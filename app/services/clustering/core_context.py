@@ -6,12 +6,11 @@ from typing import Any, Sequence
 from app.plotly_bundle import get_plotly_bundle
 from app.cache import CopyingTtlCache
 from app.services.charting import build_empty_chart_bundle as _empty_chart_bundle
-from config.constants import CLUSTER_COUNT_OPTIONS, SAMPLE_LIMIT_OPTIONS
+from config.constants import CLUSTER_COUNT_OPTIONS
 
 from .data import (
     _build_table_options,
     _parse_cluster_count,
-    _parse_sample_limit,
     _parse_sampling_strategy,
     _resolve_selected_table,
 )
@@ -20,7 +19,7 @@ from .quality_silhouette import _empty_clustering_quality_assessment
 from .utils import _format_datetime, _format_integer
 
 _CLUSTERING_CACHE = CopyingTtlCache(ttl_seconds=120.0)
-_CLUSTERING_CACHE_SCHEMA_VERSION = "v3_feature_importance_chart"
+_CLUSTERING_CACHE_SCHEMA_VERSION = "v4_no_sample_limit"
 
 
 def clear_clustering_cache() -> None:
@@ -34,7 +33,6 @@ def _normalize_clustering_cache_value(value: str) -> str:
 def _build_clustering_cache_key(
     selected_table: str,
     cluster_count: int,
-    sample_limit: int,
     sampling_strategy: str,
     feature_columns: Sequence[str] | None,
     cluster_count_is_explicit: bool,
@@ -43,7 +41,6 @@ def _build_clustering_cache_key(
         _CLUSTERING_CACHE_SCHEMA_VERSION,
         selected_table,
         str(cluster_count),
-        str(sample_limit),
         _normalize_clustering_cache_value(sampling_strategy),
         "manual_k" if cluster_count_is_explicit else "auto_k",
         *tuple(str(item).strip() for item in (feature_columns or []) if str(item).strip()),
@@ -57,7 +54,6 @@ def _normalize_feature_columns(feature_columns: Sequence[str] | None) -> list[st
 def _build_clustering_request_state(
     table_name: str = "",
     cluster_count: str = "4",
-    sample_limit: str = "1000",
     sampling_strategy: str = "stratified",
     feature_columns: Sequence[str] | None = None,
     cluster_count_is_explicit: bool = False,
@@ -65,13 +61,11 @@ def _build_clustering_request_state(
     table_options = _build_table_options()
     selected_table = _resolve_selected_table(table_options, table_name)
     requested_cluster_count = _parse_cluster_count(cluster_count)
-    requested_sample_limit = _parse_sample_limit(sample_limit)
     selected_sampling_strategy = _parse_sampling_strategy(sampling_strategy)
     normalized_feature_columns = _normalize_feature_columns(feature_columns)
     cache_key = _build_clustering_cache_key(
         selected_table=selected_table,
         cluster_count=requested_cluster_count,
-        sample_limit=requested_sample_limit,
         sampling_strategy=selected_sampling_strategy,
         feature_columns=normalized_feature_columns,
         cluster_count_is_explicit=cluster_count_is_explicit,
@@ -80,7 +74,6 @@ def _build_clustering_request_state(
         "table_options": table_options,
         "selected_table": selected_table,
         "cluster_count": requested_cluster_count,
-        "sample_limit": requested_sample_limit,
         "sampling_strategy": selected_sampling_strategy,
         "feature_columns": normalized_feature_columns,
         "cluster_count_is_explicit": bool(cluster_count_is_explicit),
@@ -91,7 +84,6 @@ def _build_clustering_request_state(
 def get_clustering_page_context(
     table_name: str = "",
     cluster_count: str = "4",
-    sample_limit: str = "1000",
     sampling_strategy: str = "stratified",
     feature_columns: Sequence[str] | None = None,
     cluster_count_is_explicit: bool = False,
@@ -101,7 +93,6 @@ def get_clustering_page_context(
     initial_data = get_clustering_data(
         table_name=table_name,
         cluster_count=cluster_count,
-        sample_limit=sample_limit,
         sampling_strategy=sampling_strategy,
         feature_columns=feature_columns,
         cluster_count_is_explicit=cluster_count_is_explicit,
@@ -117,7 +108,6 @@ def get_clustering_page_context(
 def get_clustering_shell_context(
     table_name: str = "",
     cluster_count: str = "4",
-    sample_limit: str = "1000",
     sampling_strategy: str = "stratified",
     feature_columns: Sequence[str] | None = None,
     cluster_count_is_explicit: bool = False,
@@ -125,13 +115,11 @@ def get_clustering_shell_context(
     table_options = _build_table_options()
     selected_table = _resolve_selected_table(table_options, table_name)
     requested_cluster_count = _parse_cluster_count(cluster_count)
-    requested_sample_limit = _parse_sample_limit(sample_limit)
     selected_sampling_strategy = _parse_sampling_strategy(sampling_strategy)
     initial_data = _empty_clustering_data(
         table_options=table_options,
         selected_table=selected_table,
         cluster_count=requested_cluster_count,
-        sample_limit=requested_sample_limit,
         sampling_strategy=selected_sampling_strategy,
     )
     initial_data["bootstrap_mode"] = "deferred"
@@ -149,15 +137,18 @@ def _empty_clustering_data(
     table_options: list[dict[str, str]],
     selected_table: str,
     cluster_count: int,
-    sample_limit: int,
     sampling_strategy: str,
 ) -> dict[str, Any]:
+    selected_table_label = next(
+        (item.get("label") for item in table_options if str(item.get("value") or "") == selected_table),
+        selected_table or "Нет таблицы",
+    )
     return {
         "generated_at": _format_datetime(datetime.now()),
         "has_data": False,
         "model_description": "",
         "summary": {
-            "selected_table_label": selected_table or "Нет таблицы",
+            "selected_table_label": str(selected_table_label),
             "total_incidents_display": "0",
             "total_entities_display": "0",
             "sampled_entities_display": "0",
@@ -213,16 +204,12 @@ def _empty_clustering_data(
         "filters": {
             "table_name": selected_table,
             "cluster_count": str(cluster_count),
-            "sample_limit": str(sample_limit),
             "sampling_strategy": sampling_strategy,
             "feature_columns": [],
             "available_tables": table_options,
             "available_cluster_counts": [
                 {"value": str(item), "label": f"{item} кластера" if item < 5 else f"{item} кластеров"}
                 for item in CLUSTER_COUNT_OPTIONS
-            ],
-            "available_sample_limits": [
-                {"value": str(item), "label": f"до {item} территорий"} for item in SAMPLE_LIMIT_OPTIONS
             ],
             "available_sampling_strategies": SAMPLING_STRATEGY_OPTIONS,
             "available_features": [],

@@ -53,7 +53,6 @@ def clustering_data_endpoint(
     request: Request,
     table_name: str = "",
     cluster_count: str = "4",
-    sample_limit: str = "1000",
     sampling_strategy: str = "stratified",
     feature_columns: list[str] | None = None,
 ):
@@ -61,7 +60,6 @@ def clustering_data_endpoint(
         lambda: _build_clustering_api_payload(
             table_name=table_name,
             cluster_count=cluster_count,
-            sample_limit=sample_limit,
             sampling_strategy=sampling_strategy,
             feature_columns=feature_columns or [],
             cluster_count_is_explicit="cluster_count" in request.query_params,
@@ -81,7 +79,6 @@ def start_clustering_job_endpoint(request: Request, payload: dict = Body(...)):
             session_id=session_id,
             table_name=str(payload.get("table_name") or ""),
             cluster_count=str(payload.get("cluster_count") or "4"),
-            sample_limit=str(payload.get("sample_limit") or "1000"),
             sampling_strategy=str(payload.get("sampling_strategy") or "stratified"),
             feature_columns=coerce_string_list(payload.get("feature_columns")),
             cluster_count_is_explicit="cluster_count" in payload,

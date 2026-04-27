@@ -311,7 +311,6 @@ function applyClusteringData(data) {
 
         setSelectOptions('clusterTableFilter', filters.available_tables, filters.table_name, 'Нет таблиц');
         setSelectOptions('clusterCountFilter', filters.available_cluster_counts, filters.cluster_count, '4 кластера');
-        setSelectOptions('clusterSampleLimitFilter', filters.available_sample_limits, filters.sample_limit, 'до 1000 территорий');
         setSelectOptions('clusterSamplingStrategyFilter', filters.available_sampling_strategies, filters.sampling_strategy, 'Стратифицированная');
         renderFeaturePicker(filters);
         renderFilterSummary(summary);
@@ -355,6 +354,4 @@ function applyClusteringData(data) {
         }
     };
 }(window));
-
-
 

@@ -20,7 +20,6 @@ var getClusteringErrorMessage = shared.getErrorMessage;
         return {
             table_name: String(formData.get('table_name') || ''),
             cluster_count: String(formData.get('cluster_count') || '4'),
-            sample_limit: String(formData.get('sample_limit') || '1000'),
             sampling_strategy: String(formData.get('sampling_strategy') || 'stratified'),
             feature_columns: formData.getAll('feature_columns').map(function (value) {
                 return String(value || '').trim();

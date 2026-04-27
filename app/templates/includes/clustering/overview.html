@@ -51,14 +51,6 @@
                 </select>
             </label>
             <label class="filter-field">
-                <span>Лимит территорий</span>
-                <select id="clusterSampleLimitFilter" name="sample_limit">
-                    {% for option in filters.available_sample_limits %}
-                    <option value="{{ option.value }}" {% if option.value == filters.sample_limit %}selected{% endif %}>{{ option.label }}</option>
-                    {% endfor %}
-                </select>
-            </label>
-            <label class="filter-field">
                 <span>Стратегия выборки</span>
                 <select id="clusterSamplingStrategyFilter" name="sampling_strategy">
                     {% for option in filters.available_sampling_strategies %}

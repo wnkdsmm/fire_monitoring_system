@@ -27,7 +27,6 @@ def start_clustering_job(
     session_id: str,
     table_name: str = "",
     cluster_count: str = "4",
-    sample_limit: str = "1000",
     sampling_strategy: str = "stratified",
     feature_columns: list[str] | None = None,
     cluster_count_is_explicit: bool = False,
@@ -35,7 +34,6 @@ def start_clustering_job(
     request_state = _build_clustering_request_state(
         table_name=table_name,
         cluster_count=cluster_count,
-        sample_limit=sample_limit,
         sampling_strategy=sampling_strategy,
         feature_columns=feature_columns,
         cluster_count_is_explicit=cluster_count_is_explicit,
@@ -44,7 +42,6 @@ def start_clustering_job(
     params_payload = _build_params_payload(
         table_name=table_name,
         cluster_count=cluster_count,
-        sample_limit=sample_limit,
         sampling_strategy=sampling_strategy,
         feature_columns=feature_columns,
         cluster_count_is_explicit=cluster_count_is_explicit,
@@ -111,7 +108,6 @@ def _run_clustering_job(
         execute=lambda: get_clustering_data(
             table_name=str(params_payload["table_name"]),
             cluster_count=str(params_payload["cluster_count"]),
-            sample_limit=str(params_payload["sample_limit"]),
             sampling_strategy=str(params_payload["sampling_strategy"]),
             feature_columns=list(params_payload.get("feature_columns") or []),
             cluster_count_is_explicit=bool(params_payload.get("cluster_count_is_explicit")),
@@ -249,7 +245,6 @@ def _build_params_payload(
     *,
     table_name: str,
     cluster_count: str,
-    sample_limit: str,
     sampling_strategy: str,
     feature_columns: list[str] | None,
     cluster_count_is_explicit: bool,
@@ -257,7 +252,6 @@ def _build_params_payload(
     return {
         "table_name": str(table_name or ""),
         "cluster_count": str(cluster_count or "4"),
-        "sample_limit": str(sample_limit or "1000"),
         "sampling_strategy": str(sampling_strategy or "stratified"),
         "feature_columns": [str(item).strip() for item in (feature_columns or []) if str(item).strip()],
         "cluster_count_is_explicit": bool(cluster_count_is_explicit),

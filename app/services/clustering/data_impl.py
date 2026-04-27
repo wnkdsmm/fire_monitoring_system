@@ -19,10 +19,9 @@ from config.constants import (
     MAX_FEATURE_OPTIONS,
     MEAN_SMOOTHING_PRIOR_STRENGTH,
     RATE_SMOOTHING_PRIOR_STRENGTH,
-    SAMPLE_LIMIT_OPTIONS,
     SAMPLING_STRATEGY_VALUES,
 )
-from app.table_catalog import get_user_table_names
+from app.table_catalog import get_user_table_names, get_user_table_options, resolve_selected_table_value
 
 from app.services.forecast_risk.data import _collect_risk_inputs
 from app.services.forecast_risk.utils import _counter_top_label, _is_rural_label
@@ -51,6 +50,9 @@ AREA_SUPPORT_COLUMN = "__area_count"
 RESPONSE_SUPPORT_COLUMN = "__response_count"
 WATER_SUPPORT_COLUMN = "__water_known_count"
 DISTANCE_SUPPORT_COLUMN = "__distance_count"
+ALL_TABLES_VALUE = "all"
+ALL_TABLES_LABEL = "Все таблицы"
+DEFAULT_TERRITORY_SAMPLE_LIMIT = 1000
 
 
 def _shrink_rate(
@@ -94,20 +96,21 @@ def _summarize_support(entity_frame: pd.DataFrame) -> dict[str, float]:
 
 
 def _build_table_options() -> list[ClusteringTableOption]:
-    tables = []
-    for table_name in get_user_table_names(prefer_clean=True):
-        if table_name.startswith(TABLE_EXCLUDED_PREFIXES):
-            continue
-        tables.append({"value": table_name, "label": table_name})
-    return tables
+    options = get_user_table_options(
+        include_all=True,
+        all_label=ALL_TABLES_LABEL,
+        prefer_clean=True,
+    )
+    return [
+        {"value": str(item.get("value") or ""), "label": str(item.get("label") or "")}
+        for item in options
+        if str(item.get("value") or "") and not str(item.get("value") or "").startswith(TABLE_EXCLUDED_PREFIXES)
+    ]
 
 
 
 def _resolve_selected_table(table_options: list[ClusteringTableOption], table_name: str) -> str:
-    values = {item["value"] for item in table_options}
-    if table_name in values:
-        return table_name
-    return table_options[0]["value"] if table_options else ""
+    return resolve_selected_table_value(table_options, table_name, fallback_value=ALL_TABLES_VALUE)
 
 
 
@@ -122,17 +125,6 @@ def _parse_cluster_count(value: str) -> int:
 
 
 
-def _parse_sample_limit(value: str) -> int:
-    try:
-        parsed = int(str(value).strip())
-    except Exception:
-        return 200
-    if parsed in SAMPLE_LIMIT_OPTIONS:
-        return parsed
-    return min(SAMPLE_LIMIT_OPTIONS, key=lambda item: abs(item - parsed))
-
-
-
 def _parse_sampling_strategy(value: str) -> str:
     allowed = {item["value"] for item in SAMPLING_STRATEGY_OPTIONS}
     normalized = str(value or "").strip().lower()
@@ -140,16 +132,36 @@ def _parse_sampling_strategy(value: str) -> str:
 
 
 
-def _load_territory_dataset(table_name: str, sample_limit: int, sampling_strategy: str) -> ClusteringDatasetBundle:
-    _, records, notes = _collect_risk_inputs([table_name])
+def _resolve_source_tables(table_name: str) -> list[str]:
+    normalized = str(table_name or "").strip()
+    if not normalized:
+        return []
+    if normalized == ALL_TABLES_VALUE:
+        return [
+            item
+            for item in get_user_table_names(prefer_clean=True)
+            if item and not item.startswith(TABLE_EXCLUDED_PREFIXES)
+        ]
+    return [normalized]
+
+
+def _load_territory_dataset(table_name: str, sampling_strategy: str) -> ClusteringDatasetBundle:
+    source_tables = _resolve_source_tables(table_name)
+    _, records, notes = _collect_risk_inputs(source_tables)
     if not records:
+        if str(table_name or "").strip() == ALL_TABLES_VALUE:
+            raise ValueError("В доступных таблицах не нашлось пожаров с датой и территориальной привязкой для кластеризации.")
         raise ValueError("В выбранной таблице не нашлось пожаров с датой и территориальной привязкой для кластеризации.")
 
     territory_frame = _aggregate_territory_frame(records)
     if territory_frame.empty:
         raise ValueError("Не удалось собрать агрегаты по территориям: проверьте наличие населённого пункта, района и базовых пожарных признаков.")
 
-    sampled_frame, sampling_note = _sample_territory_frame(territory_frame, sample_limit, sampling_strategy)
+    sampled_frame, sampling_note = _sample_territory_frame(
+        territory_frame,
+        DEFAULT_TERRITORY_SAMPLE_LIMIT,
+        sampling_strategy,
+    )
     sampled_frame = sampled_frame.reset_index(drop=True)
 
     feature_columns = [name for name in FEATURE_METADATA if name in sampled_frame.columns]
