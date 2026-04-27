@@ -11,6 +11,11 @@ import pandas as pd
 from fastapi import UploadFile
 
 from app.runtime_invalidation import invalidate_runtime_caches as shared_invalidate_runtime_caches
+from app.services.pipeline_disk_cache import (
+    invalidate_profiling_result_cache,
+    load_cached_profiling_result,
+    save_profiling_result_cache,
+)
 from app.state import UPLOAD_FOLDER, job_store
 from config.constants import (
     DOMINANT_VALUE_THRESHOLD,
@@ -341,6 +346,25 @@ def run_profiling_for_table(
         settings.dominant_value_threshold = normalized_thresholds["dominant_value_threshold"]
         settings.low_variance_threshold = normalized_thresholds["low_variance_threshold"]
 
+        cached_result = load_cached_profiling_result(
+            table_name=table_name,
+            output_folder=settings.output_folder,
+            thresholds=normalized_thresholds,
+        )
+        if cached_result is not None:
+            add_log(session_id, resolved_job_id, "Persistent cache hit: skipping recomputation.")
+            add_log(
+                session_id,
+                resolved_job_id,
+                "Returning cached reports and cleaned table.",
+            )
+            final_status = "completed"
+            return {
+                **cached_result,
+                "job_id": resolved_job_id,
+                "cache_hit": True,
+            }
+
         add_log(session_id, resolved_job_id, f"Таблица: {table_name}")
         add_log(
             session_id,
@@ -397,7 +421,7 @@ def run_profiling_for_table(
         _invalidate_runtime_caches(session_id, resolved_job_id)
         final_status = "completed"
 
-        return {
+        response_payload = {
             "status": "success",
             "message": f"Очистка завершена для таблицы {table_name}.",
             "job_id": resolved_job_id,
@@ -428,6 +452,14 @@ def run_profiling_for_table(
                 "clean_xlsx": clean_result["export_file"],
             },
         }
+        save_profiling_result_cache(
+            table_name=table_name,
+            output_folder=settings.output_folder,
+            thresholds=normalized_thresholds,
+            result_payload={key: value for key, value in response_payload.items() if key != "job_id"},
+        )
+        response_payload["cache_hit"] = False
+        return response_payload
     except FileNotFoundError as exc:
         message = f"Не найден файл отчета: {exc}"
     except ValueError as exc:
@@ -479,6 +511,10 @@ def import_uploaded_data(
 
     try:
         step.run(settings)
+        invalidate_profiling_result_cache(
+            output_folder=settings.output_folder,
+            table_name=settings.project_name,
+        )
         _invalidate_runtime_caches(session_id, resolved_job_id)
         add_log(session_id, resolved_job_id, f"Импорт завершён: {uploaded_file_path}")
         final_status = "completed"
