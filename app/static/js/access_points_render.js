@@ -22,7 +22,7 @@ function showLoading(message) {
         setText('accessPointsLoadingLead', 'Готовим рейтинг проблемных точек');
         setText(
             'accessPointsLoadingMessage',
-            message || 'Собираем incidents по точкам, считаем explainable score, причины попадания в топ и uncertainty notes.'
+            message || 'Собираем пожары по точкам, считаем объяснимый балл риска, причины попадания в топ и предупреждения о неопределённости.'
         );
         if (loadingNode) {
             loadingNode.classList.remove('is-hidden', 'is-ready');
@@ -62,7 +62,7 @@ function showLoading(message) {
             badgeClass += ' status-badge-live';
         }
         var badgeLabel = data.bootstrap_mode === 'deferred'
-            ? 'Собираем ranking'
+            ? 'Собираем рейтинг'
             : (data.has_data ? 'Рейтинг готов' : 'Нужны данные');
         node.innerHTML = ''
             + '<span class="' + badgeClass + '">' + escapeHtml(badgeLabel) + '</span>'
@@ -82,7 +82,7 @@ function showLoading(message) {
         setText('accessPointsHeroLabel', data.top_point_label || '-');
         setText(
             'accessPointsHeroMeta',
-            severityBand + ' риск | score ' + (summary.top_point_score_display || '0')
+            severityBand + ' риск | балл ' + (summary.top_point_score_display || '0')
         );
         setText('accessPointsIncompleteCount', summary.uncertainty_points_display || summary.incomplete_points_display || '0');
     }
@@ -185,13 +185,13 @@ function showLoading(message) {
             return;
         }
         if (!points.length) {
-            node.innerHTML = '<div class="mini-empty">После расчёта здесь появится ranking отдельных проблемных точек.</div>';
+            node.innerHTML = '<div class="mini-empty">После расчёта здесь появится рейтинг отдельных проблемных точек.</div>';
             return;
         }
         node.innerHTML = ''
             + '<table class="data-table table-sticky-first access-points-table">'
             + '<thead><tr>'
-            + '<th>#</th><th>Точка</th><th>Тип</th><th>Район</th><th>Score</th><th>Band</th><th>Типология</th><th>Пожары</th><th>Удалённость</th><th>Прибытие</th><th>Вода</th><th>Полнота</th><th>Драйверы</th><th>Почему в топе</th>'
+            + '<th>#</th><th>Точка</th><th>Тип</th><th>Район</th><th>Балл</th><th>Уровень</th><th>Типология</th><th>Пожары</th><th>Удалённость</th><th>Прибытие</th><th>Вода</th><th>Полнота</th><th>Факторы</th><th>Почему в топе</th>'
             + '</tr></thead>'
             + '<tbody>'
             + points.map(function (point) {
@@ -315,7 +315,7 @@ function showLoading(message) {
                 + '<article class="incomplete-card">'
                 + '<strong>' + escapeHtml(point.label || '-') + '</strong>'
                 + '<span>' + escapeHtml(point.incomplete_note || 'Нужна проверка полноты данных.') + '</span>'
-                + '<span>Investigation score: ' + escapeHtml(point.investigation_score_display || '0') + ' | Полнота: ' + escapeHtml(point.completeness_display || '0%') + '</span>'
+                + '<span>Балл проверки: ' + escapeHtml(point.investigation_score_display || '0') + ' | Полнота: ' + escapeHtml(point.completeness_display || '0%') + '</span>'
                 + '<span>' + escapeHtml(explanation) + '</span>'
                 + '</article>';
         }).join('');
@@ -348,16 +348,16 @@ function showLoading(message) {
                     + '</label>';
             }).join('') + '</div>';
         } else {
-            body = '<div class="mini-empty">После загрузки данных здесь появятся explainable-факторы, которые можно включать и исключать из scoring-модели проблемных точек.</div>'
+            body = '<div class="mini-empty">После загрузки данных здесь появятся объясняемые факторы риска, которые можно включать и исключать из модели оценки проблемных точек.</div>'
                 + selectedValues.map(function (value) {
                     return '<input type="hidden" name="feature_columns" value="' + escapeHtml(value) + '">';
                 }).join('');
         }
 
         container.innerHTML = ''
-            + '<span>Факторы explainable-score</span>'
+            + '<span>Факторы объяснимого балла риска</span>'
             + body
-            + '<span class="access-point-feature-help">Выбранные факторы напрямую участвуют в итоговом access risk score, разложении по причинам и в ранжировании top-N.</span>';
+            + '<span class="access-point-feature-help">Выбранные факторы напрямую участвуют в итоговом балле риска точки, разложении по причинам и в ранжировании топ-N.</span>';
     }
 
     function renderFilters(data) {
@@ -365,7 +365,7 @@ function showLoading(message) {
         setSelectOptions('accessPointsTableFilter', filters.available_tables, filters.table_name, 'Нет таблиц');
         setSelectOptions('accessPointsDistrictFilter', filters.available_districts, filters.district, 'Все районы');
         setSelectOptions('accessPointsYearFilter', filters.available_years, filters.year, 'Все годы');
-        setSelectOptions('accessPointsLimitFilter', filters.available_limits, filters.limit, 'Top 25');
+        setSelectOptions('accessPointsLimitFilter', filters.available_limits, filters.limit, 'Топ 25');
         renderFeaturePicker(filters);
     }
     function renderCharts(charts) {
@@ -392,7 +392,7 @@ function showLoading(message) {
         renderScoreDistribution(data);
         renderReasonBreakdown(data);
         renderIncomplete(data);
-        renderListItems('accessPointsUncertaintyNotes', data.uncertainty_notes, 'Здесь появятся пояснения по uncertainty penalty и low support.');
+        renderListItems('accessPointsUncertaintyNotes', data.uncertainty_notes, 'Здесь появятся пояснения по штрафу за неопределённость и малой выборке.');
         renderListItems('accessPointsNotes', data.notes, 'Здесь появятся короткие пояснения по качеству данных и смыслу рейтинга.');
         hideLoading();
         if (shared.revealPageContent) { shared.revealPageContent(); }
