@@ -38,7 +38,7 @@ __all__ = [
 
 def _format_configuration_label(configuration: ClusterMethod | None) -> str:
     if not configuration:
-        return "вЂ”"
+        return "?"
     method_label = str(configuration.get("method_label") or "Метод")
     cluster_count = configuration.get("cluster_count")
     if cluster_count:

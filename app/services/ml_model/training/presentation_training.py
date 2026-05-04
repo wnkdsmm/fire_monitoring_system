@@ -177,8 +177,8 @@ def _build_summary(
     event_context = _event_probability_context(ml_result, backtest_overview)
     hero_summary = (
         f"Пик по горизонту ожидается {_format_optional_text(peak_row.get('date_display'))}: "
-        f"ожидаемое число пожаров вЂ” {_format_row_display(peak_row, 'forecast_value_display', 'forecast_value', _format_optional_number)}. "
-        f"Среднее ожидаемое значение по дням вЂ” {_format_optional_number(average_expected_count)}."
+        f"ожидаемое число пожаров ? {_format_row_display(peak_row, 'forecast_value_display', 'forecast_value', _format_optional_number)}. "
+        f"Среднее ожидаемое значение по дням ? {_format_optional_number(average_expected_count)}."
         if peak_row
         else 'После расчета здесь появится краткий вывод по ожидаемому числу пожаров на ближайшие даты.'
     )
@@ -222,7 +222,7 @@ def _build_summary(
         'log_loss_display': _format_optional_number(ml_result.get('log_loss')),
         'top_feature_label': _format_optional_text(ml_result.get('top_feature_label')),
         'temperature_scenario_display': (
-            f"{_format_number(scenario_temperature)} В°C" if scenario_temperature is not None else 'РСЃС‚РѕСЂРёС‡РµСЃРєР°СЏ температура'
+            f"{_format_number(scenario_temperature)} ?C" if scenario_temperature is not None else '???????????? ???????????'
         ),
         'predicted_total_display': _format_optional_number(predicted_total),
         'average_expected_count_display': _format_optional_number(average_expected_count),

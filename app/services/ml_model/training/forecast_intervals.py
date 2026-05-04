@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 
 from app.services.forecasting.utils import _format_number
+from app.services.shared.formatting import _fire_count_word
 
 from .forecast_bounds import (
     _bound_probability,
@@ -38,17 +39,6 @@ from .types import (
 
 logger = logging.getLogger(__name__)
 
-
-def _fire_count_word(n: float) -> str:
-    n_int = int(round(n))
-    if 11 <= (n_int % 100) <= 14:
-        return "пожаров"
-    rem = n_int % 10
-    if rem == 1:
-        return "пожар"
-    if 2 <= rem <= 4:
-        return "пожара"
-    return "пожаров"
 
 @dataclass
 class _RecursiveForecastSeed:
@@ -365,15 +355,15 @@ def _build_future_forecast_rows(
                 'upper_bound': round(upper_bound, 3),
                 'upper_bound_display': _format_number(upper_bound),
                 'range_label': f'{interval_label} интервал',
-                'range_display': f"{interval_label}: {_format_number(lower_bound)} вЂ“ {_format_number(upper_bound)} {_fire_count_word(upper_bound)}",
-                'temperature_display': f"{_format_number(temp_value)} В°C",
+                'range_display': f"{interval_label}: {_format_number(lower_bound)} ? {_format_number(upper_bound)} {_fire_count_word(upper_bound)}",
+                'temperature_display': f"{_format_number(temp_value)} ?C",
                 'risk_index': round(risk_index, 1),
                 'risk_index_display': f"{int(round(risk_index))} / 100",
                 'risk_level_label': risk_level_label,
                 'risk_level_tone': risk_level_tone,
                 **_forecast_interval_coverage_metadata(row_interval_calibration),
                 'event_probability': round(event_probability, 4) if event_probability is not None else None,
-                'event_probability_display': _format_probability(event_probability) if event_probability is not None else 'вЂ”',
+                'event_probability_display': _format_probability(event_probability) if event_probability is not None else '?',
             }
         )
     return forecast_rows

@@ -183,7 +183,7 @@ def _build_geo_prediction(
             "Это не ML-прогноз и не дневной сценарный прогноз, а отдельная пространственная оценка для приоритизации территорий."
         ),
         "coverage_display": f"{_format_integer(len(geo_records))} с координатами из {_format_integer(len(records))}",
-        "cell_size_display": f"{_format_number(cell_size)}В°",
+        "cell_size_display": f"{_format_number(cell_size)}?",
         "top_risk_display": f"{_format_number(hotspots[0]['risk_score'])} / 100" if hotspots else "0 / 100",
         "hotspots_count_display": _format_integer(len(points)),
         "top_zone_label": top_zone_label,

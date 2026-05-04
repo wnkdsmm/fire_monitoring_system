@@ -4,7 +4,20 @@ import math
 from datetime import date, datetime
 from typing import Any, Sequence
 
-MISSING_VALUE = "вЂ”"
+MISSING_VALUE = "?"
+
+
+def _fire_count_word(n: float) -> str:
+    n_int = int(round(n))
+    if 11 <= (n_int % 100) <= 14:
+        return "???????"
+    rem = n_int % 10
+    if rem == 1:
+        return "?????"
+    if 2 <= rem <= 4:
+        return "??????"
+    return "???????"
+
 
 
 def format_integer(value: Any) -> str:
@@ -72,7 +85,7 @@ def normalize_probability(value: Any) -> float:
 def format_count_range(lower: float, upper: float) -> str:
     lower_bound = max(0, int(math.floor(lower)))
     upper_bound = max(lower_bound, int(math.ceil(upper)))
-    return f"{format_integer(lower_bound)}-{format_integer(upper_bound)} пожара"
+    return f"{format_integer(lower_bound)}-{format_integer(upper_bound)} {_fire_count_word(upper_bound)}"
 
 
 def format_percent_ratio(value: float) -> str:

@@ -37,7 +37,7 @@ FEATURE_GROUPS = [
     },
 ]
 
-_EMPTY_TEXT_VALUES = {"", "nan", "nat", "none", "null", "n/a", "na", "-", "вЂ”"}
+_EMPTY_TEXT_VALUES = {"", "nan", "nat", "none", "null", "n/a", "na", "-", "?"}
 
 
 def _normalize_text(value: Any) -> str:

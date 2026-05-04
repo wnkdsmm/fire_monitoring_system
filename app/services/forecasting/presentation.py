@@ -130,7 +130,7 @@ def _build_summary(
         "peak_forecast_value_display": peak_row["forecast_value_display"] if peak_row else "0",
         "peak_forecast_probability_display": peak_row["fire_probability_display"] if peak_row else "0%",
         "temperature_scenario_display": (
-            f"{_format_number(temperature_value)} В°C" if temperature_value is not None else FORECASTING_TEMPERATURE_SCENARIO_SEASONAL
+            f"{_format_number(temperature_value)} ?C" if temperature_value is not None else FORECASTING_TEMPERATURE_SCENARIO_SEASONAL
         ),
     }
 
