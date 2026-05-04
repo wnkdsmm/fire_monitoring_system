@@ -9,7 +9,6 @@ from fastapi.templating import Jinja2Templates
 
 from config.paths import STATIC_DIR, TEMPLATES_DIR
 
-
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 PUBLIC_CACHE_HEADERS = {"Cache-Control": "public, max-age=86400"}
 _DEFAULT_TEMPLATE_ASSETS = {
@@ -49,7 +48,6 @@ TABLE_VIEW_ASSETS = {
 
 def _url_path_segment(value: object) -> str:
     return quote(str(value or ""), safe="")
-
 
 templates.env.filters["urlpath"] = _url_path_segment
 

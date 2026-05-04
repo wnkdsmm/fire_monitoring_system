@@ -192,7 +192,6 @@ def _load_table_metadata(table_name: str) -> RiskTableMetadata:
     return {"table_name": table_name, "columns": columns, "resolved_columns": resolved_columns}
 
 
-
 def _load_risk_records(
     table_name: str,
     resolved_columns: dict[str, str],

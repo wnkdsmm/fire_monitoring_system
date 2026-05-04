@@ -7,10 +7,9 @@ from sqlalchemy import inspect
 from app.cache import CopyingTtlCache
 from config.db import engine
 
-_METADATA_CACHE_TTL_SECONDS = 60.0
 _TABLE_NAMES_CACHE_KEY = "__table_names__"
-_TABLE_NAMES_CACHE = CopyingTtlCache[str, tuple[str, ...]](ttl_seconds=_METADATA_CACHE_TTL_SECONDS)
-_TABLE_COLUMNS_CACHE = CopyingTtlCache[str, tuple[str, ...]](ttl_seconds=_METADATA_CACHE_TTL_SECONDS)
+_TABLE_NAMES_CACHE = CopyingTtlCache[str, tuple[str, ...]](ttl_seconds=None)
+_TABLE_COLUMNS_CACHE = CopyingTtlCache[str, tuple[str, ...]](ttl_seconds=None)
 _TABLE_ORDER_CACHE_INVALIDATORS: list[Callable[[], None]] = []
 
 
@@ -28,7 +27,6 @@ def invalidate_table_order_caches() -> None:
             continue
 
 
-
 def invalidate_db_metadata_cache(table_name: str | None = None) -> None:
     _TABLE_NAMES_CACHE.delete(_TABLE_NAMES_CACHE_KEY)
     if table_name is None:
@@ -37,7 +35,6 @@ def invalidate_db_metadata_cache(table_name: str | None = None) -> None:
         _TABLE_COLUMNS_CACHE.delete(str(table_name))
 
     invalidate_table_order_caches()
-
 
 
 def get_table_names_cached(force_refresh: bool = False) -> list[str]:
@@ -52,10 +49,8 @@ def get_table_names_cached(force_refresh: bool = False) -> list[str]:
     return list(table_names)
 
 
-
 def table_exists_cached(table_name: str) -> bool:
     return str(table_name) in set(get_table_names_cached())
-
 
 
 def get_table_columns_cached(table_name: str, force_refresh: bool = False) -> list[str]:
@@ -78,15 +73,12 @@ def get_table_columns_cached(table_name: str, force_refresh: bool = False) -> li
     return list(columns)
 
 
-
 def get_table_column_set_cached(table_name: str, force_refresh: bool = False) -> set[str]:
     return set(get_table_columns_cached(table_name, force_refresh=force_refresh))
 
 
-
 def get_table_signature_cached() -> tuple[str, ...]:
     return tuple(sorted(get_table_names_cached()))
-
 
 __all__ = [
     "get_table_column_set_cached",
@@ -98,4 +90,3 @@ __all__ = [
     "register_table_order_cache_invalidator",
     "table_exists_cached",
 ]
-

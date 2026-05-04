@@ -3,6 +3,39 @@ from __future__ import annotations
 from statistics import mean
 from typing import Any
 
+from app.labels import (
+    FORECASTING_FEATURE_CARD_CONFIG,
+    FORECASTING_FEATURE_COVERAGE_DISPLAY_TEMPLATE,
+    FORECASTING_FEATURE_QUALITY_LABEL_GOOD,
+    FORECASTING_FEATURE_QUALITY_LABEL_MISSING,
+    FORECASTING_FEATURE_QUALITY_LABEL_SPARSE,
+    FORECASTING_FEATURE_SOURCES_COVERAGE_TEMPLATE,
+    FORECASTING_FEATURE_SOURCE_COVERAGE_SUFFIX_TEMPLATE,
+    FORECASTING_FEATURE_STATUS_LABEL_MISSING,
+    FORECASTING_FEATURE_STATUS_LABEL_PARTIAL_TEMPLATE,
+    FORECASTING_FEATURE_STATUS_LABEL_USED,
+    FORECASTING_FEATURE_TEMPERATURE_LOW_COVERAGE_DESCRIPTION,
+    FORECASTING_INSIGHT_LABEL_ACTIVE_WEEKDAY,
+    FORECASTING_INSIGHT_LABEL_AVERAGE_PROBABILITY,
+    FORECASTING_INSIGHT_LABEL_COMPARE_RECENT,
+    FORECASTING_INSIGHT_LABEL_RISKIEST_DAY,
+    FORECASTING_INSIGHT_LABEL_STABILITY,
+    FORECASTING_INSIGHT_META_ACTIVE_WEEKDAY_TEMPLATE,
+    FORECASTING_INSIGHT_META_COMPARE_RECENT_TEMPLATE,
+    FORECASTING_INSIGHT_META_HORIZON_TEMPLATE,
+    FORECASTING_INSIGHT_META_PROBABILITY_TEMPLATE,
+    FORECASTING_NOTE_INTERPRETATION,
+    FORECASTING_NOTE_MISSING_DATE,
+    FORECASTING_NOTE_MISSING_TEMPERATURE,
+    FORECASTING_NOTE_MULTI_TABLE_TEMPLATE,
+    FORECASTING_NOTE_NO_HISTORY,
+    FORECASTING_NOTE_PARTIAL_CAUSE,
+    FORECASTING_NOTE_PARTIAL_OBJECT_CATEGORY,
+    FORECASTING_NOTE_SHORT_HISTORY,
+    FORECASTING_SUMMARY_HERO_EMPTY,
+    FORECASTING_SUMMARY_HERO_TEMPLATE,
+    FORECASTING_TEMPERATURE_SCENARIO_SEASONAL,
+)
 from app.services.shared.formatting import (
     format_percent as _format_percent,
     normalize_probability as _normalize_probability,
@@ -28,7 +61,6 @@ from .utils import (
     _format_signed_percent,
     _history_window_label,
 )
-
 
 # intentionally separate from access_points/presentation.py::_build_summary and
 # ml_model/training/presentation_training.py::_build_summary:
@@ -67,10 +99,13 @@ def _build_summary(
     )
     peak_row = max(forecast_rows, key=lambda item: float(item["forecast_value"])) if forecast_rows else None
     hero_summary = (
-        f"Пиковая дата сценария: {peak_row.get('date_display', '-')} — вероятность пожара {peak_row.get('fire_probability_display', '0%')}. "
-        f"Средняя вероятность по выбранному горизонту: {_format_probability(average_probability)}."
+        FORECASTING_SUMMARY_HERO_TEMPLATE.format(
+            peak_date=peak_row.get("date_display", "-"),
+            peak_probability=peak_row.get("fire_probability_display", "0%"),
+            average_probability=_format_probability(average_probability),
+        )
         if peak_row
-        else "После расчета здесь появится краткий вывод по датам, где сценарий выглядит напряжённее."
+        else FORECASTING_SUMMARY_HERO_EMPTY
     )
     return {
         "selected_table_label": _table_selection_label(selected_table),
@@ -94,7 +129,9 @@ def _build_summary(
         "peak_forecast_day_display": peak_row["date_display"] if peak_row else "-",
         "peak_forecast_value_display": peak_row["forecast_value_display"] if peak_row else "0",
         "peak_forecast_probability_display": peak_row["fire_probability_display"] if peak_row else "0%",
-        "temperature_scenario_display": f"{_format_number(temperature_value)} °C" if temperature_value is not None else "Историческая сезонность",
+        "temperature_scenario_display": (
+            f"{_format_number(temperature_value)} В°C" if temperature_value is not None else FORECASTING_TEMPERATURE_SCENARIO_SEASONAL
+        ),
     }
 
 
@@ -104,12 +141,7 @@ def _build_feature_cards(metadata: Any) -> list[dict[str, str]]:
     if not metadata_items:
         return []
     total_tables = len(metadata_items)
-    feature_config = [
-        ("date", "Дата возникновения пожара", "Нужна для построения дневного временного ряда."),
-        ("temperature", "Температура", "Используется для температурной поправки, если колонка найдена."),
-        ("cause", "Причина", "Позволяет строить сценарий по конкретной причине пожара."),
-        ("object_category", "Категория объекта", "Позволяет строить сценарий по типу объекта."),
-    ]
+    feature_config = FORECASTING_FEATURE_CARD_CONFIG
     cards = []
     for key, label, description in feature_config:
         sources = []
@@ -121,19 +153,19 @@ def _build_feature_cards(metadata: Any) -> list[dict[str, str]]:
                 sources.append(f"{item['table_name']}: {source_column}")
         if found == total_tables:
             status = "used"
-            status_label = "Используется"
+            status_label = FORECASTING_FEATURE_STATUS_LABEL_USED
         elif found > 0:
             status = "partial"
-            status_label = f"Частично ({found}/{total_tables})"
+            status_label = FORECASTING_FEATURE_STATUS_LABEL_PARTIAL_TEMPLATE.format(found=found, total_tables=total_tables)
         else:
             status = "missing"
-            status_label = "Не найдена"
+            status_label = FORECASTING_FEATURE_STATUS_LABEL_MISSING
         cards.append(
             {
                 "label": label,
                 "status": status,
                 "status_label": status_label,
-                "source": "; ".join(sources[:3]) if sources else "Не найдена",
+                "source": "; ".join(sources[:3]) if sources else FORECASTING_FEATURE_STATUS_LABEL_MISSING,
                 "description": description,
             }
         )
@@ -149,12 +181,7 @@ def _build_feature_cards_with_quality(
     if not metadata_items:
         return []
     total_tables = len(metadata_items)
-    feature_config = [
-        ("date", "Дата возникновения пожара", "Нужна для построения дневного временного ряда."),
-        ("temperature", "Температура", "Используется для температурной поправки, если колонка найдена."),
-        ("cause", "Причина", "Позволяет строить сценарий по конкретной причине пожара."),
-        ("object_category", "Категория объекта", "Позволяет строить сценарий по типу объекта."),
-    ]
+    feature_config = FORECASTING_FEATURE_CARD_CONFIG
     cards: list[ForecastingFeatureCard] = []
     for key, label, base_description in feature_config:
         description = base_description
@@ -172,7 +199,11 @@ def _build_feature_cards_with_quality(
                 non_null_days = int(quality.get("non_null_days", 0) or 0)
                 total_days = int(quality.get("total_days", 0) or 0)
                 coverage_value = _normalize_probability(quality.get("coverage", 0.0) or 0.0)
-                coverage_suffix = f" | покрытие: {non_null_days}/{total_days} дней ({_format_percent(coverage_value)})"
+                coverage_suffix = FORECASTING_FEATURE_SOURCE_COVERAGE_SUFFIX_TEMPLATE.format(
+                    non_null_days=non_null_days,
+                    total_days=total_days,
+                    coverage=_format_percent(coverage_value),
+                )
             if key == "temperature":
                 quality_items.append(quality)
             sources.append(f"{item['table_name']}: {source_column}{coverage_suffix}")
@@ -184,49 +215,75 @@ def _build_feature_cards_with_quality(
             non_null_days = sum(int(item.get("non_null_days", 0) or 0) for item in quality_items)
             total_days = sum(int(item.get("total_days", 0) or 0) for item in quality_items)
             coverage_value = float(non_null_days) / float(total_days) if total_days > 0 else 0.0
-            coverage_display = f"{non_null_days}/{total_days} дней ({_format_percent(coverage_value)})"
+            coverage_display = FORECASTING_FEATURE_COVERAGE_DISPLAY_TEMPLATE.format(
+                non_null_days=non_null_days,
+                total_days=total_days,
+                coverage=_format_percent(coverage_value),
+            )
             usable = all(bool(item.get("usable")) for item in quality_items) and len(quality_items) == found
             quality_status = "good" if usable else "missing" if non_null_days <= 0 else "sparse"
-            quality_label = "Достаточное покрытие" if usable else "Нет измерений" if non_null_days <= 0 else "Низкое покрытие"
+            quality_label = (
+                FORECASTING_FEATURE_QUALITY_LABEL_GOOD
+                if usable
+                else FORECASTING_FEATURE_QUALITY_LABEL_MISSING
+                if non_null_days <= 0
+                else FORECASTING_FEATURE_QUALITY_LABEL_SPARSE
+            )
             if not usable:
-                description = "Колонка температуры найдена, но покрытие низкое: температурный признак нельзя считать надёжным для ML и температурной поправки."
+                description = FORECASTING_FEATURE_TEMPERATURE_LOW_COVERAGE_DESCRIPTION
         if key == "temperature" and found > 0 and temperature_quality is not None:
             non_null_days = int(temperature_quality.get("non_null_days", 0) or 0)
             total_days = int(temperature_quality.get("total_days", 0) or 0)
             coverage_value = _normalize_probability(temperature_quality.get("coverage", 0.0) or 0.0)
-            coverage_display = f"{non_null_days}/{total_days} дней ({_format_percent(coverage_value)})"
+            coverage_display = FORECASTING_FEATURE_COVERAGE_DISPLAY_TEMPLATE.format(
+                non_null_days=non_null_days,
+                total_days=total_days,
+                coverage=_format_percent(coverage_value),
+            )
             usable = bool(temperature_quality.get("usable")) and found == total_tables
             quality_status = str(temperature_quality.get("quality_key") or ("missing" if non_null_days <= 0 else "sparse"))
-            quality_label = str(temperature_quality.get("quality_label") or ("Нет измерений" if non_null_days <= 0 else "Низкое покрытие"))
+            quality_label = str(
+                temperature_quality.get("quality_label")
+                or (
+                    FORECASTING_FEATURE_QUALITY_LABEL_MISSING
+                    if non_null_days <= 0
+                    else FORECASTING_FEATURE_QUALITY_LABEL_SPARSE
+                )
+            )
             if not usable:
-                description = "Колонка температуры найдена, но покрытие низкое: температурный признак нельзя считать надёжным для ML и температурной поправки."
+                description = FORECASTING_FEATURE_TEMPERATURE_LOW_COVERAGE_DESCRIPTION
             if sources:
                 base_sources = [source.split(" | ", 1)[0] for source in sources[:3]]
-                sources = [f"{'; '.join(base_sources)} | покрытие по дневной истории: {coverage_display}"]
+                sources = [
+                    FORECASTING_FEATURE_SOURCES_COVERAGE_TEMPLATE.format(
+                        sources="; ".join(base_sources),
+                        coverage_display=coverage_display,
+                    )
+                ]
         if key == "temperature" and found > 0 and found < total_tables:
             usable = False
             quality_status = "partial"
-            quality_label = f"Частично ({found}/{total_tables})"
+            quality_label = FORECASTING_FEATURE_STATUS_LABEL_PARTIAL_TEMPLATE.format(found=found, total_tables=total_tables)
             description = base_description
         if found == 0:
             status = "missing"
-            status_label = "Не найдена"
+            status_label = FORECASTING_FEATURE_STATUS_LABEL_MISSING
             usable = False
         elif key == "temperature" and quality_label is not None:
             status = "used" if usable and found == total_tables else "partial"
             status_label = f"{quality_label} ({coverage_display})"
         elif found == total_tables:
             status = "used"
-            status_label = "Используется"
+            status_label = FORECASTING_FEATURE_STATUS_LABEL_USED
         else:
             status = "partial"
-            status_label = f"Частично ({found}/{total_tables})"
+            status_label = FORECASTING_FEATURE_STATUS_LABEL_PARTIAL_TEMPLATE.format(found=found, total_tables=total_tables)
         cards.append(
             {
                 "label": label,
                 "status": status,
                 "status_label": status_label,
-                "source": "; ".join(sources[:3]) if sources else "Не найдена",
+                "source": "; ".join(sources[:3]) if sources else FORECASTING_FEATURE_STATUS_LABEL_MISSING,
                 "description": description,
                 "quality_status": quality_status,
                 "quality_label": quality_label,
@@ -247,18 +304,20 @@ def _build_insights(
         peak_row = max(forecast_rows, key=lambda item: _normalize_probability(item.get("fire_probability", 0.0)))
         insights.append(
             {
-                "label": "Самый рискованный день",
+                "label": FORECASTING_INSIGHT_LABEL_RISKIEST_DAY,
                 "value": peak_row["date_display"],
-                "meta": f"вероятность пожара {peak_row['fire_probability_display']}",
+                "meta": FORECASTING_INSIGHT_META_PROBABILITY_TEMPLATE.format(
+                    probability=peak_row["fire_probability_display"],
+                ),
                 "tone": "fire",
             }
         )
         average_probability = mean(_normalize_probability(item.get("fire_probability", 0.0)) for item in forecast_rows)
         insights.append(
             {
-                "label": "Средняя вероятность пожара",
+                "label": FORECASTING_INSIGHT_LABEL_AVERAGE_PROBABILITY,
                 "value": _format_probability(average_probability),
-                "meta": f"в день на ближайшие {len(forecast_rows)} дней",
+                "meta": FORECASTING_INSIGHT_META_HORIZON_TEMPLATE.format(days=len(forecast_rows)),
                 "tone": "forest",
             }
         )
@@ -268,9 +327,11 @@ def _build_insights(
         forecast_average = mean(float(item["forecast_value"]) for item in forecast_rows)
         insights.append(
             {
-                "label": "Сравнение с недавним уровнем",
+                "label": FORECASTING_INSIGHT_LABEL_COMPARE_RECENT,
                 "value": _format_signed_percent((forecast_average - recent_average) / recent_average if recent_average > 0 else 0.0),
-                "meta": f"{_forecast_level_label(forecast_average, recent_average)[0]} относительно последних 4 недель",
+                "meta": FORECASTING_INSIGHT_META_COMPARE_RECENT_TEMPLATE.format(
+                    level_label=_forecast_level_label(forecast_average, recent_average)[0],
+                ),
                 "tone": "sky",
             }
         )
@@ -278,16 +339,18 @@ def _build_insights(
         peak_weekday = max(weekday_profile, key=lambda item: float(item["avg_value"]))
         insights.append(
             {
-                "label": "Самый активный день недели",
+                "label": FORECASTING_INSIGHT_LABEL_ACTIVE_WEEKDAY,
                 "value": peak_weekday["label"],
-                "meta": f"в истории в среднем {peak_weekday['avg_display']} пожара",
+                "meta": FORECASTING_INSIGHT_META_ACTIVE_WEEKDAY_TEMPLATE.format(
+                    avg_display=peak_weekday["avg_display"],
+                ),
                 "tone": "sand",
             }
         )
     stability_label, stability_meta = _forecast_stability_hint(daily_history)
     insights.append(
         {
-            "label": "Надежность оценки",
+            "label": FORECASTING_INSIGHT_LABEL_STABILITY,
             "value": stability_label,
             "meta": stability_meta,
             "tone": "sky",
@@ -306,20 +369,18 @@ def _build_notes(
     metadata_items = [item for item in metadata_items if item]
     notes: list[str] = []
     if len(metadata_items) > 1:
-        notes.append(f"Прогноз собран сразу по {len(metadata_items)} таблицам.")
+        notes.append(FORECASTING_NOTE_MULTI_TABLE_TEMPLATE.format(tables_count=len(metadata_items)))
     if not any(item["resolved_columns"].get("date") for item in metadata_items):
-        notes.append("В выбранных таблицах не найдена дата возникновения пожара.")
+        notes.append(FORECASTING_NOTE_MISSING_DATE)
     if filtered_records_count <= 0:
-        notes.append("По выбранным фильтрам нет пожаров в истории. Попробуйте снять часть ограничений.")
+        notes.append(FORECASTING_NOTE_NO_HISTORY)
     elif len(daily_history) < 14:
-        notes.append("История короткая, поэтому сценарный прогноз может быть менее устойчивым.")
+        notes.append(FORECASTING_NOTE_SHORT_HISTORY)
     if temperature_value is not None and not any(item["resolved_columns"].get("temperature") for item in metadata_items):
-        notes.append("Температурный сценарий задан, но колонка температуры не найдена ни в одной таблице.")
+        notes.append(FORECASTING_NOTE_MISSING_TEMPERATURE)
     if any(not item["resolved_columns"].get("cause") for item in metadata_items):
-        notes.append("Не во всех таблицах найдена причина пожара, поэтому этот фильтр работает частично.")
+        notes.append(FORECASTING_NOTE_PARTIAL_CAUSE)
     if any(not item["resolved_columns"].get("object_category") for item in metadata_items):
-        notes.append("Не во всех таблицах найдена категория объекта, поэтому этот фильтр работает частично.")
-    notes.append(
-        "Сценарный прогноз лучше читать как календарь вероятности пожара по дням, а не как точное обещание числа пожаров. Если нужен прогноз количества, используйте ML-прогноз."
-    )
+        notes.append(FORECASTING_NOTE_PARTIAL_OBJECT_CATEGORY)
+    notes.append(FORECASTING_NOTE_INTERPRETATION)
     return notes

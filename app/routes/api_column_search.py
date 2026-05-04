@@ -10,16 +10,17 @@ from app.services.table_workflows import (
 
 from .api_common import utf8_json
 
-
 router = APIRouter()
 
-
 @router.get("/api/column-search")
+
+
 def column_search_endpoint(table_name: str = "", query: str = ""):
     return utf8_json(build_column_search_payload(table_name=table_name, query=query))
 
-
 @router.post("/api/column-search/preview")
+
+
 def column_search_preview_endpoint(payload: dict = Body(...)):
     return utf8_json(
         build_column_search_preview_payload(
@@ -28,8 +29,9 @@ def column_search_preview_endpoint(payload: dict = Body(...)):
         )
     )
 
-
 @router.post("/api/column-search/create-modify-table")
+
+
 def create_modify_table_endpoint(payload: dict = Body(...)):
     return utf8_json(
         build_create_modify_table_payload(

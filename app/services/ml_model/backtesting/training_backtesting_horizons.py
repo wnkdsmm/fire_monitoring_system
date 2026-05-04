@@ -3,7 +3,6 @@ from __future__ import annotations
 from dataclasses import replace
 import math
 
-
 import numpy as np
 
 from app.services.model_quality import compute_count_metrics

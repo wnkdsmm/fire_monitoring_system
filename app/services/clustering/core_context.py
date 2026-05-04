@@ -18,7 +18,7 @@ from .data_impl import SAMPLING_STRATEGY_OPTIONS
 from .quality_silhouette import _empty_clustering_quality_assessment
 from .utils import _format_datetime, _format_integer
 
-_CLUSTERING_CACHE = CopyingTtlCache(ttl_seconds=120.0)
+_CLUSTERING_CACHE = CopyingTtlCache(ttl_seconds=None)
 _CLUSTERING_CACHE_SCHEMA_VERSION = "v4_no_sample_limit"
 
 
@@ -141,7 +141,7 @@ def _empty_clustering_data(
 ) -> dict[str, Any]:
     selected_table_label = next(
         (item.get("label") for item in table_options if str(item.get("value") or "") == selected_table),
-        selected_table or "Нет таблицы",
+        selected_table or "РќРµС‚ С‚Р°Р±Р»РёС†С‹",
     )
     return {
         "generated_at": _format_datetime(datetime.now()),
@@ -158,12 +158,12 @@ def _empty_clustering_data(
             "selected_features_display": "0",
             "cluster_count_display": _format_integer(cluster_count),
             "cluster_count_requested_display": _format_integer(cluster_count),
-            "cluster_count_note": f"Сейчас основной вывод показан для k={_format_integer(cluster_count)}.",
-            "suggested_cluster_count_label": "Рекомендуемый k",
-            "suggested_cluster_count_display": "—",
-            "suggested_cluster_count_note": "Диагностика k появится, когда хватит данных для сравнения нескольких вариантов.",
-            "elbow_cluster_count_display": "—",
-            "silhouette_display": "—",
+            "cluster_count_note": f"РЎРµР№С‡Р°СЃ РѕСЃРЅРѕРІРЅРѕР№ РІС‹РІРѕРґ РїРѕРєР°Р·Р°РЅ РґР»СЏ k={_format_integer(cluster_count)}.",
+            "suggested_cluster_count_label": "Р РµРєРѕРјРµРЅРґСѓРµРјС‹Р№ k",
+            "suggested_cluster_count_display": "вЂ”",
+            "suggested_cluster_count_note": "Р”РёР°РіРЅРѕСЃС‚РёРєР° k РїРѕСЏРІРёС‚СЃСЏ, РєРѕРіРґР° С…РІР°С‚РёС‚ РґР°РЅРЅС‹С… РґР»СЏ СЃСЂР°РІРЅРµРЅРёСЏ РЅРµСЃРєРѕР»СЊРєРёС… РІР°СЂРёР°РЅС‚РѕРІ.",
+            "elbow_cluster_count_display": "вЂ”",
+            "silhouette_display": "вЂ”",
             "pca_variance_display": "0%",
             "inertia_display": "0",
             "sampling_strategy_label": next(
@@ -180,24 +180,24 @@ def _empty_clustering_data(
         "cluster_risk": [],
         "charts": {
             "feature_importance_chart": _empty_chart_bundle(
-                "Вклад признаков в разделение кластеров",
-                "Недостаточно данных, чтобы оценить вклад признаков в разделение кластеров.",
+                "Р’РєР»Р°Рґ РїСЂРёР·РЅР°РєРѕРІ РІ СЂР°Р·РґРµР»РµРЅРёРµ РєР»Р°СЃС‚РµСЂРѕРІ",
+                "РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РґР°РЅРЅС‹С…, С‡С‚РѕР±С‹ РѕС†РµРЅРёС‚СЊ РІРєР»Р°Рґ РїСЂРёР·РЅР°РєРѕРІ РІ СЂР°Р·РґРµР»РµРЅРёРµ РєР»Р°СЃС‚РµСЂРѕРІ.",
             ),
             "radar_chart": _empty_chart_bundle(
-                "Профили кластеров по признакам",
-                "Недостаточно данных для построения радар-графика профилей кластеров.",
+                "РџСЂРѕС„РёР»Рё РєР»Р°СЃС‚РµСЂРѕРІ РїРѕ РїСЂРёР·РЅР°РєР°Рј",
+                "РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РґР°РЅРЅС‹С… РґР»СЏ РїРѕСЃС‚СЂРѕРµРЅРёСЏ СЂР°РґР°СЂ-РіСЂР°С„РёРєР° РїСЂРѕС„РёР»РµР№ РєР»Р°СЃС‚РµСЂРѕРІ.",
             ),
             "scatter": _empty_chart_bundle(
-                "Кластеры территорий на двумерной проекции",
-                "Недостаточно данных, чтобы показать типы территорий на проекции главных компонент.",
+                "РљР»Р°СЃС‚РµСЂС‹ С‚РµСЂСЂРёС‚РѕСЂРёР№ РЅР° РґРІСѓРјРµСЂРЅРѕР№ РїСЂРѕРµРєС†РёРё",
+                "РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РґР°РЅРЅС‹С…, С‡С‚РѕР±С‹ РїРѕРєР°Р·Р°С‚СЊ С‚РёРїС‹ С‚РµСЂСЂРёС‚РѕСЂРёР№ РЅР° РїСЂРѕРµРєС†РёРё РіР»Р°РІРЅС‹С… РєРѕРјРїРѕРЅРµРЅС‚.",
             ),
             "distribution": _empty_chart_bundle(
-                "Размеры кластеров по числу территорий",
-                "Распределение территорий по типам появится после расчёта.",
+                "Р Р°Р·РјРµСЂС‹ РєР»Р°СЃС‚РµСЂРѕРІ РїРѕ С‡РёСЃР»Сѓ С‚РµСЂСЂРёС‚РѕСЂРёР№",
+                "Р Р°СЃРїСЂРµРґРµР»РµРЅРёРµ С‚РµСЂСЂРёС‚РѕСЂРёР№ РїРѕ С‚РёРїР°Рј РїРѕСЏРІРёС‚СЃСЏ РїРѕСЃР»Рµ СЂР°СЃС‡С‘С‚Р°.",
             ),
             "diagnostics": _empty_chart_bundle(
-                "Подсказка по числу кластеров",
-                "Диагностика k появится, когда хватит территорий для сравнения нескольких вариантов.",
+                "РџРѕРґСЃРєР°Р·РєР° РїРѕ С‡РёСЃР»Сѓ РєР»Р°СЃС‚РµСЂРѕРІ",
+                "Р”РёР°РіРЅРѕСЃС‚РёРєР° k РїРѕСЏРІРёС‚СЃСЏ, РєРѕРіРґР° С…РІР°С‚РёС‚ С‚РµСЂСЂРёС‚РѕСЂРёР№ РґР»СЏ СЃСЂР°РІРЅРµРЅРёСЏ РЅРµСЃРєРѕР»СЊРєРёС… РІР°СЂРёР°РЅС‚РѕРІ.",
             ),
         },
         "notes": [],
@@ -208,7 +208,7 @@ def _empty_clustering_data(
             "feature_columns": [],
             "available_tables": table_options,
             "available_cluster_counts": [
-                {"value": str(item), "label": f"{item} кластера" if item < 5 else f"{item} кластеров"}
+                {"value": str(item), "label": f"{item} РєР»Р°СЃС‚РµСЂР°" if item < 5 else f"{item} РєР»Р°СЃС‚РµСЂРѕРІ"}
                 for item in CLUSTER_COUNT_OPTIONS
             ],
             "available_sampling_strategies": SAMPLING_STRATEGY_OPTIONS,

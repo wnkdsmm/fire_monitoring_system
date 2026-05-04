@@ -9,11 +9,56 @@ FORECASTING_HISTORY_WINDOW_LABELS = {
     "recent_3": "Последние 3 года",
     "recent_5": "Последние 5 лет",
 }
-
 SCENARIO_FORECAST_DESCRIPTION = (
     "Сценарный прогноз открывают, когда нужно понять, в какие ближайшие дни вероятность пожара выше и когда стоит готовиться заранее. "
     "Он показывает календарь по дням и затем помогает перейти к территориальному приоритету. "
     "Это не ML-прогноз ожидаемого числа пожаров: экран отвечает на вопрос «когда готовиться», а не «сколько пожаров может быть по датам»."
+)
+
+FORECASTING_FEATURE_CARD_CONFIG = [
+    ("date", "Дата возникновения пожара", "Нужна для построения дневного временного ряда."),
+    ("temperature", "Температура", "Используется для температурной поправки, если колонка найдена."),
+    ("cause", "Причина", "Позволяет строить сценарий по конкретной причине пожара."),
+    ("object_category", "Категория объекта", "Позволяет строить сценарий по типу объекта."),
+]
+FORECASTING_FEATURE_SOURCE_COVERAGE_SUFFIX_TEMPLATE = " | покрытие: {non_null_days}/{total_days} дней ({coverage})"
+FORECASTING_FEATURE_COVERAGE_DISPLAY_TEMPLATE = "{non_null_days}/{total_days} дней ({coverage})"
+FORECASTING_FEATURE_TEMPERATURE_LOW_COVERAGE_DESCRIPTION = (
+    "Колонка температуры найдена, но покрытие низкое: температурный признак нельзя считать надёжным для ML "
+    "и температурной поправки."
+)
+FORECASTING_FEATURE_SOURCES_COVERAGE_TEMPLATE = "{sources} | покрытие по дневной истории: {coverage_display}"
+FORECASTING_FEATURE_QUALITY_LABEL_GOOD = "Достаточное покрытие"
+FORECASTING_FEATURE_QUALITY_LABEL_MISSING = "Нет измерений"
+FORECASTING_FEATURE_QUALITY_LABEL_SPARSE = "Низкое покрытие"
+FORECASTING_FEATURE_STATUS_LABEL_MISSING = "Не найдена"
+FORECASTING_FEATURE_STATUS_LABEL_USED = "Используется"
+FORECASTING_FEATURE_STATUS_LABEL_PARTIAL_TEMPLATE = "Частично ({found}/{total_tables})"
+FORECASTING_SUMMARY_HERO_TEMPLATE = (
+    "Пиковая дата сценария: {peak_date} — вероятность пожара {peak_probability}. "
+    "Средняя вероятность по выбранному горизонту: {average_probability}."
+)
+FORECASTING_SUMMARY_HERO_EMPTY = "После расчета здесь появится краткий вывод по датам, где сценарий выглядит напряжённее."
+FORECASTING_TEMPERATURE_SCENARIO_SEASONAL = "Историческая сезонность"
+FORECASTING_INSIGHT_LABEL_RISKIEST_DAY = "Самый рискованный день"
+FORECASTING_INSIGHT_META_PROBABILITY_TEMPLATE = "вероятность пожара {probability}"
+FORECASTING_INSIGHT_LABEL_AVERAGE_PROBABILITY = "Средняя вероятность пожара"
+FORECASTING_INSIGHT_META_HORIZON_TEMPLATE = "в день на ближайшие {days} дней"
+FORECASTING_INSIGHT_LABEL_COMPARE_RECENT = "Сравнение с недавним уровнем"
+FORECASTING_INSIGHT_META_COMPARE_RECENT_TEMPLATE = "{level_label} относительно последних 4 недель"
+FORECASTING_INSIGHT_LABEL_ACTIVE_WEEKDAY = "Самый активный день недели"
+FORECASTING_INSIGHT_META_ACTIVE_WEEKDAY_TEMPLATE = "в истории в среднем {avg_display} пожара"
+FORECASTING_INSIGHT_LABEL_STABILITY = "Надежность оценки"
+FORECASTING_NOTE_MULTI_TABLE_TEMPLATE = "Прогноз собран сразу по {tables_count} таблицам."
+FORECASTING_NOTE_MISSING_DATE = "В выбранных таблицах не найдена дата возникновения пожара."
+FORECASTING_NOTE_NO_HISTORY = "По выбранным фильтрам нет пожаров в истории. Попробуйте снять часть ограничений."
+FORECASTING_NOTE_SHORT_HISTORY = "История короткая, поэтому сценарный прогноз может быть менее устойчивым."
+FORECASTING_NOTE_MISSING_TEMPERATURE = "Температурный сценарий задан, но колонка температуры не найдена ни в одной таблице."
+FORECASTING_NOTE_PARTIAL_CAUSE = "Не во всех таблицах найдена причина пожара, поэтому этот фильтр работает частично."
+FORECASTING_NOTE_PARTIAL_OBJECT_CATEGORY = "Не во всех таблицах найдена категория объекта, поэтому этот фильтр работает частично."
+FORECASTING_NOTE_INTERPRETATION = (
+    "Сценарный прогноз лучше читать как календарь вероятности пожара по дням, "
+    "а не как точное обещание числа пожаров. Если нужен прогноз количества, используйте ML-прогноз."
 )
 
 # === Clustering UI ===
@@ -175,4 +220,3 @@ ML_PREDICTIVE_BLOCK_DESCRIPTION = (
     "Ниже показаны прогноз количества, качество модели и факторы, которые сильнее всего влияют на результат. "
     "Этот экран не ранжирует территории и не заменяет сценарный прогноз по вероятности пожара."
 )
-

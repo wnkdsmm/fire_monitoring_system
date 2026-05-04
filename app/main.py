@@ -17,9 +17,7 @@ def create_app() -> FastAPI:
     application.include_router(pages_router)
     return application
 
-
 app = create_app()
-
 
 @app.on_event("startup")
 async def startup_event() -> None:
@@ -31,4 +29,4 @@ async def startup_event() -> None:
         )
     else:
         print(f"[ERROR] {message}")
-        print("  Проверьте настройки DATABASE_URL в файле .env")
+        print("  РџСЂРѕРІРµСЂСЊС‚Рµ РЅР°СЃС‚СЂРѕР№РєРё DATABASE_URL РІ С„Р°Р№Р»Рµ .env")

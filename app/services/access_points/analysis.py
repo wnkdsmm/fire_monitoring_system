@@ -11,10 +11,8 @@ def _reexport_module(module: object) -> None:
             continue
         globals()[name] = value
 
-
 for _module in (_analysis_factors, _analysis_output, _analysis_ranking):
     _reexport_module(_module)
-
 
 del _module
 del _reexport_module

@@ -198,7 +198,6 @@ def _build_dashboard_widgets(
         widgets["districts"] = build_sql_district_widget_from_counts(district_counts)
     return widgets
 
-
 __all__ = [
     "_build_dashboard_widgets",
     "_build_damage_dashboard_charts",

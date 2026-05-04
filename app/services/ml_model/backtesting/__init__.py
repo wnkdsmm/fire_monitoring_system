@@ -21,7 +21,6 @@ def _reexport_module(module: object) -> list[str]:
         globals()[name] = getattr(module, name)
     return list(exported_names)
 
-
 __all__: list[str] = []
 for _module in (
     _training_backtesting_baselines,
@@ -35,7 +34,6 @@ for _module in (
     __all__.extend(_reexport_module(_module))
 __all__ = list(dict.fromkeys(__all__))
 __all__.append("training_backtesting")
-
 
 del _module
 del _reexport_module

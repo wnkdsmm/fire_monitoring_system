@@ -16,7 +16,6 @@ except Exception:
     PlotlyJSONEncoder = None
     PLOTLY_AVAILABLE = False
 
-
 DEFAULT_PLOTLY_CONFIG: dict[str, Any] = {
     "responsive": True,
     "displaylogo": False,
@@ -27,7 +26,6 @@ DEFAULT_PLOTLY_CONFIG: dict[str, Any] = {
         "toggleSpikelines",
     ],
 }
-
 
 @lru_cache(maxsize=1)
 

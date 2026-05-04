@@ -2,8 +2,32 @@ from __future__ import annotations
 
 from typing import Any, Sequence
 
-from .shaping import _build_daily_history
 from .types import ForecastingInputRecord, ForecastingTableMetadata, SqlFilters, SqlMaterializedRow, SqlMergedBucket
+
+
+def _build_daily_history(records: list[ForecastingInputRecord]) -> list[dict]:
+    """Group raw input records by date, summing counts and averaging temperature."""
+    daily: dict = {}
+    for record in records:
+        date = record.get("date")
+        if date is None:
+            continue
+        if date not in daily:
+            daily[date] = {"date": date, "count": 0.0, "avg_temperature": None,
+                           "_temp_sum": 0.0, "_temp_count": 0}
+        daily[date]["count"] += float(record.get("count") or 0.0)
+        temp = record.get("temperature")
+        if temp is not None:
+            try:
+                daily[date]["_temp_sum"] += float(temp)
+                daily[date]["_temp_count"] += 1
+            except (TypeError, ValueError):
+                pass
+    result = []
+    for day in sorted(daily.values(), key=lambda r: r["date"]):
+        avg_temp = day["_temp_sum"] / day["_temp_count"] if day["_temp_count"] > 0 else None
+        result.append({"date": day["date"], "count": day["count"], "avg_temperature": avg_temp})
+    return result
 
 
 class SourceQueryRegistryMixin:

@@ -8,8 +8,8 @@ from app.services.forecasting.selection import _canonicalize_source_tables, _nor
 from app.services.shared.data_base import DataLoader
 from .types import MlAggregationInputs, MlFilterBundle
 
-_ML_FILTER_BUNDLE_CACHE = build_immutable_payload_ttl_cache(ttl_seconds=120.0)
-_ML_AGGREGATION_INPUT_CACHE = build_immutable_payload_ttl_cache(ttl_seconds=120.0)
+_ML_FILTER_BUNDLE_CACHE = build_immutable_payload_ttl_cache(ttl_seconds=None)
+_ML_AGGREGATION_INPUT_CACHE = build_immutable_payload_ttl_cache(ttl_seconds=None)
 
 
 def clear_ml_model_input_cache() -> None:
@@ -196,11 +196,9 @@ class MlModelDataLoader(DataLoader):
             count_forecasting_records_sql=count_forecasting_records_sql,
         )
 
-
 __all__ = [
     "MlModelDataLoader",
     "clear_ml_model_input_cache",
     "load_ml_filter_bundle",
     "load_ml_aggregation_inputs",
 ]
-

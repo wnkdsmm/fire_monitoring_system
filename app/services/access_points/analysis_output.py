@@ -105,6 +105,7 @@ ACCESS_POINT_PAYLOAD_OVERWRITE_COLUMNS = frozenset(
     }
 )
 
+
 def _build_access_point_score_context(
     metrics: _AccessPointRowMetrics,
     displays: _AccessPointDisplayContext,
@@ -157,6 +158,7 @@ def _build_access_point_score_context(
         ),
     )
 
+
 def _build_access_point_metric_payload(
     metrics: _AccessPointRowMetrics,
     displays: _AccessPointDisplayContext,
@@ -199,6 +201,7 @@ def _build_access_point_metric_payload(
         "coordinates_display": _coordinates_display(metrics.latitude, metrics.longitude),
     }
 
+
 def _build_access_point_score_payload(
     score_context: _AccessPointScoreContext,
     *,
@@ -230,6 +233,7 @@ def _build_access_point_score_payload(
         "selected_feature_count": len(normalized_selected_features),
         "score_decomposition": score_context.score_decomposition,
     }
+
 
 def _build_access_point_payload_row(
     *,
@@ -308,6 +312,7 @@ def _build_access_point_payload_row(
     )
     return row
 
+
 def _build_typology_rows(rows: Sequence[AccessPointPayloadRow]) -> list[AccessPointTypologyRow]:
     if not rows:
         return []
@@ -348,6 +353,7 @@ def _build_typology_rows(rows: Sequence[AccessPointPayloadRow]) -> list[AccessPo
         )
     result.sort(key=lambda item: (item["count"], item["max_score"]), reverse=True)
     return result
+
 
 def _build_score_distribution(rows: Sequence[AccessPointPayloadRow]) -> AccessPointScoreDistribution:
     if not rows:
@@ -395,6 +401,7 @@ def _build_score_distribution(rows: Sequence[AccessPointPayloadRow]) -> AccessPo
         "buckets": buckets,
     }
 
+
 def _build_reason_breakdown(rows: Sequence[AccessPointPayloadRow]) -> list[AccessPointReasonBreakdownRow]:
     buckets: dict[str, AccessPointReasonBreakdownRow] = {}
     for row in rows:
@@ -439,6 +446,7 @@ def _build_reason_breakdown(rows: Sequence[AccessPointPayloadRow]) -> list[Acces
         )
     result.sort(key=lambda item: (item["count"], item["average_contribution"]), reverse=True)
     return result
+
 
 def _build_uncertainty_notes(rows: Sequence[AccessPointPayloadRow]) -> list[str]:
     if not rows:

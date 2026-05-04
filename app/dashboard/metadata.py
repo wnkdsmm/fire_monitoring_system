@@ -209,7 +209,6 @@ def _resolve_dashboard_filters(
         "selected_table_name": selected_table_name,
     }
 
-
 __all__ = [
     "_collect_dashboard_metadata",
     "_collect_group_column_options",

@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date, timedelta
+import logging
 import math
 from typing import Any, Callable
 
 import numpy as np
 import pandas as pd
 
-from app.services.forecasting.data import _build_forecast_rows as _build_scenario_forecast_rows
 from app.services.forecasting.utils import _format_number
 
 from .forecast_bounds import (
@@ -36,6 +36,19 @@ from .types import (
     TrainingTemperatureStats,
 )
 
+logger = logging.getLogger(__name__)
+
+
+def _fire_count_word(n: float) -> str:
+    n_int = int(round(n))
+    if 11 <= (n_int % 100) <= 14:
+        return "РїРѕР¶Р°СЂРѕРІ"
+    rem = n_int % 10
+    if rem == 1:
+        return "РїРѕР¶Р°СЂ"
+    if 2 <= rem <= 4:
+        return "РїРѕР¶Р°СЂР°"
+    return "РїРѕР¶Р°СЂРѕРІ"
 
 @dataclass
 
@@ -95,7 +108,6 @@ def _future_feature_row(history_counts: list[float], target_date: date, temp_val
         'lag_14': lag_value(14),
         'rolling_7': rolling_7,
         'rolling_28': rolling_28,
-        'trend_gap': rolling_7 - rolling_28,
     }
 
 
@@ -107,15 +119,6 @@ def _predict_heuristic_future_step(
     baseline_expected_count: Callable[[pd.DataFrame, pd.Timestamp], float],
     reference_train_factory: Callable[[], pd.DataFrame] | None = None,
 ) -> tuple[float, float | None]:
-    forecast_rows = _build_scenario_forecast_rows(history_records, 1, temp_value if temperature_usable else None)
-    if forecast_rows:
-        row = forecast_rows[0]
-        probability = row.get('fire_probability')
-        return (
-            max(0.0, float(row.get('forecast_value', 0.0))),
-            _bound_probability(probability if probability is not None else 0.0),
-        )
-
     reference_train = (
         reference_train_factory()
         if reference_train_factory is not None
@@ -255,7 +258,13 @@ def _simulate_recursive_forecast_path(
                     ),
                     reference_train_factory=_reference_train,
                 )
-            except Exception:
+            except Exception as exc:
+                logger.warning(
+                    "count model prediction failed on step %d (%s): %s",
+                    step,
+                    selected_count_model_key,
+                    exc,
+                )
                 point_prediction = float(baseline_expected_count(_reference_train(), pd.Timestamp(target_date)))
 
         point_prediction = _sanitize_recursive_count_prediction(point_prediction, history_counts)
@@ -269,7 +278,8 @@ def _simulate_recursive_forecast_path(
                         _design_row_for(list(event_model.get('columns') or [])),
                     )[0]
                 )
-            except Exception:
+            except Exception as exc:
+                logger.warning("event model prediction failed on step %d: %s", step, exc)
                 event_probability = None
         elif selected_count_model_key == 'heuristic_forecast':
             event_probability = heuristic_probability
@@ -356,16 +366,16 @@ def _build_future_forecast_rows(
                 'lower_bound_display': _format_number(lower_bound),
                 'upper_bound': round(upper_bound, 3),
                 'upper_bound_display': _format_number(upper_bound),
-                'range_label': f'{interval_label} interval',
-                'range_display': f"{interval_label}: {_format_number(lower_bound)} - {_format_number(upper_bound)} пожара",
-                'temperature_display': f"{_format_number(temp_value)} °C",
+                'range_label': f'{interval_label} РёРЅС‚РµСЂРІР°Р»',
+                'range_display': f"{interval_label}: {_format_number(lower_bound)} вЂ“ {_format_number(upper_bound)} {_fire_count_word(upper_bound)}",
+                'temperature_display': f"{_format_number(temp_value)} В°C",
                 'risk_index': round(risk_index, 1),
                 'risk_index_display': f"{int(round(risk_index))} / 100",
                 'risk_level_label': risk_level_label,
                 'risk_level_tone': risk_level_tone,
                 **_forecast_interval_coverage_metadata(row_interval_calibration),
                 'event_probability': round(event_probability, 4) if event_probability is not None else None,
-                'event_probability_display': _format_probability(event_probability) if event_probability is not None else '—',
+                'event_probability_display': _format_probability(event_probability) if event_probability is not None else 'вЂ”',
             }
         )
     return forecast_rows

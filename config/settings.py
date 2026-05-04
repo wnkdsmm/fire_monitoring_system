@@ -8,12 +8,12 @@ class Settings:
 
     def __init__(self, input_file=None, selected_table=None, output_folder=None):
         """
-        Инициализация настроек.
+        РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ РЅР°СЃС‚СЂРѕРµРє.
         
         Args:
-            input_file: путь к загруженному файлу (опционально)
-            selected_table: имя выбранной таблицы (опционально)
-            output_folder: папка для вывода результатов (опционально)
+            input_file: РїСѓС‚СЊ Рє Р·Р°РіСЂСѓР¶РµРЅРЅРѕРјСѓ С„Р°Р№Р»Сѓ (РѕРїС†РёРѕРЅР°Р»СЊРЅРѕ)
+            selected_table: РёРјСЏ РІС‹Р±СЂР°РЅРЅРѕР№ С‚Р°Р±Р»РёС†С‹ (РѕРїС†РёРѕРЅР°Р»СЊРЅРѕ)
+            output_folder: РїР°РїРєР° РґР»СЏ РІС‹РІРѕРґР° СЂРµР·СѓР»СЊС‚Р°С‚РѕРІ (РѕРїС†РёРѕРЅР°Р»СЊРЅРѕ)
         """
         self.input_file = input_file
         self.selected_table = selected_table

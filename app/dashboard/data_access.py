@@ -12,15 +12,15 @@ from .types import DashboardTableRef, ImpactTotals
 from .utils import _date_expression, _quote_identifier
 
 _LEGACY_DISTRICT_COLUMN_CANDIDATES = [
-    "Район",
-    "Муниципальный район",
-    "Муниципальное образование",
-    "Административный район",
-    "Район выезда подразделения",
-    "Район пожара",
-    "Территория",
+    "Р Р°Р№РѕРЅ",
+    "РњСѓРЅРёС†РёРїР°Р»СЊРЅС‹Р№ СЂР°Р№РѕРЅ",
+    "РњСѓРЅРёС†РёРїР°Р»СЊРЅРѕРµ РѕР±СЂР°Р·РѕРІР°РЅРёРµ",
+    "РђРґРјРёРЅРёСЃС‚СЂР°С‚РёРІРЅС‹Р№ СЂР°Р№РѕРЅ",
+    "Р Р°Р№РѕРЅ РІС‹РµР·РґР° РїРѕРґСЂР°Р·РґРµР»РµРЅРёСЏ",
+    "Р Р°Р№РѕРЅ РїРѕР¶Р°СЂР°",
+    "РўРµСЂСЂРёС‚РѕСЂРёСЏ",
 ]
-SEASON_ORDER = ["Зима", "Весна", "Лето", "Осень"]
+SEASON_ORDER = ["Р—РёРјР°", "Р’РµСЃРЅР°", "Р›РµС‚Рѕ", "РћСЃРµРЅСЊ"]
 
 
 def _resolve_district_column(table: DashboardTableRef) -> str:
@@ -169,7 +169,7 @@ def _find_metric_column(table: DashboardTableRef, metric_key: str) -> str:
         for token_group in config.get("include_any", []):
             if all(token in normalized_name for token in token_group):
                 score = max(score, 3 + len(token_group))
-        if "количество" in normalized_name:
+        if "РєРѕР»РёС‡РµСЃС‚РІРѕ" in normalized_name:
             score += 1
         if score > best_score:
             best_score = score
@@ -185,7 +185,7 @@ def _numeric_expression_for_column(column_name: str) -> str:
 
 
 def _normalize_match_text(value: str) -> str:
-    normalized = value.lower().replace("ё", "е")
+    normalized = value.lower().replace("С‘", "Рµ")
     normalized = re.sub(r"\s+", " ", normalized)
     return normalized
 
@@ -278,7 +278,6 @@ def _resolve_years_in_scope(table: DashboardTableRef, selected_year: int | None)
     if table["table_year"] is not None:
         return [table["table_year"]]
     return []
-
 
 __all__ = [
     "DISTRICT_COLUMN_CANDIDATES",

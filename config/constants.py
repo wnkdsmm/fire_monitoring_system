@@ -16,8 +16,8 @@ LOW_VARIANCE_THRESHOLD = 0.0001
 DOMINANT_VALUE_THRESHOLD = 0.85
 
 MISSING_LIKE_VALUES = [
-    "нет данных",
-    "н/д",
+    "РЅРµС‚ РґР°РЅРЅС‹С…",
+    "РЅ/Рґ",
     "nan",
     "none",
     "null",
@@ -29,16 +29,15 @@ MISSING_LIKE_VALUES = [
 PROFILING_CSV_SUFFIX = "_fires_profiling_report.csv"
 PROFILING_XLSX_SUFFIX = "_fires_profiling_report.xlsx"
 
-
 # === Business Rules ===
 
 CORR_THRESHOLD = 0.9
 VIF_THRESHOLD = 10
 IMPORTANT_KEYWORDS = [
-    "травмировать",
-    "погибнуть",
-    "эвакуировать",
-    "ребёнок",
+    "С‚СЂР°РІРјРёСЂРѕРІР°С‚СЊ",
+    "РїРѕРіРёР±РЅСѓС‚СЊ",
+    "СЌРІР°РєСѓРёСЂРѕРІР°С‚СЊ",
+    "СЂРµР±С‘РЅРѕРє",
 ]
 
 FORECASTING_FORECAST_DAY_OPTIONS = [7, 14, 30, 60]
@@ -115,7 +114,6 @@ SERVICE_TIME_TARGET_MINUTES = 20.0
 SERVICE_DISTANCE_TARGET_KM = 12.0
 CORE_SERVICE_TIME_MINUTES = 14.0
 
-
 # === ML ===
 
 ML_FORECAST_DAY_OPTIONS = [7, 14, 30]
@@ -131,6 +129,11 @@ MAX_BACKTEST_POINTS = 45
 PERMUTATION_REPEATS = 8
 ROLLING_MIN_TRAIN_ROWS = 28
 COUNT_MODEL_SELECTION_TOLERANCE = 0.05
+BASELINE_RECENT_WINDOW_DAYS = 28
+BASELINE_WEEKDAY_TAIL = 8
+BASELINE_WEEKDAY_MIN_SAMPLES = 3
+BASELINE_WEEKDAY_WEIGHT = 0.6
+BASELINE_RECENT_WEIGHT = 0.4
 
 FEATURE_COLUMNS = [
     "temp_value",
@@ -141,7 +144,6 @@ FEATURE_COLUMNS = [
     "lag_14",
     "rolling_7",
     "rolling_28",
-    "trend_gap",
 ]
 COUNT_MODEL_CONTINUOUS_COLUMNS = [
     "temp_value",
@@ -150,7 +152,6 @@ COUNT_MODEL_CONTINUOUS_COLUMNS = [
     "lag_14",
     "rolling_7",
     "rolling_28",
-    "trend_gap",
 ]
 COUNT_MODEL_KEYS = ["poisson", "negative_binomial"]
 EXPLAINABLE_COUNT_MODEL_KEY = "poisson"
@@ -159,7 +160,7 @@ NEGATIVE_BINOMIAL_MIN_TRAIN_ROWS = 56
 MIN_POSITIVE_PREDICTION = 1e-6
 CLASSIFICATION_THRESHOLD = 0.5
 
-PREDICTION_INTERVAL_LEVEL = 0.8
+PREDICTION_INTERVAL_LEVEL = 0.90
 PREDICTION_INTERVAL_CALIBRATION_FRACTION = 0.6
 MIN_INTERVAL_CALIBRATION_WINDOWS = 6
 MIN_INTERVAL_EVALUATION_WINDOWS = 4
@@ -181,7 +182,7 @@ WARNING_INSTABILITY_MESSAGE_TOKENS = (
     "hessian",
 )
 
-ML_CACHE_SCHEMA_VERSION = 2
+ML_CACHE_SCHEMA_VERSION = 4
 ML_CACHE_LIMIT = 128
 
 POISSON_PARAMS = {
@@ -195,4 +196,3 @@ LOGISTIC_PARAMS = {
     "class_weight": "balanced",
     "random_state": 42,
 }
-

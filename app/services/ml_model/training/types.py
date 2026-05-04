@@ -450,6 +450,5 @@ class PredictionIntervalBacktestEvaluation(TypedDict, total=False):
     reference_candidate: PredictionIntervalCandidate | None
     runner_up_candidate: PredictionIntervalCandidate | None
 
-
 IntervalCalibrationByHorizon: TypeAlias = dict[int, PredictionIntervalCalibration] | dict[str, PredictionIntervalCalibration]
 IntervalCalibrationInput: TypeAlias = PredictionIntervalCalibration | IntervalCalibrationByHorizon

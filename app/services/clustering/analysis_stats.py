@@ -123,11 +123,11 @@ def compute_cluster_risk_scores(
 
         risk_score = float(np.clip(weighted_score / effective_weight_sum, 0.0, 1.0))
         if risk_score > 0.65:
-            risk_level = "Высокий"
+            risk_level = "Р’С‹СЃРѕРєРёР№"
         elif risk_score > 0.35:
-            risk_level = "Средний"
+            risk_level = "РЎСЂРµРґРЅРёР№"
         else:
-            risk_level = "Низкий"
+            risk_level = "РќРёР·РєРёР№"
         risk_rows.append(
             {
                 "cluster_id": int(cluster_id),
@@ -213,10 +213,10 @@ def _build_sample_weights(
 ) -> np.ndarray:
     if (
         weighting_strategy in {WEIGHTING_STRATEGY_UNIFORM, WEIGHTING_STRATEGY_NOT_APPLICABLE}
-        or "Число пожаров" not in entity_frame.columns
+        or "Р§РёСЃР»Рѕ РїРѕР¶Р°СЂРѕРІ" not in entity_frame.columns
     ):
         return np.ones(len(entity_frame), dtype=float)
-    counts = pd.to_numeric(entity_frame["Число пожаров"], errors="coerce").fillna(1.0).clip(lower=1.0).to_numpy(dtype=float)
+    counts = pd.to_numeric(entity_frame["Р§РёСЃР»Рѕ РїРѕР¶Р°СЂРѕРІ"], errors="coerce").fillna(1.0).clip(lower=1.0).to_numpy(dtype=float)
     weights = np.log1p(counts)
     mean_weight = float(np.mean(weights))
     if mean_weight <= 0:
@@ -375,7 +375,7 @@ def _compute_pca_projection(
         cluster_label = (
             cluster_labels[cluster_id]
             if 0 <= cluster_id < len(cluster_labels)
-            else f"Тип {cluster_id + 1}"
+            else f"РўРёРї {cluster_id + 1}"
         )
         rows.append(
             {

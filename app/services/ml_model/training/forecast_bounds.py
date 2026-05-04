@@ -40,7 +40,7 @@ def _resolve_interval_calibration(interval_calibration: dict[str, Any], horizon_
 
 def _format_ratio_percent(value: float | None) -> str:
     if value is None:
-        return '—'
+        return 'вЂ”'
     return f"{_format_number(float(value) * 100.0)}%"
 
 
@@ -105,14 +105,14 @@ def _risk_index(prediction: float, sorted_history_counts: np.ndarray) -> float:
 
 def _risk_band_from_index(risk_index: float) -> tuple[str, str]:
     if risk_index >= 90.0:
-        return 'Очень высокий', 'critical'
+        return 'РћС‡РµРЅСЊ РІС‹СЃРѕРєРёР№', 'critical'
     if risk_index >= 75.0:
-        return 'Высокий', 'high'
+        return 'Р’С‹СЃРѕРєРёР№', 'high'
     if risk_index >= 50.0:
-        return 'Средний', 'medium'
+        return 'РЎСЂРµРґРЅРёР№', 'medium'
     if risk_index >= 25.0:
-        return 'Ниже среднего', 'low'
-    return 'Низкий', 'minimal'
+        return 'РќРёР¶Рµ СЃСЂРµРґРЅРµРіРѕ', 'low'
+    return 'РќРёР·РєРёР№', 'minimal'
 
 
 def _bound_probability(value: float) -> float:
@@ -121,5 +121,5 @@ def _bound_probability(value: float) -> float:
 
 def _format_probability(value: float | None) -> str:
     if value is None:
-        return '—'
+        return 'вЂ”'
     return _format_percent(_normalize_probability(value) * 100.0)

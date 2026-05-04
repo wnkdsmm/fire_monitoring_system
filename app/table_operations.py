@@ -156,7 +156,6 @@ def delete_table(table_name: str, *, db_engine=engine) -> dict[str, Any]:
         "remaining_count": result["remaining_count"],
     }
 
-
 __all__ = [
     "build_modified_table_name",
     "create_modified_table",

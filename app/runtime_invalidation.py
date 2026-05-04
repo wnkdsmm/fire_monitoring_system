@@ -30,15 +30,6 @@ _INVALIDATORS: tuple[tuple[str, str, str, str], ...] = (
         "\u043a\u044d\u0448\u0430 ML-\u0431\u043b\u043e\u043a\u0430: {exc}",
     ),
     (
-        "forecasting",
-        "app.services.forecasting.core",
-        "clear_forecasting_cache",
-        "\u041f\u0440\u0435\u0434\u0443\u043f\u0440\u0435\u0436\u0434\u0435\u043d\u0438\u0435 "
-        "\u043f\u0440\u0438 \u043e\u0431\u043d\u043e\u0432\u043b\u0435\u043d\u0438\u0438 "
-        "\u043a\u044d\u0448\u0430 \u043f\u0440\u043e\u0433\u043d\u043e\u0437\u0438\u0440\u043e\u0432"
-        "\u0430\u043d\u0438\u044f: {exc}",
-    ),
-    (
         "clustering",
         "app.services.clustering.core",
         "clear_clustering_cache",
@@ -118,12 +109,12 @@ def warmup_runtime_caches(on_warning: Callable[[str], None] | None = None) -> No
             try:
                 db_metadata.get_table_columns_cached(table_name)
             except Exception as exc:
-                warn(f"Предупреждение при прогреве колонок таблицы '{table_name}': {exc}")
+                warn(f"РџСЂРµРґСѓРїСЂРµР¶РґРµРЅРёРµ РїСЂРё РїСЂРѕРіСЂРµРІРµ РєРѕР»РѕРЅРѕРє С‚Р°Р±Р»РёС†С‹ '{table_name}': {exc}")
     except Exception as exc:
-        warn(f"Предупреждение при прогреве кэша метаданных БД: {exc}")
+        warn(f"РџСЂРµРґСѓРїСЂРµР¶РґРµРЅРёРµ РїСЂРё РїСЂРѕРіСЂРµРІРµ РєСЌС€Р° РјРµС‚Р°РґР°РЅРЅС‹С… Р‘Р”: {exc}")
 
     try:
         dashboard_cache = import_module("app.dashboard.cache")
         dashboard_cache._collect_dashboard_metadata_cached()
     except Exception as exc:
-        warn(f"Предупреждение при прогреве кэша дашборда: {exc}")
+        warn(f"РџСЂРµРґСѓРїСЂРµР¶РґРµРЅРёРµ РїСЂРё РїСЂРѕРіСЂРµРІРµ РєСЌС€Р° РґР°С€Р±РѕСЂРґР°: {exc}")

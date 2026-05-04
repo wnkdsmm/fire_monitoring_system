@@ -11,7 +11,7 @@ class QueryBuilder:
         hook_resolver: Callable[[str | None, Any]] = None,
         *,
         cache: CopyingTtlCache | None = None,
-        cache_ttl_seconds: float = 120.0,
+        cache_ttl_seconds: float | None = None,
     ) -> None:
         self._hook_resolver = hook_resolver
         # SQL builder cache stores immutable/read-only payloads (query text, counters, flags),

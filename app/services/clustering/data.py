@@ -55,7 +55,6 @@ class ClusteringDataLoader(DataLoader):
     ) -> tuple[pd.DataFrame, pd.DataFrame, int]:
         return _impl._prepare_cluster_frame(feature_frame, entity_frame, selected_features)
 
-
 _LOADER = ClusteringDataLoader()
 
 
@@ -118,7 +117,6 @@ def _shrink_rate(
     prior_strength: float,
 ) -> float:
     return _impl._shrink_rate(successes, support, prior_rate, prior_strength)
-
 
 __all__ = [
     "ClusteringDataLoader",

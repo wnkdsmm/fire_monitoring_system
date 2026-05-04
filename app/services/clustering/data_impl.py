@@ -45,13 +45,13 @@ SAMPLING_STRATEGY_OPTIONS = [
     for value in SAMPLING_STRATEGY_VALUES
 ]
 
-INCIDENT_COUNT_COLUMN = "Число пожаров"
+INCIDENT_COUNT_COLUMN = "Р§РёСЃР»Рѕ РїРѕР¶Р°СЂРѕРІ"
 AREA_SUPPORT_COLUMN = "__area_count"
 RESPONSE_SUPPORT_COLUMN = "__response_count"
 WATER_SUPPORT_COLUMN = "__water_known_count"
 DISTANCE_SUPPORT_COLUMN = "__distance_count"
 ALL_TABLES_VALUE = "all"
-ALL_TABLES_LABEL = "Все таблицы"
+ALL_TABLES_LABEL = "Р’СЃРµ С‚Р°Р±Р»РёС†С‹"
 DEFAULT_TERRITORY_SAMPLE_LIMIT = 1000
 
 
@@ -108,10 +108,8 @@ def _build_table_options() -> list[ClusteringTableOption]:
     ]
 
 
-
 def _resolve_selected_table(table_options: list[ClusteringTableOption], table_name: str) -> str:
     return resolve_selected_table_value(table_options, table_name, fallback_value=ALL_TABLES_VALUE)
-
 
 
 def _parse_cluster_count(value: str) -> int:
@@ -124,12 +122,10 @@ def _parse_cluster_count(value: str) -> int:
     return min(CLUSTER_COUNT_OPTIONS, key=lambda item: abs(item - parsed))
 
 
-
 def _parse_sampling_strategy(value: str) -> str:
     allowed = {item["value"] for item in SAMPLING_STRATEGY_OPTIONS}
     normalized = str(value or "").strip().lower()
     return normalized if normalized in allowed else SAMPLING_STRATEGY_OPTIONS[0]["value"]
-
 
 
 def _resolve_source_tables(table_name: str) -> list[str]:
@@ -150,12 +146,12 @@ def _load_territory_dataset(table_name: str, sampling_strategy: str) -> Clusteri
     _, records, notes = _collect_risk_inputs(source_tables)
     if not records:
         if str(table_name or "").strip() == ALL_TABLES_VALUE:
-            raise ValueError("В доступных таблицах не нашлось пожаров с датой и территориальной привязкой для кластеризации.")
-        raise ValueError("В выбранной таблице не нашлось пожаров с датой и территориальной привязкой для кластеризации.")
+            raise ValueError("Р’ РґРѕСЃС‚СѓРїРЅС‹С… С‚Р°Р±Р»РёС†Р°С… РЅРµ РЅР°С€Р»РѕСЃСЊ РїРѕР¶Р°СЂРѕРІ СЃ РґР°С‚РѕР№ Рё С‚РµСЂСЂРёС‚РѕСЂРёР°Р»СЊРЅРѕР№ РїСЂРёРІСЏР·РєРѕР№ РґР»СЏ РєР»Р°СЃС‚РµСЂРёР·Р°С†РёРё.")
+        raise ValueError("Р’ РІС‹Р±СЂР°РЅРЅРѕР№ С‚Р°Р±Р»РёС†Рµ РЅРµ РЅР°С€Р»РѕСЃСЊ РїРѕР¶Р°СЂРѕРІ СЃ РґР°С‚РѕР№ Рё С‚РµСЂСЂРёС‚РѕСЂРёР°Р»СЊРЅРѕР№ РїСЂРёРІСЏР·РєРѕР№ РґР»СЏ РєР»Р°СЃС‚РµСЂРёР·Р°С†РёРё.")
 
     territory_frame = _aggregate_territory_frame(records)
     if territory_frame.empty:
-        raise ValueError("Не удалось собрать агрегаты по территориям: проверьте наличие населённого пункта, района и базовых пожарных признаков.")
+        raise ValueError("РќРµ СѓРґР°Р»РѕСЃСЊ СЃРѕР±СЂР°С‚СЊ Р°РіСЂРµРіР°С‚С‹ РїРѕ С‚РµСЂСЂРёС‚РѕСЂРёСЏРј: РїСЂРѕРІРµСЂСЊС‚Рµ РЅР°Р»РёС‡РёРµ РЅР°СЃРµР»С‘РЅРЅРѕРіРѕ РїСѓРЅРєС‚Р°, СЂР°Р№РѕРЅР° Рё Р±Р°Р·РѕРІС‹С… РїРѕР¶Р°СЂРЅС‹С… РїСЂРёР·РЅР°РєРѕРІ.")
 
     sampled_frame, sampling_note = _sample_territory_frame(
         territory_frame,
@@ -179,7 +175,6 @@ def _load_territory_dataset(table_name: str, sampling_strategy: str) -> Clusteri
         "sampling_note": sampling_note,
         "notes": [note for note in notes if note],
     }
-
 
 
 def _resolve_selected_features(
@@ -215,13 +210,12 @@ def _resolve_selected_features(
     if requested_features:
         return (
             fallback,
-            "Часть выбранных агрегированных признаков недоступна, поэтому страница вернулась к базовому набору, собранному по вкладу признаков в качество кластеризации.",
+            "Р§Р°СЃС‚СЊ РІС‹Р±СЂР°РЅРЅС‹С… Р°РіСЂРµРіРёСЂРѕРІР°РЅРЅС‹С… РїСЂРёР·РЅР°РєРѕРІ РЅРµРґРѕСЃС‚СѓРїРЅР°, РїРѕСЌС‚РѕРјСѓ СЃС‚СЂР°РЅРёС†Р° РІРµСЂРЅСѓР»Р°СЃСЊ Рє Р±Р°Р·РѕРІРѕРјСѓ РЅР°Р±РѕСЂСѓ, СЃРѕР±СЂР°РЅРЅРѕРјСѓ РїРѕ РІРєР»Р°РґСѓ РїСЂРёР·РЅР°РєРѕРІ РІ РєР°С‡РµСЃС‚РІРѕ РєР»Р°СЃС‚РµСЂРёР·Р°С†РёРё.",
         )
     return (
         fallback,
-        "Базовый набор подобран автоматически: в него попадают признаки, которые на текущем срезе реально улучшают разделимость кластеров, а шумные признаки исключаются.",
+        "Р‘Р°Р·РѕРІС‹Р№ РЅР°Р±РѕСЂ РїРѕРґРѕР±СЂР°РЅ Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРё: РІ РЅРµРіРѕ РїРѕРїР°РґР°СЋС‚ РїСЂРёР·РЅР°РєРё, РєРѕС‚РѕСЂС‹Рµ РЅР° С‚РµРєСѓС‰РµРј СЃСЂРµР·Рµ СЂРµР°Р»СЊРЅРѕ СѓР»СѓС‡С€Р°СЋС‚ СЂР°Р·РґРµР»РёРјРѕСЃС‚СЊ РєР»Р°СЃС‚РµСЂРѕРІ, Р° С€СѓРјРЅС‹Рµ РїСЂРёР·РЅР°РєРё РёСЃРєР»СЋС‡Р°СЋС‚СЃСЏ.",
     )
-
 
 
 def _build_feature_options(
@@ -244,7 +238,6 @@ def _build_feature_options(
     ]
 
 
-
 def _prepare_cluster_frame(
     feature_frame: pd.DataFrame,
     entity_frame: pd.DataFrame,
@@ -264,7 +257,6 @@ def _prepare_cluster_frame(
     prepared_entities = prepared_entities.reset_index(drop=True)
     excluded_rows = int(len(feature_frame) - len(prepared_numeric))
     return prepared_numeric, prepared_entities, excluded_rows
-
 
 
 def _new_territory_bucket(label: str) -> TerritoryBucket:
@@ -292,7 +284,7 @@ def _update_territory_bucket(bucket: TerritoryBucket, record: TerritoryRecord, l
     bucket["incidents"] += 1
     district_value = record.get("district") or label
     bucket["districts"][district_value] += 1
-    settlement_type = record.get("settlement_type") or "Не указано"
+    settlement_type = record.get("settlement_type") or "РќРµ СѓРєР°Р·Р°РЅРѕ"
     bucket["settlement_types"][settlement_type] += 1
 
     fire_area = record.get("fire_area")
@@ -328,7 +320,7 @@ def _update_territory_bucket(bucket: TerritoryBucket, record: TerritoryRecord, l
 def _aggregate_territory_buckets(records: Sequence[TerritoryRecord]) -> dict[str, TerritoryBucket]:
     buckets: dict[str, TerritoryBucket] = {}
     for record in records:
-        label = record.get("territory_label") or record.get("district") or "Территория не указана"
+        label = record.get("territory_label") or record.get("district") or "РўРµСЂСЂРёС‚РѕСЂРёСЏ РЅРµ СѓРєР°Р·Р°РЅР°"
         bucket = buckets.get(label)
         if bucket is None:
             bucket = _new_territory_bucket(label)
@@ -390,69 +382,69 @@ def _territory_bucket_to_row(bucket: TerritoryBucket, global_stats: TerritoryGlo
     water_known_count = int(bucket["water_known"])
     distance_count = int(bucket["distance_count"])
     dominant_district = _counter_top_label(bucket["districts"], bucket["label"]) or bucket["label"]
-    dominant_settlement_type = _counter_top_label(bucket["settlement_types"], "Не указано") or "Не указано"
+    dominant_settlement_type = _counter_top_label(bucket["settlement_types"], "РќРµ СѓРєР°Р·Р°РЅРѕ") or "РќРµ СѓРєР°Р·Р°РЅРѕ"
     is_rural = _is_rural_label(dominant_settlement_type) or _is_rural_label(bucket["label"])
     return {
-        "Территория": bucket["label"],
-        "Район": dominant_district,
-        "Тип территории": "Сельская территория" if is_rural else "Территория без выраженного сельского профиля",
-        "Доминирующий тип населенного пункта": dominant_settlement_type,
-        "Число пожаров": incidents,
-        "Средняя площадь пожара": _shrink_mean(
+        "РўРµСЂСЂРёС‚РѕСЂРёСЏ": bucket["label"],
+        "Р Р°Р№РѕРЅ": dominant_district,
+        "РўРёРї С‚РµСЂСЂРёС‚РѕСЂРёРё": "РЎРµР»СЊСЃРєР°СЏ С‚РµСЂСЂРёС‚РѕСЂРёСЏ" if is_rural else "РўРµСЂСЂРёС‚РѕСЂРёСЏ Р±РµР· РІС‹СЂР°Р¶РµРЅРЅРѕРіРѕ СЃРµР»СЊСЃРєРѕРіРѕ РїСЂРѕС„РёР»СЏ",
+        "Р”РѕРјРёРЅРёСЂСѓСЋС‰РёР№ С‚РёРї РЅР°СЃРµР»РµРЅРЅРѕРіРѕ РїСѓРЅРєС‚Р°": dominant_settlement_type,
+        "Р§РёСЃР»Рѕ РїРѕР¶Р°СЂРѕРІ": incidents,
+        "РЎСЂРµРґРЅСЏСЏ РїР»РѕС‰Р°РґСЊ РїРѕР¶Р°СЂР°": _shrink_mean(
             bucket["area_sum"],
             area_count,
             global_stats["area_mean"],
             MEAN_SMOOTHING_PRIOR_STRENGTH,
         ),
-        "Доля ночных пожаров": _shrink_rate(
+        "Р”РѕР»СЏ РЅРѕС‡РЅС‹С… РїРѕР¶Р°СЂРѕРІ": _shrink_rate(
             bucket["night_incidents"],
             incidents,
             global_stats["night_rate"],
             RATE_SMOOTHING_PRIOR_STRENGTH,
         ),
-        "Среднее время прибытия, мин": _shrink_mean(
+        "РЎСЂРµРґРЅРµРµ РІСЂРµРјСЏ РїСЂРёР±С‹С‚РёСЏ, РјРёРЅ": _shrink_mean(
             bucket["response_sum"],
             response_count,
             global_stats["response_mean"],
             MEAN_SMOOTHING_PRIOR_STRENGTH,
         ),
-        "Доля тяжелых последствий": _shrink_rate(
+        "Р”РѕР»СЏ С‚СЏР¶РµР»С‹С… РїРѕСЃР»РµРґСЃС‚РІРёР№": _shrink_rate(
             bucket["severe"],
             incidents,
             global_stats["severe_rate"],
             RATE_SMOOTHING_PRIOR_STRENGTH,
         ),
-        "Доля без подтвержденного водоснабжения": _shrink_rate(
+        "Р”РѕР»СЏ Р±РµР· РїРѕРґС‚РІРµСЂР¶РґРµРЅРЅРѕРіРѕ РІРѕРґРѕСЃРЅР°Р±Р¶РµРЅРёСЏ": _shrink_rate(
             bucket["water_known"] - bucket["water_available"],
             water_known_count,
             global_stats["no_water_rate"],
             RATE_SMOOTHING_PRIOR_STRENGTH,
         ),
-        "Доля долгих прибытий": _shrink_rate(
+        "Р”РѕР»СЏ РґРѕР»РіРёС… РїСЂРёР±С‹С‚РёР№": _shrink_rate(
             bucket["long_arrivals"],
             response_count,
             global_stats["long_arrival_rate"],
             RATE_SMOOTHING_PRIOR_STRENGTH,
         ),
-        "Средняя удаленность до ПЧ, км": _shrink_mean(
+        "РЎСЂРµРґРЅСЏСЏ СѓРґР°Р»РµРЅРЅРѕСЃС‚СЊ РґРѕ РџР§, РєРј": _shrink_mean(
             bucket["distance_sum"],
             distance_count,
             global_stats["distance_mean"],
             MEAN_SMOOTHING_PRIOR_STRENGTH,
         ),
-        "Доля пожаров в отопительный сезон": _shrink_rate(
+        "Р”РѕР»СЏ РїРѕР¶Р°СЂРѕРІ РІ РѕС‚РѕРїРёС‚РµР»СЊРЅС‹Р№ СЃРµР·РѕРЅ": _shrink_rate(
             bucket["heating_incidents"],
             incidents,
             global_stats["heating_rate"],
             RATE_SMOOTHING_PRIOR_STRENGTH,
         ),
-        "Покрытие данных по водоснабжению": _shrink_rate(
+        "РџРѕРєСЂС‹С‚РёРµ РґР°РЅРЅС‹С… РїРѕ РІРѕРґРѕСЃРЅР°Р±Р¶РµРЅРёСЋ": _shrink_rate(
             water_known_count,
             incidents,
             global_stats["water_coverage_rate"],
             RATE_SMOOTHING_PRIOR_STRENGTH,
         ),
-        "Покрытие данных по времени прибытия": _shrink_rate(
+        "РџРѕРєСЂС‹С‚РёРµ РґР°РЅРЅС‹С… РїРѕ РІСЂРµРјРµРЅРё РїСЂРёР±С‹С‚РёСЏ": _shrink_rate(
             response_count,
             incidents,
             global_stats["response_coverage_rate"],
@@ -473,8 +465,7 @@ def _aggregate_territory_frame(records: Sequence[TerritoryRecord]) -> pd.DataFra
     frame = pd.DataFrame(rows)
     if frame.empty:
         return frame
-    return frame.sort_values(["Число пожаров", "Территория"], ascending=[False, True]).reset_index(drop=True)
-
+    return frame.sort_values(["Р§РёСЃР»Рѕ РїРѕР¶Р°СЂРѕРІ", "РўРµСЂСЂРёС‚РѕСЂРёСЏ"], ascending=[False, True]).reset_index(drop=True)
 
 
 def _sample_territory_frame(frame: pd.DataFrame, sample_limit: int, sampling_strategy: str) -> tuple[pd.DataFrame, str]:
@@ -482,19 +473,19 @@ def _sample_territory_frame(frame: pd.DataFrame, sample_limit: int, sampling_str
         return frame.copy(), ""
 
     if sampling_strategy == "random":
-        sampled = frame.sample(n=sample_limit, random_state=42).sort_values("Территория").reset_index(drop=True)
+        sampled = frame.sample(n=sample_limit, random_state=42).sort_values("РўРµСЂСЂРёС‚РѕСЂРёСЏ").reset_index(drop=True)
         note = (
-            f"Из {len(frame)} территорий для кластеризации выбрана случайная выборка из {len(sampled)} территорий. "
-            "Агрегаты по каждой территории при этом посчитаны по всей истории инцидентов, поэтому смещения из-за первых строк больше нет."
+            f"РР· {len(frame)} С‚РµСЂСЂРёС‚РѕСЂРёР№ РґР»СЏ РєР»Р°СЃС‚РµСЂРёР·Р°С†РёРё РІС‹Р±СЂР°РЅР° СЃР»СѓС‡Р°Р№РЅР°СЏ РІС‹Р±РѕСЂРєР° РёР· {len(sampled)} С‚РµСЂСЂРёС‚РѕСЂРёР№. "
+            "РђРіСЂРµРіР°С‚С‹ РїРѕ РєР°Р¶РґРѕР№ С‚РµСЂСЂРёС‚РѕСЂРёРё РїСЂРё СЌС‚РѕРј РїРѕСЃС‡РёС‚Р°РЅС‹ РїРѕ РІСЃРµР№ РёСЃС‚РѕСЂРёРё РёРЅС†РёРґРµРЅС‚РѕРІ, РїРѕСЌС‚РѕРјСѓ СЃРјРµС‰РµРЅРёСЏ РёР·-Р·Р° РїРµСЂРІС‹С… СЃС‚СЂРѕРє Р±РѕР»СЊС€Рµ РЅРµС‚."
         )
         return sampled, note
 
     work = frame.copy()
-    quantiles = max(1, min(4, int(work["Число пожаров"].nunique()), len(work)))
-    work["__settlement_group"] = work["Тип территории"].fillna("Не указано")
+    quantiles = max(1, min(4, int(work["Р§РёСЃР»Рѕ РїРѕР¶Р°СЂРѕРІ"].nunique()), len(work)))
+    work["__settlement_group"] = work["РўРёРї С‚РµСЂСЂРёС‚РѕСЂРёРё"].fillna("РќРµ СѓРєР°Р·Р°РЅРѕ")
     if quantiles > 1:
         work["__volume_band"] = pd.qcut(
-            work["Число пожаров"].rank(method="first"),
+            work["Р§РёСЃР»Рѕ РїРѕР¶Р°СЂРѕРІ"].rank(method="first"),
             q=quantiles,
             labels=False,
             duplicates="drop",
@@ -520,13 +511,12 @@ def _sample_territory_frame(frame: pd.DataFrame, sample_limit: int, sampling_str
             sampled = pd.concat([sampled, remainder.sample(n=fill_count, random_state=42)], axis=0)
 
     sampled = sampled.drop(columns=["__settlement_group", "__volume_band", "__stratum"], errors="ignore")
-    sampled = sampled.sort_values("Территория").reset_index(drop=True)
+    sampled = sampled.sort_values("РўРµСЂСЂРёС‚РѕСЂРёСЏ").reset_index(drop=True)
     note = (
-        f"Из {len(frame)} территорий в модель вошла стратифицированная выборка из {len(sampled)} территорий: "
-        "сохранён баланс по сельскому/несельскому контексту и по квантилям числа пожаров."
+        f"РР· {len(frame)} С‚РµСЂСЂРёС‚РѕСЂРёР№ РІ РјРѕРґРµР»СЊ РІРѕС€Р»Р° СЃС‚СЂР°С‚РёС„РёС†РёСЂРѕРІР°РЅРЅР°СЏ РІС‹Р±РѕСЂРєР° РёР· {len(sampled)} С‚РµСЂСЂРёС‚РѕСЂРёР№: "
+        "СЃРѕС…СЂР°РЅС‘РЅ Р±Р°Р»Р°РЅСЃ РїРѕ СЃРµР»СЊСЃРєРѕРјСѓ/РЅРµСЃРµР»СЊСЃРєРѕРјСѓ РєРѕРЅС‚РµРєСЃС‚Сѓ Рё РїРѕ РєРІР°РЅС‚РёР»СЏРј С‡РёСЃР»Р° РїРѕР¶Р°СЂРѕРІ."
     )
     return sampled, note
-
 
 
 def _discover_candidate_features(feature_frame: pd.DataFrame) -> list[CandidateFeatureOption]:

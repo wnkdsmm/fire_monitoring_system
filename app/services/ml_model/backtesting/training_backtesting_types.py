@@ -8,7 +8,6 @@ import pandas as pd
 
 from ..ml_model_result_types import BacktestEvaluationRow, BacktestWindowRow, CountMetrics, EventComparisonRow, EventMetrics, HorizonSummary
 
-
 @dataclass
 
 
@@ -27,7 +26,6 @@ class _HorizonEvaluationData:
     coverage_by_model: dict[str, _CandidateCoverage]
     dates: list[str]
 
-
 @dataclass
 
 
@@ -42,7 +40,6 @@ class _BacktestSelection:
     overdispersion_ratio: float
     validation_evaluation_data: _HorizonEvaluationData
 
-
 @dataclass
 
 
@@ -55,7 +52,6 @@ class _EventMetricInputs:
     classifier_probabilities: np.ndarray
     logistic_available: bool
 
-
 @dataclass
 
 
@@ -64,7 +60,6 @@ class _EventMetricMaskContext:
     evaluation_mask: np.ndarray
     rows_used: int
     logistic_available: bool
-
 
 @dataclass
 
@@ -77,7 +72,6 @@ class _EventMetricSelection:
     selected_log_loss: float | None
     comparison_rows: list[EventComparisonRow]
 
-
 @dataclass
 
 
@@ -88,7 +82,6 @@ class _EventProbabilityScores:
     baseline_log_loss: float | None
     heuristic_log_loss: float | None
 
-
 @dataclass
 
 
@@ -98,7 +91,6 @@ class _EventMetricContext:
     event_probability_informative: bool
     event_probability_note: str | None
     event_probability_reason_code: str | None
-
 
 @dataclass
 
@@ -114,7 +106,6 @@ class _BacktestEvaluationArtifacts:
     event_metrics: EventMetrics
     window_rows: list[BacktestWindowRow]
 
-
 @dataclass
 
 
@@ -122,7 +113,6 @@ class _BacktestOriginSelection:
     available_backtest_points: int
     selected_origin_dates: list[Any]
     total_windows: int
-
 
 @dataclass
 
@@ -135,7 +125,6 @@ class _BacktestRunContext:
     max_horizon_days: int
     horizon_days: list[int]
     min_train_rows: int
-
 
 @dataclass
 
@@ -150,14 +139,12 @@ class _BacktestWindow:
     event_targets: np.ndarray
     temperature_stats: dict[str, Any]  # one-off
 
-
 @dataclass
 
 
 class _WindowCandidateFits:
     event_bundle: dict[str, Any] | None  # one-off
     forecast_paths: dict[str, list[BacktestWindowRow | None]]  # one-off
-
 
 @dataclass
 
@@ -166,7 +153,6 @@ class _CandidateCoverage:
     covered_window_count: int
     window_count: int
     window_coverage: float
-
 
 @dataclass
 

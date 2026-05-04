@@ -5,10 +5,9 @@ from typing import Tuple
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine.url import make_url
 
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql://postgres:1234@localhost/fires",
-)
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    raise ValueError("DATABASE_URL environment variable is not set")
 
 engine = create_engine(
     DATABASE_URL,
@@ -44,7 +43,6 @@ def get_db_info() -> str:
         return f"{backend} @ {host}:{port}{db_path}"
     except Exception:
         return "unknown @ ****"
-
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format="%(message)s")

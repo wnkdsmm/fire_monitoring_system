@@ -543,8 +543,6 @@
     function updateMlScreenLinks(filters) {
         var safeFilters = filters || collectMlFiltersFromForm();
         setHref('mlPanelLink', buildMlNavigationHref('/', safeFilters, { onlyTable: true }));
-        setHref('mlScenarioLink', buildMlNavigationHref('/forecasting', safeFilters));
-        setHref('mlDecisionLink', buildMlNavigationHref('/forecasting', safeFilters, { hash: '#forecastDetails' }));
     }
 
     function updateAsyncStateForJob(jobPayload) {

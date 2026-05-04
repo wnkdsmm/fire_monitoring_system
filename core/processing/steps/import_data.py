@@ -10,6 +10,38 @@ from core.processing.pipeline import PipelineStep
 
 logger = logging.getLogger(__name__)
 
+_CSV_FALLBACK_ENCODINGS = ("utf-8-sig", "windows-1251", "latin-1")
+
+
+def _detect_csv_encoding(input_file: str) -> str | None:
+    try:
+        import chardet
+        with open(input_file, "rb") as f:
+            raw = f.read(65536)
+        result = chardet.detect(raw)
+        detected = (result.get("encoding") or "").strip()
+        return detected if detected else None
+    except Exception:
+        return None
+
+
+def _read_csv(input_file: str) -> pd.DataFrame:
+    detected = _detect_csv_encoding(input_file)
+    candidates = [detected] if detected else []
+    for enc in _CSV_FALLBACK_ENCODINGS:
+        if enc not in candidates:
+            candidates.append(enc)
+    last_exc: Exception | None = None
+    for enc in candidates:
+        try:
+            return pd.read_csv(input_file, encoding=enc)
+        except (UnicodeDecodeError, LookupError) as exc:
+            last_exc = exc
+            logger.debug("CSV read failed with encoding %s: %s", enc, exc)
+    raise ValueError(
+        f"Cannot decode {input_file!r}. Tried encodings: {candidates}"
+    ) from last_exc
+
 
 def _read_tabular_data(input_file: str, ext: str) -> pd.DataFrame:
     if ext == ".xls":
@@ -22,7 +54,7 @@ def _read_tabular_data(input_file: str, ext: str) -> pd.DataFrame:
     if ext == ".xlsx":
         return pd.read_excel(input_file, engine="openpyxl")
     if ext == ".csv":
-        return pd.read_csv(input_file, encoding="utf-8-sig")
+        return _read_csv(input_file)
     raise ValueError("Only XLS, XLSX and CSV are supported")
 
 

@@ -8,8 +8,9 @@ from app.cache import build_immutable_payload_lru_cache
 
 from .ml_model_config_types import _CACHE_LIMIT
 
-
 @dataclass
+
+
 class MLModelCaches:
     ml_cache: Any
     artifact_cache: OrderedDict[Any, Any]

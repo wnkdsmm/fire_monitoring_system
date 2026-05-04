@@ -11,7 +11,6 @@ from fastapi.responses import Response
 
 from app.state import SESSION_COOKIE_NAME, job_store
 
-
 JsonPayload = dict[str, Any]
 RouteResult = TypeVar("RouteResult")
 

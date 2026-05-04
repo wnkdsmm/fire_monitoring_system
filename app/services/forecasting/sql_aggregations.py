@@ -22,7 +22,7 @@ from .utils import (
     _to_float_or_none,
 )
 
-_FORECASTING_SQL_CACHE = CopyingTtlCache(ttl_seconds=120.0)
+_FORECASTING_SQL_CACHE = CopyingTtlCache(ttl_seconds=None)
 
 
 class QueryBuilder(SharedQueryBuilder):

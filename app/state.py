@@ -9,7 +9,6 @@ from uuid import uuid4
 from app.cache import clone_mutable_payload, freeze_mutable_payload
 from config.paths import UPLOADS_DIR
 
-
 SESSION_COOKIE_NAME = "fire_monitor_session_id"
 UPLOAD_FOLDER = UPLOADS_DIR
 UPLOAD_FOLDER.mkdir(parents=True, exist_ok=True)
@@ -55,7 +54,6 @@ def _clone_job_result_payload(result: Any) -> Any:
         return {key: _clone_job_payload_value(value) for key, value in result.items()}
     return clone_mutable_payload(result)
 
-
 @dataclass
 
 
@@ -75,7 +73,6 @@ class JobState:
 
     def touch(self) -> None:
         self.updated_at = _utcnow()
-
 
 @dataclass
 
@@ -348,6 +345,5 @@ class JobStore:
         for job in jobs:
             session.latest_job_ids[job.kind] = job.job_id
             session.last_job_id = job.job_id
-
 
 job_store = JobStore()

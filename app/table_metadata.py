@@ -37,7 +37,6 @@ def table_exists(table_name: str) -> bool:
 def get_table_signature() -> tuple[str, ...]:
     return get_table_signature_cached()
 
-
 __all__ = [
     "get_all_tables",
     "get_table_column_set",

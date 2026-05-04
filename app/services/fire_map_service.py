@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+import logging
 from pathlib import Path
 from typing import Any
 
@@ -17,7 +18,7 @@ from core.processing.steps.create_fire_map import CreateFireMapStep
 
 _FIRE_MAP_CACHE = CopyingTtlCache(ttl_seconds=300.0, copier=lambda value: value)
 _FIRE_MAP_BRIEF_CACHE = CopyingTtlCache(ttl_seconds=300.0)
-
+logger = logging.getLogger(__name__)
 
 
 def clear_fire_map_cache() -> None:
@@ -25,30 +26,33 @@ def clear_fire_map_cache() -> None:
     _FIRE_MAP_BRIEF_CACHE.clear()
 
 
-
 def build_fire_map_html(table_name: str) -> str:
     normalized_table_name = str(table_name or "").strip()
     if not normalized_table_name:
         return ""
-
     cached_html = _FIRE_MAP_CACHE.get(normalized_table_name)
     if cached_html is not None:
         return cached_html
-
-    settings = Settings(
-        input_file=None,
-        selected_table=normalized_table_name,
-        output_folder=str(get_result_folder(normalized_table_name)),
-    )
-    output_path = CreateFireMapStep().run(settings, table_name=normalized_table_name)
+    try:
+        settings = Settings(
+            input_file=None,
+            selected_table=normalized_table_name,
+            output_folder=str(get_result_folder(normalized_table_name)),
+        )
+        output_path = CreateFireMapStep().run(settings, table_name=normalized_table_name)
+    except Exception as exc:
+        logger.error("fire map generation failed for table %r: %s", normalized_table_name, exc)
+        return ""
     if not output_path:
         return ""
-
-    html = Path(output_path).read_text(encoding="utf-8")
+    try:
+        html = Path(output_path).read_text(encoding="utf-8")
+    except OSError as exc:
+        logger.error("fire map file not readable at %r: %s", output_path, exc)
+        return ""
     if not html:
         return ""
     return _FIRE_MAP_CACHE.set(normalized_table_name, html)
-
 
 
 def get_fire_map_page_context(table_name: str = "") -> dict[str, Any]:
@@ -82,7 +86,7 @@ def get_fire_map_page_context(table_name: str = "") -> dict[str, Any]:
                 )
             except Exception as exc:
                 brief = empty_executive_brief()
-                brief["notes"] = [f"Территориальный приоритет на карте временно недоступен: {exc}"]
+                brief["notes"] = [f"РўРµСЂСЂРёС‚РѕСЂРёР°Р»СЊРЅС‹Р№ РїСЂРёРѕСЂРёС‚РµС‚ РЅР° РєР°СЂС‚Рµ РІСЂРµРјРµРЅРЅРѕ РЅРµРґРѕСЃС‚СѓРїРµРЅ: {exc}"]
                 risk_prediction = {"territories": [], "notes": list(brief["notes"])}
 
             _FIRE_MAP_BRIEF_CACHE.set(
@@ -102,4 +106,3 @@ def get_fire_map_page_context(table_name: str = "") -> dict[str, Any]:
         "risk_prediction": risk_prediction,
         "has_data": bool(selected_table),
     }
-

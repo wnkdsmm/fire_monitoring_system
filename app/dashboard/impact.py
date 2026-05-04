@@ -5,7 +5,6 @@ from config.db import engine as _default_engine
 from . import impact_fire_metrics as _impact_fire_metrics_mod
 from . import impact_forecast_metrics as _impact_forecast_metrics_mod
 
-
 engine = _default_engine
 
 
@@ -123,7 +122,6 @@ class DashboardImpactMetrics:
     build_monthly_profile_chart = staticmethod(_build_monthly_profile_chart)
     build_sql_district_widget_from_counts = staticmethod(_build_sql_district_widget_from_counts)
     build_sql_widgets = staticmethod(_build_sql_widgets)
-
 
 __all__ = [
     "DashboardImpactMetrics",

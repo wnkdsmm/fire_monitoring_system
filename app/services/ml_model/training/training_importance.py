@@ -125,4 +125,3 @@ def _aggregate_feature_name(column_name: str) -> str:
         return 'month'
     return column_name
 
-

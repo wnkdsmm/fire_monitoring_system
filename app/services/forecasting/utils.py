@@ -189,32 +189,32 @@ def _forecast_stability_hint(daily_history: list[dict[str, Any]]) -> tuple[str, 
     total_days = len(daily_history)
     active_days = sum(1 for item in daily_history if float(item["count"]) > 0)
     if total_days >= 180 and active_days >= 45:
-        return "Выше средней", "истории достаточно, поэтому прогноз обычно стабильнее"
+        return "Р’С‹С€Рµ СЃСЂРµРґРЅРµР№", "РёСЃС‚РѕСЂРёРё РґРѕСЃС‚Р°С‚РѕС‡РЅРѕ, РїРѕСЌС‚РѕРјСѓ РїСЂРѕРіРЅРѕР· РѕР±С‹С‡РЅРѕ СЃС‚Р°Р±РёР»СЊРЅРµРµ"
     if total_days >= 60 and active_days >= 15:
-        return "Средняя", "истории хватает для ориентировочного сценария"
-    return "Ниже средней", "данных мало или они слишком редкие, поэтому важнее смотреть на общий тренд"
+        return "РЎСЂРµРґРЅСЏСЏ", "РёСЃС‚РѕСЂРёРё С…РІР°С‚Р°РµС‚ РґР»СЏ РѕСЂРёРµРЅС‚РёСЂРѕРІРѕС‡РЅРѕРіРѕ СЃС†РµРЅР°СЂРёСЏ"
+    return "РќРёР¶Рµ СЃСЂРµРґРЅРµР№", "РґР°РЅРЅС‹С… РјР°Р»Рѕ РёР»Рё РѕРЅРё СЃР»РёС€РєРѕРј СЂРµРґРєРёРµ, РїРѕСЌС‚РѕРјСѓ РІР°Р¶РЅРµРµ СЃРјРѕС‚СЂРµС‚СЊ РЅР° РѕР±С‰РёР№ С‚СЂРµРЅРґ"
 
 
 def _forecast_level_label(value: float, reference: float) -> tuple[str, str]:
     if reference <= 0:
         if value <= 0:
-            return "На уровне нуля", "sky"
-        return "Выше обычного", "fire"
+            return "РќР° СѓСЂРѕРІРЅРµ РЅСѓР»СЏ", "sky"
+        return "Р’С‹С€Рµ РѕР±С‹С‡РЅРѕРіРѕ", "fire"
 
     ratio = value / reference
     if ratio >= 1.2:
-        return "Выше обычного", "fire"
+        return "Р’С‹С€Рµ РѕР±С‹С‡РЅРѕРіРѕ", "fire"
     if ratio <= 0.8:
-        return "Ниже обычного", "forest"
-    return "Около обычного", "sky"
+        return "РќРёР¶Рµ РѕР±С‹С‡РЅРѕРіРѕ", "forest"
+    return "РћРєРѕР»Рѕ РѕР±С‹С‡РЅРѕРіРѕ", "sky"
 
 
 def _relative_delta_text(value: float, reference: float, reference_label: str) -> str:
     if reference <= 0:
-        return "нет устойчивой базы для сравнения"
+        return "РЅРµС‚ СѓСЃС‚РѕР№С‡РёРІРѕР№ Р±Р°Р·С‹ РґР»СЏ СЃСЂР°РІРЅРµРЅРёСЏ"
     delta_ratio = (value - reference) / reference
     if abs(delta_ratio) < 0.05:
-        return f"почти без изменений {reference_label}"
+        return f"РїРѕС‡С‚Рё Р±РµР· РёР·РјРµРЅРµРЅРёР№ {reference_label}"
     return f"{_format_signed_percent(delta_ratio)} {reference_label}"
 
 

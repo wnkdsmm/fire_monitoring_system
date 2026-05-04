@@ -22,14 +22,12 @@ JobExecuteHook = Callable[[], Any]
 JobSuccessHook = Callable[[Any], None]
 JobFailureHook = Callable[[str], None]
 
-
 @dataclass(frozen=True)
 
 
 class JobLaunchBundle:
     primary_job_id: str
     related_job_ids: dict[str, str] = field(default_factory=dict)
-
 
 @dataclass(frozen=True)
 
@@ -39,7 +37,6 @@ class LinkedJobStatusSpec:
     meta_key: str
     include_result: bool = False
     include_meta: bool = False
-
 
 @dataclass(frozen=True)
 

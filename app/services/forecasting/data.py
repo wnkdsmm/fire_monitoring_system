@@ -5,7 +5,6 @@ from typing import Any, Sequence
 from app.services.shared.data_base import DataLoader
 
 from . import selection as _selection
-from . import shaping as _shaping
 from . import sources as _sources
 from . import sql as _sql
 from .types import (
@@ -89,7 +88,6 @@ class ForecastingDataLoader(DataLoader):
             object_category=object_category,
             metadata_items=metadata_items,
         )
-
 
 _LOADER = ForecastingDataLoader()
 
@@ -180,7 +178,6 @@ def _reexport_module(module: object, excluded_names: Sequence[str]) -> list[str]
         exported.append(name)
     return exported
 
-
 __all__ = [
     "ForecastingDataLoader",
     "_build_forecasting_table_options",
@@ -191,10 +188,9 @@ __all__ = [
     "_count_forecasting_records_sql",
     "clear_forecasting_sql_cache",
 ]
-for _module in (_selection, _shaping, _sources, _sql):
+for _module in (_selection, _sources, _sql):
     __all__.extend(_reexport_module(_module, __all__))
 __all__ = list(dict.fromkeys(__all__))
-
 
 del _module
 del _reexport_module

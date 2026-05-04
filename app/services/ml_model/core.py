@@ -4,7 +4,6 @@ from contextlib import nullcontext
 from datetime import datetime
 from typing import Any
 
-
 from app.perf import current_perf_trace, profiled
 from app.services.forecasting.data import (
     _build_daily_history_sql,
@@ -69,7 +68,7 @@ def _build_ml_deferred_shell_data(
     )
     initial_data['bootstrap_mode'] = 'deferred'
     initial_data['charts']['importance']['empty_message'] = (
-        'Собираем драйверы прогноза: блок заполнится после фонового расчёта.'
+        'РЎРѕР±РёСЂР°РµРј РґСЂР°Р№РІРµСЂС‹ РїСЂРѕРіРЅРѕР·Р°: Р±Р»РѕРє Р·Р°РїРѕР»РЅРёС‚СЃСЏ РїРѕСЃР»Рµ С„РѕРЅРѕРІРѕРіРѕ СЂР°СЃС‡С‘С‚Р°.'
     )
     initial_data['notes'].extend(request_state['source_table_notes'])
     initial_data['notes'] = _compact_ui_notes(initial_data['notes'])
@@ -154,7 +153,6 @@ def get_ml_model_shell_context(
         temperature=temperature,
     )
     return _build_ml_context(initial_data)
-
 
 @profiled('ml_model', engine=engine)
 

@@ -11,17 +11,16 @@ from typing import Any
 from app.db_metadata import get_table_signature_cached, invalidate_db_metadata_cache
 from app.cache import CopyingTtlCache, clone_mutable_payload, freeze_mutable_payload
 from app.table_catalog import select_user_table_names
-from app.statistics_constants import DASHBOARD_CACHE_TTL_SECONDS, METADATA_CACHE_TTL_SECONDS
 
 from .metadata import _collect_dashboard_metadata
 
 _DASHBOARD_METADATA_CACHE = CopyingTtlCache[tuple[str, ...], dict[str, Any]](
-    ttl_seconds=METADATA_CACHE_TTL_SECONDS,
+    ttl_seconds=None,
     storer=freeze_mutable_payload,
     loader=clone_mutable_payload,
 )
 _DASHBOARD_CACHE = CopyingTtlCache[tuple[Any, ...], dict[str, Any]](
-    ttl_seconds=DASHBOARD_CACHE_TTL_SECONDS,
+    ttl_seconds=None,
     storer=freeze_mutable_payload,
     loader=clone_mutable_payload,
 )
@@ -65,7 +64,6 @@ def _get_dashboard_cache(cache_key: tuple[Any, ...]) -> dict[str, Any] | None:
 
 def _set_dashboard_cache(cache_key: tuple[Any, ...], value: dict[str, Any]) -> None:
     _DASHBOARD_CACHE.set(cache_key, value)
-
 
 __all__ = [
     "_collect_dashboard_metadata_cached",

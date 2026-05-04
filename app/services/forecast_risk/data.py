@@ -102,7 +102,6 @@ class ForecastRiskDataLoader(DataLoader):
             selected_year=selected_year,
         )
 
-
 _LOADER = ForecastRiskDataLoader()
 
 

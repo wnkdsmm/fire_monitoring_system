@@ -23,6 +23,8 @@ from app.labels import (
     ML_PREDICTIVE_BLOCK_DESCRIPTION as L_ML_PREDICTIVE_BLOCK_DESCRIPTION,
 )
 from config.constants import (
+    BASELINE_RECENT_WEIGHT as C_BASELINE_RECENT_WEIGHT,
+    BASELINE_WEEKDAY_WEIGHT as C_BASELINE_WEEKDAY_WEIGHT,
     CLASSIFICATION_THRESHOLD as C_CLASSIFICATION_THRESHOLD,
     COUNT_MODEL_CONTINUOUS_COLUMNS as C_COUNT_MODEL_CONTINUOUS_COLUMNS,
     COUNT_MODEL_KEYS as C_COUNT_MODEL_KEYS,
@@ -97,8 +99,8 @@ IMPORTANCE_TRAIN_SPLIT_RATIO = 0.7
 # Cap importance sample size to bound runtime while preserving enough temporal variability.
 IMPORTANCE_MAX_SAMPLE_SIZE = 120
 # Blend baseline forecast toward weekday history while keeping recency influence for drift adaptation.
-BASELINE_WEEKDAY_WEIGHT = 0.6
-BASELINE_RECENT_WEIGHT = 0.4
+BASELINE_WEEKDAY_WEIGHT = C_BASELINE_WEEKDAY_WEIGHT
+BASELINE_RECENT_WEIGHT = C_BASELINE_RECENT_WEIGHT
 # Require at least two adaptive bins; otherwise quantile-by-bin calibration is not meaningful.
 PREDICTION_INTERVAL_MIN_BIN_COUNT = 2
 # Split validation blocks by evaluation size: 12+/6+ windows map to 4/3 blocks; otherwise use 2.

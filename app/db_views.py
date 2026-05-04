@@ -9,7 +9,6 @@ from app.db_metadata import get_table_columns_cached, register_table_order_cache
 from app.perf import ensure_sqlalchemy_timing, perf_trace
 from config.db import engine
 
-
 DEFAULT_TABLE_PAGE_SIZE = 100
 TABLE_PAGE_SIZE_OPTIONS = (50, 100, 500)
 _PHYSICAL_ROW_ORDER_FALLBACKS = {
@@ -17,8 +16,9 @@ _PHYSICAL_ROW_ORDER_FALLBACKS = {
     "sqlite": "rowid ASC",
 }
 
-
 @dataclass(frozen=True)
+
+
 class TableOrderStrategy:
     order_by_sql: str
     source: str
@@ -92,8 +92,9 @@ def _get_unique_key_candidates(inspector_obj, table_name: str, available_columns
     candidates.sort(key=lambda item: (item["has_nullable_columns"], len(item["columns"]), item["columns"], item["name"]))
     return candidates
 
-
 @lru_cache(maxsize=256)
+
+
 def _get_table_order_strategy_cached(table_name: str) -> TableOrderStrategy:
     available_columns = tuple(get_table_columns_cached(table_name))
     if not available_columns:
@@ -153,7 +154,6 @@ def _get_table_order_strategy_cached(table_name: str) -> TableOrderStrategy:
         columns=available_columns,
         note="Best-effort fallback when the engine has no physical row identifier available.",
     )
-
 
 register_table_order_cache_invalidator(_get_table_order_strategy_cached.cache_clear)
 

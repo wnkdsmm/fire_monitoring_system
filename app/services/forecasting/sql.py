@@ -30,7 +30,6 @@ from .types import (
 def _resolve_public_symbol(name: str) -> Any:
     return globals()[name]
 
-
 _AGGREGATION_BUILDER = AggregationQueryBuilder(_resolve_public_symbol)
 _SOURCE_BUILDER = SourceQueryBuilder(_AGGREGATION_BUILDER, _resolve_public_symbol)
 _PAYLOAD_BUILDER = PayloadQueryBuilder(_AGGREGATION_BUILDER, _SOURCE_BUILDER, _resolve_public_symbol)

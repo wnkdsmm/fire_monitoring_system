@@ -88,8 +88,8 @@ def _build_combined_impact_timeline_chart(
             }
         )
 
-    title = "Последствия, эвакуация и дети"
-    empty_message = "Нет данных по погибшим, травмам и эвакуации."
+    title = "РџРѕСЃР»РµРґСЃС‚РІРёСЏ, СЌРІР°РєСѓР°С†РёСЏ Рё РґРµС‚Рё"
+    empty_message = "РќРµС‚ РґР°РЅРЅС‹С… РїРѕ РїРѕРіРёР±С€РёРј, С‚СЂР°РІРјР°Рј Рё СЌРІР°РєСѓР°С†РёРё."
     return _finalize_chart(
         title,
         items,
@@ -151,15 +151,15 @@ def _build_ranked_bar_widget(
     ]
     chart_meta = {
         "causes": {
-            "empty_message": "Нет данных по причинам возгорания.",
+            "empty_message": "РќРµС‚ РґР°РЅРЅС‹С… РїРѕ РїСЂРёС‡РёРЅР°Рј РІРѕР·РіРѕСЂР°РЅРёСЏ.",
             "color_key": "fire",
         },
         "districts": {
-            "empty_message": "В выбранных таблицах не найдено колонок района.",
+            "empty_message": "Р’ РІС‹Р±СЂР°РЅРЅС‹С… С‚Р°Р±Р»РёС†Р°С… РЅРµ РЅР°Р№РґРµРЅРѕ РєРѕР»РѕРЅРѕРє СЂР°Р№РѕРЅР°.",
             "color_key": "forest",
         },
         "seasons": {
-            "empty_message": "Нет данных для сезонного SQL-виджета.",
+            "empty_message": "РќРµС‚ РґР°РЅРЅС‹С… РґР»СЏ СЃРµР·РѕРЅРЅРѕРіРѕ SQL-РІРёРґР¶РµС‚Р°.",
             "color_key": "forest",
         },
     }
@@ -174,7 +174,7 @@ def _build_ranked_bar_widget(
             items,
             empty_message,
             color_key=resolved_meta["color_key"],
-            value_label="Пожаров",
+            value_label="РџРѕР¶Р°СЂРѕРІ",
         ),
     )
 
@@ -186,7 +186,7 @@ def _build_sql_cause_widget(
     cause_counts: dict[str, int | None] = None,
 ) -> DistributionResult:
     grouped = cause_counts if cause_counts is not None else _collect_cause_counts(selected_tables, selected_year)
-    return _build_ranked_bar_widget(grouped, "SQL-виджет: причины", "causes")
+    return _build_ranked_bar_widget(grouped, "SQL-РІРёРґР¶РµС‚: РїСЂРёС‡РёРЅС‹", "causes")
 
 
 def _build_sql_district_widget(selected_tables: list[DashboardTableRef], selected_year: int | None) -> DistributionResult:
@@ -202,7 +202,7 @@ def _build_sql_district_widget(selected_tables: list[DashboardTableRef], selecte
             query = text(
                 f"""
                 SELECT
-                    COALESCE(NULLIF(TRIM(CAST({_quote_identifier(district_column)} AS TEXT)), ''), 'Не указано') AS label,
+                    COALESCE(NULLIF(TRIM(CAST({_quote_identifier(district_column)} AS TEXT)), ''), 'РќРµ СѓРєР°Р·Р°РЅРѕ') AS label,
                     COUNT(*) AS fire_count
                 FROM {_quote_identifier(table['name'])}
                 WHERE {where_clause}
@@ -214,11 +214,11 @@ def _build_sql_district_widget(selected_tables: list[DashboardTableRef], selecte
             for row in conn.execute(query, params).mappings().all():
                 grouped[row["label"]] += int(row["fire_count"] or 0)
 
-    return _build_ranked_bar_widget(dict(grouped), "SQL-виджет: районы", "districts")
+    return _build_ranked_bar_widget(dict(grouped), "SQL-РІРёРґР¶РµС‚: СЂР°Р№РѕРЅС‹", "districts")
 
 
 def _build_sql_district_widget_from_counts(district_counts: dict[str, int]) -> DistributionResult:
-    return _build_ranked_bar_widget(district_counts, "SQL-виджет: районы", "districts")
+    return _build_ranked_bar_widget(district_counts, "SQL-РІРёРґР¶РµС‚: СЂР°Р№РѕРЅС‹", "districts")
 
 
 def _build_sql_season_widget(
@@ -241,7 +241,7 @@ def _build_sql_season_widget(
             season_label = autumn_label
         grouped[season_label] += int(fire_count or 0)
 
-    return _build_ranked_bar_widget(dict(grouped), "SQL-виджет: сезоны", "seasons")
+    return _build_ranked_bar_widget(dict(grouped), "SQL-РІРёРґР¶РµС‚: СЃРµР·РѕРЅС‹", "seasons")
 
 __all__ = [
     "_collect_impact_timeline_rows",

@@ -21,7 +21,6 @@ from uuid import UUID
 K = TypeVar("K", bound=Hashable)
 V = TypeVar("V")
 
-
 _IMMUTABLE_LEAF_TYPES = (
     str,
     bytes,
@@ -38,13 +37,11 @@ _IMMUTABLE_LEAF_TYPES = (
     UUID,
 )
 
-
 @dataclass(frozen=True, slots=True)
 
 
 class _FrozenDict:
     items: tuple[tuple[Any, object], ...]
-
 
 @dataclass(frozen=True, slots=True)
 
@@ -52,13 +49,11 @@ class _FrozenDict:
 class _FrozenList:
     items: tuple[object, ...]
 
-
 @dataclass(frozen=True, slots=True)
 
 
 class _FrozenTuple:
     items: tuple[object, ...]
-
 
 @dataclass(frozen=True, slots=True)
 
@@ -66,7 +61,6 @@ class _FrozenTuple:
 class _FrozenSet:
     items: frozenset[object]
     preserve_frozenset: bool = False
-
 
 @dataclass(frozen=True, slots=True)
 
@@ -154,14 +148,14 @@ def _resolve_copy_hooks(
 class CopyingTtlCache(Generic[K, V]):
     def __init__(
         self,
-        ttl_seconds: float,
+        ttl_seconds: float | None,
         copier: Callable[[V | None, V]] = None,
         *,
         storer: Callable[[V | None, object]] = None,
         loader: Callable[[object | None, V]] = None,
         skip_freeze: bool = False,
     ) -> None:
-        self._ttl_seconds = max(float(ttl_seconds), 0.0)
+        self._ttl_seconds = None if ttl_seconds is None else max(float(ttl_seconds), 0.0)
         self._skip_freeze = bool(skip_freeze)
         self._store_value, self._load_value = _resolve_copy_hooks(
             copier,
@@ -178,7 +172,8 @@ class CopyingTtlCache(Generic[K, V]):
             item = self._items.get(key)
             if item is None:
                 return None
-            if float(item.get("expires_at") or 0.0) <= now:
+            expires_at = item.get("expires_at")
+            if expires_at is not None and float(expires_at) <= now:
                 self._items.pop(key, None)
                 return None
             return self._load_value(item.get("value"))
@@ -188,7 +183,7 @@ class CopyingTtlCache(Generic[K, V]):
         with self._lock:
             self._items[key] = {
                 "value": stored_value,
-                "expires_at": time.time() + self._ttl_seconds,
+                "expires_at": None if self._ttl_seconds is None else time.time() + self._ttl_seconds,
             }
         return self._load_value(stored_value)
 
@@ -250,7 +245,7 @@ class CopyingLruCache(Generic[K, V]):
 
 def build_immutable_payload_ttl_cache(
     *,
-    ttl_seconds: float,
+    ttl_seconds: float | None,
 ) -> CopyingTtlCache[Hashable, Any]:
     return CopyingTtlCache(
         ttl_seconds=ttl_seconds,
@@ -268,7 +263,6 @@ def build_immutable_payload_lru_cache(
         storer=freeze_mutable_payload,
         loader=clone_mutable_payload,
     )
-
 
 __all__ = [
     "CopyingLruCache",

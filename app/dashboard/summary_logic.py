@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-
-
 from .distribution import _build_rankings, _build_table_breakdown_chart
 from .summary import (
     _build_highlights,
@@ -77,11 +75,10 @@ def _build_dashboard_scope(
     return _build_scope(
         summary=summary,
         metadata=metadata,
-        selected_table_label=_find_option_label(metadata["table_options"], selected_table_name, "Все таблицы"),
-        selected_group_label=_find_option_label(available_group_columns, selected_group_column, "Нет доступных колонок"),
+        selected_table_label=_find_option_label(metadata["table_options"], selected_table_name, "Р’СЃРµ С‚Р°Р±Р»РёС†С‹"),
+        selected_group_label=_find_option_label(available_group_columns, selected_group_column, "РќРµС‚ РґРѕСЃС‚СѓРїРЅС‹С… РєРѕР»РѕРЅРѕРє"),
         available_years=available_years,
     )
-
 
 __all__ = [
     "_build_dashboard_scope",

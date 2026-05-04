@@ -475,5 +475,3 @@ __all__ = [
     '_prediction_interval_candidate_sort_key',
 ]
 
-
-

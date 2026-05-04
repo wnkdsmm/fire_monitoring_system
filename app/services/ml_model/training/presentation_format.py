@@ -68,7 +68,6 @@ def _format_row_display(
         return _format_optional_text(display_value)
     return raw_formatter(row.get(raw_key))
 
-
 __all__ = [
     'MISSING_DISPLAY',
     '_first_present',

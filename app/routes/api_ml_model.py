@@ -4,7 +4,6 @@ from fastapi import APIRouter, Body, Request
 
 from .api_common import job_status_response, run_analytics_request, run_session_json_action
 
-
 router = APIRouter()
 
 _INVALID_ML_MODEL_MESSAGE = "\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u043e\u0431\u0440\u0430\u0431\u043e\u0442\u0430\u0442\u044c \u043f\u0430\u0440\u0430\u043c\u0435\u0442\u0440\u044b ML-\u0430\u043d\u0430\u043b\u0438\u0437\u0430."
@@ -32,8 +31,9 @@ def get_ml_job_status(**kwargs):
 
     return _get_ml_job_status(**kwargs)
 
-
 @router.get("/api/ml-model-data")
+
+
 def ml_model_data_endpoint(
     table_name: str = "all",
     cause: str = "all",
@@ -59,8 +59,9 @@ def ml_model_data_endpoint(
         failed_message=_FAILED_ML_MODEL_MESSAGE,
     )
 
-
 @router.post("/api/ml-model-jobs")
+
+
 def start_ml_model_job_endpoint(request: Request, payload: dict = Body(...)):
     return run_session_json_action(
         request,
@@ -76,7 +77,8 @@ def start_ml_model_job_endpoint(request: Request, payload: dict = Body(...)):
         ),
     )
 
-
 @router.get("/api/ml-model-jobs/{job_id}")
+
+
 def ml_model_job_status_endpoint(request: Request, job_id: str):
     return job_status_response(request, job_id, get_ml_job_status)

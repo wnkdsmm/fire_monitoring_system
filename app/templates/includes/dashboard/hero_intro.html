@@ -11,16 +11,6 @@
         "cta": "Текущий раздел",
     },
     {
-        "id": "dashboardScenarioLink",
-        "variant": "is-scenario",
-        "is_current": false,
-        "href": "/forecasting{% if filters.table_name and filters.table_name != 'all' %}?table_name={{ filters.table_name }}{% endif %}",
-        "kicker": "Сценарный прогноз",
-        "title": "Оценка вероятности пожаров по календарным датам",
-        "body": "Календарная оценка вероятности пожарной активности на ближайший период.",
-        "cta": "Перейти к сценарному прогнозу",
-    },
-    {
         "id": "dashboardMlLink",
         "variant": "is-ml",
         "is_current": false,
@@ -34,11 +24,11 @@
         "id": "dashboardDecisionLink",
         "variant": "is-decision",
         "is_current": false,
-        "href": "/forecasting{% if filters.table_name and filters.table_name != 'all' %}?table_name={{ filters.table_name }}{% endif %}#forecastDetails",
+        "href": "/ml-model{% if filters.table_name and filters.table_name != 'all' %}?table_name={{ filters.table_name }}{% endif %}",
         "kicker": "Поддержка решений",
         "title": "Приоритизация территорий для первоочередных мер",
-        "body": "Полное ранжирование территорий, факторы приоритета и оценка надежности вывода.",
-        "cta": "Перейти к приоритизации территорий",
+        "body": "Полное ранжирование территорий, фак��оры приоритета и оценка надёжности вывода.",
+        "cta": "Перейти к ML-прогнозу",
     },
 ] %}
 <main class="main dashboard-main" id="page-content">

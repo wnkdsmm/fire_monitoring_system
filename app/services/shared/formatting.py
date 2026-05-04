@@ -4,7 +4,7 @@ import math
 from datetime import date, datetime
 from typing import Any, Sequence
 
-MISSING_VALUE = "—"
+MISSING_VALUE = "вЂ”"
 
 
 def format_integer(value: Any) -> str:
@@ -28,7 +28,6 @@ def format_number(value: Any, digits: int = 1, integer: bool = False) -> str:
     if digits == 2:
         return f"{numeric:,.2f}".replace(",", " ").replace(".", ",")
     return f"{numeric:.{digits}f}".replace(".", ",")
-
 
 format_number_two_decimals = lambda v, integer=False: format_number(v, digits=2, integer=integer)
 format_number_rounded = lambda v: format_number(v, digits=1).replace(" ", "")
@@ -73,7 +72,7 @@ def normalize_probability(value: Any) -> float:
 def format_count_range(lower: float, upper: float) -> str:
     lower_bound = max(0, int(math.floor(lower)))
     upper_bound = max(lower_bound, int(math.ceil(upper)))
-    return f"{format_integer(lower_bound)}-{format_integer(upper_bound)} пожара"
+    return f"{format_integer(lower_bound)}-{format_integer(upper_bound)} РїРѕР¶Р°СЂР°"
 
 
 def format_percent_ratio(value: float) -> str:
@@ -128,7 +127,7 @@ def _format_float_for_input(value: float) -> str:
 
 def _format_period(values: Sequence[date]) -> str:
     if not values:
-        return "Нет данных"
+        return "РќРµС‚ РґР°РЅРЅС‹С…"
     ordered = sorted(values)
     return f"{ordered[0].strftime('%d.%m.%Y')} - {ordered[-1].strftime('%d.%m.%Y')}"
 

@@ -49,7 +49,6 @@ def get_fire_map_table_options():
 def resolve_selected_table(table_options, table_name: str) -> str:
     return resolve_selected_table_value(table_options, table_name)
 
-
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
@@ -69,11 +68,8 @@ def _lazy(module_path: str, attr: str):
     _invoke.__qualname__ = attr
     return _invoke
 
-
 get_dashboard_page_context = _lazy("app.dashboard.service", "get_dashboard_page_context")
 get_dashboard_shell_context = _lazy("app.dashboard.service", "get_dashboard_shell_context")
-get_forecasting_page_context = _lazy("app.services.forecasting.core", "get_forecasting_page_context")
-get_forecasting_shell_context = _lazy("app.services.forecasting.core", "get_forecasting_shell_context")
 get_ml_model_shell_context = _lazy("app.services.ml_model.core", "get_ml_model_shell_context")
 get_clustering_shell_context = _lazy("app.services.clustering.core", "get_clustering_shell_context")
 get_access_points_shell_context = _lazy("app.services.access_points.core", "get_access_points_shell_context")
@@ -95,8 +91,7 @@ def _extract_nested_text(payload: dict[str, Any], *path: str) -> str:
 
 def _download_brief_response(initial_data: dict[str, Any], filename: str, *path: str) -> Response:
     text = _extract_nested_text(initial_data, *path)
-    return download_text_response(text or "Управленческий бриф пока недоступен.", filename)
-
+    return download_text_response(text or "РЈРїСЂР°РІР»РµРЅС‡РµСЃРєРёР№ Р±СЂРёС„ РїРѕРєР° РЅРµРґРѕСЃС‚СѓРїРµРЅ.", filename)
 
 PROFILING_DEFAULTS = {
     "null_threshold_percent": round(NULL_THRESHOLD * 100),
@@ -104,18 +99,21 @@ PROFILING_DEFAULTS = {
     "low_variance_threshold": LOW_VARIANCE_THRESHOLD,
 }
 
-
 @router.get("/assets/plotly.js")
+
+
 def plotly_bundle_asset() -> Response:
     return cached_text_response(get_plotly_bundle(), "application/javascript; charset=utf-8")
 
-
 @router.get("/favicon.ico", include_in_schema=False)
+
+
 def favicon() -> Response:
     return empty_cached_response()
 
-
 @router.get("/brief/dashboard.txt")
+
+
 def dashboard_brief_download(
     table_name: str = "all",
     year: str = "all",
@@ -130,32 +128,9 @@ def dashboard_brief_download(
     )["initial_data"]
     return _download_brief_response(data, "dashboard-brief.txt", "management", "export_text")
 
-
-@router.get("/brief/forecasting.txt")
-def forecasting_brief_download(
-    table_name: str = "all",
-    district: str = "all",
-    cause: str = "all",
-    object_category: str = "all",
-    temperature: str = "",
-    forecast_days: str = "14",
-    history_window: str = "all",
-    current_user_date: str = "",
-) -> Response:
-    data = get_forecasting_page_context(
-        table_name=table_name,
-        district=district,
-        cause=cause,
-        object_category=object_category,
-        temperature=temperature,
-        forecast_days=forecast_days,
-        history_window=history_window,
-        current_user_date=current_user_date,
-    )["initial_data"]
-    return _download_brief_response(data, "forecasting-brief.txt", "executive_brief", "export_text")
-
-
 @router.get("/", response_class=HTMLResponse)
+
+
 def home(
     request: Request,
     table_name: str = "all",
@@ -186,42 +161,10 @@ def home(
         },
     )
 
-
-@router.get("/forecasting", response_class=HTMLResponse)
-def forecasting_page(
-    request: Request,
-    table_name: str = "all",
-    district: str = "all",
-    cause: str = "all",
-    object_category: str = "all",
-    temperature: str = "",
-    forecast_days: str = "14",
-    history_window: str = "all",
-):
-    forecast = get_forecasting_shell_context(
-        table_name=table_name,
-        district=district,
-        cause=cause,
-        object_category=object_category,
-        temperature=temperature,
-        forecast_days=forecast_days,
-        history_window=history_window,
-    )
-    return render_context_page(
-        request,
-        "forecasting.html",
-        context_name="forecast",
-        context_value=forecast,
-        asset_files={
-            **ANALYTICS_PAGE_ASSETS,
-            "forecasting_css_version": "css/forecasting.css",
-            "forecasting_js_version": "js/forecasting.js",
-        },
-    )
-
-
 @router.get("/backtesting", response_class=HTMLResponse)
 @router.get("/ml-model", response_class=HTMLResponse)
+
+
 def ml_model_page(
     request: Request,
     table_name: str = "all",
@@ -254,8 +197,9 @@ def ml_model_page(
         },
     )
 
-
 @router.get("/clustering", response_class=HTMLResponse)
+
+
 def clustering_page(
     request: Request,
     table_name: str = "",
@@ -282,8 +226,9 @@ def clustering_page(
         },
     )
 
-
 @router.get("/access-points", response_class=HTMLResponse)
+
+
 def access_points_page(
     request: Request,
     table_name: str = "all",
@@ -311,8 +256,9 @@ def access_points_page(
         },
     )
 
-
 @router.get("/column-search", response_class=HTMLResponse)
+
+
 def column_search_page(request: Request, table_name: str = "", query: str = ""):
     table_options = get_column_search_table_options()
     selected_table = resolve_selected_table(table_options, table_name)
@@ -328,8 +274,9 @@ def column_search_page(request: Request, table_name: str = "", query: str = ""):
         ),
     )
 
-
 @router.get("/fire-map", response_class=HTMLResponse)
+
+
 def fire_map_page(request: Request, table_name: str = ""):
     try:
         fire_map = get_fire_map_page_context(table_name)
@@ -350,8 +297,9 @@ def fire_map_page(request: Request, table_name: str = ""):
             **asset_versions(**FIRE_MAP_ASSETS),
         )
 
-
 @router.get("/fire-map/embed", response_class=HTMLResponse)
+
+
 def fire_map_embed(request: Request, table_name: str = ""):
     table_options = get_fire_map_table_options()
     selected_table = resolve_selected_table(table_options, table_name)
@@ -360,7 +308,7 @@ def fire_map_embed(request: Request, table_name: str = ""):
         return render_template_page(
             request,
             "fire_map_error.html",
-            message="Выберите существующую таблицу для построения карты.",
+            message="Р’С‹Р±РµСЂРёС‚Рµ СЃСѓС‰РµСЃС‚РІСѓСЋС‰СѓСЋ С‚Р°Р±Р»РёС†Сѓ РґР»СЏ РїРѕСЃС‚СЂРѕРµРЅРёСЏ РєР°СЂС‚С‹.",
             status_code=400,
             **asset_versions(**FIRE_MAP_ASSETS),
         )
@@ -371,7 +319,7 @@ def fire_map_embed(request: Request, table_name: str = ""):
             return render_template_page(
                 request,
                 "fire_map_error.html",
-                message="Для выбранной таблицы не удалось собрать карту. Проверьте координаты, даты и наличие записей.",
+                message="Р”Р»СЏ РІС‹Р±СЂР°РЅРЅРѕР№ С‚Р°Р±Р»РёС†С‹ РЅРµ СѓРґР°Р»РѕСЃСЊ СЃРѕР±СЂР°С‚СЊ РєР°СЂС‚Сѓ. РџСЂРѕРІРµСЂСЊС‚Рµ РєРѕРѕСЂРґРёРЅР°С‚С‹, РґР°С‚С‹ Рё РЅР°Р»РёС‡РёРµ Р·Р°РїРёСЃРµР№.",
                 status_code=422,
                 **asset_versions(**FIRE_MAP_ASSETS),
             )
@@ -386,7 +334,6 @@ def fire_map_embed(request: Request, table_name: str = ""):
             **asset_versions(**FIRE_MAP_ASSETS),
         )
 
-
 @router.get("/tables", response_class=HTMLResponse)
 async def list_tables(request: Request):
     tables = get_all_tables()
@@ -400,7 +347,6 @@ async def list_tables(request: Request):
             tables_js_version="js/tables.js",
         ),
     )
-
 
 @router.get("/tables/{table_name}", response_class=HTMLResponse)
 async def view_table(
@@ -432,8 +378,9 @@ async def view_table(
         ),
     )
 
-
 @router.get("/select_table", response_class=HTMLResponse)
+
+
 def select_table(request: Request):
     tables = get_all_tables()
     return render_template_page(

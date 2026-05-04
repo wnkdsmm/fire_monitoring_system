@@ -88,7 +88,6 @@ class AccessPointsDataLoader(DataLoader):
     def get_access_points_data(self, **kwargs: Any) -> AccessPointsDataPayload:
         return _impl.get_access_points_data(**kwargs)
 
-
 _LOADER = AccessPointsDataLoader()
 
 

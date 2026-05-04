@@ -49,8 +49,8 @@ def _detect_trend_warning(dataset: pd.DataFrame) -> str | None:
         return None
     relative_percent = round(relative_trend * 100.0)
     return (
-        f"Обнаружен выраженный тренд: среднее число пожаров изменяется на ~{relative_percent}% за 100 дней. "
-        "Модель на основе лагов может систематически ошибаться."
+        f"РћР±РЅР°СЂСѓР¶РµРЅ РІС‹СЂР°Р¶РµРЅРЅС‹Р№ С‚СЂРµРЅРґ: СЃСЂРµРґРЅРµРµ С‡РёСЃР»Рѕ РїРѕР¶Р°СЂРѕРІ РёР·РјРµРЅСЏРµС‚СЃСЏ РЅР° ~{relative_percent}% Р·Р° 100 РґРЅРµР№. "
+        "РњРѕРґРµР»СЊ РЅР° РѕСЃРЅРѕРІРµ Р»Р°РіРѕРІ РјРѕР¶РµС‚ СЃРёСЃС‚РµРјР°С‚РёС‡РµСЃРєРё РѕС€РёР±Р°С‚СЊСЃСЏ."
     )
 
 
@@ -74,7 +74,6 @@ def _feature_frame(frame: pd.DataFrame) -> pd.DataFrame:
         result[f'lag_{lag}'] = result['count'].shift(lag)
     result['rolling_7'] = result['count'].shift(LAG_DAYS_SHORT).rolling(ROLLING_WINDOW_SHORT_DAYS).mean()
     result['rolling_28'] = result['count'].shift(LAG_DAYS_SHORT).rolling(ROLLING_WINDOW_LONG_DAYS).mean()
-    result['trend_gap'] = result['rolling_7'] - result['rolling_28']
     return result
 
 

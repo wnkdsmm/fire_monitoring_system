@@ -42,7 +42,6 @@ class MappingAccessMixin:
     def copy(self) -> dict[str, object]:
         return {key: getattr(self, key) for key in self.keys()}
 
-
 @dataclass
 
 
@@ -70,7 +69,6 @@ class CountMetrics(MappingAccessMixin):
             smape_delta_vs_baseline=_optional_float(value.get("smape_delta_vs_baseline")),
         )
 
-
 @dataclass
 
 
@@ -93,7 +91,6 @@ class CountComparisonRow(MappingAccessMixin):
             is_selected=bool(value.get("is_selected")),
             metrics=CountMetrics.coerce(value),
         )
-
 
 @dataclass
 
@@ -124,7 +121,6 @@ class EventComparisonRow(MappingAccessMixin):
             is_selected=bool(value.get("is_selected")),
         )
 
-
 @dataclass
 
 
@@ -145,7 +141,6 @@ class EventScoreMetrics:
             f1=_optional_float(value.get("f1")),
             log_loss=_optional_float(value.get("log_loss")),
         )
-
 
 @dataclass
 
@@ -268,7 +263,6 @@ class EventMetrics(MappingAccessMixin):
             event_probability_reason_code=value.get("event_probability_reason_code"),
         )
 
-
 @dataclass
 
 
@@ -305,7 +299,6 @@ class BacktestWindowRow(MappingAccessMixin):
             predicted_event_probabilities=dict(value.get("predicted_event_probabilities") or {}),
             predicted_event_probability=_optional_float(value.get("predicted_event_probability")),
         )
-
 
 @dataclass
 
@@ -345,7 +338,6 @@ class BacktestEvaluationRow(MappingAccessMixin):
             baseline_event_probability=_optional_float(value.get("baseline_event_probability")),
             heuristic_event_probability=_optional_float(value.get("heuristic_event_probability")),
         )
-
 
 @dataclass
 
@@ -407,7 +399,6 @@ class HorizonSummary(MappingAccessMixin):
             prediction_interval_method_label=value.get("prediction_interval_method_label"),
         )
 
-
 @dataclass
 
 
@@ -444,7 +435,6 @@ def _coerce_scalar_fields(value: dict[str, Any], cls_fields_map: _ScalarFieldsMa
     for field_name in cls_fields_map.get("optional_float", []):
         kwargs[field_name] = _optional_float(value.get(field_name))
     return kwargs
-
 
 @dataclass
 
@@ -554,14 +544,12 @@ class BacktestOverview(MappingAccessMixin):
         kwargs.update(cls._coerce_complex_fields(value))
         return cls(**kwargs)
 
-
 @dataclass
 
 
 class BacktestFailure(MappingAccessMixin):
     is_ready: bool = False
     message: str = ""
-
 
 @dataclass
 
@@ -587,7 +575,6 @@ class BacktestSuccess(MappingAccessMixin):
     horizon_summaries: dict[str, HorizonSummary] = field(default_factory=dict)
     backtest_overview: BacktestOverview = field(default_factory=BacktestOverview)
     horizon_7_mae: float | None = None
-
 
 BacktestRunResult = BacktestSuccess | BacktestFailure
 

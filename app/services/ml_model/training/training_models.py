@@ -46,7 +46,6 @@ except Exception:  # pragma: no cover - optional dependency
 from ..ml_model_config_types import COUNT_MODEL_CONTINUOUS_COLUMNS, MIN_EVENT_CLASS_COUNT, NEGATIVE_BINOMIAL_MIN_TRAIN_ROWS, NEGATIVE_BINOMIAL_OVERDISPERSION_THRESHOLD, MIN_POSITIVE_PREDICTION, WARNING_INSTABILITY_MESSAGE_TOKENS, _LOGISTIC_PARAMS, _POISSON_PARAMS
 from .training_dataset import _build_design_matrix
 
-
 COUNT_PREDICTION_FALLBACK_COLUMNS = ('lag_1', 'rolling_7', 'lag_7', 'rolling_28', 'lag_14')
 COUNT_PREDICTION_SUPPORT_COLUMNS = ('lag_1', 'lag_7', 'lag_14', 'rolling_7', 'rolling_28')
 

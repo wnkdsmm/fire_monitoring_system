@@ -4,7 +4,6 @@ from fastapi import APIRouter, Body
 
 from .api_common import json_action_response
 
-
 router = APIRouter()
 
 _FAILED_TABLE_PAGE_MESSAGE = "\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u0437\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044c \u0441\u0442\u0440\u0430\u043d\u0438\u0446\u0443 \u0442\u0430\u0431\u043b\u0438\u0446\u044b: {exc}"
@@ -34,8 +33,9 @@ def delete_tables(table_names: list[str]):
 
     return _delete_tables(table_names)
 
-
 @router.get("/api/tables/{table_name}/page")
+
+
 def table_page_endpoint(table_name: str, page: int = 1, page_size: int = 100):
     return json_action_response(
         lambda: build_table_page_api_payload(table_name=table_name, page=page, page_size=page_size),
@@ -57,8 +57,9 @@ def table_page_endpoint(table_name: str, page: int = 1, page_size: int = 100):
         ),
     )
 
-
 @router.delete("/api/tables/{table_name}")
+
+
 def delete_table_endpoint(table_name: str):
     def delete_action():
         result = delete_table(table_name)
@@ -90,8 +91,9 @@ def delete_table_endpoint(table_name: str):
         ),
     )
 
-
 @router.post("/api/tables/delete")
+
+
 def delete_tables_endpoint(payload: dict = Body(...)):
     table_names = [str(item).strip() for item in (payload.get("table_names") or []) if str(item).strip()]
 

@@ -212,9 +212,8 @@ function renderManagementCards(items) {
 
     function updateDashboardScreenLinks(filters) {
         const safeFilters = filters || {};
-        setHref('dashboardScenarioLink', buildDashboardScreenHref('/forecasting', safeFilters, ''));
         setHref('dashboardMlLink', buildDashboardScreenHref('/ml-model', safeFilters, ''));
-        setHref('dashboardDecisionLink', buildDashboardScreenHref('/forecasting', safeFilters, '#forecastDetails'));
+        setHref('dashboardDecisionLink', buildDashboardScreenHref('/ml-model', safeFilters, ''));
     }
 
     function buildDashboardPageHref(filters, mode) {
