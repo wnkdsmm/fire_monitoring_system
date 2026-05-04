@@ -336,7 +336,7 @@ def _build_quality_methodology_items(
         {
             "label": "Территории с короткой историей",
             "value": low_support_display,
-            "meta": f"Для территорий с в‰¤{LOW_SUPPORT_TERRITORY_THRESHOLD} пожарами значения сглажены, чтобы убрать шум",
+            "meta": f"Для территорий с ≤{LOW_SUPPORT_TERRITORY_THRESHOLD} пожарами значения сглажены, чтобы убрать шум",
         },
         {
             "label": "Насколько 2D-карта отражает картину",

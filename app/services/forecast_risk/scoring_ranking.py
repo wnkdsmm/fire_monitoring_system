@@ -154,7 +154,7 @@ def _attach_ranking_context(territory_rows: list[dict[str, Any]]) -> None:
         item.update(
             {
                 "ranking_position": index + 1,
-                "ranking_position_display": f"?{index + 1}",
+                "ranking_position_display": f"№{index + 1}",
                 "ranking_gap_to_next": gap_to_next,
                 "ranking_gap_to_next_display": f"{_format_number(gap_to_next)} балла" if next_score is not None else "замыкает текущий список",
                 "ranking_gap_to_top": gap_to_top,

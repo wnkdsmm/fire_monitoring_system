@@ -184,7 +184,7 @@ def _build_summary_cards(
     else:
         cards.append(
             {
-                "label": "Историческая ��������",
+                "label": "Историческая проверка",
                 "value": historical_validation.get("status_label") or "Пока без проверки",
                 "meta": historical_validation.get("summary") or "Метрики появятся после накопления истории.",
                 "tone": historical_validation.get("status_tone") or "sand",
