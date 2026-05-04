@@ -118,6 +118,41 @@ FIRE_PROBABILITY_FLOOR_HISTORY_WEIGHT = 0.52
 FIRE_PROBABILITY_FLOOR_BASE = 0.22
 FIRE_PROBABILITY_FLOOR_MAX = 0.94
 
+# Seasonal alignment blend weights (month vs weekday contribution, must sum to 1.0)
+SEASONAL_MONTH_WEIGHT = 0.62
+SEASONAL_WEEKDAY_WEIGHT = 0.38
+
+# Fire probability clamp bounds
+FIRE_PROBABILITY_CLAMP_MIN = 0.02
+FIRE_PROBABILITY_CLAMP_MAX = 0.995
+
+# Distance score normalization (km)
+DISTANCE_SCORE_MIN_KM = 6.0
+DISTANCE_SCORE_RANGE_KM = 24.0
+
+# Response pressure normalization (minutes)
+RESPONSE_PRESSURE_TARGET_MIN = 12.0
+RESPONSE_PRESSURE_RANGE_MIN = 18.0
+
+# Fallback response pressure when avg_response is unknown
+RESPONSE_PRESSURE_UNKNOWN_FALLBACK = 0.42
+RESPONSE_PRESSURE_DISTANCE_SCALE = 0.72
+
+# Arrival probability component weights (must sum to 1.0)
+ARRIVAL_PROB_LONG_ARRIVAL_WEIGHT = 0.24
+ARRIVAL_PROB_RESPONSE_WEIGHT = 0.18
+ARRIVAL_PROB_TRAVEL_WEIGHT = 0.22
+ARRIVAL_PROB_COVERAGE_WEIGHT = 0.22
+ARRIVAL_PROB_ZONE_WEIGHT = 0.14
+
+# Tanker dependency blend weights (must sum to 1.0)
+TANKER_DEPENDENCY_DISTANCE_WEIGHT = 0.58
+TANKER_DEPENDENCY_RESPONSE_WEIGHT = 0.42
+
+# Water deficit probability blend weights (must sum to 1.0)
+WATER_DEFICIT_GAP_WEIGHT = 0.76
+WATER_DEFICIT_TANKER_WEIGHT = 0.24
+
 # Casualty pressure scaling factor (converts victim rate to 0-1 pressure)
 CASUALTY_PRESSURE_SCALE = 1.8
 
