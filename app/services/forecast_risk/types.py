@@ -161,7 +161,7 @@ class LogisticsFactors(TypedDict, total=False):
     long_arrival_rate: float
     response_pressure: float
     logistics_profile: LogisticsProfile
-    arrival_probability: float
+    late_arrival_risk: float
 
 
 class WaterFactors(TypedDict, total=False):
@@ -322,11 +322,11 @@ class RiskScore(TypedDict, total=False):
     component_score_map: dict[str, ComponentScoreMapEntry]
     fire_probability: float
     severe_probability: float
-    arrival_probability: float
+    late_arrival_risk: float
     water_deficit_probability: float
     fire_probability_display: str
     severe_probability_display: str
-    arrival_probability_display: str
+    late_arrival_risk_display: str
     water_deficit_display: str
     history_count: int
     history_count_display: str

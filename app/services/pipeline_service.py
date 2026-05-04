@@ -350,11 +350,11 @@ def run_profiling_for_table(
             thresholds=normalized_thresholds,
         )
         if cached_result is not None:
-            add_log(session_id, resolved_job_id, "Persistent cache hit: skipping recomputation.")
+            add_log(session_id, resolved_job_id, "Кэш актуален: повторное вычисление не требуется.")
             add_log(
                 session_id,
                 resolved_job_id,
-                "Returning cached reports and cleaned table.",
+                "Возвращаем кэшированные отчёты и очищенную таблицу.",
             )
             final_status = "completed"
             return {

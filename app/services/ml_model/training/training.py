@@ -412,7 +412,8 @@ def _train_ml_model(
         backtest=backtest,
         progress_callback=progress_callback,
     )
-    if isinstance(training_models, dict):
+    if not hasattr(training_models, "final_frame"):
+        # Error payload (TypedDict) does not expose dataclass attributes.
         return training_models
 
     _emit_progress(progress_callback, 'ml_model.running', 'Строим прогноз по будущим датам и интервалы неопределённости.')

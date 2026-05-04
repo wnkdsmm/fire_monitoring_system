@@ -71,7 +71,7 @@ def compute_segmentation_strength(
 
 
 def compute_diagnostics_row_sort_key(result: ClusteringMethodRow) -> tuple[float, float, float, float, float]:
-    davies_bouldin = result.get("davies_bouldin", float("inf"))
+    davies_bouldin = result.get("davies_bouldin")
     davies_value = float("inf") if davies_bouldin is None else float(davies_bouldin)
     return (
         float(result.get("quality_score", float("-inf"))),

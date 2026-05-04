@@ -12,6 +12,7 @@ from ..ml_model_config_types import (
     LAG_DAYS_BIWEEK,
     LAG_DAYS_SHORT,
     LAG_DAYS_WEEK,
+    MIN_DAILY_HISTORY,
     MIN_TEMPERATURE_COVERAGE,
     NON_TEMPERATURE_FEATURE_COLUMNS,
     ROLLING_WINDOW_LONG_DAYS,
@@ -31,12 +32,12 @@ def _prepare_reference_frame(frame: pd.DataFrame) -> pd.DataFrame:
 
 
 def _detect_trend_warning(dataset: pd.DataFrame) -> str | None:
-    if len(dataset) < 60:
+    if len(dataset) < MIN_DAILY_HISTORY:
         return None
     ordered = dataset.sort_values('date').reset_index(drop=True)
     count_series = pd.to_numeric(ordered['count'], errors='coerce')
     valid = count_series.notna()
-    if int(valid.sum()) < 60:
+    if int(valid.sum()) < MIN_DAILY_HISTORY:
         return None
     counts = count_series.loc[valid].to_numpy(dtype=float)
     time_index = np.arange(len(counts), dtype=float)

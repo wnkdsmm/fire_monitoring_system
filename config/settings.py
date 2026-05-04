@@ -8,7 +8,7 @@ class Settings:
 
     def __init__(self, input_file=None, selected_table=None, output_folder=None):
         """
-        РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ настроек.
+        Инициализация настроек.
         
         Args:
             input_file: путь к загруженному файлу (опционально)
