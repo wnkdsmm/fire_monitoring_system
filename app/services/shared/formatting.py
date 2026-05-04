@@ -4,21 +4,19 @@ import math
 from datetime import date, datetime
 from typing import Any, Sequence
 
-MISSING_VALUE = "?"
+MISSING_VALUE = "—"
 
 
 def _fire_count_word(n: float) -> str:
     n_int = int(round(n))
     if 11 <= (n_int % 100) <= 14:
-        return "???????"
+        return "пожаров"
     rem = n_int % 10
     if rem == 1:
-        return "?????"
+        return "пожар"
     if 2 <= rem <= 4:
-        return "??????"
-    return "???????"
-
-
+        return "пожара"
+    return "пожаров"
 
 def format_integer(value: Any) -> str:
     try:
