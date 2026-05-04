@@ -103,6 +103,37 @@ GAP_STAT_MAX_WORKERS = min(4, (os.cpu_count() or 1))
 GAP_STAT_N_REFERENCES = 10
 
 MAX_TERRITORIES = 12
+
+# === Scoring risk formula constants ===
+
+# Bounds for base_fire_signal (exponential decay of incident rate)
+BASE_FIRE_SIGNAL_MIN = 0.08
+BASE_FIRE_SIGNAL_MAX = 0.72
+
+# Multiplier to scale expected Poisson parameter relative to base signal
+FIRE_EXPECTED_VALUE_SCALE = 0.72
+
+# Fallback floor for fire probability from history pressure
+FIRE_PROBABILITY_FLOOR_HISTORY_WEIGHT = 0.52
+FIRE_PROBABILITY_FLOOR_BASE = 0.22
+FIRE_PROBABILITY_FLOOR_MAX = 0.94
+
+# Casualty pressure scaling factor (converts victim rate to 0-1 pressure)
+CASUALTY_PRESSURE_SCALE = 1.8
+
+# Damage pressure weights (damage_rate vs severe_rate blend)
+DAMAGE_PRESSURE_DAMAGE_WEIGHT = 0.70
+DAMAGE_PRESSURE_SEVERE_WEIGHT = 0.30
+
+# Severe probability component weights (must sum to 1.0)
+SEVERE_PROB_SEVERE_RATE_WEIGHT = 0.46
+SEVERE_PROB_CASUALTY_WEIGHT = 0.26
+SEVERE_PROB_DAMAGE_WEIGHT = 0.18
+SEVERE_PROB_RISK_FACTOR_WEIGHT = 0.10
+
+# Default risk_factor when no risk_score_count data available
+DEFAULT_RISK_FACTOR = 0.26
+
 MIN_TEMPERATURE_NON_NULL_DAYS = 30
 MIN_TEMPERATURE_COVERAGE = 0.20
 GEO_LOOKBACK_DAYS = 180
@@ -113,6 +144,25 @@ MAX_GEO_HOTSPOTS = 8
 SERVICE_TIME_TARGET_MINUTES = 20.0
 SERVICE_DISTANCE_TARGET_KM = 12.0
 CORE_SERVICE_TIME_MINUTES = 14.0
+
+# === Logistics travel-time model constants ===
+
+# Vehicle speed assumptions (km/h) by territory type
+LOGISTICS_RURAL_SPEED_KMH = 34.0
+LOGISTICS_URBAN_SPEED_KMH = 42.0
+LOGISTICS_MINIMUM_SPEED_KMH = 22.0
+
+# Night-time speed reduction coefficient per unit of night_share
+LOGISTICS_NIGHT_SPEED_REDUCTION = 0.14
+
+# Blend weights for observed vs distance-estimated travel time
+LOGISTICS_RESPONSE_OBSERVED_WEIGHT_HIGH = 0.72   # >= 3 observations
+LOGISTICS_RESPONSE_OBSERVED_WEIGHT_LOW = 0.58    # < 3 observations
+LOGISTICS_RESPONSE_OBSERVATIONS_THRESHOLD = 3
+
+# Fallback travel-time when neither response nor distance is available
+LOGISTICS_FALLBACK_TRAVEL_RURAL_MIN = 24.0
+LOGISTICS_FALLBACK_TRAVEL_URBAN_MIN = 18.0
 
 # === ML ===
 

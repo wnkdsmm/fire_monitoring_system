@@ -6,7 +6,20 @@ from app.services.shared.formatting import (
     format_number_rounded as _format_number,
     format_percent_ratio as _format_percent_ratio,
 )
-from config.constants import CORE_SERVICE_TIME_MINUTES, SERVICE_DISTANCE_TARGET_KM, SERVICE_TIME_TARGET_MINUTES
+from config.constants import (
+    CORE_SERVICE_TIME_MINUTES,
+    LOGISTICS_FALLBACK_TRAVEL_RURAL_MIN,
+    LOGISTICS_FALLBACK_TRAVEL_URBAN_MIN,
+    LOGISTICS_MINIMUM_SPEED_KMH,
+    LOGISTICS_NIGHT_SPEED_REDUCTION,
+    LOGISTICS_RESPONSE_OBSERVED_WEIGHT_HIGH,
+    LOGISTICS_RESPONSE_OBSERVED_WEIGHT_LOW,
+    LOGISTICS_RESPONSE_OBSERVATIONS_THRESHOLD,
+    LOGISTICS_RURAL_SPEED_KMH,
+    LOGISTICS_URBAN_SPEED_KMH,
+    SERVICE_DISTANCE_TARGET_KM,
+    SERVICE_TIME_TARGET_MINUTES,
+)
 
 
 def build_explainable_logistics_profile(
@@ -34,12 +47,19 @@ def build_explainable_logistics_profile(
 
     estimated_from_distance: float | None = None
     if safe_distance is not None:
-        base_speed_kmh = 34.0 if is_rural else 42.0
-        adjusted_speed_kmh = max(22.0, base_speed_kmh * (1.0 - 0.14 * safe_night_share))
+        base_speed_kmh = LOGISTICS_RURAL_SPEED_KMH if is_rural else LOGISTICS_URBAN_SPEED_KMH
+        adjusted_speed_kmh = max(
+            LOGISTICS_MINIMUM_SPEED_KMH,
+            base_speed_kmh * (1.0 - LOGISTICS_NIGHT_SPEED_REDUCTION * safe_night_share),
+        )
         estimated_from_distance = safe_distance / adjusted_speed_kmh * 60.0
 
     if safe_response is not None and estimated_from_distance is not None:
-        observed_weight = 0.72 if response_observations >= 3 else 0.58
+        observed_weight = (
+            LOGISTICS_RESPONSE_OBSERVED_WEIGHT_HIGH
+            if response_observations >= LOGISTICS_RESPONSE_OBSERVATIONS_THRESHOLD
+            else LOGISTICS_RESPONSE_OBSERVED_WEIGHT_LOW
+        )
         travel_time_minutes = safe_response * observed_weight + estimated_from_distance * (1.0 - observed_weight)
         travel_time_source = 'Факт прибытия + модель по расстоянию'
     elif safe_response is not None:
@@ -49,7 +69,9 @@ def build_explainable_logistics_profile(
         travel_time_minutes = estimated_from_distance
         travel_time_source = 'Модель по расстоянию до ПЧ'
     else:
-        travel_time_minutes = 24.0 if is_rural else 18.0
+        travel_time_minutes = (
+            LOGISTICS_FALLBACK_TRAVEL_RURAL_MIN if is_rural else LOGISTICS_FALLBACK_TRAVEL_URBAN_MIN
+        )
         travel_time_source = 'Осторожный fallback без прямой логистики'
 
     distance_pressure = _clamp(((safe_distance or 14.0) - 6.0) / 24.0, 0.0, 1.0)

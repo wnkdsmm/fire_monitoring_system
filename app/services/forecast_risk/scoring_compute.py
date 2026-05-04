@@ -4,6 +4,22 @@ import math
 from typing import Any, Sequence
 
 from app.services.explainable_logistics import build_explainable_logistics_profile
+from config.constants import (
+    BASE_FIRE_SIGNAL_MAX,
+    BASE_FIRE_SIGNAL_MIN,
+    CASUALTY_PRESSURE_SCALE,
+    DAMAGE_PRESSURE_DAMAGE_WEIGHT,
+    DAMAGE_PRESSURE_SEVERE_WEIGHT,
+    DEFAULT_RISK_FACTOR,
+    FIRE_EXPECTED_VALUE_SCALE,
+    FIRE_PROBABILITY_FLOOR_BASE,
+    FIRE_PROBABILITY_FLOOR_HISTORY_WEIGHT,
+    FIRE_PROBABILITY_FLOOR_MAX,
+    SEVERE_PROB_CASUALTY_WEIGHT,
+    SEVERE_PROB_DAMAGE_WEIGHT,
+    SEVERE_PROB_RISK_FACTOR_WEIGHT,
+    SEVERE_PROB_SEVERE_RATE_WEIGHT,
+)
 
 from .profiles import DEFAULT_RISK_WEIGHT_MODE, get_risk_weight_profile
 from .scoring_history import _collect_territory_buckets, _component_weights_for_rural, _horizon_context
@@ -45,7 +61,11 @@ def _normalization_fields(
     recent_window_days: int,
 ) -> dict[str, float]:
     return {
-        "base_fire_signal": _clamp(1.0 - math.exp(-(recent_incidents / recent_window_days)), 0.08, 0.72),
+        "base_fire_signal": _clamp(
+            1.0 - math.exp(-(recent_incidents / recent_window_days)),
+            BASE_FIRE_SIGNAL_MIN,
+            BASE_FIRE_SIGNAL_MAX,
+        ),
         "max_incidents": max(bucket["incidents"] for bucket in territories.values()),
         "max_weighted": max(bucket["weighted_history"] for bucket in territories.values()),
     }
@@ -79,27 +99,44 @@ def _normalized_risk_fields(
         1.0,
     )
     base_fire_signal = normalization["base_fire_signal"]
-    expected_value = (bucket["weighted_history"] / horizon["history_days"]) * horizon["horizon_days"] * (0.72 + base_fire_signal)
+    expected_value = (
+        (bucket["weighted_history"] / horizon["history_days"])
+        * horizon["horizon_days"]
+        * (FIRE_EXPECTED_VALUE_SCALE + base_fire_signal)
+    )
     fire_probability = _clamp(
         max(
             1.0 - math.exp(-max(0.0, expected_value)),
-            base_fire_signal * min(0.94, 0.22 + history_pressure * 0.52),
+            base_fire_signal
+            * min(
+                FIRE_PROBABILITY_FLOOR_MAX,
+                FIRE_PROBABILITY_FLOOR_BASE + history_pressure * FIRE_PROBABILITY_FLOOR_HISTORY_WEIGHT,
+            ),
         ),
         0.02,
         0.995,
     )
 
-    severe_rate = bucket["severe"] / incidents
-    victims_rate = bucket["victims"] / incidents
-    damage_rate = bucket["major_damage"] / incidents
-    heating_share = bucket["heating_incidents"] / incidents
+    severe_rate = bucket["severe"] / safe_incidents
+    victims_rate = bucket["victims"] / safe_incidents
+    damage_rate = bucket["major_damage"] / safe_incidents
+    heating_share = bucket["heating_incidents"] / safe_incidents
     heating_pressure = _clamp(heating_share * horizon["future_heating_share"], 0.0, 1.0)
-    night_share = bucket["night_incidents"] / incidents
-    risk_factor = bucket["risk_score_sum"] / bucket["risk_score_count"] if bucket["risk_score_count"] else 0.26
-    casualty_pressure = _clamp(victims_rate * 1.8, 0.0, 1.0)
-    damage_pressure = _clamp(0.70 * damage_rate + 0.30 * severe_rate, 0.0, 1.0)
+    night_share = bucket["night_incidents"] / safe_incidents
+    risk_factor = bucket["risk_score_sum"] / bucket["risk_score_count"] if bucket["risk_score_count"] else DEFAULT_RISK_FACTOR
+    casualty_pressure = _clamp(victims_rate * CASUALTY_PRESSURE_SCALE, 0.0, 1.0)
+    damage_pressure = _clamp(
+        DAMAGE_PRESSURE_DAMAGE_WEIGHT * damage_rate + DAMAGE_PRESSURE_SEVERE_WEIGHT * severe_rate,
+        0.0,
+        1.0,
+    )
     severe_probability = _clamp(
-        0.46 * severe_rate + 0.26 * casualty_pressure + 0.18 * damage_pressure + 0.10 * risk_factor,
+        (
+            SEVERE_PROB_SEVERE_RATE_WEIGHT * severe_rate
+            + SEVERE_PROB_CASUALTY_WEIGHT * casualty_pressure
+            + SEVERE_PROB_DAMAGE_WEIGHT * damage_pressure
+            + SEVERE_PROB_RISK_FACTOR_WEIGHT * risk_factor
+        ),
         0.02,
         0.98,
     )
