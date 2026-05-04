@@ -7,6 +7,15 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
+from config.constants import (
+    COUNT_PREDICTION_CAP_FLOOR,
+    COUNT_PREDICTION_CAP_SUPPORT_MULTIPLIER,
+    COUNT_PREDICTION_CAP_SUPPORT_OFFSET,
+    NEGATIVE_BINOMIAL_ALPHA_DEFAULT,
+    NEGATIVE_BINOMIAL_ALPHA_FLOOR,
+    NEGATIVE_BINOMIAL_ALPHA_MAX,
+)
+
 logger = logging.getLogger(__name__)
 
 try:
@@ -227,7 +236,10 @@ def _count_prediction_support(X: pd.DataFrame, fallback: np.ndarray) -> np.ndarr
 def _count_prediction_upper_cap_from_support(support: np.ndarray | float) -> np.ndarray | float:
     # Keep a very generous cap so plausible burst days survive, while still cutting
     # obviously explosive numeric artifacts such as 1e300 after unstable exp().
-    return np.maximum(250.0, support * 20.0 + 50.0)
+    return np.maximum(
+        COUNT_PREDICTION_CAP_FLOOR,
+        support * COUNT_PREDICTION_CAP_SUPPORT_MULTIPLIER + COUNT_PREDICTION_CAP_SUPPORT_OFFSET,
+    )
 
 
 def _count_prediction_upper_caps(X: pd.DataFrame, fallback: np.ndarray) -> np.ndarray:
@@ -269,11 +281,11 @@ def _predict_count_from_design(model_bundle: dict[str, Any], X: pd.DataFrame) ->
 def _estimate_negative_binomial_alpha(counts: np.ndarray) -> float:
     values = np.asarray(counts, dtype=float)
     if values.size <= 1:
-        return 0.25
+        return NEGATIVE_BINOMIAL_ALPHA_DEFAULT
     mean_value = max(float(np.mean(values)), MIN_POSITIVE_PREDICTION)
     variance = float(np.var(values, ddof=1))
-    alpha = max((variance - mean_value) / max(mean_value ** 2, MIN_POSITIVE_PREDICTION), 1e-4)
-    return min(alpha, 5.0)
+    alpha = max((variance - mean_value) / max(mean_value ** 2, MIN_POSITIVE_PREDICTION), NEGATIVE_BINOMIAL_ALPHA_FLOOR)
+    return min(alpha, NEGATIVE_BINOMIAL_ALPHA_MAX)
 
 
 def _estimate_count_overdispersion_ratio(counts: np.ndarray) -> float:

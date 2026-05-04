@@ -30,12 +30,6 @@ from .types import (
 )
 from .utils import _format_integer, _format_number, _format_percent
 
-__all__ = [
-    "_build_clustering_quality_assessment",
-    "_empty_clustering_quality_assessment",
-]
-
-
 def _format_configuration_label(configuration: ClusterMethod | None) -> str:
     if not configuration:
         return "—"

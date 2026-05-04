@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 from contextlib import nullcontext
 from dataclasses import dataclass
 from datetime import date
@@ -29,8 +30,6 @@ from .types import (
 _run_backtest = profiled('ml_backtest')(_backtesting._run_backtest)
 
 @dataclass
-
-
 class _TrainingArtifacts:
     final_frame: Any
     final_dataset: Any
@@ -46,16 +45,12 @@ class _TrainingArtifacts:
     trend_warning: str | None = None
 
 @dataclass
-
-
 class _TrainingSeedData:
     history_tail: list[TrainingHistoryRecord]
     frame: Any
     dataset: Any
 
 @dataclass
-
-
 class _FinalTrainingModels:
     final_frame: Any
     final_dataset: Any
@@ -67,8 +62,6 @@ class _FinalTrainingModels:
     final_event_model: TrainingModelArtifact | None
 
 @dataclass
-
-
 class _FeatureImportanceArtifacts:
     rows: list[TrainingFeatureImportanceRow]
     source_key: str | None
@@ -97,7 +90,7 @@ def _signature_float(value: Any) -> float | None:
         numeric_value = float(value)
     except (TypeError, ValueError):
         return None
-    if numeric_value != numeric_value:
+    if math.isnan(numeric_value):
         return None
     return numeric_value
 
@@ -358,9 +351,9 @@ def _train_ml_model(
     forecast_days: int,
     scenario_temperature: float | None,
     current_user_date: date | None = None,
-    progress_callback: MlProgressCallback = None,
+    progress_callback: MlProgressCallback | None = None,
     caches: MLModelCaches | None = None,
- ) -> TrainingResultPayload:
+) -> TrainingResultPayload:
     cache_set = caches or _DEFAULT_CACHES
     perf = current_perf_trace()
     if len(daily_history) < MIN_DAILY_HISTORY or forecast_days <= 0:

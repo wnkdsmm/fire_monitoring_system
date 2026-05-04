@@ -5,20 +5,39 @@ from typing import Any, Sequence
 
 from app.services.explainable_logistics import build_explainable_logistics_profile
 from config.constants import (
+    ARRIVAL_PROB_COVERAGE_WEIGHT,
+    ARRIVAL_PROB_LONG_ARRIVAL_WEIGHT,
+    ARRIVAL_PROB_RESPONSE_WEIGHT,
+    ARRIVAL_PROB_TRAVEL_WEIGHT,
+    ARRIVAL_PROB_ZONE_WEIGHT,
     BASE_FIRE_SIGNAL_MAX,
     BASE_FIRE_SIGNAL_MIN,
     CASUALTY_PRESSURE_SCALE,
     DAMAGE_PRESSURE_DAMAGE_WEIGHT,
     DAMAGE_PRESSURE_SEVERE_WEIGHT,
+    DISTANCE_SCORE_MIN_KM,
+    DISTANCE_SCORE_RANGE_KM,
     DEFAULT_RISK_FACTOR,
     FIRE_EXPECTED_VALUE_SCALE,
+    FIRE_PROBABILITY_CLAMP_MAX,
+    FIRE_PROBABILITY_CLAMP_MIN,
     FIRE_PROBABILITY_FLOOR_BASE,
     FIRE_PROBABILITY_FLOOR_HISTORY_WEIGHT,
     FIRE_PROBABILITY_FLOOR_MAX,
+    RESPONSE_PRESSURE_DISTANCE_SCALE,
+    RESPONSE_PRESSURE_RANGE_MIN,
+    RESPONSE_PRESSURE_TARGET_MIN,
+    RESPONSE_PRESSURE_UNKNOWN_FALLBACK,
+    SEASONAL_MONTH_WEIGHT,
+    SEASONAL_WEEKDAY_WEIGHT,
     SEVERE_PROB_CASUALTY_WEIGHT,
     SEVERE_PROB_DAMAGE_WEIGHT,
     SEVERE_PROB_RISK_FACTOR_WEIGHT,
     SEVERE_PROB_SEVERE_RATE_WEIGHT,
+    TANKER_DEPENDENCY_DISTANCE_WEIGHT,
+    TANKER_DEPENDENCY_RESPONSE_WEIGHT,
+    WATER_DEFICIT_GAP_WEIGHT,
+    WATER_DEFICIT_TANKER_WEIGHT,
 )
 
 from .profiles import DEFAULT_RISK_WEIGHT_MODE, get_risk_weight_profile
@@ -94,7 +113,8 @@ def _normalized_risk_fields(
     history_pressure = incidents / max(1, normalization["max_incidents"])
     recency_pressure = bucket["weighted_history"] / max(1.0, normalization["max_weighted"])
     seasonal_alignment = _clamp(
-        0.62 * (bucket["seasonal_month_sum"] / safe_incidents) + 0.38 * (bucket["seasonal_weekday_sum"] / safe_incidents),
+        SEASONAL_MONTH_WEIGHT * (bucket["seasonal_month_sum"] / safe_incidents)
+        + SEASONAL_WEEKDAY_WEIGHT * (bucket["seasonal_weekday_sum"] / safe_incidents),
         0.0,
         1.0,
     )
@@ -113,8 +133,8 @@ def _normalized_risk_fields(
                 FIRE_PROBABILITY_FLOOR_BASE + history_pressure * FIRE_PROBABILITY_FLOOR_HISTORY_WEIGHT,
             ),
         ),
-        0.02,
-        0.995,
+        FIRE_PROBABILITY_CLAMP_MIN,
+        FIRE_PROBABILITY_CLAMP_MAX,
     )
 
     severe_rate = bucket["severe"] / safe_incidents
@@ -170,7 +190,7 @@ def _logistics_fields(
     avg_response = bucket["response_sum"] / bucket["response_count"] if bucket["response_count"] else None
     avg_distance = bucket["distance_sum"] / bucket["distance_count"] if bucket["distance_count"] else None
     distance_score = _clamp(
-        ((avg_distance or float(defaults.get("distance_km_baseline", 12.0))) - 6.0) / 24.0,
+        ((avg_distance or float(defaults.get("distance_km_baseline", 12.0))) - DISTANCE_SCORE_MIN_KM) / DISTANCE_SCORE_RANGE_KM,
         0.0,
         1.0,
     )
@@ -178,9 +198,16 @@ def _logistics_fields(
         bucket["long_arrivals"] / bucket["response_count"] if bucket["response_count"] else _clamp(distance_score * 0.55, 0.05, 0.75)
     )
     response_pressure = (
-        _clamp((avg_response - 12.0) / 18.0, 0.0, 1.0)
+        _clamp((avg_response - RESPONSE_PRESSURE_TARGET_MIN) / RESPONSE_PRESSURE_RANGE_MIN, 0.0, 1.0)
         if avg_response is not None
-        else _clamp(max(float(defaults.get("response_pressure_unknown", 0.42)), distance_score * 0.72), 0.0, 1.0)
+        else _clamp(
+            max(
+                float(defaults.get("response_pressure_unknown", RESPONSE_PRESSURE_UNKNOWN_FALLBACK)),
+                distance_score * RESPONSE_PRESSURE_DISTANCE_SCALE,
+            ),
+            0.0,
+            1.0,
+        )
     )
     logistics_profile = build_explainable_logistics_profile(
         avg_distance_km=avg_distance,
@@ -192,11 +219,11 @@ def _logistics_fields(
         night_share=night_share,
     )
     arrival_probability = _clamp(
-        0.24 * long_arrival_rate
-        + 0.18 * response_pressure
-        + 0.22 * float(logistics_profile["travel_time_pressure"])
-        + 0.22 * float(logistics_profile["service_coverage_gap"])
-        + 0.14 * float(logistics_profile["service_zone_pressure"]),
+        ARRIVAL_PROB_LONG_ARRIVAL_WEIGHT * long_arrival_rate
+        + ARRIVAL_PROB_RESPONSE_WEIGHT * response_pressure
+        + ARRIVAL_PROB_TRAVEL_WEIGHT * float(logistics_profile["travel_time_pressure"])
+        + ARRIVAL_PROB_COVERAGE_WEIGHT * float(logistics_profile["service_coverage_gap"])
+        + ARRIVAL_PROB_ZONE_WEIGHT * float(logistics_profile["service_zone_pressure"]),
         0.03,
         0.98,
     )
@@ -223,8 +250,16 @@ def _water_fields(
         if bucket["water_known"]
         else float(defaults.get("water_gap_unknown", 0.38))
     )
-    tanker_dependency = _clamp(0.58 * distance_score + 0.42 * response_pressure, 0.0, 1.0)
-    water_deficit_probability = _clamp(0.76 * water_gap_rate + 0.24 * tanker_dependency, 0.02, 0.99)
+    tanker_dependency = _clamp(
+        TANKER_DEPENDENCY_DISTANCE_WEIGHT * distance_score + TANKER_DEPENDENCY_RESPONSE_WEIGHT * response_pressure,
+        0.0,
+        1.0,
+    )
+    water_deficit_probability = _clamp(
+        WATER_DEFICIT_GAP_WEIGHT * water_gap_rate + WATER_DEFICIT_TANKER_WEIGHT * tanker_dependency,
+        0.02,
+        0.99,
+    )
     return {
         "water_gap_rate": water_gap_rate,
         "tanker_dependency": tanker_dependency,

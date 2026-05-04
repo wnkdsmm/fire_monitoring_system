@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import math
 import numbers
@@ -410,7 +410,7 @@ def get_access_points_data(
         "has_data": True,
         "title": "Проблемные точки",
         "model_description": (
-            "Рейтинг строится по individual points, а не по кластерам территорий: сначала адрес/объект, затем координатная точка,"
+            "Рейтинг строится по отдельные точки, а не по кластерам территорий: сначала адрес/объект, затем координатная точка,"
             " далее населённый пункт или territory label. РС‚РѕРіРѕРІС‹Р№ score комбинирует доступность ПЧ, время прибытия,"
             " подтверждённость водоснабжения, тяжесть последствий, повторяемость пожаров и отдельный слой неполноты данных."
         ),
@@ -439,3 +439,4 @@ def get_access_points_data(
         "notes": notes,
     }
     return _ACCESS_POINTS_CACHE.set(request_state["cache_key"], _sanitize_json_payload(payload))
+

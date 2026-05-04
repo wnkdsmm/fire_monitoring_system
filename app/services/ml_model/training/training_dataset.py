@@ -5,6 +5,8 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
+from config.constants import TREND_WARNING_RELATIVE_THRESHOLD
+
 from ..ml_model_config_types import (
     FEATURE_COLUMNS,
     LAG_DAYS_BIWEEK,
@@ -45,7 +47,7 @@ def _detect_trend_warning(dataset: pd.DataFrame) -> str | None:
     slope_per_100_days = float(slope_per_day) * 100.0
     mean_count = float(np.mean(counts))
     relative_trend = slope_per_100_days / max(mean_count, 0.1)
-    if abs(relative_trend) <= 0.30:
+    if abs(relative_trend) <= TREND_WARNING_RELATIVE_THRESHOLD:
         return None
     relative_percent = round(relative_trend * 100.0)
     return (
