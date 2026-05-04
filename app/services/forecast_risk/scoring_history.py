@@ -38,7 +38,7 @@ def _history_date_bounds(records: Sequence[RiskEventRecord]) -> tuple[Any, Any]:
 
 
 def _territory_label(record: RiskEventRecord) -> str:
-    return record["territory_label"] or record["district"] or "РўРµСЂСЂРёС‚РѕСЂРёСЏ РЅРµ СѓРєР°Р·Р°РЅР°"
+    return record["territory_label"] or record["district"] or "Территория не указана"
 
 
 def _horizon_context(

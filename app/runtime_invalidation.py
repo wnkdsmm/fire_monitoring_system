@@ -109,12 +109,12 @@ def warmup_runtime_caches(on_warning: Callable[[str], None] | None = None) -> No
             try:
                 db_metadata.get_table_columns_cached(table_name)
             except Exception as exc:
-                warn(f"РџСЂРµРґСѓРїСЂРµР¶РґРµРЅРёРµ РїСЂРё РїСЂРѕРіСЂРµРІРµ РєРѕР»РѕРЅРѕРє С‚Р°Р±Р»РёС†С‹ '{table_name}': {exc}")
+                warn(f"Предупреждение при прогреве колонок таблицы '{table_name}': {exc}")
     except Exception as exc:
-        warn(f"РџСЂРµРґСѓРїСЂРµР¶РґРµРЅРёРµ РїСЂРё РїСЂРѕРіСЂРµРІРµ РєСЌС€Р° РјРµС‚Р°РґР°РЅРЅС‹С… Р‘Р”: {exc}")
+        warn(f"Предупреждение при прогреве кэша метаданных БД: {exc}")
 
     try:
         dashboard_cache = import_module("app.dashboard.cache")
         dashboard_cache._collect_dashboard_metadata_cached()
     except Exception as exc:
-        warn(f"РџСЂРµРґСѓРїСЂРµР¶РґРµРЅРёРµ РїСЂРё РїСЂРѕРіСЂРµРІРµ РєСЌС€Р° РґР°С€Р±РѕСЂРґР°: {exc}")
+        warn(f"Предупреждение при прогреве кэша дашборда: {exc}")

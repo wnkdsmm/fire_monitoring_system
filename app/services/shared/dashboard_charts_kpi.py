@@ -152,9 +152,9 @@ def _build_cause_plotly(title: str, items: list[ChartData], empty_message: str) 
     ordered_items = list(reversed(items))
     plotly_payload = build_item_horizontal_bar_payload(
         ordered_items,
-        layout=_plotly_layout("РљРѕР»РёС‡РµСЃС‚РІРѕ РїРѕР¶Р°СЂРѕРІ", showlegend=False),
+        layout=_plotly_layout("Количество пожаров", showlegend=False),
         y_values=[_wrap_plotly_label(item["label"], max_width=64, max_lines=3) for item in ordered_items],
-        hovertemplate="<b>%{customdata}</b><br>РџРѕР¶Р°СЂРѕРІ: %{text}<extra></extra>",
+        hovertemplate="<b>%{customdata}</b><br>Пожаров: %{text}<extra></extra>",
         color=PLOTLY_PALETTE["fire"],
         line_color=PLOTLY_PALETTE["fire_soft"],
         customdata=[item["label"] for item in ordered_items],
@@ -181,7 +181,7 @@ def _build_distribution_pie_plotly(title: str, items: list[ChartData], empty_mes
         layout=_plotly_layout("", showlegend=False),
         colors=build_plotly_palette(["sky", "sky_soft", "forest_soft", "forest", "sand", "fire_soft"]),
         hole=0.45,
-        hovertemplate="<b>%{label}</b><br>Р—Р°РїРёСЃРµР№: %{value}<br>Р”РѕР»СЏ: %{percent}<extra></extra>",
+        hovertemplate="<b>%{label}</b><br>Записей: %{value}<br>Доля: %{percent}<extra></extra>",
         margin={"l": 24, "r": 24, "t": 12, "b": 12},
     )
 
@@ -192,9 +192,9 @@ def _build_distribution_plotly(title: str, items: list[ChartData], empty_message
     ordered_items = list(reversed(items))
     return build_item_horizontal_bar_payload(
         ordered_items,
-        layout=_plotly_layout("РљРѕР»РёС‡РµСЃС‚РІРѕ Р·Р°РїРёСЃРµР№", showlegend=False),
+        layout=_plotly_layout("Количество записей", showlegend=False),
         y_values=[_wrap_plotly_label(item["label"], max_width=26, max_lines=2) for item in ordered_items],
-        hovertemplate="<b>%{customdata}</b><br>Р—Р°РїРёСЃРµР№: %{text}<extra></extra>",
+        hovertemplate="<b>%{customdata}</b><br>Записей: %{text}<extra></extra>",
         color=PLOTLY_PALETTE["sky"],
         line_color=PLOTLY_PALETTE["sky_soft"],
         customdata=[item["label"] for item in ordered_items],
@@ -214,9 +214,9 @@ def _build_damage_overview_plotly(title: str, items: list[ChartData], empty_mess
     ordered_items = list(reversed(items))
     return build_item_horizontal_bar_payload(
         ordered_items,
-        layout=_plotly_layout("РљРѕР»РёС‡РµСЃС‚РІРѕ РїРѕР¶Р°СЂРѕРІ", showlegend=False),
+        layout=_plotly_layout("Количество пожаров", showlegend=False),
         y_values=[_wrap_plotly_label(item["label"], max_width=24, max_lines=2) for item in ordered_items],
-        hovertemplate="<b>%{customdata}</b><br>РџРѕР¶Р°СЂРѕРІ СЃ РЅРµРЅСѓР»РµРІС‹Рј РїРѕРєР°Р·Р°С‚РµР»РµРј: %{text}<extra></extra>",
+        hovertemplate="<b>%{customdata}</b><br>Пожаров с ненулевым показателем: %{text}<extra></extra>",
         color=PLOTLY_PALETTE["sand"],
         line_color=PLOTLY_PALETTE["sand_soft"],
         customdata=[item["label"] for item in ordered_items],
@@ -240,23 +240,23 @@ def _build_damage_pairs_plotly(title: str, items: list[DamagePairData], empty_me
         build_plotly_bar_trace(
             x=x_values,
             y=[item["destroyed"] for item in items],
-            name="РЈРЅРёС‡С‚РѕР¶РµРЅРѕ",
+            name="Уничтожено",
             customdata=customdata,
             marker={"color": PLOTLY_PALETTE["fire"]},
-            hovertemplate="<b>%{customdata}</b><br>РџРѕР¶Р°СЂРѕРІ СЃ СѓРЅРёС‡С‚РѕР¶РµРЅРёРµРј: %{y}<extra></extra>",
+            hovertemplate="<b>%{customdata}</b><br>Пожаров с уничтожением: %{y}<extra></extra>",
         ),
         build_plotly_bar_trace(
             x=x_values,
             y=[item["damaged"] for item in items],
-            name="РџРѕРІСЂРµР¶РґРµРЅРѕ",
+            name="Повреждено",
             customdata=customdata,
             marker={"color": PLOTLY_PALETTE["sky"]},
-            hovertemplate="<b>%{customdata}</b><br>РџРѕР¶Р°СЂРѕРІ СЃ РїРѕРІСЂРµР¶РґРµРЅРёРµРј: %{y}<extra></extra>",
+            hovertemplate="<b>%{customdata}</b><br>Пожаров с повреждением: %{y}<extra></extra>",
         ),
     ]
     return build_plotly_payload_from_traces(
         traces,
-        layout=_plotly_layout("РљРѕР»РёС‡РµСЃС‚РІРѕ РїРѕР¶Р°СЂРѕРІ", showlegend=True),
+        layout=_plotly_layout("Количество пожаров", showlegend=True),
         layout_updates=merge_plotly_layout(
             updates={"barmode": "group"},
             xaxis={"automargin": True},
@@ -279,8 +279,8 @@ def _build_damage_standalone_plotly(title: str, items: list[ChartData], empty_me
     ]
     return build_item_vertical_bar_payload(
         normalized_items,
-        layout=_plotly_layout("РљРѕР»РёС‡РµСЃС‚РІРѕ РїРѕР¶Р°СЂРѕРІ", showlegend=False),
-        hovertemplate="<b>%{customdata}</b><br>РџРѕР¶Р°СЂРѕРІ СЃ РїРѕРєР°Р·Р°С‚РµР»РµРј: %{text}<extra></extra>",
+        layout=_plotly_layout("Количество пожаров", showlegend=False),
+        hovertemplate="<b>%{customdata}</b><br>Пожаров с показателем: %{text}<extra></extra>",
         colors=[
             [PLOTLY_PALETTE["forest"], PLOTLY_PALETTE["sky"], PLOTLY_PALETTE["sand"], PLOTLY_PALETTE["fire_soft"]][
                 index % 4
@@ -313,7 +313,7 @@ def _build_damage_share_plotly(title: str, items: list[ChartData], empty_message
             "#8d7763",
         ],
         hole=0.46,
-        hovertemplate="<b>%{label}</b><br>РџРѕР¶Р°СЂРѕРІ: %{value}<br>Р”РѕР»СЏ: %{percent}<extra></extra>",
+        hovertemplate="<b>%{label}</b><br>Пожаров: %{value}<br>Доля: %{percent}<extra></extra>",
         margin={"l": 24, "r": 24, "t": 12, "b": 12},
     )
 
@@ -324,9 +324,9 @@ def _build_table_breakdown_plotly(title: str, items: list[ChartData], empty_mess
     ordered_items = list(reversed(items))
     return build_item_horizontal_bar_payload(
         ordered_items,
-        layout=_plotly_layout("РљРѕР»РёС‡РµСЃС‚РІРѕ РїРѕР¶Р°СЂРѕРІ", showlegend=False),
+        layout=_plotly_layout("Количество пожаров", showlegend=False),
         y_values=[item["label"] for item in ordered_items],
-        hovertemplate="<b>%{y}</b><br>РџРѕР¶Р°СЂРѕРІ: %{text}<extra></extra>",
+        hovertemplate="<b>%{y}</b><br>Пожаров: %{text}<extra></extra>",
         color=PLOTLY_PALETTE["sand"],
         line_color=PLOTLY_PALETTE["sand_soft"],
     )

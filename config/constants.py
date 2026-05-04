@@ -16,8 +16,8 @@ LOW_VARIANCE_THRESHOLD = 0.0001
 DOMINANT_VALUE_THRESHOLD = 0.85
 
 MISSING_LIKE_VALUES = [
-    "РЅРµС‚ РґР°РЅРЅС‹С…",
-    "РЅ/Рґ",
+    "нет данных",
+    "н/д",
     "nan",
     "none",
     "null",
@@ -34,10 +34,10 @@ PROFILING_XLSX_SUFFIX = "_fires_profiling_report.xlsx"
 CORR_THRESHOLD = 0.9
 VIF_THRESHOLD = 10
 IMPORTANT_KEYWORDS = [
-    "С‚СЂР°РІРјРёСЂРѕРІР°С‚СЊ",
-    "РїРѕРіРёР±РЅСѓС‚СЊ",
-    "СЌРІР°РєСѓРёСЂРѕРІР°С‚СЊ",
-    "СЂРµР±С‘РЅРѕРє",
+    "травмировать",
+    "погибнуть",
+    "эвакуировать",
+    "ребёнок",
 ]
 
 FORECASTING_FORECAST_DAY_OPTIONS = [7, 14, 30, 60]

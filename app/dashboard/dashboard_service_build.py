@@ -49,7 +49,7 @@ def _build_dashboard_error_context(error_message: str, *, plotly_js: str = "") -
     return {
         "generated_at": _format_datetime(datetime.now()),
         "filters": {
-            "tables": [{"value": "all", "label": "Р’СЃРµ С‚Р°Р±Р»РёС†С‹"}],
+            "tables": [{"value": "all", "label": "Все таблицы"}],
             "years": [],
             "group_columns": [],
         },
@@ -241,7 +241,7 @@ def _build_dashboard_payload(
     monthly_heatmap = aggregation["monthly_heatmap"]
     area_buckets = aggregation["area_buckets"]
     cumulative_area = aggregation["cumulative_area"]
-    scope_label = f"РўР°Р±Р»РёС†Р°: {scope['table_label']} | Р“РѕРґ: {scope['year_label']} | Р Р°Р·СЂРµР·: {scope['group_label']}"
+    scope_label = f"Таблица: {scope['table_label']} | Год: {scope['year_label']} | Разрез: {scope['group_label']}"
 
     export_text = compose_executive_brief_text(
         management.get("brief"),
@@ -254,7 +254,7 @@ def _build_dashboard_payload(
 
     notes = list(metadata["errors"][:5])
     if not PLOTLY_AVAILABLE:
-        notes.append("Р‘РёР±Р»РёРѕС‚РµРєР° Plotly РЅРµ РЅР°Р№РґРµРЅР° РІ РѕРєСЂСѓР¶РµРЅРёРё. РРЅС‚РµСЂР°РєС‚РёРІРЅС‹Рµ РіСЂР°С„РёРєРё РЅРµ Р±СѓРґСѓС‚ РїРѕРєР°Р·Р°РЅС‹.")
+        notes.append("Библиотека Plotly не найдена в окружении. РРЅС‚РµСЂР°РєС‚РёРІРЅС‹Рµ графики не будут показаны.")
 
     return {
         "generated_at": _format_datetime(datetime.now()),
@@ -312,8 +312,8 @@ def _empty_dashboard_data(
             "area_fill_rate_display": "0%",
             "years_covered": 0,
             "years_covered_display": "0",
-            "period_label": "РќРµС‚ РґР°РЅРЅС‹С…",
-            "year_label": "Р’СЃРµ РіРѕРґС‹",
+            "period_label": "Нет данных",
+            "year_label": "Все годы",
             "deaths": 0,
             "deaths_display": "0",
             "injuries": 0,
@@ -334,25 +334,25 @@ def _empty_dashboard_data(
             "children_total_display": "0",
         },
         "scope": {
-            "table_label": "Р’СЃРµ С‚Р°Р±Р»РёС†С‹",
-            "year_label": "Р’СЃРµ РіРѕРґС‹",
-            "group_label": "РќРµС‚ РґР°РЅРЅС‹С…",
+            "table_label": "Все таблицы",
+            "year_label": "Все годы",
+            "group_label": "Нет данных",
             "table_count": 0,
             "table_count_display": "0",
             "database_tables_count": 0,
             "database_tables_count_display": "0",
             "available_years_count": 0,
             "available_years_count_display": "0",
-            "period_label": "РќРµС‚ РґР°РЅРЅС‹С…",
+            "period_label": "Нет данных",
         },
         "trend": {
-            "title": "Р”РёРЅР°РјРёРєР° РїРѕСЃР»РµРґРЅРµРіРѕ РіРѕРґР°",
+            "title": "Динамика последнего года",
             "current_year": "-",
             "current_value_display": "0",
             "previous_year": "",
-            "delta_display": "РќРµС‚ Р±Р°Р·С‹ СЃСЂР°РІРЅРµРЅРёСЏ",
+            "delta_display": "Нет базы сравнения",
             "direction": "flat",
-            "description": "РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РґР°РЅРЅС‹С… РґР»СЏ СЃСЂР°РІРЅРµРЅРёСЏ РїРѕ РіРѕРґР°Рј.",
+            "description": "Недостаточно данных для сравнения по годам.",
         },
         "management": _empty_management_snapshot(priority_horizon_days=horizon_days),
         "highlights": [],
@@ -362,27 +362,27 @@ def _empty_dashboard_data(
             "recent_years": [],
         },
         "widgets": {
-            "causes": _finalize_chart("SQL-РІРёРґР¶РµС‚: РїСЂРёС‡РёРЅС‹", [], "РќРµС‚ РґР°РЅРЅС‹С… РїРѕ РїСЂРёС‡РёРЅР°Рј РІРѕР·РіРѕСЂР°РЅРёСЏ."),
-            "districts": _finalize_chart("SQL-РІРёРґР¶РµС‚: СЂР°Р№РѕРЅС‹", [], "Р’ РІС‹Р±СЂР°РЅРЅС‹С… С‚Р°Р±Р»РёС†Р°С… РЅРµ РЅР°Р№РґРµРЅРѕ РєРѕР»РѕРЅРѕРє СЂР°Р№РѕРЅР°."),
-            "seasons": _finalize_chart("SQL-РІРёРґР¶РµС‚: СЃРµР·РѕРЅС‹", [], "РќРµС‚ РґР°РЅРЅС‹С… РґР»СЏ СЃРµР·РѕРЅРЅРѕРіРѕ SQL-РІРёРґР¶РµС‚Р°."),
+            "causes": _finalize_chart("SQL-виджет: причины", [], "Нет данных по причинам возгорания."),
+            "districts": _finalize_chart("SQL-виджет: районы", [], "В выбранных таблицах не найдено колонок района."),
+            "seasons": _finalize_chart("SQL-виджет: сезоны", [], "Нет данных для сезонного SQL-виджета."),
         },
         "charts": {
-            "yearly_fires": _finalize_chart("РџСЂРёС‡РёРЅС‹ РІРѕР·РіРѕСЂР°РЅРёР№", [], "РќРµС‚ РґР°РЅРЅС‹С… РїРѕ РїСЂРёС‡РёРЅР°Рј РІРѕР·РіРѕСЂР°РЅРёСЏ."),
-            "yearly_area": _finalize_chart("РџРѕСЃР»РµРґСЃС‚РІРёСЏ, СЌРІР°РєСѓР°С†РёСЏ Рё РґРµС‚Рё", [], "РќРµС‚ РґР°РЅРЅС‹С… РїРѕ РїРѕРіРёР±С€РёРј, С‚СЂР°РІРјР°Рј Рё СЌРІР°РєСѓР°С†РёРё."),
-            "distribution": _finalize_chart("Р Р°СЃРїСЂРµРґРµР»РµРЅРёРµ РїРѕ РєРѕР»РѕРЅРєРµ", [], "РќРµС‚ РґР°РЅРЅС‹С… РґР»СЏ РіСЂР°С„РёРєР°."),
+            "yearly_fires": _finalize_chart("Причины возгораний", [], "Нет данных по причинам возгорания."),
+            "yearly_area": _finalize_chart("Последствия, эвакуация и дети", [], "Нет данных по погибшим, травмам и эвакуации."),
+            "distribution": _finalize_chart("Распределение по колонке", [], "Нет данных для графика."),
 
-            "monthly_heatmap": _finalize_chart("РЎРµР·РѕРЅРЅРѕСЃС‚СЊ РїРѕ РјРµСЃСЏС†Р°Рј Рё РіРѕРґР°Рј", [], "РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РґР°РЅРЅС‹С… РґР»СЏ С‚РµРїР»РѕРІРѕР№ РєР°СЂС‚С‹ СЃРµР·РѕРЅРЅРѕСЃС‚Рё."),
-            "monthly_profile": _finalize_chart("РЎРµР·РѕРЅРЅРѕСЃС‚СЊ РїРѕ РјРµСЃСЏС†Р°Рј", [], "РќРµС‚ РґР°РЅРЅС‹С… РґР»СЏ СЃРµР·РѕРЅРЅРѕРіРѕ РїСЂРѕС„РёР»СЏ."),
-            "area_buckets": _finalize_chart("РЎС‚СЂСѓРєС‚СѓСЂР° РїРѕ РїР»РѕС‰Р°РґРё РїРѕР¶Р°СЂР°", [], "РќРµС‚ РґР°РЅРЅС‹С… РїРѕ РїР»РѕС‰Р°РґРё РїРѕР¶Р°СЂР°."),
+            "monthly_heatmap": _finalize_chart("Сезонность по месяцам и годам", [], "Недостаточно данных для тепловой карты сезонности."),
+            "monthly_profile": _finalize_chart("Сезонность по месяцам", [], "Нет данных для сезонного профиля."),
+            "area_buckets": _finalize_chart("Структура по площади пожара", [], "Нет данных по площади пожара."),
 
-            "cumulative_area": _finalize_chart("РќР°РєРѕРїР»РµРЅРЅР°СЏ РїР»РѕС‰Р°РґСЊ РїРѕ РґРЅСЏРј РіРѕРґР°", [], "РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РґР°РЅРЅС‹С… РґР»СЏ РЅР°РєРѕРїР»РµРЅРЅРѕРіРѕ РіСЂР°С„РёРєР° РїР»РѕС‰Р°РґРё."),
+            "cumulative_area": _finalize_chart("Накопленная площадь по дням года", [], "Недостаточно данных для накопленного графика площади."),
         },
         "filters": {
             "table_name": "all",
             "year": "",
             "group_column": "",
             "horizon_days": str(horizon_days),
-            "available_tables": [{"value": "all", "label": "Р’СЃРµ С‚Р°Р±Р»РёС†С‹"}],
+            "available_tables": [{"value": "all", "label": "Все таблицы"}],
             "available_years": [],
             "available_group_columns": [],
             "available_horizon_days": build_horizon_day_options(),

@@ -56,8 +56,8 @@ def _build_yearly_plotly(title: str, items: list[ChartData], metric: str, empty_
                 line_width=1.5,
             ),
             customdata=text_values,
-            hovertemplate="<b>%{x}</b><br>РџРѕР¶Р°СЂРѕРІ: %{customdata}<extra></extra>",
-            layout=_plotly_layout("РџРѕР¶Р°СЂРѕРІ", showlegend=False),
+            hovertemplate="<b>%{x}</b><br>Пожаров: %{customdata}<extra></extra>",
+            layout=_plotly_layout("Пожаров", showlegend=False),
         )
     return build_plotly_scatter_payload(
         x=x_values,
@@ -67,8 +67,8 @@ def _build_yearly_plotly(title: str, items: list[ChartData], metric: str, empty_
         line=build_plotly_line(color=PLOTLY_PALETTE["forest"], width=4),
         marker=build_plotly_marker(color=PLOTLY_PALETTE["forest_soft"], size=9),
         customdata=text_values,
-        hovertemplate="<b>%{x}</b><br>РџР»РѕС‰Р°РґСЊ: %{customdata} РіР°<extra></extra>",
-        layout=_plotly_layout("РџР»РѕС‰Р°РґСЊ, РіР°", showlegend=False),
+        hovertemplate="<b>%{x}</b><br>Площадь: %{customdata} га<extra></extra>",
+        layout=_plotly_layout("Площадь, га", showlegend=False),
     )
 
 
@@ -84,53 +84,53 @@ def _build_combined_impact_timeline_plotly(
         build_plotly_bar_trace(
             x=x_values,
             y=[item["deaths"] for item in items],
-            name="РџРѕРіРёР±С€РёРµ",
+            name="Погибшие",
             customdata=date_labels,
             marker={"color": PLOTLY_PALETTE["fire"]},
-            hovertemplate="<b>%{customdata}</b><br>РџРѕРіРёР±С€РёРµ: %{y}<extra></extra>",
+            hovertemplate="<b>%{customdata}</b><br>Погибшие: %{y}<extra></extra>",
         ),
         build_plotly_bar_trace(
             x=x_values,
             y=[item["injuries"] for item in items],
-            name="РўСЂР°РІРјРёСЂРѕРІР°РЅРЅС‹Рµ",
+            name="Травмированные",
             customdata=date_labels,
             marker={"color": PLOTLY_PALETTE["sand"]},
-            hovertemplate="<b>%{customdata}</b><br>РўСЂР°РІРјРёСЂРѕРІР°РЅРЅС‹Рµ: %{y}<extra></extra>",
+            hovertemplate="<b>%{customdata}</b><br>Травмированные: %{y}<extra></extra>",
         ),
         build_plotly_scatter_trace(
             x=x_values,
             y=[item["evacuated_adults"] for item in items],
-            name="Р­РІР°РєСѓРёСЂРѕРІР°РЅРѕ",
+            name="Эвакуировано",
             customdata=date_labels,
             mode="lines+markers",
             line=build_plotly_line(color=PLOTLY_PALETTE["sky"], width=3),
             marker=build_plotly_marker(color=PLOTLY_PALETTE["sky_soft"], size=7),
-            hovertemplate="<b>%{customdata}</b><br>Р­РІР°РєСѓРёСЂРѕРІР°РЅРѕ: %{y}<extra></extra>",
+            hovertemplate="<b>%{customdata}</b><br>Эвакуировано: %{y}<extra></extra>",
         ),
         build_plotly_scatter_trace(
             x=x_values,
             y=[item["evacuated_children"] for item in items],
-            name="Р­РІР°РєСѓРёСЂРѕРІР°РЅРѕ РґРµС‚РµР№",
+            name="Эвакуировано детей",
             customdata=date_labels,
             mode="lines+markers",
             line=build_plotly_line(color=PLOTLY_PALETTE["forest"], width=3),
             marker=build_plotly_marker(color=PLOTLY_PALETTE["forest_soft"], size=7),
-            hovertemplate="<b>%{customdata}</b><br>Р­РІР°РєСѓРёСЂРѕРІР°РЅРѕ РґРµС‚РµР№: %{y}<extra></extra>",
+            hovertemplate="<b>%{customdata}</b><br>Эвакуировано детей: %{y}<extra></extra>",
         ),
         build_plotly_scatter_trace(
             x=x_values,
             y=[item["rescued_children"] for item in items],
-            name="РЎРїР°СЃРµРЅРѕ РґРµС‚РµР№",
+            name="Спасено детей",
             customdata=date_labels,
             mode="lines+markers",
             line=build_plotly_line(color=PLOTLY_PALETTE["ink"], width=2, dash="dot"),
             marker=build_plotly_marker(color=PLOTLY_PALETTE["fire_soft"], size=6),
-            hovertemplate="<b>%{customdata}</b><br>РЎРїР°СЃРµРЅРѕ РґРµС‚РµР№: %{y}<extra></extra>",
+            hovertemplate="<b>%{customdata}</b><br>Спасено детей: %{y}<extra></extra>",
         ),
     ]
     return build_plotly_payload_from_traces(
         traces,
-        layout=_plotly_layout("Р›СЋРґРё", showlegend=True),
+        layout=_plotly_layout("Люди", showlegend=True),
         layout_updates=merge_plotly_layout(
             updates={"barmode": "group"},
             xaxis={"type": "date"},
@@ -144,8 +144,8 @@ def _build_monthly_profile_plotly(title: str, items: list[ChartData], empty_mess
         return _empty_plotly_payload(empty_message)
     return build_item_vertical_bar_payload(
         items,
-        layout=_plotly_layout("РљРѕР»РёС‡РµСЃС‚РІРѕ РїРѕР¶Р°СЂРѕРІ", showlegend=False),
-        hovertemplate="<b>%{x}</b><br>РџРѕР¶Р°СЂРѕРІ: %{text}<extra></extra>",
+        layout=_plotly_layout("Количество пожаров", showlegend=False),
+        hovertemplate="<b>%{x}</b><br>Пожаров: %{text}<extra></extra>",
         colors=[
             PLOTLY_PALETTE["fire_soft"],
             PLOTLY_PALETTE["fire_soft"],
@@ -180,7 +180,7 @@ def _build_area_bucket_plotly(title: str, items: list[ChartData], empty_message:
             "#b5aea5",
         ],
         hole=0.58,
-        hovertemplate="<b>%{label}</b><br>РџРѕР¶Р°СЂРѕРІ: %{value}<br>Р”РѕР»СЏ: %{percent}<extra></extra>",
+        hovertemplate="<b>%{label}</b><br>Пожаров: %{value}<br>Доля: %{percent}<extra></extra>",
         margin={"l": 20, "r": 20, "t": 10, "b": 10},
     )
 
@@ -221,8 +221,8 @@ def _build_sql_widget_season_plotly(title: str, items: list[ChartData], empty_me
         return _empty_plotly_payload(empty_message)
     return build_item_vertical_bar_payload(
         items,
-        layout=_plotly_layout("РџРѕР¶Р°СЂРѕРІ", showlegend=False),
-        hovertemplate="<b>%{x}</b><br>РџРѕР¶Р°СЂРѕРІ: %{text}<extra></extra>",
+        layout=_plotly_layout("Пожаров", showlegend=False),
+        hovertemplate="<b>%{x}</b><br>Пожаров: %{text}<extra></extra>",
         colors=build_plotly_palette(["sky", "forest", "sand", "fire_soft"], limit=len(items)),
         line_color="rgba(255,255,255,0.7)",
         line_width=1,

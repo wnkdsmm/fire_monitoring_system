@@ -15,7 +15,7 @@ DASHBOARD_HORIZON_OPTIONS: tuple[int, ...] = (7, 14, 30)
 
 
 def build_horizon_day_options() -> list[dict[str, str]]:
-    return [{"value": str(day), "label": f"{day} РґРЅРµР№"} for day in DASHBOARD_HORIZON_OPTIONS]
+    return [{"value": str(day), "label": f"{day} дней"} for day in DASHBOARD_HORIZON_OPTIONS]
 
 
 def _select_tables(table_names: list[str]) -> list[str]:
@@ -73,7 +73,7 @@ def _format_signed_number(value: float, integer: bool = False) -> str:
 
 def _format_period_label(years: list[int]) -> str:
     if not years:
-        return "РќРµС‚ РґР°РЅРЅС‹С…"
+        return "Нет данных"
     normalized = sorted(set(years))
     if len(normalized) == 1:
         return str(normalized[0])

@@ -42,17 +42,15 @@ logger = logging.getLogger(__name__)
 def _fire_count_word(n: float) -> str:
     n_int = int(round(n))
     if 11 <= (n_int % 100) <= 14:
-        return "РїРѕР¶Р°СЂРѕРІ"
+        return "пожаров"
     rem = n_int % 10
     if rem == 1:
-        return "РїРѕР¶Р°СЂ"
+        return "пожар"
     if 2 <= rem <= 4:
-        return "РїРѕР¶Р°СЂР°"
-    return "РїРѕР¶Р°СЂРѕРІ"
+        return "пожара"
+    return "пожаров"
 
 @dataclass
-
-
 class _RecursiveForecastSeed:
     temperature_usable: bool
     monthly_temp: dict[int, float]
@@ -366,7 +364,7 @@ def _build_future_forecast_rows(
                 'lower_bound_display': _format_number(lower_bound),
                 'upper_bound': round(upper_bound, 3),
                 'upper_bound_display': _format_number(upper_bound),
-                'range_label': f'{interval_label} РёРЅС‚РµСЂРІР°Р»',
+                'range_label': f'{interval_label} интервал',
                 'range_display': f"{interval_label}: {_format_number(lower_bound)} вЂ“ {_format_number(upper_bound)} {_fire_count_word(upper_bound)}",
                 'temperature_display': f"{_format_number(temp_value)} В°C",
                 'risk_index': round(risk_index, 1),

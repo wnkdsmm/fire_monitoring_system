@@ -72,7 +72,7 @@ def normalize_probability(value: Any) -> float:
 def format_count_range(lower: float, upper: float) -> str:
     lower_bound = max(0, int(math.floor(lower)))
     upper_bound = max(lower_bound, int(math.ceil(upper)))
-    return f"{format_integer(lower_bound)}-{format_integer(upper_bound)} РїРѕР¶Р°СЂР°"
+    return f"{format_integer(lower_bound)}-{format_integer(upper_bound)} пожара"
 
 
 def format_percent_ratio(value: float) -> str:
@@ -127,7 +127,7 @@ def _format_float_for_input(value: float) -> str:
 
 def _format_period(values: Sequence[date]) -> str:
     if not values:
-        return "РќРµС‚ РґР°РЅРЅС‹С…"
+        return "Нет данных"
     ordered = sorted(values)
     return f"{ordered[0].strftime('%d.%m.%Y')} - {ordered[-1].strftime('%d.%m.%Y')}"
 

@@ -304,7 +304,7 @@ def _filter_source_records(
 
 def _collect_available_districts(records: Sequence[PointRecord]) -> list[OptionItem]:
     districts = sorted({record["district"] for record in records if _clean_text(record.get("district"))})
-    return [{"value": "all", "label": "Р’СЃРµ СЂР°Р№РѕРЅС‹"}, *({"value": district, "label": district} for district in districts)]
+    return [{"value": "all", "label": "Все районы"}, *({"value": district, "label": district} for district in districts)]
 
 
 def _collect_available_years(records: Sequence[PointRecord]) -> list[OptionItem]:
@@ -316,7 +316,7 @@ def _collect_available_years(records: Sequence[PointRecord]) -> list[OptionItem]
         },
         reverse=True,
     )
-    return [{"value": "all", "label": "Р’СЃРµ РіРѕРґС‹"}, *({"value": year, "label": year} for year in years)]
+    return [{"value": "all", "label": "Все годы"}, *({"value": year, "label": year} for year in years)]
 
 
 def _summarize_consequences(records: Sequence[PointRecord]) -> ConsequenceSummary:
@@ -399,7 +399,7 @@ def _build_priority_rows(records: Sequence[PointRecord]) -> list[PriorityRow]:
                 "without_water_supply": water_supply["without_water_supply"],
                 "heating_season_fires": sum(1 for item in items if _is_heating_season(item.get("event_date"))),
                 "top_object_category": Counter(
-                    _clean_text(item.get("object_category")) or "РќРµ Р·Р°РґР°РЅРѕ"
+                    _clean_text(item.get("object_category")) or "Не задано"
                     for item in items
                 ).most_common(1)[0][0],
             }
@@ -428,9 +428,9 @@ def get_access_points_data(
         return {
             "table_options": table_options,
             "selected_table": selected_table,
-            "selected_table_label": next((item["label"] for item in table_options if item["value"] == selected_table), "Р’СЃРµ С‚Р°Р±Р»РёС†С‹"),
-            "district_options": [{"value": "all", "label": "Р’СЃРµ СЂР°Р№РѕРЅС‹"}],
-            "year_options": [{"value": "all", "label": "Р’СЃРµ РіРѕРґС‹"}],
+            "selected_table_label": next((item["label"] for item in table_options if item["value"] == selected_table), "Все таблицы"),
+            "district_options": [{"value": "all", "label": "Все районы"}],
+            "year_options": [{"value": "all", "label": "Все годы"}],
             "selected_district": "all",
             "selected_year": "all",
             "summary": {"total_points": 0, "total_points_display": "0"},
@@ -452,7 +452,7 @@ def get_access_points_data(
     return {
         "table_options": table_options,
         "selected_table": selected_table,
-        "selected_table_label": next((item["label"] for item in table_options if item["value"] == selected_table), "Р’СЃРµ С‚Р°Р±Р»РёС†С‹"),
+        "selected_table_label": next((item["label"] for item in table_options if item["value"] == selected_table), "Все таблицы"),
         "district_options": district_options,
         "year_options": year_options,
         "selected_district": selected_district,

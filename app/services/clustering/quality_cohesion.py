@@ -31,23 +31,23 @@ def _build_stability_note(clustering: ClusterMetrics, resample_share_label: str)
     stability_ari = clustering.get("stability_ari")
     initialization_ari = clustering.get("initialization_ari")
     if stability_ari is None:
-        return "РћС†РµРЅРёС‚СЊ СѓСЃС‚РѕР№С‡РёРІРѕСЃС‚СЊ РЅР° РїРѕРІС‚РѕСЂРЅС‹С… РїРѕРґРІС‹Р±РѕСЂРєР°С… РЅРµ СѓРґР°Р»РѕСЃСЊ: РІ С‚РµРєСѓС‰РµРј СЃСЂРµР·Рµ СЃР»РёС€РєРѕРј РјР°Р»Рѕ С‚РµСЂСЂРёС‚РѕСЂРёР№ РґР»СЏ РЅР°РґС‘Р¶РЅРѕРіРѕ СЃСЂР°РІРЅРµРЅРёСЏ РїРµСЂРµСЃСЌРјРїР»РѕРІ."
+        return "Оценить устойчивость на повторных подвыборках не удалось: в текущем срезе слишком мало территорий для надёжного сравнения пересэмплов."
     if initialization_ari is None:
         return (
-            f"РџСЂРѕРІРµСЂРєР° РЅР° РїРѕРІС‚РѕСЂРЅС‹С… {resample_share_label}-РїРѕРґРІС‹Р±РѕСЂРєР°С… РґР°Р»Р° "
-            f"{_format_number(stability_ari, 3)}: С‚Р°Рє РІРёРґРЅРѕ, РЅР°СЃРєРѕР»СЊРєРѕ СЂРµР·СѓР»СЊС‚Р°С‚ РїРѕРІС‚РѕСЂСЏРµС‚СЃСЏ РЅРµ С‚РѕР»СЊРєРѕ РЅР° С‚РµС… Р¶Рµ РґР°РЅРЅС‹С…."
+            f"Проверка на повторных {resample_share_label}-подвыборках дала "
+            f"{_format_number(stability_ari, 3)}: так видно, насколько результат повторяется не только на тех же данных."
         )
 
     gap = float(initialization_ari) - float(stability_ari)
     if gap >= 0.15:
         return (
-            f"РќР° РѕРґРЅРёС… Рё С‚РµС… Р¶Рµ РґР°РЅРЅС‹С… СЂР°Р·Р±РёРµРЅРёРµ РїРѕС‡С‚Рё РЅРµ РјРµРЅСЏРµС‚СЃСЏ ({_format_number(initialization_ari, 3)}), "
-            f"РЅРѕ РЅР° РїРѕРІС‚РѕСЂРЅС‹С… {resample_share_label}-РїРѕРґРІС‹Р±РѕСЂРєР°С… СѓСЃС‚РѕР№С‡РёРІРѕСЃС‚СЊ Р·Р°РјРµС‚РЅРѕ РЅРёР¶Рµ "
-            f"({_format_number(stability_ari, 3)}), РїРѕСЌС‚РѕРјСѓ СЂРµР·СѓР»СЊС‚Р°С‚ С‡СѓРІСЃС‚РІРёС‚РµР»РµРЅ Рє СЃРѕСЃС‚Р°РІСѓ РІС‹Р±РѕСЂРєРё."
+            f"На одних и тех же данных разбиение почти не меняется ({_format_number(initialization_ari, 3)}), "
+            f"но на повторных {resample_share_label}-подвыборках устойчивость заметно ниже "
+            f"({_format_number(stability_ari, 3)}), поэтому результат чувствителен к составу выборки."
         )
     return (
-        f"РќР° РїРѕРІС‚РѕСЂРЅС‹С… {resample_share_label}-РїРѕРґРІС‹Р±РѕСЂРєР°С… СѓСЃС‚РѕР№С‡РёРІРѕСЃС‚СЊ СЃРѕСЃС‚Р°РІР»СЏРµС‚ "
-        f"{_format_number(stability_ari, 3)}; СЌС‚Рѕ Р±Р»РёР·РєРѕ Рє РїСЂРѕРІРµСЂРєРµ РЅР° С‚РµС… Р¶Рµ РґР°РЅРЅС‹С… "
+        f"На повторных {resample_share_label}-подвыборках устойчивость составляет "
+        f"{_format_number(stability_ari, 3)}; это близко к проверке на тех же данных "
         f"({_format_number(initialization_ari, 3)})."
     )
 
@@ -59,17 +59,17 @@ def _build_method_recommendation_note(
     selected_label = str((selected_method or {}).get("method_label") or "KMeans")
     recommended_label = str((recommended_method or {}).get("method_label") or selected_label)
     if not selected_method:
-        return f"Р”Р»СЏ С‚РµРєСѓС‰РµРіРѕ СЃСЂРµР·Р° СЂР°Р±РѕС‡РёРј РјРµС‚РѕРґРѕРј РѕСЃС‚Р°С‘С‚СЃСЏ {recommended_label}."
+        return f"Для текущего среза рабочим методом остаётся {recommended_label}."
     if (recommended_method or {}).get("method_key") != (selected_method or {}).get("method_key"):
         if _resolve_method_algorithm_key(recommended_method) == _resolve_method_algorithm_key(selected_method):
             return (
-                f"РќР° СЃС‚СЂР°РЅРёС†Рµ СЃРµР№С‡Р°СЃ РїРѕРєР°Р·Р°РЅ РІС‹РІРѕРґ {selected_label}, РЅРѕ РЅР° С‚РѕРј Р¶Рµ Р°Р»РіРѕСЂРёС‚РјРµ Р±РѕР»РµРµ СѓР±РµРґРёС‚РµР»СЊРЅРѕ РІС‹РіР»СЏРґРёС‚ "
-                f"РєРѕРЅС„РёРіСѓСЂР°С†РёСЏ {recommended_label}: С‚Р°Рє СЌС„С„РµРєС‚ СЃС‚СЂР°С‚РµРіРёРё РІРµСЃРѕРІ РЅРµ СЃРјРµС€РёРІР°РµС‚СЃСЏ СЃ СЌС„С„РµРєС‚РѕРј СЃР°РјРѕРіРѕ РјРµС‚РѕРґР°."
+                f"На странице сейчас показан вывод {selected_label}, но на том же алгоритме более убедительно выглядит "
+                f"конфигурация {recommended_label}: так эффект стратегии весов не смешивается с эффектом самого метода."
             )
         return (
-            f"РўРµРєСѓС‰РёР№ РІС‹РІРѕРґ РЅР° СЃС‚СЂР°РЅРёС†Рµ РїРѕСЃС‚СЂРѕРµРЅ РјРµС‚РѕРґРѕРј {selected_label}, РЅРѕ РїРѕ СЃРѕРІРѕРєСѓРїРЅРѕСЃС‚Рё РјРµС‚СЂРёРє Рё СЂР°Р·РјРµСЂРѕРІ РєР»Р°СЃС‚РµСЂРѕРІ РґР»СЏ СЌС‚РѕРіРѕ СЃСЂРµР·Р° Р»СѓС‡С€Рµ РІС‹РіР»СЏРґРёС‚ {recommended_label}."
+            f"Текущий вывод на странице построен методом {selected_label}, но по совокупности метрик и размеров кластеров для этого среза лучше выглядит {recommended_label}."
         )
-    return f"{selected_label} РѕСЃС‚Р°С‘С‚СЃСЏ РїСЂРµРґРїРѕС‡С‚РёС‚РµР»СЊРЅС‹Рј РјРµС‚РѕРґРѕРј: Р°Р»СЊС‚РµСЂРЅР°С‚РёРІС‹ РЅРµ РґР°СЋС‚ Р±РѕР»РµРµ СЃРёР»СЊРЅРѕРіРѕ РєР°С‡РµСЃС‚РІР° Р±РµР· СѓС…СѓРґС€РµРЅРёСЏ СЂР°Р·РјРµСЂРѕРІ РєР»Р°СЃС‚РµСЂРѕРІ."
+    return f"{selected_label} остаётся предпочтительным методом: альтернативы не дают более сильного качества без ухудшения размеров кластеров."
 
 
 def _build_method_comparison_scope_note(method_comparison: Sequence[ClusterMethod]) -> str:
@@ -88,8 +88,8 @@ def _build_method_comparison_scope_note(method_comparison: Sequence[ClusterMetho
     if not same_algorithm_alternatives:
         return ""
     return (
-        "Р”Р»СЏ С‡РµСЃС‚РЅРѕРіРѕ СЃСЂР°РІРЅРµРЅРёСЏ РІР»РёСЏРЅРёРµ РІРµСЃРѕРІ РІС‹РЅРµСЃРµРЅРѕ РѕС‚РґРµР»СЊРЅРѕ: СЂСЏРґРѕРј СЃ СЂР°Р±РѕС‡РµР№ РєРѕРЅС„РёРіСѓСЂР°С†РёРµР№ KMeans РїРѕРєР°Р·Р°РЅ KMeans "
-        "СЃ РґСЂСѓРіРѕР№ СЃС‚СЂР°С‚РµРіРёРµР№ РІРµСЃРѕРІ, РїРѕСЌС‚РѕРјСѓ СЂРµРєРѕРјРµРЅРґР°С†РёСЏ РїРѕ РјРµС‚РѕРґСѓ РЅРµ СЃРјРµС€РёРІР°РµС‚ СЌС„С„РµРєС‚ Р°Р»РіРѕСЂРёС‚РјР° Рё СЌС„С„РµРєС‚ РІРµСЃРѕРІ."
+        "Для честного сравнения влияние весов вынесено отдельно: рядом с рабочей конфигурацией KMeans показан KMeans "
+        "с другой стратегией весов, поэтому рекомендация по методу не смешивает эффект алгоритма и эффект весов."
     )
 
 
@@ -104,17 +104,17 @@ def _build_cluster_shape_note(clustering: ClusterMetrics) -> str:
     microcluster_threshold = int(clustering.get("microcluster_threshold") or 0)
     if clustering.get("has_microclusters"):
         return (
-            f"Р•СЃС‚СЊ РјРёРєСЂРѕРєР»Р°СЃС‚РµСЂС‹: СЃР°РјС‹Р№ РјР°Р»РµРЅСЊРєРёР№ РєР»Р°СЃС‚РµСЂ СЃРѕРґРµСЂР¶РёС‚ {_format_integer(smallest_cluster_size)} С‚РµСЂСЂРёС‚РѕСЂРёР№ РїСЂРё РїРѕСЂРѕРіРµ РїСЂРµРґСѓРїСЂРµР¶РґРµРЅРёСЏ {_format_integer(microcluster_threshold)}, "
-            "РїРѕСЌС‚РѕРјСѓ С‡Р°СЃС‚СЊ СЃРµРіРјРµРЅС‚Р°С†РёРё РјРѕР¶РµС‚ РґРµСЂР¶Р°С‚СЊСЃСЏ РЅР° РѕС‡РµРЅСЊ РјР°Р»РѕР№ РіСЂСѓРїРїРµ РЅР°Р±Р»СЋРґРµРЅРёР№."
+            f"Есть микрокластеры: самый маленький кластер содержит {_format_integer(smallest_cluster_size)} территорий при пороге предупреждения {_format_integer(microcluster_threshold)}, "
+            "поэтому часть сегментации может держаться на очень малой группе наблюдений."
         )
     if balance_ratio < 0.12:
         return (
-            f"РљР»Р°СЃС‚РµСЂС‹ Р·Р°РјРµС‚РЅРѕ РЅРµСЃР±Р°Р»Р°РЅСЃРёСЂРѕРІР°РЅС‹: min/max = {_format_integer(smallest_cluster_size)} / {_format_integer(largest_cluster_size)} "
-            f"({ _format_percent(balance_ratio) }), РїРѕСЌС‚РѕРјСѓ СЂРµР·СѓР»СЊС‚Р°С‚ СЃС‚РѕРёС‚ С‚СЂР°РєС‚РѕРІР°С‚СЊ РѕСЃС‚РѕСЂРѕР¶РЅРµРµ."
+            f"Кластеры заметно несбалансированы: min/max = {_format_integer(smallest_cluster_size)} / {_format_integer(largest_cluster_size)} "
+            f"({ _format_percent(balance_ratio) }), поэтому результат стоит трактовать осторожнее."
         )
     if balance_ratio < 0.18:
         return (
-            f"РљР»Р°СЃС‚РµСЂС‹ СѓРјРµСЂРµРЅРЅРѕ РЅРµСЃР±Р°Р»Р°РЅСЃРёСЂРѕРІР°РЅС‹: min/max = {_format_integer(smallest_cluster_size)} / {_format_integer(largest_cluster_size)} "
+            f"Кластеры умеренно несбалансированы: min/max = {_format_integer(smallest_cluster_size)} / {_format_integer(largest_cluster_size)} "
             f"({ _format_percent(balance_ratio) })."
         )
     return ""

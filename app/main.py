@@ -29,4 +29,4 @@ async def startup_event() -> None:
         )
     else:
         print(f"[ERROR] {message}")
-        print("  РџСЂРѕРІРµСЂСЊС‚Рµ РЅР°СЃС‚СЂРѕР№РєРё DATABASE_URL РІ С„Р°Р№Р»Рµ .env")
+        print("  Проверьте настройки DATABASE_URL в файле .env")

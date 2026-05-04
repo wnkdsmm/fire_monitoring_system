@@ -54,7 +54,7 @@ def _build_cumulative_area_plotly(
             mode="lines",
             name=str(current_year),
             line={"color": "#cf2323", "width": 3},
-            hovertemplate=f"Р“РѕРґ: {current_year}<br>Р”РµРЅСЊ: %{{x}}<br>РџР»РѕС‰Р°РґСЊ: %{{y:.2f}} РіР°<extra></extra>",
+            hovertemplate=f"Год: {current_year}<br>День: %{{x}}<br>Площадь: %{{y:.2f}} га<extra></extra>",
         )
     )
     figure.add_trace(
@@ -64,12 +64,12 @@ def _build_cumulative_area_plotly(
             mode="lines",
             name=str(previous_year),
             line={"color": "#8a8a8a", "width": 2, "dash": "dash"},
-            hovertemplate=f"Р“РѕРґ: {previous_year}<br>Р”РµРЅСЊ: %{{x}}<br>РџР»РѕС‰Р°РґСЊ: %{{y:.2f}} РіР°<extra></extra>",
+            hovertemplate=f"Год: {previous_year}<br>День: %{{x}}<br>Площадь: %{{y:.2f}} га<extra></extra>",
         )
     )
     figure.update_layout(
-        _plotly_layout("РќР°РєРѕРїР»РµРЅРЅР°СЏ РїР»РѕС‰Р°РґСЊ, РіР°", showlegend=True),
-        xaxis={"title": "Р”РµРЅСЊ РіРѕРґР°", "range": [1, 365]},
+        _plotly_layout("Накопленная площадь, га", showlegend=True),
+        xaxis={"title": "День года", "range": [1, 365]},
     )
     return serialize_plotly_figure(figure)
 
@@ -95,7 +95,7 @@ def _build_monthly_heatmap_plotly(
             count_value = int(month_counts.get(month_value, 0) or 0)
             row.append(count_value)
             text_row.append(
-                f"Р“РѕРґ: {year_value}<br>РњРµСЃСЏС†: {MONTH_LABELS[month_value]}<br>РџРѕР¶Р°СЂРѕРІ: {count_value}"
+                f"Год: {year_value}<br>Месяц: {MONTH_LABELS[month_value]}<br>Пожаров: {count_value}"
             )
         z_values.append(row)
         text_values.append(text_row)
@@ -111,9 +111,9 @@ def _build_monthly_heatmap_plotly(
         )
     )
     figure.update_layout(
-        _plotly_layout("РљРѕР»РёС‡РµСЃС‚РІРѕ РїРѕР¶Р°СЂРѕРІ", showlegend=False),
-        xaxis={"title": "РњРµСЃСЏС†", "tickmode": "array", "tickvals": x_values, "ticktext": [MONTH_LABELS[month] for month in x_values]},
-        yaxis={"title": "Р“РѕРґ"},
+        _plotly_layout("Количество пожаров", showlegend=False),
+        xaxis={"title": "Месяц", "tickmode": "array", "tickvals": x_values, "ticktext": [MONTH_LABELS[month] for month in x_values]},
+        yaxis={"title": "Год"},
     )
     return serialize_plotly_figure(figure)
 

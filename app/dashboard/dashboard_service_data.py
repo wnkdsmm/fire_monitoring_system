@@ -153,15 +153,15 @@ def _build_dashboard_shell_initial_data(
     initial_data["scope"]["table_label"] = _find_option_label(
         metadata["table_options"],
         filter_state["selected_table_name"],
-        "Р’СЃРµ С‚Р°Р±Р»РёС†С‹",
+        "Все таблицы",
     )
     initial_data["scope"]["year_label"] = (
-        str(filter_state["selected_year"]) if filter_state["selected_year"] is not None else "Р’СЃРµ РіРѕРґС‹"
+        str(filter_state["selected_year"]) if filter_state["selected_year"] is not None else "Все годы"
     )
     initial_data["scope"]["group_label"] = _find_option_label(
         available_group_columns,
         selected_group_column,
-        "РќРµС‚ РґР°РЅРЅС‹С…",
+        "Нет данных",
     )
     return initial_data, available_group_columns
 
