@@ -14,7 +14,7 @@ EXPERT_RISK_WEIGHT_PROFILE: RiskProfile = {
     "status_label": "Экспертный профиль",
     "status_tone": "forest",
     "description": (
-        "Базовый профиль для сельских территорий. РС‚РѕРіРѕРІС‹Р№ риск складывается из четырех компонентов: "
+        "Базовый профиль для сельских территорий. Итоговый риск складывается из четырех компонентов: "
         "частоты пожаров, тяжести последствий, риска долгого прибытия и дефицита водоснабжения."
     ),
     "component_order": [
@@ -77,7 +77,7 @@ EXPERT_RISK_WEIGHT_PROFILE: RiskProfile = {
                 {"key": "water_gap_rate", "label": "Подтвержденный дефицит воды", "weight": 0.62},
                 {"key": "tanker_dependency", "label": "Зависимость от подвоза", "weight": 0.18},
                 {"key": "rural_context", "label": "Сельский контекст", "weight": 0.12},
-                {"key": "damage_pressure", "label": "РСЃС‚РѕСЂРёСЏ ущерба", "weight": 0.08},
+                {"key": "damage_pressure", "label": "История ущерба", "weight": 0.08},
             ],
         },
     },
@@ -95,7 +95,7 @@ EXPERT_RISK_WEIGHT_PROFILE: RiskProfile = {
     "notes": [
         "Для сельских территорий вес логистики и водоснабжения автоматически повышается.",
         "Веса компонентов и сигналов вынесены в отдельную структуру и могут меняться без переписывания формулы.",
-        "РС‚РѕРіРѕРІС‹Р№ балл интерпретируется как управленческий приоритет территории, а не как прямой прогноз числа пожаров.",
+        "Итоговый балл интерпретируется как управленческий приоритет территории, а не как прямой прогноз числа пожаров.",
     ],
     "calibration": {
         "ready": False,
@@ -154,7 +154,7 @@ CALIBRATABLE_RISK_WEIGHT_PROFILE.update(
             "подбора весов по историческим окнам."
         ),
         "notes": [
-            "РСЃРїРѕР»СЊР·СѓРµС‚ ту же компонентную формулу, что и экспертный профиль.",
+            "Использует ту же компонентную формулу, что и экспертный профиль.",
             "Подходит для ручного сравнения альтернативных наборов весов без смены интерфейса.",
         ],
     }
@@ -273,7 +273,7 @@ def build_weight_profile_snapshot(profile: RiskProfile) -> dict[str, Any]:  # on
                 "label": f"Precision@{k_value}",
                 "value": _format_probability(float(selected_metrics.get("precision_at_k") or 0.0)),
                 "meta": (
-                    f"Экспертный профиль: {_format_probability(float(expert_metrics.get('precision_at_k') or 0.0))}; О” { _format_shift_probability(float(comparison.get('precision_at_k_delta') or 0.0)) }"
+                    f"Экспертный профиль: {_format_probability(float(expert_metrics.get('precision_at_k') or 0.0))}; Δ{_format_shift_probability(float(comparison.get('precision_at_k_delta') or 0.0))}"
                     if expert_metrics
                     else "Сколько территорий в top-k действительно подтвердились пожаром."
                 ),
@@ -284,7 +284,7 @@ def build_weight_profile_snapshot(profile: RiskProfile) -> dict[str, Any]:  # on
                 "label": f"NDCG@{k_value}",
                 "value": _format_decimal(float(selected_metrics.get("ndcg_at_k") or 0.0)),
                 "meta": (
-                    f"Экспертный профиль: {_format_decimal(float(expert_metrics.get('ndcg_at_k') or 0.0))}; О” { _format_signed_decimal(float(comparison.get('ndcg_at_k_delta') or 0.0)) }"
+                    f"Экспертный профиль: {_format_decimal(float(expert_metrics.get('ndcg_at_k') or 0.0))}; Δ{_format_signed_decimal(float(comparison.get('ndcg_at_k_delta') or 0.0))}"
                     if expert_metrics
                     else "Сравнение с экспертным профилем недоступно."
                 ),
