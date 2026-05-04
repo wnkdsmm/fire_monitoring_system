@@ -16,12 +16,12 @@ from app.services.chart_utils import (
 from app.statistics_constants import PLOTLY_PALETTE
 
 TYPOLOGY_LABELS: dict[str, str] = {
-    "access": "Р”Р°Р»СЊРЅРёР№ РІС‹РµР·Рґ",
-    "water": "Р”РµС„РёС†РёС‚ РІРѕРґС‹",
-    "severity": "РўСЏР¶РµР»С‹Рµ РїРѕСЃР»РµРґСЃС‚РІРёСЏ",
-    "recurrence": "РџРѕРІС‚РѕСЂСЏСЋС‰РёР№СЃСЏ РѕС‡Р°Рі",
-    "needs_data": "Р”Р°РЅРЅС‹Рµ РЅРµРїРѕР»РЅС‹Рµ",
-    "mixed": "РљРѕРјР±РёРЅРёСЂРѕРІР°РЅРЅС‹Р№ СЂРёСЃРє",
+    "access": "Дальний выезд",
+    "water": "Дефицит воды",
+    "severity": "Тяжелые последствия",
+    "recurrence": "Повторяющийся очаг",
+    "needs_data": "Данные неполные",
+    "mixed": "Комбинированный риск",
 }
 
 TYPOLOGY_COLORS: dict[str, str] = {
@@ -66,11 +66,11 @@ def _resolve_typology(row: dict[str, Any]) -> tuple[str, str]:
 
 
 def _build_points_scatter_chart(rows: Sequence[dict[str, Any]]) -> dict[str, Any]:
-    title = "РџСЂРѕР±Р»РµРјРЅС‹Рµ С‚РѕС‡РєРё РЅР° РґРІСѓРјРµСЂРЅРѕР№ РїСЂРѕРµРєС†РёРё СЂРёСЃРєР°"
+    title = "Проблемные точки на двумерной проекции риска"
     if not rows:
-        return _empty_chart_bundle(title, "РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РґР°РЅРЅС‹С…, С‡С‚РѕР±С‹ РїРѕРєР°Р·Р°С‚СЊ СЂР°СЃРїСЂРµРґРµР»РµРЅРёРµ РїСЂРѕР±Р»РµРјРЅС‹С… С‚РѕС‡РµРє.")
+        return _empty_chart_bundle(title, "Недостаточно данных, чтобы показать распределение проблемных точек.")
     if not PLOTLY_AVAILABLE:
-        return _empty_chart_bundle(title, "Plotly РЅРµРґРѕСЃС‚СѓРїРµРЅ, РїРѕСЌС‚РѕРјСѓ РіСЂР°С„РёРє РїСЂРѕР±Р»РµРјРЅС‹С… С‚РѕС‡РµРє РЅРµ РїРѕСЃС‚СЂРѕРµРЅ.")
+        return _empty_chart_bundle(title, "Plotly недоступен, поэтому график проблемных точек не построен.")
 
     figure = go.Figure()
     coordinates = build_component_projection(
@@ -109,16 +109,16 @@ def _build_points_scatter_chart(rows: Sequence[dict[str, Any]]) -> dict[str, Any
             hover_texts.append(
                 "<br>".join(
                     [
-                        f"<b>{row.get('label') or 'РўРѕС‡РєР°'}</b>",
-                        f"РўРёРї: {row.get('entity_type') or '-'}",
-                        f"Р Р°Р№РѕРЅ: {row.get('district') or '-'}",
+                        f"<b>{row.get('label') or 'Точка'}</b>",
+                        f"Тип: {row.get('entity_type') or '-'}",
+                        f"Район: {row.get('district') or '-'}",
                         f"Итоговый score: {row.get('score_display') or '0'}",
-                        f"РџРѕР¶Р°СЂРѕРІ: {row.get('incident_count_display') or '0'}",
-                        f"Р”РѕСЃС‚СѓРїРЅРѕСЃС‚СЊ РџР§: {row.get('access_score', 0)}",
+                        f"Пожаров: {row.get('incident_count_display') or '0'}",
+                        f"Доступность ПЧ: {row.get('access_score', 0)}",
                         f"\u0412\u043e\u0434\u0430: {row.get('water_score', 0)}",
-                        f"РџРѕСЃР»РµРґСЃС‚РІРёСЏ: {row.get('severity_score', 0)}",
-                        f"Р§Р°СЃС‚РѕС‚Р° Рё РєРѕРЅС‚РµРєСЃС‚: {row.get('recurrence_score', 0)}",
-                        f"РќРµРїРѕР»РЅРѕС‚Р° РґР°РЅРЅС‹С…: {row.get('data_gap_score', 0)}",
+                        f"Последствия: {row.get('severity_score', 0)}",
+                        f"Частота и контекст: {row.get('recurrence_score', 0)}",
+                        f"Неполнота данных: {row.get('data_gap_score', 0)}",
                     ]
                 )
             )
@@ -145,8 +145,8 @@ def _build_points_scatter_chart(rows: Sequence[dict[str, Any]]) -> dict[str, Any
 
     figure.update_layout(
         **build_service_scatter_layout(
-            xaxis_title="РљРѕРјРїРѕРЅРµРЅС‚Р° 1",
-            yaxis_title="РљРѕРјРїРѕРЅРµРЅС‚Р° 2",
+            xaxis_title="Компонента 1",
+            yaxis_title="Компонента 2",
             height=420,
             include_xy_axes=False,
             legend_y=1.1,
@@ -160,7 +160,7 @@ def _build_score_histogram(points: list[dict]) -> dict[str, Any]:
         return {
             "figure": {"data": [], "layout": {}, "config": {"responsive": True}},
             "plotly": {"data": [], "layout": {}, "config": {"responsive": True}},
-            "empty_message": "Plotly РЅРµРґРѕСЃС‚СѓРїРµРЅ, РїРѕСЌС‚РѕРјСѓ РіРёСЃС‚РѕРіСЂР°РјРјР° РЅРµ РїРѕСЃС‚СЂРѕРµРЅР°.",
+            "empty_message": "Plotly недоступен, поэтому гистограмма не построена.",
         }
 
     scores: list[int] = []
@@ -180,7 +180,7 @@ def _build_score_histogram(points: list[dict]) -> dict[str, Any]:
         return {
             "figure": {"data": [], "layout": {}, "config": {"responsive": True}},
             "plotly": {"data": [], "layout": {}, "config": {"responsive": True}},
-            "empty_message": "РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РґР°РЅРЅС‹С… РґР»СЏ РїРѕСЃС‚СЂРѕРµРЅРёСЏ СЂР°СЃРїСЂРµРґРµР»РµРЅРёСЏ Р±Р°Р»Р»Р° СЂРёСЃРєР°.",
+            "empty_message": "Недостаточно данных для построения распределения балла риска.",
         }
 
     bucket_counts = [0] * 10
@@ -207,13 +207,13 @@ def _build_score_histogram(points: list[dict]) -> dict[str, Any]:
                 x=x_labels,
                 y=bucket_counts,
                 marker={"color": colors},
-                hovertemplate="Р”РёР°РїР°Р·РѕРЅ: %{x}<br>РљРѕР»РёС‡РµСЃС‚РІРѕ С‚РѕС‡РµРє: %{y}<extra></extra>",
+                hovertemplate="Диапазон: %{x}<br>Количество точек: %{y}<extra></extra>",
             )
         ]
     )
     figure.update_layout(
-        xaxis={"title": "Р‘Р°Р»Р» СЂРёСЃРєР°"},
-        yaxis={"title": "РљРѕР»РёС‡РµСЃС‚РІРѕ С‚РѕС‡РµРє"},
+        xaxis={"title": "Балл риска"},
+        yaxis={"title": "Количество точек"},
         showlegend=False,
         plot_bgcolor="white",
         paper_bgcolor="white",
@@ -234,7 +234,7 @@ def _build_factor_bar_chart(points: list[dict]) -> dict[str, Any]:
         return {
             "figure": {"data": [], "layout": {}, "config": {"responsive": True}},
             "plotly": {"data": [], "layout": {}, "config": {"responsive": True}},
-            "empty_message": "Plotly РЅРµРґРѕСЃС‚СѓРїРµРЅ, РїРѕСЌС‚РѕРјСѓ РіСЂР°С„РёРє РІРєР»Р°РґР° С„Р°РєС‚РѕСЂРѕРІ РЅРµ РїРѕСЃС‚СЂРѕРµРЅ.",
+            "empty_message": "Plotly недоступен, поэтому график вклада факторов не построен.",
         }
 
     top_points = list(points[:10])
@@ -242,7 +242,7 @@ def _build_factor_bar_chart(points: list[dict]) -> dict[str, Any]:
         return {
             "figure": {"data": [], "layout": {}, "config": {"responsive": True}},
             "plotly": {"data": [], "layout": {}, "config": {"responsive": True}},
-            "empty_message": "РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РґР°РЅРЅС‹С… РґР»СЏ РїРѕСЃС‚СЂРѕРµРЅРёСЏ РІРєР»Р°РґР° С„Р°РєС‚РѕСЂРѕРІ.",
+            "empty_message": "Недостаточно данных для построения вклада факторов.",
         }
 
     def _safe_score(item: dict[str, Any], key: str) -> float:
@@ -267,16 +267,16 @@ def _build_factor_bar_chart(points: list[dict]) -> dict[str, Any]:
 
     figure = go.Figure(
         data=[
-            go.Bar(name="Р”РѕСЃС‚СѓРїРЅРѕСЃС‚СЊ", y=y_labels, x=access_values, orientation="h", marker={"color": "#3b82f6"}),
-            go.Bar(name="Р’РѕРґРѕСЃРЅР°Р±Р¶РµРЅРёРµ", y=y_labels, x=water_values, orientation="h", marker={"color": "#06b6d4"}),
-            go.Bar(name="РџРѕСЃР»РµРґСЃС‚РІРёСЏ", y=y_labels, x=severity_values, orientation="h", marker={"color": "#ef4444"}),
-            go.Bar(name="РџРѕРІС‚РѕСЂСЏРµРјРѕСЃС‚СЊ", y=y_labels, x=recurrence_values, orientation="h", marker={"color": "#f59e0b"}),
-            go.Bar(name="РџСЂРѕРїСѓСЃРєРё", y=y_labels, x=data_gap_values, orientation="h", marker={"color": "#94a3b8"}),
+            go.Bar(name="Доступность", y=y_labels, x=access_values, orientation="h", marker={"color": "#3b82f6"}),
+            go.Bar(name="Водоснабжение", y=y_labels, x=water_values, orientation="h", marker={"color": "#06b6d4"}),
+            go.Bar(name="Последствия", y=y_labels, x=severity_values, orientation="h", marker={"color": "#ef4444"}),
+            go.Bar(name="Повторяемость", y=y_labels, x=recurrence_values, orientation="h", marker={"color": "#f59e0b"}),
+            go.Bar(name="Пропуски", y=y_labels, x=data_gap_values, orientation="h", marker={"color": "#94a3b8"}),
         ]
     )
     figure.update_layout(
         barmode="stack",
-        xaxis={"title": "Р‘Р°Р»Р»", "range": [0, 100]},
+        xaxis={"title": "Балл", "range": [0, 100]},
         yaxis={"autorange": "reversed", "showgrid": False, "automargin": True, "tickfont": {"size": 10}},
         legend={"orientation": "h", "y": -0.15, "x": 0, "font": {"size": 10}},
         plot_bgcolor="white",
@@ -298,7 +298,7 @@ def _build_factor_heatmap(points: list[dict]) -> dict[str, Any]:
         return {
             "figure": {"data": [], "layout": {}, "config": {"responsive": True}},
             "plotly": {"data": [], "layout": {}, "config": {"responsive": True}},
-            "empty_message": "Plotly РЅРµРґРѕСЃС‚СѓРїРµРЅ, РїРѕСЌС‚РѕРјСѓ С‚РµРїР»РѕРІР°СЏ РєР°СЂС‚Р° РЅРµ РїРѕСЃС‚СЂРѕРµРЅР°.",
+            "empty_message": "Plotly недоступен, поэтому тепловая карта не построена.",
         }
 
     top_points = list(points[:15])
@@ -306,15 +306,15 @@ def _build_factor_heatmap(points: list[dict]) -> dict[str, Any]:
         return {
             "figure": {"data": [], "layout": {}, "config": {"responsive": True}},
             "plotly": {"data": [], "layout": {}, "config": {"responsive": True}},
-            "empty_message": "РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РґР°РЅРЅС‹С… РґР»СЏ РїРѕСЃС‚СЂРѕРµРЅРёСЏ С‚РµРїР»РѕРІРѕР№ РєР°СЂС‚С‹",
+            "empty_message": "Недостаточно данных для построения тепловой карты.",
         }
 
     features = [
-        ("access_score", "Р”РѕСЃС‚СѓРїРЅРѕСЃС‚СЊ"),
-        ("water_score", "Р’РѕРґР°"),
-        ("severity_score", "РџРѕСЃР»РµРґСЃС‚РІРёСЏ"),
-        ("recurrence_score", "РџРѕРІС‚РѕСЂСЏРµРјРѕСЃС‚СЊ"),
-        ("data_gap_score", "РџСЂРѕРїСѓСЃРєРё"),
+        ("access_score", "Доступность"),
+        ("water_score", "Вода"),
+        ("severity_score", "Последствия"),
+        ("recurrence_score", "Повторяемость"),
+        ("data_gap_score", "Пропуски"),
     ]
 
     def _safe_score(item: dict[str, Any], key: str) -> float:
