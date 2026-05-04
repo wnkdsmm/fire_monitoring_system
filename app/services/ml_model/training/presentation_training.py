@@ -85,7 +85,7 @@ def _build_forecast_chart(daily_history: list[ForecastingDailyHistoryRow], ml_re
         'empty_message': '',
         'value_format': 'count',
         'legend': [
-            {'label': 'РСЃС‚РѕСЂРёСЏ', 'color': '#F97316'},
+                {'label': 'Ист??', 'color': '#F97316'},
             {'label': 'Проверка на истории: факт', 'color': '#94A3B8'},
             {'label': 'Проверка на истории: прогноз', 'color': '#64748B'},
             {'label': 'ML-прогноз', 'color': '#0F766E'},
@@ -222,7 +222,7 @@ def _build_summary(
         'log_loss_display': _format_optional_number(ml_result.get('log_loss')),
         'top_feature_label': _format_optional_text(ml_result.get('top_feature_label')),
         'temperature_scenario_display': (
-            f"{_format_number(scenario_temperature)} ?C" if scenario_temperature is not None else '???????????? ???????????'
+            f"{_format_number(scenario_temperature)} °C" if scenario_temperature is not None else 'ИстИст?? —ИстИст'
         ),
         'predicted_total_display': _format_optional_number(predicted_total),
         'average_expected_count_display': _format_optional_number(average_expected_count),

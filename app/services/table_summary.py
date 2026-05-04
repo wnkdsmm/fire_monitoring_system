@@ -37,11 +37,11 @@ FEATURE_GROUPS = [
     },
 ]
 
-_EMPTY_TEXT_VALUES = {"", "nan", "nat", "none", "null", "n/a", "na", "-", "?"}
+_EMPTY_TEXT_VALUES = {"", "nan", "nat", "none", "null", "n/a", "na", "-", "—"}
 
 
 def _normalize_text(value: Any) -> str:
-    text = str(value or "").lower().replace("?", "?")
+    text = str(value or "").lower().replace("—", "—")
     text = re.sub(r"[_/#-]+", " ", text)
     text = re.sub(r"[^\w\s]+", " ", text)
     text = re.sub(r"\s+", " ", text).strip()

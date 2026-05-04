@@ -160,10 +160,10 @@ def _empty_clustering_data(
             "cluster_count_requested_display": _format_integer(cluster_count),
             "cluster_count_note": f"Сейчас основной вывод показан для k={_format_integer(cluster_count)}.",
             "suggested_cluster_count_label": "Рекомендуемый k",
-            "suggested_cluster_count_display": "?",
+            "suggested_cluster_count_display": "—",
             "suggested_cluster_count_note": "Диагностика k появится, когда хватит данных для сравнения нескольких вариантов.",
-            "elbow_cluster_count_display": "?",
-            "silhouette_display": "?",
+            "elbow_cluster_count_display": "—",
+            "silhouette_display": "—",
             "pca_variance_display": "0%",
             "inertia_display": "0",
             "sampling_strategy_label": next(

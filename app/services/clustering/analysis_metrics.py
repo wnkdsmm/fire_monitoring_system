@@ -385,8 +385,8 @@ def _build_cluster_profiles(
                 "share_display": _format_percent(size / total_entities if total_entities else 0.0),
                 "incidents_display": _format_integer(cluster_incidents),
                 "incident_share_display": _format_percent(cluster_incidents / total_incidents if total_incidents else 0.0),
-                "dominant_feature": dominant_columns[0] if dominant_columns else "?",
-                "dominant_value": _format_feature_value(dominant_columns[0], center[dominant_columns[0]]) if dominant_columns else "?",
+                "dominant_feature": dominant_columns[0] if dominant_columns else "—",
+                "dominant_value": _format_feature_value(dominant_columns[0], center[dominant_columns[0]]) if dominant_columns else "—",
                 "summary": "; ".join(summary_parts[:3]) + ".",
                 "tone": CARD_TONES[cluster_id % len(CARD_TONES)],
             }
@@ -409,7 +409,7 @@ def _build_centroid_table(
         mask = labels == cluster_id
         size = int(np.sum(mask))
         cluster_incidents = int(entity_frame.loc[mask, "Число пожаров"].sum()) if "Число пожаров" in entity_frame.columns else 0
-        row = [cluster_label, titles.get(cluster_label, "?"), _format_integer(size), _format_integer(cluster_incidents)]
+        row = [cluster_label, titles.get(cluster_label, "—"), _format_integer(size), _format_integer(cluster_incidents)]
         row.extend(_format_feature_value(feature_name, value) for feature_name, value in zip(cluster_frame.columns, raw_centers[cluster_id]))
         rows.append(row)
     return columns, rows
@@ -434,9 +434,9 @@ def _build_representative_rows(
             entity_row = entity_frame.iloc[row_index]
             row_values = [
                 cluster_label,
-                str(entity_row.get("Территория", "?")),
-                str(entity_row.get("Район", "?")),
-                str(entity_row.get("Тип территории", "?")),
+                str(entity_row.get("Территория", "—")),
+                str(entity_row.get("Район", "—")),
+                str(entity_row.get("Тип территории", "—")),
             ]
             for column in cluster_frame.columns:
                 row_values.append(_format_feature_value(column, cluster_frame.iloc[row_index][column]))
@@ -547,7 +547,7 @@ def _build_notes(
     if cluster_profiles:
         largest = max(cluster_profiles, key=lambda item: int(item["size"]))
         notes.append(
-            f"Самый крупный тип территорий сейчас ? {largest['cluster_label']} ({largest['share_display']} выборки): {largest['segment_title'].lower()}."
+            f"Самый крупный тип территорий сейчас — {largest['cluster_label']} ({largest['share_display']} выборки): {largest['segment_title'].lower()}."
         )
     notes.append(
         "Кластеры полезны как типология территорий, но соседние группы могут пересекаться, поэтому итог лучше проверять по профилям, центрам и типичным территориям внутри каждого кластера."

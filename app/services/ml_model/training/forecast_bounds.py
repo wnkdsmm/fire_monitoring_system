@@ -40,7 +40,7 @@ def _resolve_interval_calibration(interval_calibration: dict[str, Any], horizon_
 
 def _format_ratio_percent(value: float | None) -> str:
     if value is None:
-        return '?'
+        return '—'
     return f"{_format_number(float(value) * 100.0)}%"
 
 
@@ -121,5 +121,5 @@ def _bound_probability(value: float) -> float:
 
 def _format_probability(value: float | None) -> str:
     if value is None:
-        return '?'
+        return '—'
     return _format_percent(_normalize_probability(value) * 100.0)

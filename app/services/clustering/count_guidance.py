@@ -89,7 +89,7 @@ def _recommended_cluster_count_messages(
         else:
             gap_note = (
                 f"По критерию Gap statistic оптимально k={best_gap_k}, "
-                f"по совокупному качеству ? k={recommended_k}."
+                f"по совокупному качеству — k={recommended_k}."
             )
         return gap_note if not note else f"{note} {gap_note}".strip()
 

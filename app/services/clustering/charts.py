@@ -105,8 +105,8 @@ def _build_scatter_chart(
             entity_row = entity_frame.iloc[row_index]
             details = [
                 f"<b>{entity_row.get('Территория', 'Территория')}</b>",
-                f"Район: {entity_row.get('Район', '?')}",
-                f"Контекст: {entity_row.get('Тип территории', '?')}",
+                f"Район: {entity_row.get('Район', '—')}",
+                f"Контекст: {entity_row.get('Тип территории', '—')}",
             ]
             details.extend(
                 f"{column}: {_format_metric(column, cluster_frame.iloc[row_index][column])}" for column in preview_columns
