@@ -91,7 +91,7 @@ def _extract_nested_text(payload: dict[str, Any], *path: str) -> str:
 
 def _download_brief_response(initial_data: dict[str, Any], filename: str, *path: str) -> Response:
     text = _extract_nested_text(initial_data, *path)
-    return download_text_response(text or "РЈРїСЂР°РІР»РµРЅС‡РµСЃРєРёР№ Р±СЂРёС„ РїРѕРєР° РЅРµРґРѕСЃС‚СѓРїРµРЅ.", filename)
+    return download_text_response(text or "Управленческий бриф пока недоступен.", filename)
 
 PROFILING_DEFAULTS = {
     "null_threshold_percent": round(NULL_THRESHOLD * 100),
@@ -298,7 +298,7 @@ def fire_map_embed(request: Request, table_name: str = ""):
         return render_template_page(
             request,
             "fire_map_error.html",
-            message="Р’С‹Р±РµСЂРёС‚Рµ СЃСѓС‰РµСЃС‚РІСѓСЋС‰СѓСЋ С‚Р°Р±Р»РёС†Сѓ РґР»СЏ РїРѕСЃС‚СЂРѕРµРЅРёСЏ РєР°СЂС‚С‹.",
+            message="Выберите существующую таблицу для построения карты.",
             status_code=400,
             **asset_versions(**FIRE_MAP_ASSETS),
         )
@@ -309,7 +309,7 @@ def fire_map_embed(request: Request, table_name: str = ""):
             return render_template_page(
                 request,
                 "fire_map_error.html",
-                message="Р”Р»СЏ РІС‹Р±СЂР°РЅРЅРѕР№ С‚Р°Р±Р»РёС†С‹ РЅРµ СѓРґР°Р»РѕСЃСЊ СЃРѕР±СЂР°С‚СЊ РєР°СЂС‚Сѓ. РџСЂРѕРІРµСЂСЊС‚Рµ РєРѕРѕСЂРґРёРЅР°С‚С‹, РґР°С‚С‹ Рё РЅР°Р»РёС‡РёРµ Р·Р°РїРёСЃРµР№.",
+                message="Для выбранной таблицы не удалось собрать карту. Проверьте координаты, даты и наличие записей.",
                 status_code=422,
                 **asset_versions(**FIRE_MAP_ASSETS),
             )
