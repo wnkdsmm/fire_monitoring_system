@@ -7,7 +7,7 @@ from sqlalchemy import inspect, text
 
 from app.db_metadata import get_table_columns_cached, register_table_order_cache_invalidator
 from app.perf import ensure_sqlalchemy_timing, perf_trace
-from app.shared.sql_utils import _quote_identifier
+from app.shared.sql_utils import quote_identifier
 from config.db import engine
 
 DEFAULT_TABLE_PAGE_SIZE = 100
@@ -18,19 +18,19 @@ _PHYSICAL_ROW_ORDER_FALLBACKS = {
 }
 
 @dataclass(frozen=True)
-
-
 class TableOrderStrategy:
     order_by_sql: str
     source: str
     columns: tuple[str, ...] = ()
     note: str | None = None
+
+
 def invalidate_table_order_cache(table_name: str | None = None) -> None:
     _get_table_order_strategy_cached.cache_clear()
 
 
 def _build_order_by_columns_sql(columns) -> str:
-    return ", ".join(f"{_quote_identifier(column)} ASC" for column in columns)
+    return ", ".join(f"{quote_identifier(column)} ASC" for column in columns)
 
 
 def _get_physical_row_order_sql() -> str | None:
@@ -154,12 +154,12 @@ register_table_order_cache_invalidator(_get_table_order_strategy_cached.cache_cl
 
 
 def _build_ordered_select_query(table_name: str, columns, limit=None, offset=0):
-    quoted_columns = ", ".join(_quote_identifier(column) for column in columns)
+    quoted_columns = ", ".join(quote_identifier(column) for column in columns)
     order_strategy = _get_table_order_strategy_cached(table_name)
 
     query_parts = [
         f"SELECT {quoted_columns}",
-        f"FROM {_quote_identifier(table_name)}",
+        f"FROM {quote_identifier(table_name)}",
         f"ORDER BY {order_strategy.order_by_sql}",
     ]
     if limit is not None:
@@ -250,7 +250,7 @@ def get_table_data(table_name, limit=None, offset=0, perf=None):
 
             with active_perf.span("payload_render"):
                 with engine.connect() as conn:
-                    total_rows = int(conn.execute(text(f"SELECT COUNT(*) FROM {_quote_identifier(table_name)}")).scalar() or 0)
+                    total_rows = int(conn.execute(text(f"SELECT COUNT(*) FROM {quote_identifier(table_name)}")).scalar() or 0)
                     rows = _fetch_ordered_rows(
                         conn,
                         table_name,

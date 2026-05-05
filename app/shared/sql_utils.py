@@ -1,5 +1,8 @@
 from __future__ import annotations
 
 
-def _quote_identifier(identifier: str) -> str:
+def quote_identifier(identifier: str) -> str:
     return '"' + str(identifier).replace('"', '""') + '"'
+
+
+__all__ = ["quote_identifier"]

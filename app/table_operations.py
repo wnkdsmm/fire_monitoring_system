@@ -7,20 +7,15 @@ from sqlalchemy import text
 
 from app.db_metadata import get_table_names_cached
 from app.runtime_invalidation import invalidate_table_related_caches
-from app.shared.sql_utils import _quote_identifier
+from app.shared.sql_utils import quote_identifier
 from app.table_metadata import get_table_columns
 from config.db import engine
 
-_NO_SELECTED_COLUMNS_MESSAGE = (
-    "Не выбрано ни одной "
-    "колонки для новой "
-    "таблицы"
-)
-_NO_TABLES_SELECTED_MESSAGE = (
-    "Не выбрана ни одна "
-    "таблица для удаления"
-)
+_NO_SELECTED_COLUMNS_MESSAGE = "Не выбрано ни одной колонки для новой таблицы"
+_NO_TABLES_SELECTED_MESSAGE = "Не выбрана ни одна таблица для удаления"
 _MISSING_TABLES_MESSAGE = "Таблицы не найдены: "
+
+
 def _sanitize_table_name(table_name: str) -> str:
     normalized = re.sub(r"\s+", "_", str(table_name).strip())
     normalized = re.sub(r"[^0-9A-Za-z\u0410-\u042f\u0430-\u044f_]+", "_", normalized)
@@ -61,7 +56,7 @@ def _drop_postgres_dependent_views(conn, table_name: str) -> None:
         relation_kind = str(row.get("dependent_kind") or "").strip()
         if not schema_name or not relation_name:
             continue
-        quoted_relation = f"{_quote_identifier(schema_name)}.{_quote_identifier(relation_name)}"
+        quoted_relation = f"{quote_identifier(schema_name)}.{quote_identifier(relation_name)}"
         if relation_kind == "m":
             conn.execute(text(f"DROP MATERIALIZED VIEW IF EXISTS {quoted_relation} CASCADE"))
         elif relation_kind == "v":
@@ -87,9 +82,9 @@ def create_modified_table(
     target_table_name = target_table or build_modified_table_name(source_table)
     replaced_existing = target_table_name in set(get_table_names_cached())
 
-    quoted_target = _quote_identifier(target_table_name)
-    quoted_source = _quote_identifier(source_table)
-    quoted_columns = ", ".join(_quote_identifier(column) for column in ordered_columns)
+    quoted_target = quote_identifier(target_table_name)
+    quoted_source = quote_identifier(source_table)
+    quoted_columns = ", ".join(quote_identifier(column) for column in ordered_columns)
 
     with db_engine.begin() as conn:
         conn.execute(text(f"DROP TABLE IF EXISTS {quoted_target}"))
@@ -130,7 +125,7 @@ def delete_tables(table_names: Sequence[Any], *, db_engine=engine) -> dict[str, 
     with db_engine.begin() as conn:
         for table_name in normalized_names:
             _drop_postgres_dependent_views(conn, table_name)
-            conn.execute(text(f"DROP TABLE IF EXISTS {_quote_identifier(table_name)}"))
+            conn.execute(text(f"DROP TABLE IF EXISTS {quote_identifier(table_name)}"))
 
     invalidate_table_related_caches()
 

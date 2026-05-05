@@ -8,51 +8,37 @@ _INVALIDATORS: tuple[tuple[str, str, str, str], ...] = (
         "db_metadata",
         "app.db_metadata",
         "invalidate_db_metadata_cache",
-        "Предупреждение "
-        "при обновлении "
-        "кэша метаданных "
-        "БД: {exc}",
+        "Предупреждение при обновлении кэша метаданных БД: {exc}",
     ),
     (
         "dashboard",
         "app.dashboard.cache",
         "_invalidate_dashboard_caches",
-        "Предупреждение "
-        "при обновлении "
-        "кэша панели: {exc}",
+        "Предупреждение при обновлении кэша панели: {exc}",
     ),
     (
         "ml_model",
         "app.services.ml_model.core",
         "clear_ml_model_cache",
-        "Предупреждение "
-        "при обновлении "
-        "кэша ML-блока: {exc}",
+        "Предупреждение при обновлении кэша ML-блока: {exc}",
     ),
     (
         "clustering",
         "app.services.clustering.core",
         "clear_clustering_cache",
-        "Предупреждение "
-        "при обновлении "
-        "кэша кластеризации: {exc}",
+        "Предупреждение при обновлении кэша кластеризации: {exc}",
     ),
     (
         "access_points",
         "app.services.access_points.core",
         "clear_access_points_cache",
-        "Предупреждение "
-        "при обновлении "
-        "кэша проблемных "
-        "точек: {exc}",
+        "Предупреждение при обновлении кэша проблемных точек: {exc}",
     ),
     (
         "fire_map",
         "app.services.fire_map_service",
         "clear_fire_map_cache",
-        "Предупреждение "
-        "при обновлении "
-        "кэша карты пожаров: {exc}",
+        "Предупреждение при обновлении кэша карты пожаров: {exc}",
     ),
 )
 
