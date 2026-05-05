@@ -52,6 +52,7 @@ from config.constants import (
     WATER_DEFICIT_CLAMP_MIN,
     WATER_DEFICIT_GAP_WEIGHT,
     WATER_DEFICIT_TANKER_WEIGHT,
+    WATER_GAP_UNKNOWN_DEFAULT,
 )
 
 from .profiles import DEFAULT_RISK_WEIGHT_MODE, get_risk_weight_profile
@@ -99,8 +100,8 @@ def _normalization_fields(
             BASE_FIRE_SIGNAL_MIN,
             BASE_FIRE_SIGNAL_MAX,
         ),
-        "max_incidents": max(bucket["incidents"] for bucket in territories.values()),
-        "max_weighted": max(bucket["weighted_history"] for bucket in territories.values()),
+        "max_incidents": max((bucket["incidents"] for bucket in territories.values()), default=1),
+        "max_weighted": max((bucket["weighted_history"] for bucket in territories.values()), default=1.0),
     }
 
 
@@ -268,7 +269,7 @@ def _water_fields(
     water_gap_rate = (
         1.0 - (bucket["water_available"] / bucket["water_known"])
         if bucket["water_known"]
-        else float(defaults.get("water_gap_unknown", 0.38))
+        else float(defaults.get("water_gap_unknown", WATER_GAP_UNKNOWN_DEFAULT))
     )
     tanker_dependency = _clamp(
         TANKER_DEPENDENCY_DISTANCE_WEIGHT * distance_score + TANKER_DEPENDENCY_RESPONSE_WEIGHT * response_pressure,

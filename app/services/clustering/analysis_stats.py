@@ -16,6 +16,8 @@ from sklearn.preprocessing import StandardScaler
 from app.labels import CLUSTERING_LOG_SCALE_FEATURES
 from config.constants import GAP_STAT_MAX_WORKERS, GAP_STAT_N_REFERENCES
 from config.constants import (
+    CLUSTER_RISK_HIGH_THRESHOLD,
+    CLUSTER_RISK_MEDIUM_THRESHOLD,
     CLUSTER_COUNT_OPTIONS,
     MODEL_N_INIT,
     RATE_SMOOTHING_PRIOR_STRENGTH,
@@ -47,7 +49,7 @@ def _derive_feature_weights_from_profiles(
             continue
         mean_value = float(np.mean(values))
         std_value = float(np.std(values))
-        if not math.isfinite(mean_value) or not math.isfinite(std_value) or mean_value == 0.0:
+        if not math.isfinite(mean_value) or not math.isfinite(std_value) or abs(mean_value) < 1e-9:
             cv_by_feature[feature_name] = 0.0
             continue
         cv = std_value / abs(mean_value)
@@ -122,9 +124,9 @@ def compute_cluster_risk_scores(
             weighted_score += normalized_value * weight
 
         risk_score = float(np.clip(weighted_score / effective_weight_sum, 0.0, 1.0))
-        if risk_score > 0.65:
+        if risk_score > CLUSTER_RISK_HIGH_THRESHOLD:
             risk_level = "Высокий"
-        elif risk_score > 0.35:
+        elif risk_score > CLUSTER_RISK_MEDIUM_THRESHOLD:
             risk_level = "Средний"
         else:
             risk_level = "Низкий"
@@ -482,7 +484,7 @@ def _estimate_best_k_gap(gap_scores: dict[int, float]) -> int | None:
         next_gap = float(gap_scores[ordered_ks[index + 1]])
         if current_gap >= (next_gap - std_gap):
             return ordered_ks[index]
-    return None
+    return ordered_ks[int(np.argmax(gap_values))]
 
 
 def _estimate_kmeans_initialization_stability(

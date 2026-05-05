@@ -167,6 +167,20 @@ RISK_WEIGHT_PROFILES: dict[str, RiskProfile] = {
 }
 
 
+def _validate_profile_weights(profile: RiskProfile, profile_name: str) -> None:
+    component_weight_sum = sum(float(v) for v in (profile.get("component_weights") or {}).values())
+    if abs(component_weight_sum - 1.0) > 0.01:
+        raise ValueError(
+            f"Profile '{profile_name}': component_weights sum to {component_weight_sum:.4f}, expected 1.0"
+        )
+    for comp_key, comp_spec in (profile.get("components") or {}).items():
+        signal_sum = sum(float(s.get("weight", 0.0)) for s in (comp_spec.get("signals") or []))
+        if (comp_spec.get("signals")) and abs(signal_sum - 1.0) > 0.01:
+            raise ValueError(
+                f"Profile '{profile_name}', component '{comp_key}': signal weights sum to {signal_sum:.4f}, expected 1.0"
+            )
+
+
 def get_risk_weight_profile(mode: str = DEFAULT_RISK_WEIGHT_MODE) -> RiskProfile:
     resolved_mode = mode if mode in RISK_WEIGHT_PROFILES else DEFAULT_RISK_WEIGHT_MODE
     return deepcopy(RISK_WEIGHT_PROFILES[resolved_mode])
@@ -325,9 +339,8 @@ def _format_shift(value: float) -> str:
 
 def _format_probability(value: float) -> str:
     numeric = float(value)
-    if numeric > 1.5:
-        while numeric > 1.0 and numeric <= 10000.0:
-            numeric = numeric / 100.0
+    if numeric > 1.0:
+        numeric = numeric / 100.0
     numeric = max(0.0, min(1.0, numeric))
     rounded = round(numeric * 100.0, 1)
     if abs(rounded - round(rounded)) < 1e-9:
@@ -349,3 +362,7 @@ def _format_signed_decimal(value: float) -> str:
     if abs(numeric - round(numeric)) < 1e-9:
         return f"{sign}{int(round(numeric))}"
     return sign + str(numeric).replace('.', ',')
+
+
+for _profile_name, _profile in RISK_WEIGHT_PROFILES.items():
+    _validate_profile_weights(_profile, _profile_name)

@@ -27,7 +27,16 @@ def _priority_label(
     immediate_threshold = float(priority_thresholds.get("immediate", 70.0))
     targeted_threshold = float(priority_thresholds.get("targeted", 45.0))
 
-    if risk_score >= immediate_threshold or (arrival_score >= PRIORITY_ARRIVAL_IMMEDIATE_THRESHOLD and water_score >= PRIORITY_WATER_IMMEDIATE_THRESHOLD) or (is_rural and arrival_score >= PRIORITY_RURAL_ARRIVAL_THRESHOLD and fire_score >= PRIORITY_RURAL_FIRE_THRESHOLD):
+    high_combined = (
+        arrival_score >= PRIORITY_ARRIVAL_IMMEDIATE_THRESHOLD
+        and water_score >= PRIORITY_WATER_IMMEDIATE_THRESHOLD
+    )
+    rural_immediate = (
+        is_rural
+        and arrival_score >= PRIORITY_RURAL_ARRIVAL_THRESHOLD
+        and fire_score >= PRIORITY_RURAL_FIRE_THRESHOLD
+    )
+    if risk_score >= immediate_threshold or high_combined or rural_immediate:
         return "Нужны меры сейчас", "fire"
     if risk_score >= targeted_threshold or max(fire_score, severe_score, arrival_score, water_score) >= PRIORITY_ANY_COMPONENT_TARGETED:
         return "Нужны точечные меры", "sand"

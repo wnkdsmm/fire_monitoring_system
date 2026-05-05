@@ -175,7 +175,7 @@ def _simulate_recursive_forecast_path(
     scenario_temperature: float | None,
     baseline_expected_count: Callable[[pd.DataFrame, pd.Timestamp], float],
     temperature_stats: TrainingTemperatureStats | None = None,
-    baseline_event_probability: Callable[[pd.DataFrame, pd.Timestamp | None, float | None]] = None,
+    baseline_event_probability: Callable[[pd.DataFrame, pd.Timestamp | None, float | None], Any] | None = None,
     simulation_seed: _RecursiveForecastSeed | None = None,
     current_user_date: date | None = None,
 ) -> list[TrainingForecastPathPoint]:
