@@ -7,6 +7,7 @@ from sqlalchemy import inspect, text
 
 from app.db_metadata import get_table_columns_cached, register_table_order_cache_invalidator
 from app.perf import ensure_sqlalchemy_timing, perf_trace
+from app.shared.sql_utils import _quote_identifier
 from config.db import engine
 
 DEFAULT_TABLE_PAGE_SIZE = 100
@@ -24,12 +25,6 @@ class TableOrderStrategy:
     source: str
     columns: tuple[str, ...] = ()
     note: str | None = None
-
-
-def _quote_identifier(identifier):
-    return '"' + str(identifier).replace('"', '""') + '"'
-
-
 def invalidate_table_order_cache(table_name: str | None = None) -> None:
     _get_table_order_strategy_cached.cache_clear()
 

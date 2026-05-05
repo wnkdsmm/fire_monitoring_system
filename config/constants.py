@@ -344,3 +344,46 @@ LOGISTIC_PARAMS = {
     "class_weight": "balanced",
     "random_state": 42,
 }
+
+
+def _validate_weight_group(name: str, *values: float) -> None:
+    total = sum(values)
+    if abs(total - 1.0) > 1e-9:
+        raise ValueError(f"Константы {name} должны суммироваться в 1.0, получено {total:.6f}")
+
+
+_validate_weight_group(
+    "SEASONAL_*_WEIGHT",
+    SEASONAL_MONTH_WEIGHT,
+    SEASONAL_WEEKDAY_WEIGHT,
+)
+_validate_weight_group(
+    "ARRIVAL_PROB_*_WEIGHT",
+    ARRIVAL_PROB_LONG_ARRIVAL_WEIGHT,
+    ARRIVAL_PROB_RESPONSE_WEIGHT,
+    ARRIVAL_PROB_TRAVEL_WEIGHT,
+    ARRIVAL_PROB_COVERAGE_WEIGHT,
+    ARRIVAL_PROB_ZONE_WEIGHT,
+)
+_validate_weight_group(
+    "TANKER_DEPENDENCY_*_WEIGHT",
+    TANKER_DEPENDENCY_DISTANCE_WEIGHT,
+    TANKER_DEPENDENCY_RESPONSE_WEIGHT,
+)
+_validate_weight_group(
+    "WATER_DEFICIT_*_WEIGHT",
+    WATER_DEFICIT_GAP_WEIGHT,
+    WATER_DEFICIT_TANKER_WEIGHT,
+)
+_validate_weight_group(
+    "DAMAGE_PRESSURE_*_WEIGHT",
+    DAMAGE_PRESSURE_DAMAGE_WEIGHT,
+    DAMAGE_PRESSURE_SEVERE_WEIGHT,
+)
+_validate_weight_group(
+    "SEVERE_PROB_*_WEIGHT",
+    SEVERE_PROB_SEVERE_RATE_WEIGHT,
+    SEVERE_PROB_CASUALTY_WEIGHT,
+    SEVERE_PROB_DAMAGE_WEIGHT,
+    SEVERE_PROB_RISK_FACTOR_WEIGHT,
+)

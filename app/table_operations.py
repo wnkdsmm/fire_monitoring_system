@@ -7,25 +7,20 @@ from sqlalchemy import text
 
 from app.db_metadata import get_table_names_cached
 from app.runtime_invalidation import invalidate_table_related_caches
+from app.shared.sql_utils import _quote_identifier
 from app.table_metadata import get_table_columns
 from config.db import engine
 
 _NO_SELECTED_COLUMNS_MESSAGE = (
-    "\u041d\u0435 \u0432\u044b\u0431\u0440\u0430\u043d\u043e \u043d\u0438 \u043e\u0434\u043d\u043e\u0439 "
-    "\u043a\u043e\u043b\u043e\u043d\u043a\u0438 \u0434\u043b\u044f \u043d\u043e\u0432\u043e\u0439 "
-    "\u0442\u0430\u0431\u043b\u0438\u0446\u044b"
+    "Не выбрано ни одной "
+    "колонки для новой "
+    "таблицы"
 )
 _NO_TABLES_SELECTED_MESSAGE = (
-    "\u041d\u0435 \u0432\u044b\u0431\u0440\u0430\u043d\u0430 \u043d\u0438 \u043e\u0434\u043d\u0430 "
-    "\u0442\u0430\u0431\u043b\u0438\u0446\u0430 \u0434\u043b\u044f \u0443\u0434\u0430\u043b\u0435\u043d\u0438\u044f"
+    "Не выбрана ни одна "
+    "таблица для удаления"
 )
-_MISSING_TABLES_MESSAGE = "\u0422\u0430\u0431\u043b\u0438\u0446\u044b \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u044b: "
-
-
-def _quote_identifier(identifier: str) -> str:
-    return '"' + str(identifier).replace('"', '""') + '"'
-
-
+_MISSING_TABLES_MESSAGE = "Таблицы не найдены: "
 def _sanitize_table_name(table_name: str) -> str:
     normalized = re.sub(r"\s+", "_", str(table_name).strip())
     normalized = re.sub(r"[^0-9A-Za-z\u0410-\u042f\u0430-\u044f_]+", "_", normalized)

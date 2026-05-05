@@ -55,7 +55,7 @@ EXPERT_RISK_WEIGHT_PROFILE: RiskProfile = {
                 {"key": "casualty_pressure", "label": "Пострадавшие и погибшие", "weight": 0.24},
                 {"key": "damage_pressure", "label": "Ущерб и уничтожение", "weight": 0.20},
                 {"key": "risk_category_factor", "label": "Категория риска", "weight": 0.14},
-                {"key": "heating_pressure", "label": "Отопительный контур", "weight": 0.08},
+                {"key": "night_pressure", "label": "Ночные пожары", "weight": 0.08},
             ],
         },
         "long_arrival_risk": {
@@ -116,7 +116,7 @@ ADAPTIVE_RISK_WEIGHT_PROFILE.update(
     {
         "mode": "adaptive",
         "mode_label": "Адаптивные веса",
-        "status_label": "Ожидает калибровку",
+        "status_label": "Fallback на экспертные веса",
         "status_tone": "sand",
         "description": (
             "Сервис старается подобрать веса компонентов по историческим окнам ranking-качества, а если данных мало, "
@@ -127,7 +127,8 @@ ADAPTIVE_RISK_WEIGHT_PROFILE.update(
             "Если историческая проверка не дает устойчивого выигрыша, сервис удерживает экспертные веса как fallback.",
         ],
         "calibration": {
-            "ready": True,
+            "ready": False,
+            "used_fallback": True,
             "targets": [
                 "top1_hit_rate",
                 "top3_capture_rate",
@@ -327,7 +328,13 @@ def build_weight_profile_snapshot(profile: RiskProfile) -> dict[str, Any]:  # on
         "calibration_summary": summary,
         "calibration_windows_display": _format_integer(calibration.get("windows_used") or 0),
         "calibration_candidate_count_display": _format_integer(calibration.get("candidate_count") or 0),
-        "uses_fallback": bool(calibration.get("used_fallback")),
+        "uses_fallback": bool(
+            calibration.get("used_fallback")
+            or (
+                str(profile.get("mode") or "") == "adaptive"
+                and not bool(calibration.get("ready"))
+            )
+        ),
         "calibration_comparison": comparison,
         "metric_cards": metric_cards,
     }

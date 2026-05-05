@@ -1,4 +1,4 @@
-﻿(function (global) {
+(function (global) {
     var uiHelpers = global.FireUiHelpers || {};
     var plotlyHelpers = global.FirePlotlyHelpers || {};
     var apiClient = global.FireApiClient || {};

@@ -55,8 +55,6 @@ def _clone_job_result_payload(result: Any) -> Any:
     return clone_mutable_payload(result)
 
 @dataclass
-
-
 class JobState:
     job_id: str
     kind: str
@@ -75,8 +73,6 @@ class JobState:
         self.updated_at = _utcnow()
 
 @dataclass
-
-
 class SessionState:
     session_id: str
     jobs: dict[str, JobState] = field(default_factory=dict)

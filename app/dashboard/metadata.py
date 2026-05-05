@@ -101,7 +101,7 @@ def _collect_dashboard_metadata(table_names: Sequence[str | None] = None) -> dic
     table_options = build_table_options(
         [table["name"] for table in tables],
         include_all=True,
-        all_label="\u0412\u0441\u0435 \u0442\u0430\u0431\u043b\u0438\u0446\u044b",
+        all_label="Все таблицы",
     )
     group_column_options = _collect_group_column_options(tables)
     preferred_default_columns = [

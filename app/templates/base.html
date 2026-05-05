@@ -7,9 +7,6 @@
     <link rel="stylesheet" href="/static/css/base.css?v={{ base_css_version }}">
     <link rel="stylesheet" href="/static/css/layout.css?v={{ layout_css_version }}">
     <link rel="stylesheet" href="/static/css/shared-components.css?v={{ shared_components_css_version }}">
-<style>
-body[data-page-loading] .page-content-wrapper { opacity: 0; }
-</style>
 {% block page_styles %}{% endblock %}
 </head>
 <body data-page-loading="1"{% block body_attributes %}{% endblock %}>
@@ -32,7 +29,7 @@ body[data-page-loading] .page-content-wrapper { opacity: 0; }
     <div class="brand-block">
         <span class="brand-kicker">{{ sidebar_kicker | default('Монитор пожаров') }}</span>
         <h2>{{ sidebar_title }}</h2>
-        <p>{{ sidebar_description | safe }}</p>
+        <p>{{ sidebar_description }}</p>
     </div>
 
     {% include 'includes/sidebar_nav.html' %}

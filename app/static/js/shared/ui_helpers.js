@@ -1,4 +1,4 @@
-﻿(function (global) {
+(function (global) {
     function byId(id) {
         return document.getElementById(id);
     }

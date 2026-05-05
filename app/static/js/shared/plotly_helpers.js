@@ -1,4 +1,4 @@
-﻿(function (global) {
+(function (global) {
     var uiHelpers = global.FireUiHelpers || {};
     var byId = typeof uiHelpers.byId === 'function'
         ? uiHelpers.byId
