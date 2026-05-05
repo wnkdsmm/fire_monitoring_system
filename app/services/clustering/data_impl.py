@@ -475,7 +475,7 @@ def _sample_territory_frame(frame: pd.DataFrame, sample_limit: int, sampling_str
     if sampling_strategy == "random":
         sampled = frame.sample(n=sample_limit, random_state=42).sort_values("Территория").reset_index(drop=True)
         note = (
-            f"РР· {len(frame)} территорий для кластеризации выбрана случайная выборка из {len(sampled)} территорий. "
+            f"Из {len(frame)} территорий для кластеризации выбрана случайная выборка из {len(sampled)} территорий. "
             "Агрегаты по каждой территории при этом посчитаны по всей истории инцидентов, поэтому смещения из-за первых строк больше нет."
         )
         return sampled, note
@@ -513,7 +513,7 @@ def _sample_territory_frame(frame: pd.DataFrame, sample_limit: int, sampling_str
     sampled = sampled.drop(columns=["__settlement_group", "__volume_band", "__stratum"], errors="ignore")
     sampled = sampled.sort_values("Территория").reset_index(drop=True)
     note = (
-        f"РР· {len(frame)} территорий в модель вошла стратифицированная выборка из {len(sampled)} территорий: "
+        f"Из {len(frame)} территорий в модель вошла стратифицированная выборка из {len(sampled)} территорий: "
         "сохранён баланс по сельскому/несельскому контексту и по квантилям числа пожаров."
     )
     return sampled, note
