@@ -33,9 +33,8 @@ from .utils import (
     _format_percentage,
     _format_period_label,
     _format_signed_number,
-    _quote_identifier,
 )
-
+from app.shared.sql_utils import quote_identifier
 
 def _collect_summary_table_rows(
     selected_tables: list[DashboardTableRef],
@@ -61,7 +60,7 @@ def _collect_summary_table_rows(
                     SUM({area_expression}) AS total_area,
                     COUNT({area_expression}) AS area_count,
                     {', '.join(metric_selects)}
-                FROM {_quote_identifier(table['name'])}
+                FROM {quote_identifier(table['name'])}
                 WHERE {where_clause}
                 """
             )
@@ -115,7 +114,7 @@ def _collect_dashboard_summary_bundle(
                     SUM({area_expression}) AS total_area,
                     COUNT({area_expression}) AS area_count,
                     {', '.join(metric_selects)}
-                FROM {_quote_identifier(table['name'])}
+                FROM {quote_identifier(table['name'])}
                 GROUP BY year_value
                 """
             )
@@ -129,7 +128,7 @@ def _collect_dashboard_summary_bundle(
                     SUM({area_expression}) AS total_area,
                     COUNT({area_expression}) AS area_count,
                     {', '.join(metric_selects)}
-                FROM {_quote_identifier(table['name'])}
+                FROM {quote_identifier(table['name'])}
                 """
             )
         elif selected_year is None:
@@ -142,7 +141,7 @@ def _collect_dashboard_summary_bundle(
                     SUM({area_expression}) AS total_area,
                     COUNT({area_expression}) AS area_count,
                     {', '.join(metric_selects)}
-                FROM {_quote_identifier(table['name'])}
+                FROM {quote_identifier(table['name'])}
                 """
             )
 

@@ -28,8 +28,8 @@ from .types import (
     ImpactTimelineBucket,
     ImpactTimelineSqlRow,
 )
-from .utils import _format_chart_date, _format_number, _quote_identifier
-
+from .utils import _format_chart_date, _format_number
+from app.shared.sql_utils import quote_identifier
 
 def _build_combined_impact_timeline_chart(
     selected_tables: list[DashboardTableRef],
@@ -202,9 +202,9 @@ def _build_sql_district_widget(selected_tables: list[DashboardTableRef], selecte
             query = text(
                 f"""
                 SELECT
-                    COALESCE(NULLIF(TRIM(CAST({_quote_identifier(district_column)} AS TEXT)), ''), 'Не указано') AS label,
+                    COALESCE(NULLIF(TRIM(CAST({quote_identifier(district_column)} AS TEXT)), ''), 'Не указано') AS label,
                     COUNT(*) AS fire_count
-                FROM {_quote_identifier(table['name'])}
+                FROM {quote_identifier(table['name'])}
                 WHERE {where_clause}
                 GROUP BY label
                 ORDER BY fire_count DESC

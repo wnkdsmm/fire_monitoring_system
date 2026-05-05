@@ -44,13 +44,13 @@ from .utils import (
     _parse_datetime_text,
     _parse_water_supply_flag,
     _pick_territory_label,
-    _quote_identifier,
     _resolve_column_name,
     _risk_category_score,
     _text_expression,
     _to_float_or_none,
     _truthy_value,
 )
+from app.shared.sql_utils import quote_identifier
 from .types import RiskDataRecord, RiskTableMetadata
 
 
@@ -91,7 +91,7 @@ def _resolve_history_window_min_year(metadata_items: Sequence[RiskTableMetadata]
             query = text(
                 f"""
                 SELECT MAX(EXTRACT(YEAR FROM {date_expression})) AS max_year
-                FROM {_quote_identifier(table_name)}
+                FROM {quote_identifier(table_name)}
                 WHERE {date_expression} IS NOT NULL
                 """
             )
@@ -249,7 +249,7 @@ def _load_risk_records(
     query = text(
         f"""
         SELECT {", ".join(select_parts)}
-        FROM {_quote_identifier(table_name)}
+        FROM {quote_identifier(table_name)}
         WHERE {" AND ".join(conditions)}
         """
     )

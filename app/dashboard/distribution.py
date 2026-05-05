@@ -54,8 +54,8 @@ from .types import (
     DistributionResult,
     SummaryRow,
 )
-from .utils import _format_number, _quote_identifier
-
+from .utils import _format_number
+from app.shared.sql_utils import quote_identifier
 _DAMAGE_THEME_COLUMNS = {
     "Недвижимость": [
         BUILDINGS_DESTROYED_COLUMN,
@@ -164,9 +164,9 @@ def _build_distribution_chart(
                 query = text(
                     f"""
                     SELECT
-                    COALESCE(NULLIF(TRIM(CAST({_quote_identifier(resolved_group_column)} AS TEXT)), ''), 'Не указано') AS label,
+                    COALESCE(NULLIF(TRIM(CAST({quote_identifier(resolved_group_column)} AS TEXT)), ''), 'Не указано') AS label,
                         COUNT(*) AS fire_count
-                    FROM {_quote_identifier(table['name'])}
+                    FROM {quote_identifier(table['name'])}
                     WHERE {where_clause}
                     GROUP BY label
                     ORDER BY fire_count DESC
@@ -219,7 +219,7 @@ def _collect_positive_column_counts(
         query_parts.append(
             f"""
             SELECT {', '.join(selects)}
-            FROM {_quote_identifier(table['name'])}
+            FROM {quote_identifier(table['name'])}
             WHERE {where_clause}
             """
         )
@@ -442,7 +442,7 @@ def _build_table_breakdown_chart(
                 query = text(
                     f"""
                     SELECT COUNT(*) AS fire_count
-                    FROM {_quote_identifier(table['name'])}
+                    FROM {quote_identifier(table['name'])}
                     WHERE {where_clause}
                     """
                 )

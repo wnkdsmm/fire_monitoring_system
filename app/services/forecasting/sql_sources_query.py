@@ -13,11 +13,10 @@ from .utils import (
     _clean_option_value,
     _date_expression,
     _numeric_expression_for_column,
-    _quote_identifier,
     _text_expression,
     _to_float_or_none,
 )
-
+from app.shared.sql_utils import quote_identifier
 
 class SourceQuerySqlMixin:
     def _build_scope_conditions(
@@ -90,7 +89,7 @@ class SourceQuerySqlMixin:
         query = text(
             f"""
             SELECT {", ".join(select_parts)}
-            FROM {_quote_identifier(table_name)}
+            FROM {quote_identifier(table_name)}
             WHERE {" AND ".join(conditions)}
             ORDER BY fire_date
             """
@@ -145,7 +144,7 @@ class SourceQuerySqlMixin:
             )
             if not scope_is_valid:
                 return counters
-            view_name = _quote_identifier(self._aggregations._daily_aggregate_view_name(table_name))
+            view_name = quote_identifier(self._aggregations._daily_aggregate_view_name(table_name))
             joined_conditions = " AND ".join(conditions)
             for field_name in available_fields:
                 query_parts.append(
@@ -163,7 +162,7 @@ class SourceQuerySqlMixin:
             )
             if date_expression is None or not scope_is_valid:
                 return counters
-            source_name = _quote_identifier(table_name)
+            source_name = quote_identifier(table_name)
             joined_conditions = " AND ".join(conditions)
             for field_name in available_fields:
                 value_expression = _text_expression(resolved_columns[field_name])
@@ -211,7 +210,7 @@ class SourceQuerySqlMixin:
             query = text(
                 f"""
                 SELECT {field_name}_value AS option_value, SUM(incident_count) AS option_count
-                FROM {_quote_identifier(self._aggregations._daily_aggregate_view_name(table_name))}
+                FROM {quote_identifier(self._aggregations._daily_aggregate_view_name(table_name))}
                 WHERE {" AND ".join(conditions)} AND {field_name}_value IS NOT NULL
                 GROUP BY option_value
                 """
@@ -239,7 +238,7 @@ class SourceQuerySqlMixin:
         query = text(
             f"""
             SELECT {value_expression} AS option_value, COUNT(*) AS option_count
-            FROM {_quote_identifier(table_name)}
+            FROM {quote_identifier(table_name)}
             WHERE {" AND ".join(conditions)} AND {value_expression} IS NOT NULL
             GROUP BY option_value
             """
@@ -296,7 +295,7 @@ class SourceQuerySqlMixin:
         query = text(
             f"""
             SELECT {", ".join(select_parts)}
-            FROM {_quote_identifier(table_name)}
+            FROM {quote_identifier(table_name)}
             WHERE {" AND ".join(conditions)}
             GROUP BY fire_date
             ORDER BY fire_date
@@ -362,7 +361,7 @@ class SourceQuerySqlMixin:
                 COUNT(*) AS incident_count,
                 {temperature_sum_sql} AS temperature_sum,
                 {temperature_samples_sql} AS temperature_samples
-            FROM {_quote_identifier(table_name)}
+            FROM {quote_identifier(table_name)}
             WHERE {" AND ".join(conditions)}
             GROUP BY fire_date
         """
@@ -389,7 +388,7 @@ class SourceQuerySqlMixin:
             query = text(
                 f"""
                 SELECT COALESCE(SUM(incident_count), 0) AS total_count
-                FROM {_quote_identifier(self._aggregations._daily_aggregate_view_name(table_name))}
+                FROM {quote_identifier(self._aggregations._daily_aggregate_view_name(table_name))}
                 WHERE {" AND ".join(conditions)}
                 """
             )
@@ -409,7 +408,7 @@ class SourceQuerySqlMixin:
         query = text(
             f"""
             SELECT COUNT(*) AS total_count
-            FROM {_quote_identifier(table_name)}
+            FROM {quote_identifier(table_name)}
             WHERE {" AND ".join(conditions)}
             """
         )

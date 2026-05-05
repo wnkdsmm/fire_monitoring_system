@@ -24,8 +24,8 @@ from .types import (
     ForecastingTableMetadata,
     ForecastingTemperatureQuality,
 )
-from .utils import _date_expression, _quote_identifier, _resolve_column_name, _to_float_or_none
-
+from .utils import _date_expression, _resolve_column_name, _to_float_or_none
+from app.shared.sql_utils import quote_identifier
 
 def _collect_forecasting_metadata(source_tables: Sequence[str]) -> tuple[list[ForecastingTableMetadata], list[str]]:
     metadata_items: list[ForecastingTableMetadata] = []
@@ -201,7 +201,7 @@ def _resolve_history_window_min_year(metadata_items: Sequence[ForecastingTableMe
         query_parts.append(
             f"""
             SELECT MAX(EXTRACT(YEAR FROM {date_expression})) AS max_year
-            FROM {_quote_identifier(table_name)}
+            FROM {quote_identifier(table_name)}
             WHERE {date_expression} IS NOT NULL
             """
         )

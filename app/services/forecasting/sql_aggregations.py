@@ -17,11 +17,10 @@ from .types import SqlFilters, SqlMaterializedRow, SqlMergedBucket, SqlRow
 from .utils import (
     _date_expression,
     _numeric_expression_for_column,
-    _quote_identifier,
     _text_expression,
     _to_float_or_none,
 )
-
+from app.shared.sql_utils import quote_identifier
 _FORECASTING_SQL_CACHE = CopyingTtlCache(ttl_seconds=None)
 
 
@@ -159,7 +158,7 @@ class AggregationQueryBuilder(QueryBuilder):
                 COUNT(*) AS incident_count,
                 {avg_temperature_sql} AS avg_temperature,
                 {temperature_samples_sql} AS temperature_samples
-            FROM {_quote_identifier(table_name)}
+            FROM {quote_identifier(table_name)}
             WHERE {date_expression} IS NOT NULL
             GROUP BY fire_date, district_value, cause_value, object_category_value
         """
@@ -201,21 +200,21 @@ class AggregationQueryBuilder(QueryBuilder):
                 )
                 exists = conn.execute(exists_query, {"view_name": view_name}).scalar() is not None
                 if not exists:
-                    conn.execute(text(f"CREATE MATERIALIZED VIEW {_quote_identifier(view_name)} AS {view_sql}"))
+                    conn.execute(text(f"CREATE MATERIALIZED VIEW {quote_identifier(view_name)} AS {view_sql}"))
                     conn.execute(
                         text(
-                            f"CREATE INDEX IF NOT EXISTS {_quote_identifier(f'idx_{self._materialized_view_suffix(table_name)}_fire_date')} "
-                            f"ON {_quote_identifier(view_name)} (fire_date)"
+                            f"CREATE INDEX IF NOT EXISTS {quote_identifier(f'idx_{self._materialized_view_suffix(table_name)}_fire_date')} "
+                            f"ON {quote_identifier(view_name)} (fire_date)"
                         )
                     )
                     conn.execute(
                         text(
-                            f"CREATE INDEX IF NOT EXISTS {_quote_identifier(f'idx_{self._materialized_view_suffix(table_name)}_filters')} "
-                            f"ON {_quote_identifier(view_name)} (fire_date, district_value, cause_value, object_category_value)"
+                            f"CREATE INDEX IF NOT EXISTS {quote_identifier(f'idx_{self._materialized_view_suffix(table_name)}_filters')} "
+                            f"ON {quote_identifier(view_name)} (fire_date, district_value, cause_value, object_category_value)"
                         )
                     )
                 elif refresh_existing:
-                    conn.execute(text(f"REFRESH MATERIALIZED VIEW {_quote_identifier(view_name)}"))
+                    conn.execute(text(f"REFRESH MATERIALIZED VIEW {quote_identifier(view_name)}"))
                 prepared_views.append(view_name)
 
         self.clear_forecasting_sql_cache()
@@ -269,7 +268,7 @@ class AggregationQueryBuilder(QueryBuilder):
                     ELSE NULL
                 END AS avg_temperature,
                 SUM(temperature_samples) AS temperature_samples
-            FROM {_quote_identifier(self._daily_aggregate_view_name(table_name))}
+            FROM {quote_identifier(self._daily_aggregate_view_name(table_name))}
             WHERE {" AND ".join(conditions)}
             GROUP BY fire_date
             ORDER BY fire_date
@@ -304,7 +303,7 @@ class AggregationQueryBuilder(QueryBuilder):
                 SUM(incident_count) AS incident_count,
                 SUM(COALESCE(avg_temperature, 0.0) * temperature_samples) AS temperature_sum,
                 SUM(temperature_samples) AS temperature_samples
-            FROM {_quote_identifier(self._daily_aggregate_view_name(table_name))}
+            FROM {quote_identifier(self._daily_aggregate_view_name(table_name))}
             WHERE {" AND ".join(conditions)}
             GROUP BY fire_date
         """

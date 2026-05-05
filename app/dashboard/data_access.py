@@ -9,8 +9,8 @@ from app.domain.fire_columns import DASHBOARD_DISTRICT_COLUMN_CANDIDATES as DIST
 from app.statistics_constants import AREA_COLUMN, CAUSE_COLUMNS, DATE_COLUMN, IMPACT_METRIC_CONFIG
 
 from .types import DashboardTableRef, ImpactTotals
-from .utils import _date_expression, _quote_identifier
-
+from .utils import _date_expression
+from app.shared.sql_utils import quote_identifier
 _LEGACY_DISTRICT_COLUMN_CANDIDATES = [
     "Район",
     "Муниципальный район",
@@ -48,7 +48,7 @@ def _collect_impact_totals(selected_tables: list[DashboardTableRef], selected_ye
             query = text(
                 f"""
                 SELECT {', '.join(metric_selects)}
-                FROM {_quote_identifier(table['name'])}
+                FROM {quote_identifier(table['name'])}
                 WHERE {where_clause}
                 """
             )
@@ -93,7 +93,7 @@ def _build_impact_timeline_query(
             COALESCE(SUM({_metric_expression(table, "evacuated")}), 0) AS evacuated,
             COALESCE(SUM({_metric_expression(table, "evacuated_children")}), 0) AS evacuated_children,
             COALESCE(SUM({_metric_expression(table, "rescued_children")}), 0) AS rescued_children
-        FROM {_quote_identifier(table["name"])}
+        FROM {quote_identifier(table["name"])}
         WHERE {where_clause}
         GROUP BY date_value
         {order_clause}
@@ -179,7 +179,7 @@ def _find_metric_column(table: DashboardTableRef, metric_key: str) -> str:
 
 
 def _numeric_expression_for_column(column_name: str) -> str:
-    column_sql = _quote_identifier(column_name)
+    column_sql = quote_identifier(column_name)
     cleaned = f"NULLIF(REPLACE(REPLACE(REPLACE(CAST({column_sql} AS TEXT), ' ', ''), ',', '.'), CHR(160), ''), '')"
     return f"CASE WHEN {cleaned} ~ '^[-+]?[0-9]*\\.?[0-9]+$' THEN ({cleaned})::double precision ELSE NULL END"
 
@@ -191,7 +191,7 @@ def _normalize_match_text(value: str) -> str:
 
 
 def _build_yearly_query(table: DashboardTableRef) -> str | None:
-    table_name = _quote_identifier(table["name"])
+    table_name = quote_identifier(table["name"])
     area_expression = _area_expression(table)
 
     if DATE_COLUMN in table["column_set"]:
@@ -226,7 +226,7 @@ def _fetch_table_years(conn: Any, table_name: str, column_set: set) -> list[int]
     query = text(
         f"""
         SELECT DISTINCT {year_expression} AS year_value
-        FROM {_quote_identifier(table_name)}
+        FROM {quote_identifier(table_name)}
         WHERE {year_expression} IS NOT NULL
         ORDER BY year_value DESC
         """
@@ -245,12 +245,12 @@ def _build_year_filter_clause(table: DashboardTableRef, selected_year: int | Non
 
 
 def _year_expression(column_name: str) -> str:
-    column_sql = _quote_identifier(column_name)
+    column_sql = quote_identifier(column_name)
     return f"NULLIF(SUBSTRING(CAST({column_sql} AS TEXT) FROM '([0-9]{{4}})'), '')::int"
 
 
 def _month_expression(column_name: str) -> str:
-    column_sql = _quote_identifier(column_name)
+    column_sql = quote_identifier(column_name)
     text_value = f"TRIM(CAST({column_sql} AS TEXT))"
     return (
         "CASE "
@@ -265,7 +265,7 @@ def _month_expression(column_name: str) -> str:
 def _area_expression(table: DashboardTableRef) -> str:
     if AREA_COLUMN not in table["column_set"]:
         return "CAST(NULL AS double precision)"
-    column_sql = _quote_identifier(AREA_COLUMN)
+    column_sql = quote_identifier(AREA_COLUMN)
     cleaned = f"NULLIF(REPLACE(REPLACE(REPLACE(CAST({column_sql} AS TEXT), ' ', ''), ',', '.'), CHR(160), ''), '')"
     return f"CASE WHEN {cleaned} ~ '^[-+]?[0-9]*\\.?[0-9]+$' THEN ({cleaned})::double precision ELSE NULL END"
 

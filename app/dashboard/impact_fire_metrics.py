@@ -38,8 +38,8 @@ from .types import (
     ImpactMetric,
     ImpactTimelineSqlRow,
 )
-from .utils import _date_expression, _format_number, _quote_identifier
-
+from .utils import _date_expression, _format_number
+from app.shared.sql_utils import quote_identifier
 _AREA_BUCKET_ORDER = ["До 1 га", "1-5 га", "5-20 га", "20-100 га", "100+ га", "Не указано"]
 _IMPACT_TIMELINE_METRIC_KEYS = ("deaths", "injuries", "evacuated", "evacuated_children", "rescued_children")
 
@@ -57,9 +57,9 @@ def _collect_cause_counts(selected_tables: list[DashboardTableRef], selected_yea
             query = text(
                 f"""
                 SELECT
-                    COALESCE(NULLIF(TRIM(CAST({_quote_identifier(cause_column)} AS TEXT)), ''), 'Не указано') AS label,
+                    COALESCE(NULLIF(TRIM(CAST({quote_identifier(cause_column)} AS TEXT)), ''), 'Не указано') AS label,
                     COUNT(*) AS fire_count
-                FROM {_quote_identifier(table['name'])}
+                FROM {quote_identifier(table['name'])}
                 WHERE {where_clause}
                 GROUP BY label
                 ORDER BY fire_count DESC
@@ -104,7 +104,7 @@ def _collect_month_counts(selected_tables: list[DashboardTableRef], selected_yea
                 SELECT
                     {month_expression} AS month_value,
                     COUNT(*) AS fire_count
-                FROM {_quote_identifier(table['name'])}
+                FROM {quote_identifier(table['name'])}
                 WHERE {' AND '.join(conditions)}
                 GROUP BY month_value
                 ORDER BY month_value
@@ -121,7 +121,7 @@ def _collect_month_counts(selected_tables: list[DashboardTableRef], selected_yea
 
 
 def _column_label_expression(column_name: str) -> str:
-    return f"COALESCE(NULLIF(TRIM(CAST({_quote_identifier(column_name)} AS TEXT)), ''), 'Не указано')"
+    return f"COALESCE(NULLIF(TRIM(CAST({quote_identifier(column_name)} AS TEXT)), ''), 'Не указано')"
 
 
 def _resolve_grouped_count_query_context(
@@ -384,7 +384,7 @@ def _build_dashboard_grouped_counts_query(
             FROM (
                 SELECT
                     {', '.join(source_selects)}
-                FROM {_quote_identifier(table["name"])}
+                FROM {quote_identifier(table["name"])}
                 WHERE {context['where_clause']}
             ) AS grouped_source
             GROUP BY GROUPING SETS ({dimension_sql['grouping_sets']})
@@ -512,7 +512,7 @@ def _build_area_buckets_chart(selected_tables: list[DashboardTableRef], selected
                 SELECT
                     {_area_bucket_label_expression(table)} AS bucket,
                     COUNT(*) AS fire_count
-                FROM {_quote_identifier(table['name'])}
+                FROM {quote_identifier(table['name'])}
                 WHERE {where_clause}
                 GROUP BY bucket
                 """
@@ -594,7 +594,7 @@ def _collect_cumulative_area_rows(
                     {year_expression} AS year_value,
                     EXTRACT(DOY FROM {date_expression})::int AS day_of_year,
                     COALESCE(SUM({area_expression}), 0) AS area
-                FROM {_quote_identifier(table['name'])}
+                FROM {quote_identifier(table['name'])}
                 WHERE {date_expression} IS NOT NULL
                   AND {year_expression} IN (:current_year, :previous_year)
                 GROUP BY year_value, day_of_year
@@ -684,7 +684,7 @@ def _build_monthly_heatmap_chart(
                     {year_expression} AS year_value,
                     {month_expression} AS month_value,
                     COUNT(*) AS fire_count
-                FROM {_quote_identifier(table['name'])}
+                FROM {quote_identifier(table['name'])}
                 WHERE {' AND '.join(conditions)}
                 GROUP BY year_value, month_value
                 """
