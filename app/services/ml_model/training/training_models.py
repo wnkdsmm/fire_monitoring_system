@@ -64,6 +64,11 @@ def _build_count_model(model_key: str):
         if PoissonRegressor is None:
             return None
         return PoissonRegressor(**_POISSON_PARAMS)
+    if model_key == 'negative_binomial':
+        raise ValueError(
+            f"'{model_key}' не строится через _build_count_model — "
+            "используй _fit_negative_binomial_model_from_design напрямую."
+        )
     raise ValueError(f'Unsupported count model: {model_key}')
 
 
