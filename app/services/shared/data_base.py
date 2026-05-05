@@ -72,7 +72,7 @@ class DataLoader:
     def clamp_int_choice(value: Any, allowed_values: Sequence[int], default: int) -> int:
         try:
             parsed = int(str(value).strip())
-        except Exception:
+        except (ValueError, TypeError):
             return default
         if parsed in allowed_values:
             return parsed

@@ -5,6 +5,11 @@ from typing import Sequence
 
 from .types import ClusterLabel, ClusterMethod, ClusterMetrics, ClusteringMethodRow
 
+_SILHOUETTE_GOOD = 0.25
+_DAVIES_BOULDIN_GOOD = 1.30
+_STABILITY_ARI_GOOD = 0.45
+_BALANCE_RATIO_MIN = 0.10
+
 
 def compute_method_algorithm_key(method_row: ClusterMethod | None) -> str:
     if not method_row:
@@ -47,7 +52,13 @@ def compute_segmentation_strength(
             "label": "Сильная",
             "note": "Сегментация выглядит сильной: метрики согласованы между собой, кластеры заметно отделяются и в целом воспроизводятся на повторных подвыборках.",
         }
-    if not has_microclusters and silhouette >= 0.25 and davies_bouldin <= 1.30 and stability_ari >= 0.45 and balance_ratio >= 0.10:
+    if (
+        not has_microclusters
+        and silhouette >= _SILHOUETTE_GOOD
+        and davies_bouldin <= _DAVIES_BOULDIN_GOOD
+        and stability_ari >= _STABILITY_ARI_GOOD
+        and balance_ratio >= _BALANCE_RATIO_MIN
+    ):
         caution_suffix = ""
         if algorithm_mismatch:
             caution_suffix = " При этом итог лучше трактовать осторожнее: для текущего среза уже виден более убедительный альтернативный метод."

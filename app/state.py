@@ -342,4 +342,9 @@ class JobStore:
             session.latest_job_ids[job.kind] = job.job_id
             session.last_job_id = job.job_id
 
+# JobStore keeps all session and job state in process memory.
+# This is correct for single-process deployments (uvicorn default, one worker).
+# Multi-worker deployments (gunicorn -w N or uvicorn --workers N) will NOT share
+# state across workers — each worker gets its own isolated store.
+# If multi-worker support is needed, replace JobStore with a Redis-backed implementation.
 job_store = JobStore()

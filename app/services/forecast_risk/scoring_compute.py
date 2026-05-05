@@ -20,6 +20,11 @@ from config.constants import (
     CASUALTY_PRESSURE_SCALE,
     DAMAGE_PRESSURE_DAMAGE_WEIGHT,
     DAMAGE_PRESSURE_SEVERE_WEIGHT,
+    DEFAULT_DISTANCE_KM_BASELINE,
+    NARRATIVE_COMPONENT_SCORE_FLOOR,
+    NARRATIVE_COVERAGE_DEFICIT_THRESHOLD,
+    NARRATIVE_DISTANCE_REMOTE_KM,
+    NARRATIVE_HEATING_SHARE_THRESHOLD,
     DISTANCE_SCORE_MIN_KM,
     DISTANCE_SCORE_RANGE_KM,
     DEFAULT_RISK_FACTOR,
@@ -205,7 +210,7 @@ def _logistics_fields(
     avg_response = bucket["response_sum"] / bucket["response_count"] if bucket["response_count"] else None
     avg_distance = bucket["distance_sum"] / bucket["distance_count"] if bucket["distance_count"] else None
     distance_score = _clamp(
-        ((avg_distance or float(defaults.get("distance_km_baseline", 12.0))) - DISTANCE_SCORE_MIN_KM) / DISTANCE_SCORE_RANGE_KM,
+        ((avg_distance or float(defaults.get("distance_km_baseline", DEFAULT_DISTANCE_KM_BASELINE))) - DISTANCE_SCORE_MIN_KM) / DISTANCE_SCORE_RANGE_KM,
         0.0,
         1.0,
     )
@@ -637,7 +642,7 @@ def _component_rationale(component_key: str, score: float, context: ScoreContext
         )
         if context["long_arrival_rate"] >= 0.25:
             parts.append(f"Долгие прибытия были в {_format_probability(context['long_arrival_rate'])} случаев.")
-        if context["avg_distance"] is not None and context["avg_distance"] >= 15.0:
+        if context["avg_distance"] is not None and context["avg_distance"] >= NARRATIVE_DISTANCE_REMOTE_KM:
             parts.append(f"Удалённость до ПЧ {_format_number(context['avg_distance'])} км.")
         if context["logistics_priority_score"] >= 55:
             parts.append(
@@ -659,7 +664,7 @@ def _component_rationale(component_key: str, score: float, context: ScoreContext
 
 
 def _component_driver_text(component_key: str, score: float, context: ScoreContext) -> str:
-    if score < 38:
+    if score < NARRATIVE_COMPONENT_SCORE_FLOOR:
         return ""
     if component_key == "fire_frequency":
         if context["heating_share"] >= 0.50 and context["is_rural"]:
@@ -668,9 +673,9 @@ def _component_driver_text(component_key: str, score: float, context: ScoreConte
     if component_key == "consequence_severity":
         return "история последствий здесь тяжелее среднего"
     if component_key == "long_arrival_risk":
-        if context["service_coverage_ratio"] < 0.45:
+        if context["service_coverage_ratio"] < NARRATIVE_COVERAGE_DEFICIT_THRESHOLD:
             return "территория выходит из устойчивого прикрытия ПЧ"
-        if context["avg_distance"] is not None and context["avg_distance"] >= 15.0:
+        if context["avg_distance"] is not None and context["avg_distance"] >= NARRATIVE_DISTANCE_REMOTE_KM:
             return "есть риск долгого прибытия из-за удалённости"
         return "travel-time и сервисная зона повышают логистический риск"
     return "не подтверждён стабильный доступ к воде для тушения"

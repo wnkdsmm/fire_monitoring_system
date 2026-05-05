@@ -3,6 +3,10 @@ from __future__ import annotations
 from typing import Any, Sequence
 
 from config.constants import (
+    NARRATIVE_COMPONENT_SCORE_FLOOR,
+    NARRATIVE_COVERAGE_DEFICIT_THRESHOLD,
+    NARRATIVE_DISTANCE_REMOTE_KM,
+    NARRATIVE_HEATING_SHARE_THRESHOLD,
     PRIORITY_ANY_COMPONENT_TARGETED,
     PRIORITY_ARRIVAL_IMMEDIATE_THRESHOLD,
     PRIORITY_RURAL_ARRIVAL_THRESHOLD,
@@ -66,7 +70,7 @@ def _recommended_action(
     water_component = component_map.get("water_supply_deficit", {})
 
     if fire_component.get("score", 0.0) >= 55:
-        if context["heating_share"] >= 0.45:
+        if context["heating_share"] >= NARRATIVE_HEATING_SHARE_THRESHOLD:
             recommendations.append(
                 {
                     "label": "Усилить адресную профилактику по отоплению и электрике",
@@ -93,11 +97,11 @@ def _recommended_action(
         detail = (
             "Проверьте маршрут, фактический travel-time, резерв прикрытия и держится ли территория в устойчивой зоне обслуживания ПЧ."
         )
-        if context["service_coverage_ratio"] < 0.45:
+        if context["service_coverage_ratio"] < NARRATIVE_COVERAGE_DEFICIT_THRESHOLD:
             detail = (
                 "Для территории с дефицитом прикрытия полезно перепроверить маршрут, резерв прикрытия, промежуточное размещение техники или ДПК и реальный норматив доезда."
             )
-        elif context["avg_distance"] is not None and context["avg_distance"] >= 15.0:
+        elif context["avg_distance"] is not None and context["avg_distance"] >= NARRATIVE_DISTANCE_REMOTE_KM:
             detail = (
                 "Для удалённой территории полезно перепроверить маршрут, резерв прикрытия и возможность промежуточного размещения техники или ДПК."
             )

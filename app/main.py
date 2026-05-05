@@ -1,4 +1,5 @@
 import asyncio
+import os
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
@@ -8,6 +9,16 @@ from app.routes.pages import router as pages_router
 from app.runtime_invalidation import warmup_runtime_caches
 from config.db import check_connection, get_db_info
 from config.paths import STATIC_DIR
+
+if int(os.environ.get("WEB_CONCURRENCY", 1)) > 1:
+    import warnings
+
+    warnings.warn(
+        "job_store is in-memory and not shared across workers. "
+        "Set WEB_CONCURRENCY=1 or migrate to a shared backend.",
+        RuntimeWarning,
+        stacklevel=2,
+    )
 
 
 def create_app() -> FastAPI:

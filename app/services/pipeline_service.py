@@ -24,7 +24,7 @@ from config.constants import (
     PROFILING_CSV_SUFFIX,
     PROFILING_XLSX_SUFFIX,
 )
-from config.paths import get_result_folder
+from config.paths import RESULTS_DIR, get_result_folder
 from config.settings import Settings
 from core.processing.steps.create_clean_table import CreateCleanTableStep
 from core.processing.steps.column_transforms import coerce_bool_series
@@ -495,6 +495,12 @@ def import_uploaded_data(
     uploaded_file_path = job.current_file_path
     job_store.mark_job_status(session_id, resolved_job_id, "running")
     add_log(session_id, resolved_job_id, f"Запуск шага импорта для {uploaded_file_path}")
+
+    if output_folder:
+        resolved = (RESULTS_DIR / Path(output_folder).name).resolve()
+        if not str(resolved).startswith(str(RESULTS_DIR.resolve())):
+            return {"status": "error", "message": "Недопустимый путь к папке результатов", "job_id": job_id or ""}
+        output_folder = str(resolved)
 
     settings = Settings(
         input_file=str(uploaded_file_path),

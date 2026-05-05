@@ -3,6 +3,8 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Any
 
+from config.constants import DEFAULT_DISTANCE_KM_BASELINE
+
 from .types import ComponentWeightRow, RiskProfile
 from .utils import _format_decimal, _format_integer
 
@@ -88,7 +90,7 @@ EXPERT_RISK_WEIGHT_PROFILE: RiskProfile = {
     },
     "defaults": {
         "water_gap_unknown": 0.38,
-        "distance_km_baseline": 12.0,
+        "distance_km_baseline": DEFAULT_DISTANCE_KM_BASELINE,
         "distance_pressure_unknown": 0.30,
         "response_pressure_unknown": 0.42,
     },

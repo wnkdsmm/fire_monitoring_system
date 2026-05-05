@@ -61,7 +61,7 @@ class AggregationQueryBuilder(QueryBuilder):
         normalized = "_".join(part for part in normalized.split("_") if part)
         if not normalized:
             normalized = "table"
-        digest = hashlib.sha1(raw_value.encode("utf-8")).hexdigest()[:8]
+        digest = hashlib.sha1(raw_value.encode("utf-8")).hexdigest()[:16]
         return f"{normalized[:32]}_{digest}"
 
     def _daily_aggregate_view_name(self, table_name: str) -> str:
