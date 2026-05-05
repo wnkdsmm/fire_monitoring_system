@@ -217,7 +217,7 @@ def build_decision_support_payload(
     geo_prediction: GeoPredictionData | None = None,
     weight_mode: str = DEFAULT_RISK_WEIGHT_MODE,
     selected_year: int | None = None,
-    progress_callback: Callable[[str, str | None, None]] = None,
+    progress_callback: Callable[[str, str | None], None] | None = None,
     include_geo_prediction: bool = True,
     include_historical_validation: bool = True,
 ) -> RiskPresentation:
@@ -261,7 +261,7 @@ def build_decision_support_payload(
                 feature_cards=len(raw_data["feature_cards"]),
             )
 
-        with perf.span("aggregation"):
+        with perf.span("ranking"):
             if progress_callback is not None:
                 progress_callback(
                     "decision_support.aggregation",

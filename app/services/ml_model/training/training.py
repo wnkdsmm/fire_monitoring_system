@@ -347,7 +347,7 @@ def _store_training_artifacts(
 
 
 def _train_ml_model(
-    daily_history,
+    daily_history: list[TrainingHistoryRecord],
     forecast_days: int,
     scenario_temperature: float | None,
     current_user_date: date | None = None,
