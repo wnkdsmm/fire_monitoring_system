@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from typing import Any, Sequence
 
@@ -232,7 +232,7 @@ def _build_clustering_quality_stage(
         requested_cluster_count=requested_cluster_count,
         diagnostics=diagnostics,
     )
-    summary["silhouette_display"] = _format_number(clustering["silhouette"], 3) if clustering["silhouette"] is not None else "Р В Р’В Р вЂ™Р’В Р В Р Р‹Р Р†Р вЂљРІР‚СњР В Р’В Р В Р вЂ№Р В Р вЂ Р В РІР‚С™Р Р†Р вЂљРЎСљР В Р’В Р вЂ™Р’В Р В Р вЂ Р В РІР‚С™Р вЂ™Р’В¦"
+    summary["silhouette_display"] = _format_number(clustering["silhouette"], 3) if clustering["silhouette"] is not None else "—"
     summary["pca_variance_display"] = _format_percent(clustering["explained_variance"])
     summary["inertia_display"] = _format_number(clustering["inertia"], 2)
     if cluster_count_guidance.get("notes_message"):
