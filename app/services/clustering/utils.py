@@ -6,5 +6,3 @@ from app.services.shared.formatting import (
     format_number as _format_number,
     format_percent as _format_percent,
 )
-from app.shared.sql_utils import quote_identifier
-

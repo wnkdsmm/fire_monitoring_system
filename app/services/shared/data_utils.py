@@ -162,8 +162,6 @@ def _unique_non_empty(values: Sequence[str]) -> list[str]:
 
 
 @lru_cache(maxsize=16384)
-
-
 def _normalize_match_text(value: str) -> str:
     return " ".join(str(value).lower().replace("?", "?").replace("/", " ").replace("-", " ").split())
 

@@ -10,7 +10,6 @@ from app.services.shared.formatting import (
 )
 from app.shared.sql_utils import quote_identifier
 from app.table_catalog import select_user_table_names
-from config.db import engine
 
 DASHBOARD_HORIZON_OPTIONS: tuple[int, ...] = (7, 14, 30)
 

@@ -5,7 +5,6 @@ from datetime import date, datetime, timedelta
 from statistics import mean
 from typing import Any, Sequence
 
-from config.db import engine
 from app.shared.sql_utils import quote_identifier
 from app.services.shared.formatting import (
     _format_float_for_input,
