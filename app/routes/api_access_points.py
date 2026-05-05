@@ -13,8 +13,6 @@ def get_access_points_data(**kwargs):
     return _get_access_points_data(**kwargs)
 
 @router.get("/api/access-points-data")
-
-
 def access_points_data_endpoint(
     table_name: str = "all",
     district: str = "all",

@@ -34,8 +34,6 @@ def delete_tables(table_names: list[str]):
     return _delete_tables(table_names)
 
 @router.get("/api/tables/{table_name}/page")
-
-
 def table_page_endpoint(table_name: str, page: int = 1, page_size: int = 100):
     return json_action_response(
         lambda: build_table_page_api_payload(table_name=table_name, page=page, page_size=page_size),
@@ -58,8 +56,6 @@ def table_page_endpoint(table_name: str, page: int = 1, page_size: int = 100):
     )
 
 @router.delete("/api/tables/{table_name}")
-
-
 def delete_table_endpoint(table_name: str):
     def delete_action():
         result = delete_table(table_name)
@@ -92,8 +88,6 @@ def delete_table_endpoint(table_name: str):
     )
 
 @router.post("/api/tables/delete")
-
-
 def delete_tables_endpoint(payload: dict = Body(...)):
     table_names = [str(item).strip() for item in (payload.get("table_names") or []) if str(item).strip()]
 

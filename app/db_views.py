@@ -88,8 +88,6 @@ def _get_unique_key_candidates(inspector_obj, table_name: str, available_columns
     return candidates
 
 @lru_cache(maxsize=256)
-
-
 def _get_table_order_strategy_cached(table_name: str) -> TableOrderStrategy:
     available_columns = tuple(get_table_columns_cached(table_name))
     if not available_columns:

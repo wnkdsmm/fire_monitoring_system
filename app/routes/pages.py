@@ -100,20 +100,14 @@ PROFILING_DEFAULTS = {
 }
 
 @router.get("/assets/plotly.js")
-
-
 def plotly_bundle_asset() -> Response:
     return cached_text_response(get_plotly_bundle(), "application/javascript; charset=utf-8")
 
 @router.get("/favicon.ico", include_in_schema=False)
-
-
 def favicon() -> Response:
     return empty_cached_response()
 
 @router.get("/brief/dashboard.txt")
-
-
 def dashboard_brief_download(
     table_name: str = "all",
     year: str = "all",
@@ -129,8 +123,6 @@ def dashboard_brief_download(
     return _download_brief_response(data, "dashboard-brief.txt", "management", "export_text")
 
 @router.get("/", response_class=HTMLResponse)
-
-
 def home(
     request: Request,
     table_name: str = "all",
@@ -163,8 +155,6 @@ def home(
 
 @router.get("/backtesting", response_class=HTMLResponse)
 @router.get("/ml-model", response_class=HTMLResponse)
-
-
 def ml_model_page(
     request: Request,
     table_name: str = "all",
@@ -198,8 +188,6 @@ def ml_model_page(
     )
 
 @router.get("/clustering", response_class=HTMLResponse)
-
-
 def clustering_page(
     request: Request,
     table_name: str = "",
@@ -227,8 +215,6 @@ def clustering_page(
     )
 
 @router.get("/access-points", response_class=HTMLResponse)
-
-
 def access_points_page(
     request: Request,
     table_name: str = "all",
@@ -257,8 +243,6 @@ def access_points_page(
     )
 
 @router.get("/column-search", response_class=HTMLResponse)
-
-
 def column_search_page(request: Request, table_name: str = "", query: str = ""):
     table_options = get_column_search_table_options()
     selected_table = resolve_selected_table(table_options, table_name)
@@ -275,8 +259,6 @@ def column_search_page(request: Request, table_name: str = "", query: str = ""):
     )
 
 @router.get("/fire-map", response_class=HTMLResponse)
-
-
 def fire_map_page(request: Request, table_name: str = ""):
     try:
         fire_map = get_fire_map_page_context(table_name)
@@ -298,8 +280,6 @@ def fire_map_page(request: Request, table_name: str = ""):
         )
 
 @router.get("/fire-map/embed", response_class=HTMLResponse)
-
-
 def fire_map_embed(request: Request, table_name: str = ""):
     table_options = get_fire_map_table_options()
     selected_table = resolve_selected_table(table_options, table_name)
@@ -379,8 +359,6 @@ async def view_table(
     )
 
 @router.get("/select_table", response_class=HTMLResponse)
-
-
 def select_table(request: Request):
     tables = get_all_tables()
     return render_template_page(

@@ -10,8 +10,6 @@ from .api_common import run_analytics_request
 router = APIRouter()
 
 @router.get("/api/dashboard-data")
-
-
 def dashboard_data_endpoint(
     table_name: str = "all",
     year: str = "all",

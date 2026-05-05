@@ -50,8 +50,6 @@ async def upload_file(request: Request, file: UploadFile = File(...), job_id: st
     )
 
 @router.post("/import_data")
-
-
 def import_data_endpoint(request: Request, output_folder: str | None = Form(None), job_id: str | None = Form(None)):
     return run_session_json_action(
         request,
@@ -59,8 +57,6 @@ def import_data_endpoint(request: Request, output_folder: str | None = Form(None
     )
 
 @router.get("/logs")
-
-
 def logs(request: Request, job_id: str | None = None):
     return run_session_json_action(
         request,
@@ -68,8 +64,6 @@ def logs(request: Request, job_id: str | None = None):
     )
 
 @router.post("/run_profiling")
-
-
 def run_profiling_endpoint(request: Request, payload: dict = Body(...)):
     raw_job_id = str(payload.get("job_id") or "").strip()
     return run_session_json_action(

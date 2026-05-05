@@ -38,33 +38,23 @@ _IMMUTABLE_LEAF_TYPES = (
 )
 
 @dataclass(frozen=True, slots=True)
-
-
 class _FrozenDict:
     items: tuple[tuple[Any, object], ...]
 
 @dataclass(frozen=True, slots=True)
-
-
 class _FrozenList:
     items: tuple[object, ...]
 
 @dataclass(frozen=True, slots=True)
-
-
 class _FrozenTuple:
     items: tuple[object, ...]
 
 @dataclass(frozen=True, slots=True)
-
-
 class _FrozenSet:
     items: frozenset[object]
     preserve_frozenset: bool = False
 
 @dataclass(frozen=True, slots=True)
-
-
 class _FrozenLeaf:
     value: Any
 
