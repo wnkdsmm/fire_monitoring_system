@@ -30,3 +30,4 @@ ENV/
 .vscode/
 .DS_Store
 Thumbs.db
+_tmp_*.txt

@@ -42,9 +42,9 @@ body[data-page-loading] .page-content-wrapper { opacity: 0; }
 <a class="sidebar-overlay" href="#page-content" aria-hidden="true" tabindex="-1"></a>
 {% endblock %}
 
-            <main id="page-content" class="page-content-wrapper">
-            {% block content %}{% endblock %}
-            </main>
+<main id="page-content" class="page-content-wrapper">
+{% block content %}{% endblock %}
+</main>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
