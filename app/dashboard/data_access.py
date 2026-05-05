@@ -11,6 +11,7 @@ from app.statistics_constants import AREA_COLUMN, CAUSE_COLUMNS, DATE_COLUMN, IM
 from .types import DashboardTableRef, ImpactTotals
 from .utils import _date_expression
 from app.shared.sql_utils import quote_identifier
+
 _LEGACY_DISTRICT_COLUMN_CANDIDATES = [
     "Район",
     "Муниципальный район",

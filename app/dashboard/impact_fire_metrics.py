@@ -40,6 +40,7 @@ from .types import (
 )
 from .utils import _date_expression, _format_number
 from app.shared.sql_utils import quote_identifier
+
 _AREA_BUCKET_ORDER = ["До 1 га", "1-5 га", "5-20 га", "20-100 га", "100+ га", "Не указано"]
 _IMPACT_TIMELINE_METRIC_KEYS = ("deaths", "injuries", "evacuated", "evacuated_children", "rescued_children")
 

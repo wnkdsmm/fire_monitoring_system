@@ -21,6 +21,7 @@ from .utils import (
     _to_float_or_none,
 )
 from app.shared.sql_utils import quote_identifier
+
 _FORECASTING_SQL_CACHE = CopyingTtlCache(ttl_seconds=None)
 
 

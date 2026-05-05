@@ -56,6 +56,7 @@ from .types import (
 )
 from .utils import _format_number
 from app.shared.sql_utils import quote_identifier
+
 _DAMAGE_THEME_COLUMNS = {
     "Недвижимость": [
         BUILDINGS_DESTROYED_COLUMN,

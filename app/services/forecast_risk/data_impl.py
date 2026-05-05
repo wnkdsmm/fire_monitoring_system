@@ -6,6 +6,7 @@ from sqlalchemy import text
 
 from app.db_metadata import get_table_columns_cached
 from app.services.shared.sql_helpers import build_scope_conditions, build_select_parts
+from app.shared.sql_utils import quote_identifier
 from config.db import engine
 
 from .constants import (
@@ -50,7 +51,6 @@ from .utils import (
     _to_float_or_none,
     _truthy_value,
 )
-from app.shared.sql_utils import quote_identifier
 from .types import RiskDataRecord, RiskTableMetadata
 
 
