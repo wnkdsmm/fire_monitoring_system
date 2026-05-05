@@ -18,6 +18,17 @@ from config.constants import GAP_STAT_MAX_WORKERS, GAP_STAT_N_REFERENCES
 from config.constants import (
     CLUSTER_RISK_HIGH_THRESHOLD,
     CLUSTER_RISK_MEDIUM_THRESHOLD,
+    CLUSTER_QUALITY_BALANCE_WEIGHT,
+    CLUSTER_QUALITY_INVERSE_DB_WEIGHT,
+    CLUSTER_QUALITY_SCALED_CH_WEIGHT,
+    CLUSTER_QUALITY_SILHOUETTE_WEIGHT,
+    CLUSTER_SHAPE_BALANCE_WARNING_THRESHOLD,
+    CLUSTER_SHAPE_IMBALANCE_PENALTY_MAX,
+    CLUSTER_SHAPE_IMBALANCE_PENALTY_SCALE,
+    CLUSTER_SHAPE_MICROCLUSTER_DENSITY_THRESHOLD,
+    CLUSTER_SHAPE_MICROCLUSTER_PENALTY_BASE,
+    CLUSTER_SHAPE_MICROCLUSTER_PENALTY_MAX,
+    CLUSTER_SHAPE_MICROCLUSTER_PENALTY_SCALE,
     CLUSTER_COUNT_OPTIONS,
     MODEL_N_INIT,
     RATE_SMOOTHING_PRIOR_STRENGTH,
@@ -125,14 +136,15 @@ def compute_cluster_risk_scores(
 
         risk_score = float(np.clip(weighted_score / effective_weight_sum, 0.0, 1.0))
         if risk_score > CLUSTER_RISK_HIGH_THRESHOLD:
-            risk_level = "Высокий"
+            risk_level = "Р’С‹СЃРѕРєРёР№"
         elif risk_score > CLUSTER_RISK_MEDIUM_THRESHOLD:
-            risk_level = "Средний"
+            risk_level = "РЎСЂРµРґРЅРёР№"
         else:
-            risk_level = "Низкий"
+            risk_level = "РќРёР·РєРёР№"
         risk_rows.append(
             {
                 "cluster_id": int(cluster_id),
+                "cluster_label": f"Тип {int(cluster_id) + 1}",
                 "risk_score": round(risk_score, 4),
                 "risk_level": risk_level,
             }
@@ -153,25 +165,34 @@ def _cluster_quality_score(
     scaled_ch = 1.0 - math.exp(-max(calinski_harabasz, 0.0) / max(float(row_count), 1.0))
     diagnostics = shape_diagnostics if shape_diagnostics is not None else _cluster_shape_diagnostics(metrics, row_count)
     shape_penalty = float(diagnostics["shape_penalty"])
-    return float((silhouette * 0.55) + (inverse_db * 0.20) + (scaled_ch * 0.15) + (balance_ratio * 0.10) - shape_penalty)
+    return float(
+        (silhouette * CLUSTER_QUALITY_SILHOUETTE_WEIGHT)
+        + (inverse_db * CLUSTER_QUALITY_INVERSE_DB_WEIGHT)
+        + (scaled_ch * CLUSTER_QUALITY_SCALED_CH_WEIGHT)
+        + (balance_ratio * CLUSTER_QUALITY_BALANCE_WEIGHT)
+        - shape_penalty
+    )
 
 
 def _cluster_shape_diagnostics(metrics: dict[str, float | None], row_count: int) -> dict[str, float | bool | int]:
     smallest_cluster_size = int(metrics.get("smallest_cluster_size") or 0)
     balance_ratio = float(metrics.get("cluster_balance_ratio") or 0.0)
-    microcluster_threshold = max(3, int(math.ceil(max(float(row_count), 1.0) * 0.03)))
+    microcluster_threshold = max(3, int(math.ceil(max(float(row_count), 1.0) * CLUSTER_SHAPE_MICROCLUSTER_DENSITY_THRESHOLD)))
     has_microclusters = 0 < smallest_cluster_size < microcluster_threshold
-    has_balance_warning = balance_ratio < 0.18
+    has_balance_warning = balance_ratio < CLUSTER_SHAPE_BALANCE_WARNING_THRESHOLD
 
     microcluster_penalty = 0.0
     if has_microclusters:
         shortfall = (microcluster_threshold - smallest_cluster_size) / max(microcluster_threshold, 1)
-        microcluster_penalty = min(0.14, 0.04 + (shortfall * 0.10))
+        microcluster_penalty = min(
+            CLUSTER_SHAPE_MICROCLUSTER_PENALTY_MAX,
+            CLUSTER_SHAPE_MICROCLUSTER_PENALTY_BASE + (shortfall * CLUSTER_SHAPE_MICROCLUSTER_PENALTY_SCALE),
+        )
 
     imbalance_penalty = 0.0
     if has_balance_warning:
-        shortfall = (0.18 - balance_ratio) / 0.18
-        imbalance_penalty = min(0.10, shortfall * 0.08)
+        shortfall = (CLUSTER_SHAPE_BALANCE_WARNING_THRESHOLD - balance_ratio) / CLUSTER_SHAPE_BALANCE_WARNING_THRESHOLD
+        imbalance_penalty = min(CLUSTER_SHAPE_IMBALANCE_PENALTY_MAX, shortfall * CLUSTER_SHAPE_IMBALANCE_PENALTY_SCALE)
 
     return {
         "microcluster_threshold": microcluster_threshold,
@@ -215,10 +236,10 @@ def _build_sample_weights(
 ) -> np.ndarray:
     if (
         weighting_strategy in {WEIGHTING_STRATEGY_UNIFORM, WEIGHTING_STRATEGY_NOT_APPLICABLE}
-        or "Число пожаров" not in entity_frame.columns
+        or "Р§РёСЃР»Рѕ РїРѕР¶Р°СЂРѕРІ" not in entity_frame.columns
     ):
         return np.ones(len(entity_frame), dtype=float)
-    counts = pd.to_numeric(entity_frame["Число пожаров"], errors="coerce").fillna(1.0).clip(lower=1.0).to_numpy(dtype=float)
+    counts = pd.to_numeric(entity_frame["Р§РёСЃР»Рѕ РїРѕР¶Р°СЂРѕРІ"], errors="coerce").fillna(1.0).clip(lower=1.0).to_numpy(dtype=float)
     weights = np.log1p(counts)
     mean_weight = float(np.mean(weights))
     if mean_weight <= 0:
@@ -377,7 +398,7 @@ def _compute_pca_projection(
         cluster_label = (
             cluster_labels[cluster_id]
             if 0 <= cluster_id < len(cluster_labels)
-            else f"Тип {cluster_id + 1}"
+            else f"РўРёРї {cluster_id + 1}"
         )
         rows.append(
             {
@@ -614,3 +635,4 @@ def _estimate_elbow_k(rows: Sequence[dict[str, Any]]) -> int | None:
     if not interior_distances:
         return None
     return interior_ks[int(np.argmax(interior_distances))]
+

@@ -13,20 +13,20 @@ from .api_common import (
 
 router = APIRouter()
 
-_INVALID_CLUSTERING_MESSAGE = "\u041d\u0435\u043a\u043e\u0440\u0440\u0435\u043a\u0442\u043d\u044b\u0435 \u043f\u0430\u0440\u0430\u043c\u0435\u0442\u0440\u044b \u043a\u043b\u0430\u0441\u0442\u0435\u0440\u0438\u0437\u0430\u0446\u0438\u0438."
+_INVALID_CLUSTERING_MESSAGE = "Некорректные параметры кластеризации."
 _FAILED_CLUSTERING_MESSAGE = (
-    "\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u0441\u043e\u0431\u0440\u0430\u0442\u044c "
-    "clustering-\u0434\u0430\u043d\u043d\u044b\u0435. \u041f\u043e\u043f\u0440\u043e\u0431\u0443\u0439\u0442\u0435 "
-    "\u043f\u043e\u0432\u0442\u043e\u0440\u0438\u0442\u044c \u0437\u0430\u043f\u0440\u043e\u0441."
+    "Не удалось собрать "
+    "clustering-данные. Попробуйте "
+    "повторить запрос."
 )
 _INVALID_CLUSTERING_JOB_MESSAGE = (
-    "\u041d\u0435\u043a\u043e\u0440\u0440\u0435\u043a\u0442\u043d\u044b\u0435 \u043f\u0430\u0440\u0430\u043c\u0435\u0442\u0440\u044b "
-    "\u0434\u043b\u044f \u0444\u043e\u043d\u043e\u0432\u043e\u0439 clustering-\u0437\u0430\u0434\u0430\u0447\u0438."
+    "Некорректные параметры "
+    "для фоновой clustering-задачи."
 )
 _FAILED_CLUSTERING_JOB_MESSAGE = (
-    "\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u0437\u0430\u043f\u0443\u0441\u0442\u0438\u0442\u044c "
-    "\u0444\u043e\u043d\u043e\u0432\u0443\u044e clustering-\u0437\u0430\u0434\u0430\u0447\u0443. "
-    "\u041f\u043e\u043f\u0440\u043e\u0431\u0443\u0439\u0442\u0435 \u043f\u043e\u0432\u0442\u043e\u0440\u0438\u0442\u044c \u0437\u0430\u043f\u0440\u043e\u0441."
+    "Не удалось запустить "
+    "фоновую clustering-задачу. "
+    "Попробуйте повторить запрос."
 )
 
 
@@ -48,8 +48,6 @@ def get_clustering_job_status(**kwargs):
     return _get_clustering_job_status(**kwargs)
 
 @router.get("/api/clustering-data")
-
-
 def clustering_data_endpoint(
     request: Request,
     table_name: str = "",
@@ -72,8 +70,6 @@ def clustering_data_endpoint(
     )
 
 @router.post("/api/clustering-jobs")
-
-
 def start_clustering_job_endpoint(request: Request, payload: dict = Body(...)):
     return run_session_analytics_request(
         request,
@@ -92,7 +88,5 @@ def start_clustering_job_endpoint(request: Request, payload: dict = Body(...)):
     )
 
 @router.get("/api/clustering-jobs/{job_id}")
-
-
 def clustering_job_status_endpoint(request: Request, job_id: str):
     return job_status_response(request, job_id, get_clustering_job_status)

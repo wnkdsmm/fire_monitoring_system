@@ -48,7 +48,7 @@ def _empty_clustering_quality_assessment() -> ClusteringQualityAssessment:
         "metric_cards": [],
         "methodology_items": [],
         "comparison_rows": [],
-        "dissertation_points": ["Пока недостаточно данных для расчета метрик качества кластеризации."],
+        "quality_notes": ["Пока недостаточно данных для расчета метрик качества кластеризации."],
     }
 
 
@@ -160,7 +160,7 @@ def _build_quality_method_comparison_rows(
     ]
 
 
-def _build_quality_dissertation_points(
+def _build_quality_quality_notes(
     *,
     segmentation_note: str,
     method_note: str,
@@ -178,7 +178,7 @@ def _build_quality_dissertation_points(
     mode_note: str,
     ablation_note: str,
 ) -> list[str]:
-    dissertation_points = [
+    quality_notes = [
         segmentation_note,
         method_note,
         str(cluster_count_guidance.get("quality_note") or ""),
@@ -201,16 +201,16 @@ def _build_quality_dissertation_points(
         f"Сравнение методов выполнено на том же наборе признаков: {', '.join(selected_features)}.",
     ]
     if comparison_scope_note:
-        dissertation_points.append(comparison_scope_note)
+        quality_notes.append(comparison_scope_note)
     if cluster_shape_note:
-        dissertation_points.append(cluster_shape_note)
+        quality_notes.append(cluster_shape_note)
     if weighting_note:
-        dissertation_points.append(weighting_note)
+        quality_notes.append(weighting_note)
     if mode_note:
-        dissertation_points.append(mode_note)
+        quality_notes.append(mode_note)
     if ablation_note:
-        dissertation_points.append(ablation_note)
-    return [item for item in dissertation_points if str(item).strip()]
+        quality_notes.append(ablation_note)
+    return [item for item in quality_notes if str(item).strip()]
 
 
 def _build_quality_note_context(
@@ -361,7 +361,7 @@ def _build_clustering_quality_assessment(
 ) -> ClusteringQualityAssessment:
     if clustering.get("silhouette") is None:
         payload = _empty_clustering_quality_assessment()
-        payload["dissertation_points"] = ["В текущем срезе кластеризация построена, но внутренних метрик пока недостаточно для устойчивой интерпретации качества."]
+        payload["quality_notes"] = ["В текущем срезе кластеризация построена, но внутренних метрик пока недостаточно для устойчивой интерпретации качества."]
         return payload
 
     low_support_share = float((support_summary or {}).get("low_support_share") or 0.0)
@@ -409,7 +409,7 @@ def _build_clustering_quality_assessment(
     weighting_note = label_context["weighting_note"]
     weighting_meta = label_context["weighting_meta"]
     comparison_rows = _build_quality_method_comparison_rows(method_comparison)
-    dissertation_points = _build_quality_dissertation_points(
+    quality_notes = _build_quality_quality_notes(
         segmentation_note=segmentation_summary["note"],
         method_note=note_context["method_note"],
         cluster_count_guidance=cluster_count_guidance,
@@ -445,7 +445,7 @@ def _build_clustering_quality_assessment(
             explained_variance=clustering.get("explained_variance"),
         ),
         "comparison_rows": comparison_rows,
-        "dissertation_points": dissertation_points,
+        "quality_notes": quality_notes,
     }
 
 __all__ = [
@@ -457,9 +457,10 @@ __all__ = [
     '_build_ablation_warning_note',
     '_format_quality_method_selection_label',
     '_build_quality_method_comparison_rows',
-    '_build_quality_dissertation_points',
+    '_build_quality_quality_notes',
     '_build_quality_note_context',
     '_build_quality_metric_cards',
     '_build_quality_methodology_items',
     '_build_clustering_quality_assessment',
 ]
+

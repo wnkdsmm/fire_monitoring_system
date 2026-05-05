@@ -321,7 +321,7 @@ function applyClusteringData(data) {
         renderMetricCards('clusteringQualityMetrics', quality.metric_cards || [], 'После расчета здесь появятся внутренние метрики качества кластеризации.');
         renderMetricCards('clusteringQualityMethodology', quality.methodology_items || [], 'Методология сравнения появится после расчета.');
         renderQualityTable(quality.comparison_rows || []);
-        renderListItems('clusteringQualityNotes', quality.dissertation_points || [], 'После расчета здесь появятся формулировки для раздела о качестве.', { filterEmpty: true });
+        renderListItems('clusteringQualityNotes', quality.quality_notes || [], 'После расчета здесь появятся формулировки для раздела о качестве.', { filterEmpty: true });
 
         setText('clusterScatterTitle', charts.scatter ? charts.scatter.title : 'Кластеры территорий на двумерной проекции');
         setText('clusterDistributionTitle', charts.distribution ? charts.distribution.title : 'Размеры кластеров по числу территорий');
@@ -354,4 +354,5 @@ function applyClusteringData(data) {
         }
     };
 }(window));
+
 

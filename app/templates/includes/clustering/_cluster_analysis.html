@@ -21,11 +21,11 @@
         <div class="cluster-three-up">
             <article class="panel chart-panel">
                 <div class="panel-head">
-                    <h2 id="clusterFeatureImportanceTitle">{{ charts.feature_importance_chart.title | default("����� ��������� � ���������� ���������") }}</h2>
+                    <h2 id="clusterFeatureImportanceTitle">{{ charts.feature_importance_chart.title | default("Вклад признаков в разделение кластеров") }}</h2>
                     <span class="panel-meta">Межкластерная дисперсия признаков, нормализованная до долей суммарного вклада.</span>
                 </div>
                 <div id="clusterFeatureImportanceChart" class="plotly-chart cluster-bar-chart"></div>
-                <div id="clusterFeatureImportanceChartFallback" class="chart-empty{% if charts.feature_importance_chart.empty_message %} {% else %} is-hidden{% endif %}">{{ charts.feature_importance_chart.empty_message | default('') }}</div>
+                <div id="clusterFeatureImportanceChartFallback" class="chart-empty{% if charts.feature_importance_chart.empty_message %}{% else %} is-hidden{% endif %}">{{ charts.feature_importance_chart.empty_message | default('') }}</div>
             </article>
 
             <article class="panel chart-panel">
@@ -39,11 +39,11 @@
 
             <article class="panel chart-panel">
                 <div class="panel-head">
-                    <h2 id="clusterRadarTitle">{{ charts.radar_chart.title | default("������� ��������� �� ���������") }}</h2>
+                    <h2 id="clusterRadarTitle">{{ charts.radar_chart.title | default("Профили кластеров по признакам") }}</h2>
                     <span class="panel-meta">Сравнение нормализованных профилей кластеров по выбранным признакам.</span>
                 </div>
                 <div id="clusterRadarChart" class="plotly-chart cluster-bar-chart"></div>
-                <div id="clusterRadarChartFallback" class="chart-empty{% if charts.radar_chart.empty_message %} {% else %} is-hidden{% endif %}">{{ charts.radar_chart.empty_message | default('') }}</div>
+                <div id="clusterRadarChartFallback" class="chart-empty{% if charts.radar_chart.empty_message %}{% else %} is-hidden{% endif %}">{{ charts.radar_chart.empty_message | default('') }}</div>
             </article>
         </div>
 
@@ -97,7 +97,7 @@
                             {% for row in data.cluster_risk %}
                             {% set risk_class = 'risk-high' if row.risk_level == 'Высокий' else ('risk-medium' if row.risk_level == 'Средний' else ('risk-low' if row.risk_level == 'Низкий' else '')) %}
                             <tr>
-                                <td>{{ (row.cluster_id + 1) if row.cluster_id is number else row.cluster_id }}</td>
+                                <td>{{ row.cluster_label }}</td>
                                 <td class="{{ risk_class }}">{{ row.risk_level }}</td>
                             </tr>
                             {% endfor %}
@@ -183,3 +183,4 @@
         {% endif %}
     </div>
 </section>
+

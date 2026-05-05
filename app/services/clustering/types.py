@@ -175,7 +175,7 @@ class ClusteringQualityAssessment(TypedDict):
     metric_cards: list[QualityScore]
     methodology_items: list[QualityScore]
     comparison_rows: list[MethodComparisonRow]
-    dissertation_points: list[str]
+    quality_notes: list[str]
 
 
 class SupportSummary(TypedDict):
@@ -553,3 +553,4 @@ class ClusteringModelStageResult(TypedDict):
     model_inputs: NotRequired[ClusteringModelStageInputs]
     model_bundle: NotRequired[ClusteringModelBundle]
     error_payload: NotRequired[ClusteringBaseState]
+

@@ -86,8 +86,6 @@ def _parse_datetime_text(value: Any) -> datetime | None:
     return _parse_datetime_string(text_value)
 
 @lru_cache(maxsize=32768)
-
-
 def _parse_datetime_string(text_value: str) -> datetime | None:
     if len(text_value) == 10:
         try:
@@ -219,9 +217,8 @@ def _format_probability(value: float) -> str:
     numeric = _to_float_or_none(value)
     if numeric is None:
         numeric = 0.0
-    if numeric > 1.5:
-        while numeric > 1.0 and numeric <= 10000.0:
-            numeric = numeric / 100.0
+    if numeric > 1.0:
+        numeric = numeric / 100.0
     return _format_percent(_clamp(numeric, 0.0, 1.0) * 100.0)
 
 
@@ -245,10 +242,8 @@ def _quote_identifier(identifier: str) -> str:
     return engine.dialect.identifier_preparer.quote(identifier)
 
 @lru_cache(maxsize=16384)
-
-
 def _normalize_match_text(value: str) -> str:
-    return " ".join(str(value).lower().replace("?", "?").replace("/", " ").replace("-", " ").split())
+    return " ".join(str(value).lower().replace("/", " ").replace("-", " ").split())
 
 
 def _text_expression(column_name: str) -> str:

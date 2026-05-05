@@ -85,8 +85,8 @@
             {% endif %}
         </div>
         <ul class="notice-list" id="clusteringQualityNotes">
-            {% if quality.dissertation_points %}
-                {% for note in quality.dissertation_points %}
+            {% if quality.quality_notes %}
+                {% for note in quality.quality_notes %}
                 <li>{{ note }}</li>
                 {% endfor %}
             {% else %}
@@ -94,3 +94,4 @@
             {% endif %}
         </ul>
     </section>
+

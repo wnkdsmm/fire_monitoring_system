@@ -3,6 +3,27 @@ from __future__ import annotations
 from typing import Sequence
 
 from app.services.shared.summary_cards import build_summary_cards
+from config.constants import (
+    RANKING_CONF_FALLBACK_CLAMP_MAX,
+    RANKING_CONF_FALLBACK_CLAMP_MIN,
+    RANKING_CONF_FALLBACK_LOCAL_WEIGHT,
+    RANKING_CONF_FALLBACK_PASSPORT_WEIGHT,
+    RANKING_CONF_LOCAL_WEIGHT,
+    RANKING_CONF_LOWER_CLAMP_MAX,
+    RANKING_CONF_LOWER_CLAMP_MIN,
+    RANKING_CONF_LOWER_PENALTY,
+    RANKING_CONF_OBJECTIVE_WEIGHT,
+    RANKING_CONF_PASSPORT_WEIGHT,
+    RANKING_CONF_TOP_BOOST,
+    RANKING_CONF_VALIDATED_CLAMP_MAX,
+    RANKING_CONF_VALIDATED_CLAMP_MIN,
+    RANKING_HISTORY_SUPPORT_DIVISOR,
+    RANKING_LOCAL_HISTORY_WEIGHT,
+    RANKING_LOCAL_MARGIN_WEIGHT,
+    RANKING_LOCAL_SUPPORT_CLAMP_MIN,
+    RANKING_MARGIN_GAP_DIVISOR,
+    RANKING_MARGIN_TOP_DIVISOR,
+)
 
 from .types import HistoricalValidationPayload, QualityPassport, RiskProfile, RiskScore, TopConfidence
 from .utils import _clamp, _format_integer, _format_number, _format_probability
@@ -28,22 +49,44 @@ def _attach_ranking_reliability(
     ndcg_at_k = float(metrics.get("ndcg_at_k") or 0.0)
 
     for index, territory in enumerate(annotated):
-        history_support = min(1.0, float(territory.get("history_count") or 0.0) / 8.0)
+        history_support = min(1.0, float(territory.get("history_count") or 0.0) / RANKING_HISTORY_SUPPORT_DIVISOR)
         if index == 0:
-            margin_support = min(1.0, float(territory.get("ranking_gap_to_next") or 0.0) / 8.0)
+            margin_support = min(1.0, float(territory.get("ranking_gap_to_next") or 0.0) / RANKING_MARGIN_TOP_DIVISOR)
         else:
-            margin_support = 1.0 - min(1.0, float(territory.get("ranking_gap_to_top") or 0.0) / 12.0)
-        local_support = _clamp(0.58 * margin_support + 0.42 * history_support, 0.15, 1.0)
+            margin_support = 1.0 - min(1.0, float(territory.get("ranking_gap_to_top") or 0.0) / RANKING_MARGIN_GAP_DIVISOR)
+        local_support = _clamp(
+            RANKING_LOCAL_MARGIN_WEIGHT * margin_support + RANKING_LOCAL_HISTORY_WEIGHT * history_support,
+            RANKING_LOCAL_SUPPORT_CLAMP_MIN,
+            1.0,
+        )
 
         if validation_ready:
-            confidence_norm = _clamp(0.42 * passport_score + 0.38 * objective_score + 0.20 * local_support, 0.18, 0.96)
+            confidence_norm = _clamp(
+                RANKING_CONF_PASSPORT_WEIGHT * passport_score
+                + RANKING_CONF_OBJECTIVE_WEIGHT * objective_score
+                + RANKING_CONF_LOCAL_WEIGHT * local_support,
+                RANKING_CONF_VALIDATED_CLAMP_MIN,
+                RANKING_CONF_VALIDATED_CLAMP_MAX,
+            )
         else:
-            confidence_norm = _clamp(0.67 * passport_score + 0.33 * local_support, 0.16, 0.88)
+            confidence_norm = _clamp(
+                RANKING_CONF_FALLBACK_PASSPORT_WEIGHT * passport_score + RANKING_CONF_FALLBACK_LOCAL_WEIGHT * local_support,
+                RANKING_CONF_FALLBACK_CLAMP_MIN,
+                RANKING_CONF_FALLBACK_CLAMP_MAX,
+            )
 
         if index == 0:
-            confidence_norm = _clamp(confidence_norm + 0.03, 0.18, 0.96)
+            confidence_norm = _clamp(
+                confidence_norm + RANKING_CONF_TOP_BOOST,
+                RANKING_CONF_VALIDATED_CLAMP_MIN,
+                RANKING_CONF_VALIDATED_CLAMP_MAX,
+            )
         elif index >= 3:
-            confidence_norm = _clamp(confidence_norm - 0.04, 0.16, 0.92)
+            confidence_norm = _clamp(
+                confidence_norm - RANKING_CONF_LOWER_PENALTY,
+                RANKING_CONF_LOWER_CLAMP_MIN,
+                RANKING_CONF_LOWER_CLAMP_MAX,
+            )
 
         confidence_score = int(round(confidence_norm * 100.0))
         label, tone, prefix = _ranking_confidence_state(confidence_score)

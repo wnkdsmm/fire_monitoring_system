@@ -43,15 +43,15 @@ def _apply_cluster_count_guidance_to_summary(
     summary["cluster_count_note"] = str(cluster_count_guidance.get("current_note") or "")
     summary["suggested_cluster_count_label"] = str(
         cluster_count_guidance.get("suggested_label")
-        or "\u0420\u0435\u043a\u043e\u043c\u0435\u043d\u0434\u0443\u0435\u043c\u044b\u0439 k"
+        or "–екомендуемый k"
     )
     summary["suggested_cluster_count_display"] = (
         _format_integer(cluster_count_guidance["recommended_cluster_count"])
         if cluster_count_guidance.get("recommended_cluster_count")
-        else "\u2014"
+        else "Ч"
     )
     summary["suggested_cluster_count_note"] = str(cluster_count_guidance.get("suggested_note") or "")
-    summary["elbow_cluster_count_display"] = _format_integer(diagnostics["elbow_k"]) if diagnostics.get("elbow_k") else "\u2014"
+    summary["elbow_cluster_count_display"] = _format_integer(diagnostics["elbow_k"]) if diagnostics.get("elbow_k") else "Ч"
 
 
 def _build_clustering_charts_payload(
@@ -232,7 +232,7 @@ def _build_clustering_quality_stage(
         requested_cluster_count=requested_cluster_count,
         diagnostics=diagnostics,
     )
-    summary["silhouette_display"] = _format_number(clustering["silhouette"], 3) if clustering["silhouette"] is not None else "\u2014"
+    summary["silhouette_display"] = _format_number(clustering["silhouette"], 3) if clustering["silhouette"] is not None else "Ч"
     summary["pca_variance_display"] = _format_percent(clustering["explained_variance"])
     summary["inertia_display"] = _format_number(clustering["inertia"], 2)
     if cluster_count_guidance.get("notes_message"):
