@@ -17,6 +17,7 @@ _PHYSICAL_ROW_ORDER_FALLBACKS = {
     "sqlite": "rowid ASC",
 }
 
+
 @dataclass(frozen=True)
 class TableOrderStrategy:
     order_by_sql: str
@@ -86,6 +87,7 @@ def _get_unique_key_candidates(inspector_obj, table_name: str, available_columns
 
     candidates.sort(key=lambda item: (item["has_nullable_columns"], len(item["columns"]), item["columns"], item["name"]))
     return candidates
+
 
 @lru_cache(maxsize=256)
 def _get_table_order_strategy_cached(table_name: str) -> TableOrderStrategy:

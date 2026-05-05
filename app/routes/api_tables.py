@@ -6,14 +6,14 @@ from .api_common import json_action_response
 
 router = APIRouter()
 
-_FAILED_TABLE_PAGE_MESSAGE = "Не удалось загрузить страницу таблицы: {exc}"
-_DELETED_TABLE_MESSAGE = "Таблица {table_name} удалена из базы данных."
-_FAILED_DELETE_TABLE_MESSAGE = "Не удалось удалить таблицу: {exc}"
-_TABLE_WORD_SINGLE = "таблица"
-_TABLE_WORD_FEW = "таблицы"
-_TABLE_WORD_MANY = "таблиц"
-_DELETED_TABLES_MESSAGE = "Удалено {count} {table_word} из базы данных."
-_FAILED_DELETE_TABLES_MESSAGE = "Не удалось удалить таблицы: {exc}"
+_FAILED_TABLE_PAGE_MESSAGE = "РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РіСЂСѓР·РёС‚СЊ СЃС‚СЂР°РЅРёС†Сѓ С‚Р°Р±Р»РёС†С‹: {exc}"
+_DELETED_TABLE_MESSAGE = "РўР°Р±Р»РёС†Р° {table_name} СѓРґР°Р»РµРЅР° РёР· Р±Р°Р·С‹ РґР°РЅРЅС‹С…."
+_FAILED_DELETE_TABLE_MESSAGE = "РќРµ СѓРґР°Р»РѕСЃСЊ СѓРґР°Р»РёС‚СЊ С‚Р°Р±Р»РёС†Сѓ: {exc}"
+_TABLE_WORD_SINGLE = "С‚Р°Р±Р»РёС†Р°"
+_TABLE_WORD_FEW = "С‚Р°Р±Р»РёС†С‹"
+_TABLE_WORD_MANY = "С‚Р°Р±Р»РёС†"
+_DELETED_TABLES_MESSAGE = "РЈРґР°Р»РµРЅРѕ {count} {table_word} РёР· Р±Р°Р·С‹ РґР°РЅРЅС‹С…."
+_FAILED_DELETE_TABLES_MESSAGE = "РќРµ СѓРґР°Р»РѕСЃСЊ СѓРґР°Р»РёС‚СЊ С‚Р°Р±Р»РёС†С‹: {exc}"
 
 
 def build_table_page_api_payload(**kwargs):
@@ -32,6 +32,7 @@ def delete_tables(table_names: list[str]):
     from app.table_operations import delete_tables as _delete_tables
 
     return _delete_tables(table_names)
+
 
 @router.get("/api/tables/{table_name}/page")
 def table_page_endpoint(table_name: str, page: int = 1, page_size: int = 100):
@@ -54,6 +55,7 @@ def table_page_endpoint(table_name: str, page: int = 1, page_size: int = 100):
             404,
         ),
     )
+
 
 @router.delete("/api/tables/{table_name}")
 def delete_table_endpoint(table_name: str):
@@ -86,6 +88,7 @@ def delete_table_endpoint(table_name: str):
             500,
         ),
     )
+
 
 @router.post("/api/tables/delete")
 def delete_tables_endpoint(payload: dict = Body(...)):

@@ -91,7 +91,7 @@ def _extract_nested_text(payload: dict[str, Any], *path: str) -> str:
 
 def _download_brief_response(initial_data: dict[str, Any], filename: str, *path: str) -> Response:
     text = _extract_nested_text(initial_data, *path)
-    return download_text_response(text or "Управленческий бриф пока недоступен.", filename)
+    return download_text_response(text or "РЈРїСЂР°РІР»РµРЅС‡РµСЃРєРёР№ Р±СЂРёС„ РїРѕРєР° РЅРµРґРѕСЃС‚СѓРїРµРЅ.", filename)
 
 PROFILING_DEFAULTS = {
     "null_threshold_percent": round(NULL_THRESHOLD * 100),
@@ -99,13 +99,16 @@ PROFILING_DEFAULTS = {
     "low_variance_threshold": LOW_VARIANCE_THRESHOLD,
 }
 
+
 @router.get("/assets/plotly.js")
 def plotly_bundle_asset() -> Response:
     return cached_text_response(get_plotly_bundle(), "application/javascript; charset=utf-8")
 
+
 @router.get("/favicon.ico", include_in_schema=False)
 def favicon() -> Response:
     return empty_cached_response()
+
 
 @router.get("/brief/dashboard.txt")
 def dashboard_brief_download(
@@ -121,6 +124,7 @@ def dashboard_brief_download(
         horizon_days=horizon_days,
     )["initial_data"]
     return _download_brief_response(data, "dashboard-brief.txt", "management", "export_text")
+
 
 @router.get("/", response_class=HTMLResponse)
 def home(
@@ -152,6 +156,7 @@ def home(
             "dashboard_js_version": "js/dashboard.js",
         },
     )
+
 
 @router.get("/backtesting", response_class=HTMLResponse)
 @router.get("/ml-model", response_class=HTMLResponse)
@@ -187,6 +192,7 @@ def ml_model_page(
         },
     )
 
+
 @router.get("/clustering", response_class=HTMLResponse)
 def clustering_page(
     request: Request,
@@ -213,6 +219,7 @@ def clustering_page(
             "clustering_js_version": "js/clustering.js",
         },
     )
+
 
 @router.get("/access-points", response_class=HTMLResponse)
 def access_points_page(
@@ -242,6 +249,7 @@ def access_points_page(
         },
     )
 
+
 @router.get("/column-search", response_class=HTMLResponse)
 def column_search_page(request: Request, table_name: str = "", query: str = ""):
     table_options = get_column_search_table_options()
@@ -257,6 +265,7 @@ def column_search_page(request: Request, table_name: str = "", query: str = ""):
             column_search_js_version="js/column_search.js",
         ),
     )
+
 
 @router.get("/fire-map", response_class=HTMLResponse)
 def fire_map_page(request: Request, table_name: str = ""):
@@ -279,6 +288,7 @@ def fire_map_page(request: Request, table_name: str = ""):
             **asset_versions(**FIRE_MAP_ASSETS),
         )
 
+
 @router.get("/fire-map/embed", response_class=HTMLResponse)
 def fire_map_embed(request: Request, table_name: str = ""):
     table_options = get_fire_map_table_options()
@@ -288,7 +298,7 @@ def fire_map_embed(request: Request, table_name: str = ""):
         return render_template_page(
             request,
             "fire_map_error.html",
-            message="Выберите существующую таблицу для построения карты.",
+            message="Р’С‹Р±РµСЂРёС‚Рµ СЃСѓС‰РµСЃС‚РІСѓСЋС‰СѓСЋ С‚Р°Р±Р»РёС†Сѓ РґР»СЏ РїРѕСЃС‚СЂРѕРµРЅРёСЏ РєР°СЂС‚С‹.",
             status_code=400,
             **asset_versions(**FIRE_MAP_ASSETS),
         )
@@ -299,7 +309,7 @@ def fire_map_embed(request: Request, table_name: str = ""):
             return render_template_page(
                 request,
                 "fire_map_error.html",
-                message="Для выбранной таблицы не удалось собрать карту. Проверьте координаты, даты и наличие записей.",
+                message="Р”Р»СЏ РІС‹Р±СЂР°РЅРЅРѕР№ С‚Р°Р±Р»РёС†С‹ РЅРµ СѓРґР°Р»РѕСЃСЊ СЃРѕР±СЂР°С‚СЊ РєР°СЂС‚Сѓ. РџСЂРѕРІРµСЂСЊС‚Рµ РєРѕРѕСЂРґРёРЅР°С‚С‹, РґР°С‚С‹ Рё РЅР°Р»РёС‡РёРµ Р·Р°РїРёСЃРµР№.",
                 status_code=422,
                 **asset_versions(**FIRE_MAP_ASSETS),
             )
@@ -314,6 +324,7 @@ def fire_map_embed(request: Request, table_name: str = ""):
             **asset_versions(**FIRE_MAP_ASSETS),
         )
 
+
 @router.get("/tables", response_class=HTMLResponse)
 async def list_tables(request: Request):
     tables = get_all_tables()
@@ -327,6 +338,7 @@ async def list_tables(request: Request):
             tables_js_version="js/tables.js",
         ),
     )
+
 
 @router.get("/tables/{table_name}", response_class=HTMLResponse)
 async def view_table(
@@ -357,6 +369,7 @@ async def view_table(
             table_view_js_version="js/table_view.js",
         ),
     )
+
 
 @router.get("/select_table", response_class=HTMLResponse)
 def select_table(request: Request):

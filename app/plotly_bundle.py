@@ -27,6 +27,7 @@ DEFAULT_PLOTLY_CONFIG: dict[str, Any] = {
     ],
 }
 
+
 @lru_cache(maxsize=1)
 def get_plotly_bundle() -> str:
     if not PLOTLY_AVAILABLE or get_plotlyjs is None:
