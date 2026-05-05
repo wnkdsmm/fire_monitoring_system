@@ -6,7 +6,5 @@ from app.services.shared.formatting import (
     format_number as _format_number,
     format_percent as _format_percent,
 )
+from app.shared.sql_utils import quote_identifier
 
-
-def _quote_identifier(identifier: str) -> str:
-    return '"' + str(identifier).replace('"', '""') + '"'

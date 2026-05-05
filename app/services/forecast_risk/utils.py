@@ -5,7 +5,7 @@ from datetime import date, datetime
 from functools import lru_cache
 from typing import Any, Sequence
 
-from config.db import engine
+from app.shared.sql_utils import quote_identifier
 
 from .constants import LONG_RESPONSE_THRESHOLD_MINUTES
 
@@ -238,27 +238,24 @@ def _unique_non_empty(values: Sequence[str]) -> list[str]:
     return items
 
 
-def _quote_identifier(identifier: str) -> str:
-    return engine.dialect.identifier_preparer.quote(identifier)
-
 @lru_cache(maxsize=16384)
 def _normalize_match_text(value: str) -> str:
     return " ".join(str(value).lower().replace("/", " ").replace("-", " ").split())
 
 
 def _text_expression(column_name: str) -> str:
-    column_sql = _quote_identifier(column_name)
+    column_sql = quote_identifier(column_name)
     return f"NULLIF(TRIM(CAST({column_sql} AS TEXT)), '')"
 
 
 def _numeric_expression_for_column(column_name: str) -> str:
-    column_sql = _quote_identifier(column_name)
+    column_sql = quote_identifier(column_name)
     cleaned = f"NULLIF(REPLACE(REPLACE(REPLACE(CAST({column_sql} AS TEXT), ' ', ''), ',', '.'), CHR(160), ''), '')"
     return f"CASE WHEN {cleaned} ~ '^[-+]?[0-9]*\\.?[0-9]+$' THEN ({cleaned})::double precision ELSE NULL END"
 
 
 def _date_expression(column_name: str) -> str:
-    column_sql = _quote_identifier(column_name)
+    column_sql = quote_identifier(column_name)
     text_value = f"TRIM(CAST({column_sql} AS TEXT))"
     return (
         "CASE "

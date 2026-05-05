@@ -6,6 +6,7 @@ from statistics import mean
 from typing import Any, Sequence
 
 from config.db import engine
+from app.shared.sql_utils import quote_identifier
 from app.services.shared.formatting import (
     _format_float_for_input,
     _format_period,
@@ -218,10 +219,6 @@ def _relative_delta_text(value: float, reference: float, reference_label: str) -
     return f"{_format_signed_percent(delta_ratio)} {reference_label}"
 
 
-def _quote_identifier(identifier: str) -> str:
-    return engine.dialect.identifier_preparer.quote(identifier)
-
-
 def _normalize_match_text(value: str) -> str:
     normalized = str(value).lower().replace("?", "?")
     normalized = " ".join(normalized.replace("/", " ").replace("-", " ").split())
@@ -229,18 +226,18 @@ def _normalize_match_text(value: str) -> str:
 
 
 def _text_expression(column_name: str) -> str:
-    column_sql = _quote_identifier(column_name)
+    column_sql = quote_identifier(column_name)
     return f"NULLIF(TRIM(CAST({column_sql} AS TEXT)), '')"
 
 
 def _numeric_expression_for_column(column_name: str) -> str:
-    column_sql = _quote_identifier(column_name)
+    column_sql = quote_identifier(column_name)
     cleaned = f"NULLIF(REPLACE(REPLACE(REPLACE(CAST({column_sql} AS TEXT), ' ', ''), ',', '.'), CHR(160), ''), '')"
     return f"CASE WHEN {cleaned} ~ '^[-+]?[0-9]*\\.?[0-9]+$' THEN ({cleaned})::double precision ELSE NULL END"
 
 
 def _date_expression(column_name: str) -> str:
-    column_sql = _quote_identifier(column_name)
+    column_sql = quote_identifier(column_name)
     text_value = f"TRIM(CAST({column_sql} AS TEXT))"
     return (
         "CASE "

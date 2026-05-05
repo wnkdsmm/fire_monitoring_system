@@ -8,6 +8,7 @@ from app.services.shared.formatting import (
     format_number_two_decimals as _format_number,
     format_percentage as _format_percentage,
 )
+from app.shared.sql_utils import quote_identifier
 from app.table_catalog import select_user_table_names
 from config.db import engine
 
@@ -43,12 +44,8 @@ def _find_option_label(options: list[dict[str, str]], value: str, fallback: str)
     return fallback
 
 
-def _quote_identifier(identifier: str) -> str:
-    return engine.dialect.identifier_preparer.quote(identifier)
-
-
 def _date_expression(column_name: str) -> str:
-    column_sql = _quote_identifier(column_name)
+    column_sql = quote_identifier(column_name)
     text_value = f"TRIM(CAST({column_sql} AS TEXT))"
     return (
         "CASE "

@@ -6,6 +6,7 @@ from typing import Any, Sequence
 from sqlalchemy import text
 
 from app.db_metadata import get_table_columns_cached
+from app.shared.sql_utils import quote_identifier
 from app.services.shared.sql_helpers import select_expression_or_fallback
 from app.services.shared.data_utils import (
     _calculate_response_minutes,
@@ -16,7 +17,6 @@ from app.services.shared.data_utils import (
     _parse_datetime_text,
     _parse_water_supply_flag,
     _pick_territory_label,
-    _quote_identifier,
     _resolve_column_name,
     _text_expression,
     _to_float_or_none,
@@ -204,7 +204,7 @@ def _build_source_sql(table_name: str, resolved_columns: ResolvedColumns) -> str
             {destroyed_buildings_expr} AS destroyed_buildings,
             {registered_damage_expr} AS registered_damage,
             {date_expr} AS event_date
-        FROM {_quote_identifier(table_name)}
+        FROM {quote_identifier(table_name)}
     """
 
 
