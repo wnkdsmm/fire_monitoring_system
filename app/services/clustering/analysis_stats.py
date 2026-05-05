@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import math
 from concurrent.futures import ThreadPoolExecutor
@@ -136,15 +136,15 @@ def compute_cluster_risk_scores(
 
         risk_score = float(np.clip(weighted_score / effective_weight_sum, 0.0, 1.0))
         if risk_score > CLUSTER_RISK_HIGH_THRESHOLD:
-            risk_level = "Р’С‹СЃРѕРєРёР№"
+            risk_level = "Высокий"
         elif risk_score > CLUSTER_RISK_MEDIUM_THRESHOLD:
-            risk_level = "РЎСЂРµРґРЅРёР№"
+            risk_level = "Средний"
         else:
-            risk_level = "РќРёР·РєРёР№"
+            risk_level = "Низкий"
         risk_rows.append(
             {
                 "cluster_id": int(cluster_id),
-                "cluster_label": f"Тип {int(cluster_id) + 1}",
+                "cluster_label": f"Р В Р’В Р вЂ™Р’В Р В РІР‚в„ўР вЂ™Р’В Р В Р’В Р Р†Р вЂљРІвЂћСћР В РІР‚в„ўР вЂ™Р’В Р В Р’В Р вЂ™Р’В Р В Р’В Р В РІР‚в„–Р В Р’В Р В Р вЂ№Р В Р вЂ Р В РІР‚С™Р РЋРІР‚СњР В Р’В Р вЂ™Р’В Р В РІР‚в„ўР вЂ™Р’В Р В Р’В Р Р†Р вЂљРІвЂћСћР В РІР‚в„ўР вЂ™Р’В Р В Р’В Р вЂ™Р’В Р В Р’В Р В РІР‚в„–Р В Р’В Р В РІР‚В Р В Р’В Р Р†Р вЂљРЎв„ўР В РІР‚в„ўР вЂ™Р’ВР В Р’В Р вЂ™Р’В Р В РІР‚в„ўР вЂ™Р’В Р В Р’В Р Р†Р вЂљРІвЂћСћР В РІР‚в„ўР вЂ™Р’В Р В Р’В Р вЂ™Р’В Р В Р’В Р В РІР‚в„–Р В Р’В Р В РІР‚В Р В Р’В Р Р†Р вЂљРЎв„ўР В Р вЂ Р В РІР‚С™Р РЋРЎС™ {int(cluster_id) + 1}",
                 "risk_score": round(risk_score, 4),
                 "risk_level": risk_level,
             }
@@ -236,10 +236,10 @@ def _build_sample_weights(
 ) -> np.ndarray:
     if (
         weighting_strategy in {WEIGHTING_STRATEGY_UNIFORM, WEIGHTING_STRATEGY_NOT_APPLICABLE}
-        or "Р§РёСЃР»Рѕ РїРѕР¶Р°СЂРѕРІ" not in entity_frame.columns
+        or "Число пожаров" not in entity_frame.columns
     ):
         return np.ones(len(entity_frame), dtype=float)
-    counts = pd.to_numeric(entity_frame["Р§РёСЃР»Рѕ РїРѕР¶Р°СЂРѕРІ"], errors="coerce").fillna(1.0).clip(lower=1.0).to_numpy(dtype=float)
+    counts = pd.to_numeric(entity_frame["Число пожаров"], errors="coerce").fillna(1.0).clip(lower=1.0).to_numpy(dtype=float)
     weights = np.log1p(counts)
     mean_weight = float(np.mean(weights))
     if mean_weight <= 0:
@@ -398,7 +398,7 @@ def _compute_pca_projection(
         cluster_label = (
             cluster_labels[cluster_id]
             if 0 <= cluster_id < len(cluster_labels)
-            else f"РўРёРї {cluster_id + 1}"
+            else f"Тип {cluster_id + 1}"
         )
         rows.append(
             {

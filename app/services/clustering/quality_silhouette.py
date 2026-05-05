@@ -160,7 +160,7 @@ def _build_quality_method_comparison_rows(
     ]
 
 
-def _build_quality_quality_notes(
+def _build_quality_notes(
     *,
     segmentation_note: str,
     method_note: str,
@@ -409,7 +409,7 @@ def _build_clustering_quality_assessment(
     weighting_note = label_context["weighting_note"]
     weighting_meta = label_context["weighting_meta"]
     comparison_rows = _build_quality_method_comparison_rows(method_comparison)
-    quality_notes = _build_quality_quality_notes(
+    quality_notes = _build_quality_notes(
         segmentation_note=segmentation_summary["note"],
         method_note=note_context["method_note"],
         cluster_count_guidance=cluster_count_guidance,
@@ -457,7 +457,7 @@ __all__ = [
     '_build_ablation_warning_note',
     '_format_quality_method_selection_label',
     '_build_quality_method_comparison_rows',
-    '_build_quality_quality_notes',
+    '_build_quality_notes',
     '_build_quality_note_context',
     '_build_quality_metric_cards',
     '_build_quality_methodology_items',
