@@ -17,6 +17,7 @@ from app.labels import (
 )
 from config.constants import (
     CLUSTER_COUNT_OPTIONS,
+    CLUSTERING_RANDOM_STATE,
     DEFAULT_CLUSTER_MODE_LOAD,
     DEFAULT_CLUSTER_MODE_PROFILE,
     FEATURE_SELECTION_N_INIT,
@@ -559,7 +560,7 @@ def _evaluate_feature_subset(
         scaled_points,
         sample_weights,
         actual_cluster_count,
-        random_state=42,
+        random_state=CLUSTERING_RANDOM_STATE,
         n_init=FEATURE_SELECTION_N_INIT,
     )
     metrics = compute_clustering_metrics(scaled_points, model.labels_)

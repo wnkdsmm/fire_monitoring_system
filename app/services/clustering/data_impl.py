@@ -16,6 +16,7 @@ from app.labels import (
 from app.statistics_constants import EXCLUDED_TABLE_PREFIXES as TABLE_EXCLUDED_PREFIXES
 from config.constants import (
     CLUSTER_COUNT_OPTIONS,
+    CLUSTERING_RANDOM_STATE,
     MAX_FEATURE_OPTIONS,
     MEAN_SMOOTHING_PRIOR_STRENGTH,
     RATE_SMOOTHING_PRIOR_STRENGTH,
@@ -473,7 +474,7 @@ def _sample_territory_frame(frame: pd.DataFrame, sample_limit: int, sampling_str
         return frame.copy(), ""
 
     if sampling_strategy == "random":
-        sampled = frame.sample(n=sample_limit, random_state=42).sort_values("Территория").reset_index(drop=True)
+        sampled = frame.sample(n=sample_limit, random_state=CLUSTERING_RANDOM_STATE).sort_values("Территория").reset_index(drop=True)
         note = (
             f"Из {len(frame)} территорий для кластеризации выбрана случайная выборка из {len(sampled)} территорий. "
             "Агрегаты по каждой территории при этом посчитаны по всей истории инцидентов, поэтому смещения из-за первых строк больше нет."
@@ -499,16 +500,16 @@ def _sample_territory_frame(frame: pd.DataFrame, sample_limit: int, sampling_str
     for _, group in work.groupby("__stratum", sort=False):
         target = max(1, int(round(len(group) * fraction)))
         target = min(target, len(group))
-        sampled_parts.append(group.sample(n=target, random_state=42))
+        sampled_parts.append(group.sample(n=target, random_state=CLUSTERING_RANDOM_STATE))
 
     sampled = pd.concat(sampled_parts, axis=0).drop_duplicates()
     if len(sampled) > sample_limit:
-        sampled = sampled.sample(n=sample_limit, random_state=42)
+        sampled = sampled.sample(n=sample_limit, random_state=CLUSTERING_RANDOM_STATE)
     elif len(sampled) < sample_limit:
         remainder = work.drop(index=sampled.index, errors="ignore")
         if not remainder.empty:
             fill_count = min(sample_limit - len(sampled), len(remainder))
-            sampled = pd.concat([sampled, remainder.sample(n=fill_count, random_state=42)], axis=0)
+            sampled = pd.concat([sampled, remainder.sample(n=fill_count, random_state=CLUSTERING_RANDOM_STATE)], axis=0)
 
     sampled = sampled.drop(columns=["__settlement_group", "__volume_band", "__stratum"], errors="ignore")
     sampled = sampled.sort_values("Территория").reset_index(drop=True)

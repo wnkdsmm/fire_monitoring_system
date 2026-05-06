@@ -3,12 +3,14 @@ from __future__ import annotations
 import math
 from typing import Sequence
 
-from .types import ClusterLabel, ClusterMethod, ClusterMetrics, ClusteringMethodRow
+from config.constants import (
+    CLUSTER_BALANCE_RATIO_MIN_THRESHOLD,
+    CLUSTER_DAVIES_BOULDIN_GOOD_THRESHOLD,
+    CLUSTER_SILHOUETTE_GOOD_THRESHOLD,
+    CLUSTER_STABILITY_ARI_GOOD_THRESHOLD,
+)
 
-_SILHOUETTE_GOOD = 0.25
-_DAVIES_BOULDIN_GOOD = 1.30
-_STABILITY_ARI_GOOD = 0.45
-_BALANCE_RATIO_MIN = 0.10
+from .types import ClusterLabel, ClusterMethod, ClusterMetrics, ClusteringMethodRow
 
 
 def compute_method_algorithm_key(method_row: ClusterMethod | None) -> str:
@@ -54,10 +56,10 @@ def compute_segmentation_strength(
         }
     if (
         not has_microclusters
-        and silhouette >= _SILHOUETTE_GOOD
-        and davies_bouldin <= _DAVIES_BOULDIN_GOOD
-        and stability_ari >= _STABILITY_ARI_GOOD
-        and balance_ratio >= _BALANCE_RATIO_MIN
+        and silhouette >= CLUSTER_SILHOUETTE_GOOD_THRESHOLD
+        and davies_bouldin <= CLUSTER_DAVIES_BOULDIN_GOOD_THRESHOLD
+        and stability_ari >= CLUSTER_STABILITY_ARI_GOOD_THRESHOLD
+        and balance_ratio >= CLUSTER_BALANCE_RATIO_MIN_THRESHOLD
     ):
         caution_suffix = ""
         if algorithm_mismatch:

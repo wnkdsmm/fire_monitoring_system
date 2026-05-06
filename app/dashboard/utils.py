@@ -10,8 +10,9 @@ from app.services.shared.formatting import (
 )
 from app.shared.sql_utils import quote_identifier
 from app.table_catalog import select_user_table_names
+from config.constants import FORECASTING_FORECAST_DAY_OPTIONS
 
-DASHBOARD_HORIZON_OPTIONS: tuple[int, ...] = (7, 14, 30)
+DASHBOARD_HORIZON_OPTIONS: tuple[int, ...] = tuple(int(day) for day in FORECASTING_FORECAST_DAY_OPTIONS)
 
 
 def build_horizon_day_options() -> list[dict[str, str]]:

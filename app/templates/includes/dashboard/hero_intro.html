@@ -24,14 +24,14 @@
         "id": "dashboardDecisionLink",
         "variant": "is-decision",
         "is_current": false,
-        "href": "/ml-model{% if filters.table_name and filters.table_name != 'all' %}?table_name={{ filters.table_name }}{% endif %}",
+        "href": "/access-points{% if filters.table_name and filters.table_name != 'all' %}?table_name={{ filters.table_name }}{% endif %}",
         "kicker": "Поддержка решений",
         "title": "Приоритизация территорий для первоочередных мер",
         "body": "Полное ранжирование территорий, факторы приоритета и оценка надёжности вывода.",
-        "cta": "Перейти к ML-прогнозу",
+        "cta": "Перейти к поддержке решений",
     },
 ] %}
-<main class="main dashboard-main" id="page-content">
+<div class="dashboard-main">
     <section class="hero-panel">
         <div class="hero-copy">
             <span class="eyebrow">Панель | интегральный обзор выбранного среза</span>
@@ -62,3 +62,5 @@
     </section>
 
     {{ orientation_strip('Навигация по аналитическим разделам', orientation_links) }}
+
+</div>

@@ -11,6 +11,7 @@ from app.labels import CLUSTERING_FEATURE_METADATA, CLUSTERING_WEIGHTING_STRATEG
 from config.constants import (
     CARD_TONES,
     CLUSTER_COUNT_OPTIONS,
+    CLUSTERING_RANDOM_STATE,
     FEATURE_SELECTION_MIN_IMPROVEMENT,
     LOW_SUPPORT_TERRITORY_THRESHOLD,
     MODEL_N_INIT,
@@ -118,7 +119,7 @@ def _run_clustering(
     else:
         _, scaled_points, scaler, transformed_columns, sample_weights = prepared_model_inputs
     if algorithm_key == "kmeans":
-        model = _fit_weighted_kmeans(scaled_points, sample_weights, cluster_count, random_state=42, n_init=MODEL_N_INIT)
+        model = _fit_weighted_kmeans(scaled_points, sample_weights, cluster_count, random_state=CLUSTERING_RANDOM_STATE, n_init=MODEL_N_INIT)
         labels = model.labels_
         scaled_centers = model.cluster_centers_
         transformed_centers = scaler.inverse_transform(model.cluster_centers_)
@@ -131,7 +132,7 @@ def _run_clustering(
             cluster_count,
             algorithm_key=algorithm_key,
             sample_weights=sample_weights,
-            random_state=42,
+            random_state=CLUSTERING_RANDOM_STATE,
             n_init=MODEL_N_INIT,
         )
         raw_centers, scaled_centers = _derive_cluster_centers(cluster_frame, scaled_points, labels, cluster_count)
@@ -209,7 +210,7 @@ def _evaluate_cluster_counts(
         scaled_points,
         sample_weights,
         k_range=available_ks,
-        random_state=42,
+        random_state=CLUSTERING_RANDOM_STATE,
     )
 
     rows: list[ClusteringMethodRow] = []
@@ -288,7 +289,7 @@ def _compare_clustering_methods(
                 cluster_count,
                 algorithm_key=str(candidate["algorithm_key"]),
                 sample_weights=sample_weights,
-                random_state=42,
+                random_state=CLUSTERING_RANDOM_STATE,
                 n_init=MODEL_N_INIT,
             )
         except Exception:
