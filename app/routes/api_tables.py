@@ -80,7 +80,7 @@ def delete_table_endpoint(table_name: str):
                 "table_name": table_name,
                 "message": str(exc),
             },
-            404,
+            400,
         ),
         on_exception=lambda exc: (
             {

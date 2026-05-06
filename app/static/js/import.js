@@ -4,7 +4,7 @@ const shared = window.FireUi;
 const createJobId = shared.createJobId;
 const fetchJson = shared.fetchJson;
 const getApiErrorMessage = shared.getApiErrorMessage;
-const logsRefreshTimers = shared.createTimerGroup();
+const logsRefreshTimers = shared.createSingleTimer();
 let logsRefreshStarted = false;
 let currentImportJobId = null;
 
