@@ -3,12 +3,19 @@ from __future__ import annotations
 from typing import Any, Sequence
 
 from config.constants import (
+    ACTION_COMPONENT_SCORE_THRESHOLD,
+    ACTION_RISK_SCORE_HIGH,
+    ACTION_WATER_SCORE_THRESHOLD,
     NARRATIVE_COMPONENT_SCORE_FLOOR,
     NARRATIVE_COVERAGE_DEFICIT_THRESHOLD,
     NARRATIVE_DISTANCE_REMOTE_KM,
     NARRATIVE_HEATING_SHARE_THRESHOLD,
     PRIORITY_ANY_COMPONENT_TARGETED,
     PRIORITY_ARRIVAL_IMMEDIATE_THRESHOLD,
+    RANKING_GAP_CLOSE_TO_TOP,
+    RANKING_GAP_MAJOR,
+    RANKING_GAP_MODERATE,
+    RANKING_GAP_UPPER_GROUP,
     PRIORITY_RURAL_ARRIVAL_THRESHOLD,
     PRIORITY_RURAL_FIRE_THRESHOLD,
     PRIORITY_WATER_IMMEDIATE_THRESHOLD,
@@ -69,7 +76,7 @@ def _recommended_action(
     arrival_component = component_map.get("long_arrival_risk", {})
     water_component = component_map.get("water_supply_deficit", {})
 
-    if fire_component.get("score", 0.0) >= 55:
+    if fire_component.get("score", 0.0) >= ACTION_COMPONENT_SCORE_THRESHOLD:
         if context["heating_share"] >= NARRATIVE_HEATING_SHARE_THRESHOLD:
             recommendations.append(
                 {
@@ -85,7 +92,7 @@ def _recommended_action(
                 }
             )
 
-    if severe_component.get("score", 0.0) >= 55:
+    if severe_component.get("score", 0.0) >= ACTION_COMPONENT_SCORE_THRESHOLD:
         recommendations.append(
             {
                 "label": "Проверить уязвимые объекты и домохозяйства",
@@ -93,7 +100,7 @@ def _recommended_action(
             }
         )
 
-    if arrival_component.get("score", 0.0) >= 55:
+    if arrival_component.get("score", 0.0) >= ACTION_COMPONENT_SCORE_THRESHOLD:
         detail = (
             "Проверьте маршрут, фактический travel-time, резерв прикрытия и держится ли территория в устойчивой зоне обслуживания ПЧ."
         )
@@ -112,7 +119,7 @@ def _recommended_action(
             }
         )
 
-    if water_component.get("score", 0.0) >= 50:
+    if water_component.get("score", 0.0) >= ACTION_WATER_SCORE_THRESHOLD:
         recommendations.append(
             {
                 "label": "Подтвердить воду и подъезд к источникам",
@@ -137,7 +144,7 @@ def _recommended_action(
     }
     action_label = action_lookup.get(top_component.get("key"), recommendations[0]["label"])
 
-    if risk_score >= 70 and len(recommendations) >= 2:
+    if risk_score >= ACTION_RISK_SCORE_HIGH and len(recommendations) >= 2:
         action_hint = f"Сначала {recommendations[0]['label'].lower()}, затем {recommendations[1]['label'].lower()}."
     else:
         action_hint = recommendations[0]["detail"]
@@ -180,15 +187,15 @@ def _attach_ranking_context(territory_rows: list[dict[str, Any]]) -> None:
 
 def _build_ranking_reason(index: int, gap_to_next: float, gap_to_top: float, component_lead: str) -> str:
     if index == 0:
-        if gap_to_next >= 4.0:
+        if gap_to_next >= RANKING_GAP_MAJOR:
             return f"Территория лидирует с заметным отрывом {_format_number(gap_to_next)} балла; основной вклад дают {component_lead}."
-        if gap_to_next >= 1.5:
+        if gap_to_next >= RANKING_GAP_MODERATE:
             return f"Территория удерживает первое место с рабочим отрывом {_format_number(gap_to_next)} балла; основной вклад дают {component_lead}."
         return f"Территория идет первой в плотной группе; отрыв от следующей территории {_format_number(gap_to_next)} балла, основной вклад дают {component_lead}."
 
-    if gap_to_top <= 2.0:
+    if gap_to_top <= RANKING_GAP_CLOSE_TO_TOP:
         return f"Территория держится рядом с лидером: отставание {_format_number(gap_to_top)} балла, ключевые вклады {component_lead}."
-    if gap_to_top <= 6.0:
+    if gap_to_top <= RANKING_GAP_UPPER_GROUP:
         return f"Территория входит в верхнюю группу: отставание {_format_number(gap_to_top)} балла, ключевые вклады {component_lead}."
     return f"Территория остается в списке из-за вкладов {component_lead}, хотя ниже лидера на {_format_number(gap_to_top)} балла."
 

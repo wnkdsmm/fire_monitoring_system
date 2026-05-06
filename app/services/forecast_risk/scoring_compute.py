@@ -25,6 +25,7 @@ from config.constants import (
     NARRATIVE_COVERAGE_DEFICIT_THRESHOLD,
     NARRATIVE_DAMAGE_RATE_HIGH,
     NARRATIVE_DISTANCE_REMOTE_KM,
+    NARRATIVE_HEATING_SHARE_DRIVER,
     NARRATIVE_HEATING_SHARE_THRESHOLD,
     NARRATIVE_HISTORY_PRESSURE_HIGH,
     NARRATIVE_LOGISTICS_PRIORITY_HIGH,
@@ -623,7 +624,7 @@ def _component_rationale(component_key: str, score: float, context: ScoreContext
             parts.append("Часть пожаров свежая и влияет на ближайший горизонт.")
         if context["seasonal_alignment"] >= NARRATIVE_SEASONAL_ALIGNMENT_HIGH:
             parts.append("Профиль хорошо совпадает с текущим сезонным окном.")
-        if context["heating_share"] >= NARRATIVE_HEATING_SHARE_THRESHOLD and context["is_rural"]:
+        if context["heating_share"] >= NARRATIVE_HEATING_SHARE_DRIVER and context["is_rural"]:
             parts.append("Для сельской территории заметен отопительный контур риска.")
         if score < NARRATIVE_SCORE_LOW_THRESHOLD:
             parts.append("Повторяемость пока умеренная.")
@@ -678,7 +679,7 @@ def _component_driver_text(component_key: str, score: float, context: ScoreConte
     if score < NARRATIVE_COMPONENT_SCORE_FLOOR:
         return ""
     if component_key == "fire_frequency":
-        if context["heating_share"] >= NARRATIVE_HEATING_SHARE_THRESHOLD and context["is_rural"]:
+        if context["heating_share"] >= NARRATIVE_HEATING_SHARE_DRIVER and context["is_rural"]:
             return "пожары здесь повторяются и усиливаются в отопительный период"
         return "пожары здесь повторяются чаще фонового уровня"
     if component_key == "consequence_severity":

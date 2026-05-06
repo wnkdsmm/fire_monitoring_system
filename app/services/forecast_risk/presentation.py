@@ -2,6 +2,15 @@ from __future__ import annotations
 
 from typing import Any, Sequence
 
+from config.constants import (
+    PASSPORT_CRITICAL_GAP_PENALTY,
+    PASSPORT_HIGH_CONFIDENCE_THRESHOLD,
+    PASSPORT_MAX_CRITICAL_GAPS,
+    PASSPORT_MODERATE_CONFIDENCE_THRESHOLD,
+    PASSPORT_PARTIAL_FEATURE_WEIGHT,
+    PASSPORT_WORKING_CONFIDENCE_THRESHOLD,
+)
+
 from .types import (
     FeatureCard,
     FeatureSource,
@@ -197,20 +206,20 @@ def _build_quality_passport(
     }
     critical_gaps = [label for label in missing_labels if label in critical_labels]
     if total > 0:
-        raw_score = (used_count + partial_count * 0.55) / total * 100.0
+        raw_score = (used_count + partial_count * PASSPORT_PARTIAL_FEATURE_WEIGHT) / total * 100.0
     else:
         raw_score = 0.0
-    raw_score -= min(len(critical_gaps), 3) * 8.0
+    raw_score -= min(len(critical_gaps), PASSPORT_MAX_CRITICAL_GAPS) * PASSPORT_CRITICAL_GAP_PENALTY
     confidence_score = max(0, min(100, int(round(raw_score))))
-    if confidence_score >= 80:
+    if confidence_score >= PASSPORT_HIGH_CONFIDENCE_THRESHOLD:
         confidence_label = "Высокая"
         confidence_tone = "forest"
         validation_label = "Валидация данных пройдена"
-    elif confidence_score >= 60:
+    elif confidence_score >= PASSPORT_WORKING_CONFIDENCE_THRESHOLD:
         confidence_label = "Рабочая"
         confidence_tone = "sky"
         validation_label = "Валидация данных в основном пройдена"
-    elif confidence_score >= 40:
+    elif confidence_score >= PASSPORT_MODERATE_CONFIDENCE_THRESHOLD:
         confidence_label = "Умеренная"
         confidence_tone = "sand"
         validation_label = "Валидация данных частичная"

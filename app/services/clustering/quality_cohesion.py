@@ -2,7 +2,12 @@ from __future__ import annotations
 
 from typing import Sequence
 
-from config.constants import LOW_SUPPORT_TERRITORY_THRESHOLD
+from config.constants import (
+    CLUSTER_BALANCE_RATIO_CRITICAL_THRESHOLD,
+    CLUSTER_SHAPE_BALANCE_WARNING_THRESHOLD,
+    CLUSTER_STABILITY_ARI_DIVERGENCE_THRESHOLD,
+    LOW_SUPPORT_TERRITORY_THRESHOLD,
+)
 from .quality_assessment import (
     compute_method_algorithm_key,
     compute_segmentation_strength,
@@ -39,7 +44,7 @@ def _build_stability_note(clustering: ClusterMetrics, resample_share_label: str)
         )
 
     gap = float(initialization_ari) - float(stability_ari)
-    if gap >= 0.15:
+    if gap >= CLUSTER_STABILITY_ARI_DIVERGENCE_THRESHOLD:
         return (
             f"На одних и тех же данных разбиение почти не меняется ({_format_number(initialization_ari, 3)}), "
             f"но на повторных {resample_share_label}-подвыборках устойчивость заметно ниже "
@@ -107,12 +112,12 @@ def _build_cluster_shape_note(clustering: ClusterMetrics) -> str:
             f"Есть микрокластеры: самый маленький кластер содержит {_format_integer(smallest_cluster_size)} территорий при пороге предупреждения {_format_integer(microcluster_threshold)}, "
             "поэтому часть сегментации может держаться на очень малой группе наблюдений."
         )
-    if balance_ratio < 0.12:
+    if balance_ratio < CLUSTER_BALANCE_RATIO_CRITICAL_THRESHOLD:
         return (
             f"Кластеры заметно несбалансированы: min/max = {_format_integer(smallest_cluster_size)} / {_format_integer(largest_cluster_size)} "
             f"({ _format_percent(balance_ratio) }), поэтому результат стоит трактовать осторожнее."
         )
-    if balance_ratio < 0.18:
+    if balance_ratio < CLUSTER_SHAPE_BALANCE_WARNING_THRESHOLD:
         return (
             f"Кластеры умеренно несбалансированы: min/max = {_format_integer(smallest_cluster_size)} / {_format_integer(largest_cluster_size)} "
             f"({ _format_percent(balance_ratio) })."

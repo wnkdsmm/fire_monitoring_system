@@ -7,6 +7,23 @@ import math
 from statistics import mean
 from typing import Any, Sequence
 
+from config.constants import (
+    VALIDATION_MAX_CUTOFFS,
+    VALIDATION_MIN_TRAINING_DAYS,
+    VALIDATION_OBJECTIVE_CAPTURE_WEIGHT,
+    VALIDATION_OBJECTIVE_NDCG_WEIGHT,
+    VALIDATION_OBJECTIVE_PRECISION_WEIGHT,
+    VALIDATION_OBJECTIVE_TOP1_WEIGHT,
+    VALIDATION_STATUS_STABLE_CAPTURE,
+    VALIDATION_STATUS_STABLE_NDCG,
+    VALIDATION_STATUS_STABLE_WINDOWS,
+    VALIDATION_STATUS_WORKING_CAPTURE,
+    VALIDATION_STATUS_WORKING_NDCG,
+    VALIDATION_STATUS_WORKING_WINDOWS,
+    VALIDATION_TRAINING_HORIZON_MULTIPLIER,
+    VALIDATION_WINDOW_STEP_MIN_DAYS,
+)
+
 from .profile_resolution import resolve_weight_profile_for_records
 from .profiles import DEFAULT_RISK_WEIGHT_MODE, get_risk_weight_profile, resolve_component_weights
 from .scoring import _build_territory_rows
@@ -185,7 +202,7 @@ def _build_historical_windows(
     history_end = max(record["date"] for record in records)
     history_days = max(1, (history_end - history_start).days + 1)
     horizon_days = max(7, int(planning_horizon_days or 14))
-    min_training_days = max(180, horizon_days * 6)
+    min_training_days = max(VALIDATION_MIN_TRAINING_DAYS, horizon_days * VALIDATION_TRAINING_HORIZON_MULTIPLIER)
 
     if history_days < min_training_days + horizon_days:
         return {
@@ -200,7 +217,7 @@ def _build_historical_windows(
             "windows": [],
         }
 
-    step_days = max(horizon_days, 30)
+    step_days = max(horizon_days, VALIDATION_WINDOW_STEP_MIN_DAYS)
     earliest_cutoff = history_start + timedelta(days=min_training_days - 1)
     latest_cutoff = history_end - timedelta(days=horizon_days)
     cutoffs: list[Any] = []
@@ -208,7 +225,7 @@ def _build_historical_windows(
     while cursor <= latest_cutoff:
         cutoffs.append(cursor)
         cursor += timedelta(days=step_days)
-    cutoffs = cutoffs[-12:]
+    cutoffs = cutoffs[-VALIDATION_MAX_CUTOFFS:]
 
     windows: list[HistoricalWindow] = []
     skipped_no_future = 0
@@ -400,16 +417,29 @@ def _ranking_objective(metrics: ValidationMetricsRaw) -> float:
     capture = float(metrics.get("topk_capture_rate") or 0.0)
     precision = float(metrics.get("precision_at_k") or 0.0)
     ndcg = float(metrics.get("ndcg_at_k") or 0.0)
-    return 0.24 * top1 + 0.31 * capture + 0.20 * precision + 0.25 * ndcg
+    return (
+        VALIDATION_OBJECTIVE_TOP1_WEIGHT * top1
+        + VALIDATION_OBJECTIVE_CAPTURE_WEIGHT * capture
+        + VALIDATION_OBJECTIVE_PRECISION_WEIGHT * precision
+        + VALIDATION_OBJECTIVE_NDCG_WEIGHT * ndcg
+    )
 
 
 def _validation_status(aggregate: ValidationMetricsRaw) -> tuple[str, str]:
     windows_count = int(aggregate.get("windows_count") or 0)
     topk_capture = float(aggregate.get("topk_capture_rate") or 0.0)
     ndcg = float(aggregate.get("ndcg_at_k") or 0.0)
-    if windows_count >= 4 and topk_capture >= 0.60 and ndcg >= 0.62:
+    if (
+        windows_count >= VALIDATION_STATUS_STABLE_WINDOWS
+        and topk_capture >= VALIDATION_STATUS_STABLE_CAPTURE
+        and ndcg >= VALIDATION_STATUS_STABLE_NDCG
+    ):
         return "Исторический сигнал устойчив", "forest"
-    if windows_count >= 3 and topk_capture >= 0.45 and ndcg >= 0.48:
+    if (
+        windows_count >= VALIDATION_STATUS_WORKING_WINDOWS
+        and topk_capture >= VALIDATION_STATUS_WORKING_CAPTURE
+        and ndcg >= VALIDATION_STATUS_WORKING_NDCG
+    ):
         return "Исторический сигнал рабочий", "sky"
     return "Проверка частичная", "sand"
 

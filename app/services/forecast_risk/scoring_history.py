@@ -4,6 +4,15 @@ from collections import Counter
 from datetime import timedelta
 from typing import Any, Sequence, cast
 
+from config.constants import (
+    HISTORY_MAX_AGE_SPAN_DAYS,
+    HISTORY_MONTH_ALIGNMENT_BOOST,
+    HISTORY_RECENCY_WEIGHT_MIN,
+    HISTORY_RECENT_WINDOW_DAYS,
+    HISTORY_WEEKDAY_ALIGNMENT_BOOST,
+    PRIORITY_HORIZON_DAYS,
+)
+
 from .profiles import resolve_component_weights
 from .types import ComponentWeightRow, HorizonContext, RiskEventRecord, RiskProfile, TerritoryBucket
 from .utils import _is_heating_season
@@ -47,9 +56,9 @@ def _horizon_context(
 ) -> HorizonContext:
     history_start, history_end = _history_date_bounds(records)
     history_days = max(1, (history_end - history_start).days + 1)
-    horizon_days = max(1, int(planning_horizon_days or 14))
+    horizon_days = max(1, int(planning_horizon_days or PRIORITY_HORIZON_DAYS))
     future_dates = [history_end + timedelta(days=offset) for offset in range(1, horizon_days + 1)]
-    recent_window_days = max(1, min(history_days, 90))
+    recent_window_days = max(1, min(history_days, HISTORY_RECENT_WINDOW_DAYS))
     return {
         "history_end": history_end,
         "history_days": history_days,
@@ -95,8 +104,11 @@ def _history_weight_for_record(record_date: Any, horizon: HorizonContext) -> tup
     age_days = max(0, (horizon["history_end"] - record_date).days)
     month_alignment = horizon["future_months"].get(record_date.month, 0) / horizon_days
     weekday_alignment = horizon["future_weekdays"].get(record_date.weekday(), 0) / horizon_days
-    recency_weight = max(0.25, 1.0 - age_days / max(210.0, float(horizon["history_days"])))
-    history_weight = recency_weight * (1.0 + 0.40 * month_alignment) * (1.0 + 0.18 * weekday_alignment)
+    recency_weight = max(
+        HISTORY_RECENCY_WEIGHT_MIN,
+        1.0 - age_days / max(HISTORY_MAX_AGE_SPAN_DAYS, float(horizon["history_days"])),
+    )
+    history_weight = recency_weight * (1.0 + HISTORY_MONTH_ALIGNMENT_BOOST * month_alignment) * (1.0 + HISTORY_WEEKDAY_ALIGNMENT_BOOST * weekday_alignment)
     return month_alignment, weekday_alignment, history_weight
 
 

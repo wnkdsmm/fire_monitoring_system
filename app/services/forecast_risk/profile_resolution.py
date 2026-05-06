@@ -3,6 +3,13 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Any, Sequence
 
+from config.constants import (
+    CALIBRATION_FOCUS_DEFAULT_WEIGHT,
+    CALIBRATION_FOCUS_TARGET_WEIGHT,
+    CALIBRATION_SHIFT_LARGE,
+    CALIBRATION_SHIFT_SMALL,
+)
+
 from .profiles import DEFAULT_RISK_WEIGHT_MODE, get_risk_weight_profile
 from .scoring import _build_territory_rows
 from .types import (
@@ -183,15 +190,15 @@ def _generate_weight_candidates(profile: RiskProfile) -> list[WeightCandidate]:
     )
 
     for receiver in component_order:
-        focused = {component: 0.18 for component in component_order}
-        focused[receiver] = 0.46
+        focused = {component: CALIBRATION_FOCUS_DEFAULT_WEIGHT for component in component_order}
+        focused[receiver] = CALIBRATION_FOCUS_TARGET_WEIGHT
         add_candidate(f"focus_{receiver}", f"Фокус: {receiver}", focused)
 
     for donor in component_order:
         for receiver in component_order:
             if donor == receiver:
                 continue
-            for shift in (0.04, 0.08):
+            for shift in (CALIBRATION_SHIFT_SMALL, CALIBRATION_SHIFT_LARGE):
                 shifted = dict(base_weights)
                 shifted[donor] = shifted.get(donor, 0.0) - shift
                 shifted[receiver] = shifted.get(receiver, 0.0) + shift

@@ -4,6 +4,9 @@ from typing import Sequence
 
 from app.services.shared.summary_cards import build_summary_cards
 from config.constants import (
+    RANKING_CONFIDENCE_HIGH_THRESHOLD,
+    RANKING_CONFIDENCE_MODERATE_THRESHOLD,
+    RANKING_CONFIDENCE_WORKING_THRESHOLD,
     RANKING_CONF_FALLBACK_CLAMP_MAX,
     RANKING_CONF_FALLBACK_CLAMP_MIN,
     RANKING_CONF_FALLBACK_LOCAL_WEIGHT,
@@ -23,8 +26,10 @@ from config.constants import (
     RANKING_LOCAL_SUPPORT_CLAMP_MIN,
     RANKING_MARGIN_GAP_DIVISOR,
     RANKING_MARGIN_TOP_DIVISOR,
+    RANKING_LOWER_POSITION_CUTOFF,
 )
 
+from .validation import MIN_VALIDATION_WINDOWS
 from .types import HistoricalValidationPayload, QualityPassport, RiskProfile, RiskScore, TopConfidence
 from .utils import _clamp, _format_integer, _format_number, _format_probability
 
@@ -41,7 +46,7 @@ def _attach_ranking_reliability(
     metrics = historical_validation.get("metrics_raw") or {}
     windows_count = int(metrics.get("windows_count") or 0)
     k_value = int(metrics.get("k_value") or 3)
-    validation_ready = bool(historical_validation.get("has_metrics")) and windows_count >= 3
+    validation_ready = bool(historical_validation.get("has_metrics")) and windows_count >= MIN_VALIDATION_WINDOWS
     passport_score = float(quality_passport.get("confidence_score") or 0.0) / 100.0
     objective_score = float(metrics.get("objective_score") or 0.0)
     topk_capture = float(metrics.get("topk_capture_rate") or 0.0)
@@ -81,7 +86,7 @@ def _attach_ranking_reliability(
                 RANKING_CONF_VALIDATED_CLAMP_MIN,
                 RANKING_CONF_VALIDATED_CLAMP_MAX,
             )
-        elif index >= 3:
+        elif index >= RANKING_LOWER_POSITION_CUTOFF:
             confidence_norm = _clamp(
                 confidence_norm - RANKING_CONF_LOWER_PENALTY,
                 RANKING_CONF_LOWER_CLAMP_MIN,
@@ -143,11 +148,11 @@ def _top_territory_confidence_payload(
 
 
 def _ranking_confidence_state(score: int) -> tuple[str, str, str]:
-    if score >= 82:
+    if score >= RANKING_CONFIDENCE_HIGH_THRESHOLD:
         return "Высокая", "forest", "Вывод подтверждается уверенно"
-    if score >= 64:
+    if score >= RANKING_CONFIDENCE_WORKING_THRESHOLD:
         return "Рабочая", "sky", "Вывод подтверждается на рабочем уровне"
-    if score >= 46:
+    if score >= RANKING_CONFIDENCE_MODERATE_THRESHOLD:
         return "Умеренная", "sand", "Вывод полезен для приоритизации, но требует локальной проверки"
     return "Ограниченная", "fire", "Вывод стоит использовать как сигнал к дополнительной проверке"
 
