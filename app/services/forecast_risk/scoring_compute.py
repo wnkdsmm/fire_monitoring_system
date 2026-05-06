@@ -23,8 +23,19 @@ from config.constants import (
     DEFAULT_DISTANCE_KM_BASELINE,
     NARRATIVE_COMPONENT_SCORE_FLOOR,
     NARRATIVE_COVERAGE_DEFICIT_THRESHOLD,
+    NARRATIVE_DAMAGE_RATE_HIGH,
     NARRATIVE_DISTANCE_REMOTE_KM,
     NARRATIVE_HEATING_SHARE_THRESHOLD,
+    NARRATIVE_HISTORY_PRESSURE_HIGH,
+    NARRATIVE_LOGISTICS_PRIORITY_HIGH,
+    NARRATIVE_LONG_ARRIVAL_HIGH,
+    NARRATIVE_RECENCY_PRESSURE_HIGH,
+    NARRATIVE_RISK_FACTOR_HIGH,
+    NARRATIVE_SCORE_LOW_THRESHOLD,
+    NARRATIVE_SEASONAL_ALIGNMENT_HIGH,
+    NARRATIVE_SEVERE_RATE_HIGH,
+    NARRATIVE_TANKER_DEPENDENCY_HIGH,
+    NARRATIVE_VICTIMS_RATE_MIN,
     DISTANCE_SCORE_MIN_KM,
     DISTANCE_SCORE_RANGE_KM,
     DEFAULT_RISK_FACTOR,
@@ -606,27 +617,27 @@ def _component_tone(score: float, thresholds: dict[str, Any]) -> str:
 def _component_rationale(component_key: str, score: float, context: ScoreContext) -> str:
     if component_key == "fire_frequency":
         parts = [f"В истории {_format_integer(context['incidents'])} пожаров."]
-        if context["history_pressure"] >= 0.65:
+        if context["history_pressure"] >= NARRATIVE_HISTORY_PRESSURE_HIGH:
             parts.append("Территория уже накапливала много случаев относительно выбранного среза.")
-        if context["recency_pressure"] >= 0.60:
+        if context["recency_pressure"] >= NARRATIVE_RECENCY_PRESSURE_HIGH:
             parts.append("Часть пожаров свежая и влияет на ближайший горизонт.")
-        if context["seasonal_alignment"] >= 0.55:
+        if context["seasonal_alignment"] >= NARRATIVE_SEASONAL_ALIGNMENT_HIGH:
             parts.append("Профиль хорошо совпадает с текущим сезонным окном.")
-        if context["heating_share"] >= 0.50 and context["is_rural"]:
+        if context["heating_share"] >= NARRATIVE_HEATING_SHARE_THRESHOLD and context["is_rural"]:
             parts.append("Для сельской территории заметен отопительный контур риска.")
-        if score < 35:
+        if score < NARRATIVE_SCORE_LOW_THRESHOLD:
             parts.append("Повторяемость пока умеренная.")
         return " ".join(parts[:4])
 
     if component_key == "consequence_severity":
         parts = []
-        if context["severe_rate"] >= 0.25:
+        if context["severe_rate"] >= NARRATIVE_SEVERE_RATE_HIGH:
             parts.append(f"Тяжёлые последствия были в {_format_probability(context['severe_rate'])} случаев.")
-        if context["victims_rate"] >= 0.08:
+        if context["victims_rate"] >= NARRATIVE_VICTIMS_RATE_MIN:
             parts.append("В истории есть пострадавшие или погибшие.")
-        if context["damage_rate"] >= 0.30:
+        if context["damage_rate"] >= NARRATIVE_DAMAGE_RATE_HIGH:
             parts.append("Ущерб и уничтожение фиксировались часто.")
-        if context["risk_factor"] >= 0.56:
+        if context["risk_factor"] >= NARRATIVE_RISK_FACTOR_HIGH:
             parts.append("Категория риска по объектам выше средней.")
         if not parts:
             parts.append("История тяжёлых последствий пока умеренная.")
@@ -640,11 +651,11 @@ def _component_rationale(component_key: str, score: float, context: ScoreContext
         parts.append(
             f"Покрытие ПЧ {context['service_coverage_display']}, сервисная зона: {context['service_zone_label']}."
         )
-        if context["long_arrival_rate"] >= 0.25:
+        if context["long_arrival_rate"] >= NARRATIVE_LONG_ARRIVAL_HIGH:
             parts.append(f"Долгие прибытия были в {_format_probability(context['long_arrival_rate'])} случаев.")
         if context["avg_distance"] is not None and context["avg_distance"] >= NARRATIVE_DISTANCE_REMOTE_KM:
             parts.append(f"Удалённость до ПЧ {_format_number(context['avg_distance'])} км.")
-        if context["logistics_priority_score"] >= 55:
+        if context["logistics_priority_score"] >= NARRATIVE_LOGISTICS_PRIORITY_HIGH:
             parts.append(
                 f"Логистический приоритет { _format_number(context['logistics_priority_score']) } / 100."
             )
@@ -656,7 +667,7 @@ def _component_rationale(component_key: str, score: float, context: ScoreContext
         parts.append(f"Подтверждение воды по выездам: {_format_probability(water_share)} случаев.")
     else:
         parts.append("Подтверждений воды нет, поэтому используем экспертную оценку водного дефицита.")
-    if context["tanker_dependency"] >= 0.55:
+    if context["tanker_dependency"] >= NARRATIVE_TANKER_DEPENDENCY_HIGH:
         parts.append("Из-за танкерной зависимости повышен риск дефицита воды.")
     if context["is_rural"]:
         parts.append("Для сельской территории запас воды и подъезд к источникам особенно критичны.")
@@ -667,7 +678,7 @@ def _component_driver_text(component_key: str, score: float, context: ScoreConte
     if score < NARRATIVE_COMPONENT_SCORE_FLOOR:
         return ""
     if component_key == "fire_frequency":
-        if context["heating_share"] >= 0.50 and context["is_rural"]:
+        if context["heating_share"] >= NARRATIVE_HEATING_SHARE_THRESHOLD and context["is_rural"]:
             return "пожары здесь повторяются и усиливаются в отопительный период"
         return "пожары здесь повторяются чаще фонового уровня"
     if component_key == "consequence_severity":

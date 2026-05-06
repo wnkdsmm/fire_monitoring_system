@@ -6,7 +6,43 @@ import math
 from typing import Any, Sequence
 
 from app.services.shared.formatting import _format_integer, _format_number
-from config.constants import GEO_LOOKBACK_DAYS, MAX_GEO_CHART_POINTS, MAX_GEO_HOTSPOTS
+from config.constants import (
+    BAR_WIDTH_MAX,
+    BAR_WIDTH_MIN_RISK,
+    GEO_CELL_SIZE_LG,
+    GEO_CELL_SIZE_MD,
+    GEO_CELL_SIZE_SM,
+    GEO_CELL_SIZE_XL_MAX,
+    GEO_CELL_SIZE_XS,
+    GEO_CELL_SPAN_DIVISOR,
+    GEO_CELL_SPAN_LG,
+    GEO_CELL_SPAN_MD,
+    GEO_CELL_SPAN_SM,
+    GEO_CELL_SPAN_XS,
+    GEO_CONFIDENCE_BASE,
+    GEO_CONFIDENCE_FRESHNESS_CAP,
+    GEO_CONFIDENCE_FRESHNESS_DECAY,
+    GEO_CONFIDENCE_INCIDENTS_SCALE,
+    GEO_CONFIDENCE_MAX,
+    GEO_FRESHNESS_BASE,
+    GEO_FRESHNESS_SCALE,
+    GEO_LOG_INCIDENTS_SCALE,
+    GEO_LOOKBACK_DAYS,
+    GEO_MARKER_SIZE_BASE,
+    GEO_MARKER_SIZE_LOG_SCALE,
+    GEO_MARKER_SIZE_MAX,
+    GEO_MARKER_SIZE_MIN,
+    GEO_MARKER_SIZE_RISK_DIVISOR,
+    GEO_MONTH_WEIGHT_BOOST,
+    GEO_RECENCY_WEIGHT_MIN,
+    GEO_RISK_CRITICAL_THRESHOLD,
+    GEO_RISK_HIGH_THRESHOLD,
+    GEO_RISK_MEDIUM_THRESHOLD,
+    GEO_WEEKDAY_WEIGHT_BOOST,
+    MAX_GEO_CHART_POINTS,
+    MAX_GEO_DISTRICTS,
+    MAX_GEO_HOTSPOTS,
+)
 
 
 def _build_geo_prediction(
@@ -66,9 +102,9 @@ def _build_geo_prediction(
         )
 
         age_days = max(0, (last_observed_date - record["date"]).days)
-        recency_weight = max(0.2, 1 - min(age_days, GEO_LOOKBACK_DAYS) / GEO_LOOKBACK_DAYS)
-        month_weight = 1.0 + 0.35 * (future_months.get(record["date"].month, 0) / future_horizon)
-        weekday_weight = 1.0 + 0.20 * (future_weekdays.get(record["date"].weekday(), 0) / future_horizon)
+        recency_weight = max(GEO_RECENCY_WEIGHT_MIN, 1 - min(age_days, GEO_LOOKBACK_DAYS) / GEO_LOOKBACK_DAYS)
+        month_weight = 1.0 + GEO_MONTH_WEIGHT_BOOST * (future_months.get(record["date"].month, 0) / future_horizon)
+        weekday_weight = 1.0 + GEO_WEEKDAY_WEIGHT_BOOST * (future_weekdays.get(record["date"].weekday(), 0) / future_horizon)
         score = recency_weight * month_weight * weekday_weight
 
         cell["score"] += score
@@ -87,7 +123,7 @@ def _build_geo_prediction(
     for cell in cells.values():
         freshness_days = min((last_observed_date - cell["last_fire"]).days, GEO_LOOKBACK_DAYS)
         freshness = max(0.0, 1 - freshness_days / GEO_LOOKBACK_DAYS)
-        raw_risk = cell["score"] * (1.0 + math.log1p(cell["incidents"]) * 0.22) * (0.85 + 0.15 * freshness)
+        raw_risk = cell["score"] * (1.0 + math.log1p(cell["incidents"]) * GEO_LOG_INCIDENTS_SCALE) * (GEO_FRESHNESS_BASE + GEO_FRESHNESS_SCALE * freshness)
         centroid_lat = cell["lat_sum"] / cell["incidents"]
         centroid_lon = cell["lon_sum"] / cell["incidents"]
         ranked_cells.append(
@@ -111,7 +147,12 @@ def _build_geo_prediction(
     for rank, cell in enumerate(ranked_cells, start=1):
         risk_score = round((cell["raw_risk"] / max_risk) * 100, 1) if max_risk > 0 else 0.0
         risk_level_label, risk_tone = _geo_risk_level(risk_score)
-        confidence_score = min(96.0, 42.0 + cell["incidents"] * 7.0 + max(0.0, 25.0 - cell["freshness_days"] * 0.18))
+        confidence_score = min(
+            GEO_CONFIDENCE_MAX,
+            GEO_CONFIDENCE_BASE
+            + cell["incidents"] * GEO_CONFIDENCE_INCIDENTS_SCALE
+            + max(0.0, GEO_CONFIDENCE_FRESHNESS_CAP - cell["freshness_days"] * GEO_CONFIDENCE_FRESHNESS_DECAY),
+        )
         short_label = cell["dominant_district"] if cell["dominant_district"] != "Без района" else f"Сектор {rank}"
         explanation = (
             f"{_format_integer(cell['incidents'])} пожаров в ячейке, последний очаг {_format_days_ago(cell['freshness_days'])}, "
@@ -127,7 +168,7 @@ def _build_geo_prediction(
                 "risk_level_label": risk_level_label,
                 "risk_tone": risk_tone,
                 "confidence_display": f"{_format_number(confidence_score)}%",
-                "bar_width": f"{max(10, min(100, round(risk_score)))}%",
+                "bar_width": f"{max(BAR_WIDTH_MIN_RISK, min(BAR_WIDTH_MAX, round(risk_score)))}%",
                 "incidents": cell["incidents"],
                 "incidents_display": _format_integer(cell["incidents"]),
                 "last_fire_display": cell["last_fire"].strftime("%d.%m.%Y") if cell["last_fire"] else "-",
@@ -138,7 +179,18 @@ def _build_geo_prediction(
                 "latitude": cell["centroid_lat"],
                 "longitude": cell["centroid_lon"],
                 "explanation": explanation,
-                "marker_size": round(max(12.0, min(32.0, 10.0 + risk_score / 4.5 + math.log1p(cell["incidents"]) * 3.0)), 1),
+                "marker_size": round(
+                    max(
+                        GEO_MARKER_SIZE_MIN,
+                        min(
+                            GEO_MARKER_SIZE_MAX,
+                            GEO_MARKER_SIZE_BASE
+                            + risk_score / GEO_MARKER_SIZE_RISK_DIVISOR
+                            + math.log1p(cell["incidents"]) * GEO_MARKER_SIZE_LOG_SCALE,
+                        ),
+                    ),
+                    1,
+                ),
             }
         )
 
@@ -160,15 +212,17 @@ def _build_geo_prediction(
         districts.append(
             {
                 "label": district_name,
+                "peak_risk": bucket["peak_risk"],
+                "incidents": bucket["incidents"],
                 "zones_display": _format_integer(bucket["zones"]),
                 "incidents_display": _format_integer(bucket["incidents"]),
                 "peak_risk_display": f"{_format_number(bucket['peak_risk'])} / 100",
                 "avg_risk_display": f"{_format_number(avg_risk)} / 100",
-                "bar_width": f"{max(10, min(100, round(bucket['peak_risk'])))}%",
+                "bar_width": f"{max(BAR_WIDTH_MIN_RISK, min(BAR_WIDTH_MAX, round(bucket['peak_risk'])))}%",
             }
         )
     districts.sort(
-        key=lambda item: (float(item["peak_risk_display"].split(" /")[0].replace(" ", "").replace(",", ".")), item["incidents_display"]),
+        key=lambda item: (item["peak_risk"], item["incidents"]),
         reverse=True,
     )
 
@@ -189,7 +243,7 @@ def _build_geo_prediction(
         "top_zone_label": top_zone_label,
         "top_explanation": top_explanation,
         "legend": _geo_risk_legend(),
-        "districts": districts[:6],
+        "districts": districts[:MAX_GEO_DISTRICTS],
         "hotspots": hotspots,
         "points": chart_points,
     }
@@ -197,19 +251,19 @@ def _build_geo_prediction(
 
 def _derive_geo_cell_size(latitudes: Sequence[float], longitudes: Sequence[float]) -> float:
     if not latitudes or not longitudes:
-        return 0.12
+        return GEO_CELL_SIZE_MD
     lat_span = max(latitudes) - min(latitudes)
     lon_span = max(longitudes) - min(longitudes)
     span = max(lat_span, lon_span)
-    if span <= 0.35:
-        return 0.05
-    if span <= 1.20:
-        return 0.08
-    if span <= 3.00:
-        return 0.12
-    if span <= 8.00:
-        return 0.20
-    return round(min(0.60, max(0.12, span / 18.0)), 2)
+    if span <= GEO_CELL_SPAN_XS:
+        return GEO_CELL_SIZE_XS
+    if span <= GEO_CELL_SPAN_SM:
+        return GEO_CELL_SIZE_SM
+    if span <= GEO_CELL_SPAN_MD:
+        return GEO_CELL_SIZE_MD
+    if span <= GEO_CELL_SPAN_LG:
+        return GEO_CELL_SIZE_LG
+    return round(min(GEO_CELL_SIZE_XL_MAX, max(GEO_CELL_SIZE_MD, span / GEO_CELL_SPAN_DIVISOR)), 2)
 
 
 def _counter_top_label(counter: Counter, fallback: str) -> str:
@@ -219,21 +273,21 @@ def _counter_top_label(counter: Counter, fallback: str) -> str:
 
 
 def _geo_risk_level(value: float) -> tuple[str, str]:
-    if value >= 80:
+    if value >= GEO_RISK_CRITICAL_THRESHOLD:
         return "Критический", "critical"
-    if value >= 60:
+    if value >= GEO_RISK_HIGH_THRESHOLD:
         return "Высокий", "high"
-    if value >= 35:
+    if value >= GEO_RISK_MEDIUM_THRESHOLD:
         return "Средний", "medium"
     return "Наблюдение", "watch"
 
 
 def _geo_risk_legend() -> list[dict[str, str]]:
     return [
-        {"label": "Критический", "range_label": "80-100", "tone": "critical"},
-        {"label": "Высокий", "range_label": "60-79", "tone": "high"},
-        {"label": "Средний", "range_label": "35-59", "tone": "medium"},
-        {"label": "Наблюдение", "range_label": "0-34", "tone": "watch"},
+        {"label": "Критический", "range_label": f"{GEO_RISK_CRITICAL_THRESHOLD}-100", "tone": "critical"},
+        {"label": "Высокий", "range_label": f"{GEO_RISK_HIGH_THRESHOLD}-{GEO_RISK_CRITICAL_THRESHOLD - 1}", "tone": "high"},
+        {"label": "Средний", "range_label": f"{GEO_RISK_MEDIUM_THRESHOLD}-{GEO_RISK_HIGH_THRESHOLD - 1}", "tone": "medium"},
+        {"label": "Наблюдение", "range_label": f"0-{GEO_RISK_MEDIUM_THRESHOLD - 1}", "tone": "watch"},
     ]
 
 
