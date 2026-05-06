@@ -2,6 +2,12 @@ from __future__ import annotations
 
 """Centralized UI labels and user-facing copy."""
 
+LABEL_NOT_SPECIFIED = "Не указано"
+LABEL_RURAL_TERRITORY = "Сельская территория"
+LABEL_NON_RURAL_TERRITORY = "Территория без выраженного сельского профиля"
+LABEL_EXPERT_WEIGHTS = "Экспертные веса"
+LABEL_NO_DOMINANT_RISK_DRIVER = "профиль риска пока умеренный и без явного доминирующего фактора"
+
 # === Forecasting UI ===
 
 FORECASTING_HISTORY_WINDOW_LABELS = {

@@ -11,7 +11,7 @@
 </head>
 <body data-page-loading="1"{% block body_attributes %}{% endblock %}>
 {% block body %}
-<a class="skip-link" href="#page-content">Перейти к содержимому</a>
+<a class="skip-link" href="#page-content" tabindex="0">Перейти к содержимому</a>
 <a class="sidebar-toggle" href="#app-sidebar" aria-controls="app-sidebar" aria-expanded="false">Меню</a>
 {% block noscript %}
 <noscript>
@@ -45,11 +45,9 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    setTimeout(function () {
-        if (document.body && document.body.hasAttribute('data-page-loading')) {
-            document.body.removeAttribute('data-page-loading');
-        }
-    }, 0);
+    if (document.body && document.body.hasAttribute('data-page-loading')) {
+        document.body.removeAttribute('data-page-loading');
+    }
 });
 </script>
 

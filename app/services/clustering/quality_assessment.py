@@ -129,6 +129,3 @@ def compute_recommended_method_row(method_rows: Sequence[ClusteringMethodRow]) -
     ):
         return best_row
     return current_row
-
-
-_STABILITY_ARI_GOOD = CLUSTER_STABILITY_ARI_GOOD_THRESHOLD

@@ -5,6 +5,7 @@ import json
 import logging
 import threading
 import time
+import weakref
 from contextlib import contextmanager
 from functools import wraps
 from typing import Any, Iterator
@@ -16,15 +17,14 @@ _ACTIVE_TRACE: contextvars.ContextVar["PerformanceTrace | None"] = contextvars.C
     "fire_monitor_active_perf_trace",
     default=None,
 )
-_INSTRUMENTED_ENGINES: set[int] = set()
+_INSTRUMENTED_ENGINES: weakref.WeakSet = weakref.WeakSet()
 _INSTRUMENTATION_LOCK = threading.Lock()
 _LOGGER = logging.getLogger("app.performance")
 
 
 def ensure_sqlalchemy_timing(engine: Any) -> None:
-    engine_id = id(engine)
     with _INSTRUMENTATION_LOCK:
-        if engine_id in _INSTRUMENTED_ENGINES:
+        if engine in _INSTRUMENTED_ENGINES:
             return
         try:
             event.listen(engine, "before_cursor_execute", _before_cursor_execute)
@@ -33,9 +33,9 @@ def ensure_sqlalchemy_timing(engine: Any) -> None:
         except (AttributeError, InvalidRequestError, TypeError):
             # Test doubles and lightweight engine stubs may not expose SQLAlchemy's
             # event registry; skip instrumentation for those objects.
-            _INSTRUMENTED_ENGINES.add(engine_id)
+            _INSTRUMENTED_ENGINES.add(engine)
             return
-        _INSTRUMENTED_ENGINES.add(engine_id)
+        _INSTRUMENTED_ENGINES.add(engine)
 
 
 def _before_cursor_execute(conn: Any, cursor: Any, statement: str, parameters: Any, context: Any, executemany: bool) -> None:

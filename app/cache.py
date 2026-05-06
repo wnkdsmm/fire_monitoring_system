@@ -190,6 +190,18 @@ class CopyingTtlCache(Generic[K, V]):
         with self._lock:
             self._items.pop(key, None)
 
+    def evict_expired(self) -> int:
+        now = time.time()
+        with self._lock:
+            expired_keys = [
+                key
+                for key, item in self._items.items()
+                if item.get("expires_at") is not None and float(item["expires_at"]) <= now
+            ]
+            for key in expired_keys:
+                self._items.pop(key, None)
+            return len(expired_keys)
+
 
 class CopyingLruCache(Generic[K, V]):
     def __init__(

@@ -43,6 +43,7 @@ def utf8_json(payload: JsonPayload, status_code: int = 200, session_id: str | No
             value=session_id,
             httponly=True,
             samesite="lax",
+            secure=not is_local_or_debug_runtime(),
             path="/",
         )
     return response

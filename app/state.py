@@ -159,7 +159,7 @@ class JobStore:
     def set_uploaded_file(self, session_id: str, job_id: str, file_path: Path, original_name: str) -> None:
         with self._lock:
             job = self._require_job(session_id, job_id)
-            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            timestamp = _utcnow().strftime("%Y-%m-%d %H:%M:%S")
             job.current_file_path = file_path
             job.original_filename = original_name
             job.history[str(file_path)] = {

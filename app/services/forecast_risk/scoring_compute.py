@@ -3,6 +3,13 @@ from __future__ import annotations
 import math
 from typing import Any, Sequence
 
+from app.labels import (
+    LABEL_EXPERT_WEIGHTS,
+    LABEL_NON_RURAL_TERRITORY,
+    LABEL_NO_DOMINANT_RISK_DRIVER,
+    LABEL_NOT_SPECIFIED,
+    LABEL_RURAL_TERRITORY,
+)
 from app.services.explainable_logistics import build_explainable_logistics_profile
 from config.constants import (
     ARRIVAL_PROB_CLAMP_MAX,
@@ -123,10 +130,10 @@ def _normalization_fields(
 
 
 def _territory_identity_fields(bucket: TerritoryBucket) -> TerritoryIdentity:
-    dominant_object_category = _counter_top_label(bucket["object_categories"], "Не указано")
-    dominant_settlement_type = _counter_top_label(bucket["settlement_types"], "Не указано")
+    dominant_object_category = _counter_top_label(bucket["object_categories"], LABEL_NOT_SPECIFIED)
+    dominant_settlement_type = _counter_top_label(bucket["settlement_types"], LABEL_NOT_SPECIFIED)
     is_rural = _is_rural_label(dominant_settlement_type) or _is_rural_label(bucket["label"])
-    settlement_context_label = "Сельская территория" if is_rural else "Территория без выраженного сельского профиля"
+    settlement_context_label = LABEL_RURAL_TERRITORY if is_rural else LABEL_NON_RURAL_TERRITORY
     return {
         "dominant_object_category": dominant_object_category,
         "dominant_settlement_type": dominant_settlement_type,
@@ -434,7 +441,7 @@ def _territory_row_payload(
         "priority_label": priority_label,
         "priority_tone": priority_tone,
         "weight_mode": profile.get("mode") or DEFAULT_RISK_WEIGHT_MODE,
-        "weight_mode_label": profile.get("mode_label") or "Экспертные веса",
+        "weight_mode_label": profile.get("mode_label") or LABEL_EXPERT_WEIGHTS,
         "component_scores": component_scores,
         "component_score_map": component_score_map,
         "fire_probability": risk_fields["fire_probability"],
@@ -696,5 +703,5 @@ def _component_driver_text(component_key: str, score: float, context: ScoreConte
 def _build_risk_drivers(component_scores: Sequence[ComponentScore]) -> list[str]:
     drivers = [item.get("driver_text") or "" for item in component_scores if item.get("driver_text")]
     if not drivers:
-        return ["профиль риска пока умеренный и без явного доминирующего фактора"]
+        return [LABEL_NO_DOMINANT_RISK_DRIVER]
     return drivers[:3]

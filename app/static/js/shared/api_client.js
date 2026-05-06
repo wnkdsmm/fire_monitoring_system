@@ -57,6 +57,9 @@
         var shouldStop = typeof settings.shouldStop === 'function'
             ? settings.shouldStop
             : function () { return false; };
+        var stopped = false;
+        var originalShouldStop = shouldStop;
+        shouldStop = function () { return stopped || originalShouldStop(); };
         var isDone = typeof settings.isDone === 'function'
             ? settings.isDone
             : function (payload) { return Boolean(payload && payload.status === 'completed' && payload.result); };
@@ -112,6 +115,7 @@
                 if (shouldStop()) {
                     return;
                 }
+                stopped = true;
                 if (typeof handlers.onError === 'function') {
                     handlers.onError(error);
                 }
