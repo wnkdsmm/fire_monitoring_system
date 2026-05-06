@@ -41,6 +41,7 @@ UNCERTAINTY_ARRIVAL_WEIGHT = 0.35
 UNCERTAINTY_WATER_WEIGHT = 0.30
 UNCERTAINTY_DISTANCE_WEIGHT = 0.20
 UNCERTAINTY_SUPPORT_WEIGHT = 0.15
+DISTANCE_NORM_SCALE_MIN_KM = 12.0
 
 ACCESS_POINT_NUMERIC_COLUMNS = (
     "incident_count",
@@ -286,7 +287,7 @@ def _build_access_point_base_series(
 def _build_access_point_factor_series(base: _AccessPointBaseSeries) -> _AccessPointFactorSeries:
     max_incidents = max(1.0, _finite_series_max(base.incident_count_float, 1.0))
     max_incidents_per_year = max(1.0, _finite_series_max(base.incidents_per_year, 1.0))
-    distance_scale = max(12.0, _finite_series_max(base.average_distance, 0.0))
+    distance_scale = max(DISTANCE_NORM_SCALE_MIN_KM, _finite_series_max(base.average_distance, 0.0))
     response_scale = max(
         LONG_RESPONSE_THRESHOLD_MINUTES,
         _finite_series_max(base.average_response, 0.0),

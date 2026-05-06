@@ -12,6 +12,7 @@ from app.services.executive_brief import (
     empty_executive_brief,
 )
 from app.services.forecast_risk.core import build_decision_support_payload
+from config.constants import PRIORITY_HORIZON_DAYS
 from config.paths import get_result_folder
 from config.settings import Settings
 from core.processing.steps.create_fire_map import CreateFireMapStep
@@ -78,7 +79,7 @@ def get_fire_map_page_context(table_name: str = "") -> dict[str, Any]:
                     selected_cause="all",
                     selected_object_category="all",
                     history_window="all",
-                    planning_horizon_days=14,
+                    planning_horizon_days=PRIORITY_HORIZON_DAYS,
                 )
                 brief = build_executive_brief_from_risk_payload(
                     risk_prediction,

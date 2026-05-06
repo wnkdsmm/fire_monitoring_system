@@ -4,10 +4,15 @@ import math
 from typing import Sequence
 
 from config.constants import (
+    CLUSTER_BALANCE_RATIO_STRONG_THRESHOLD,
     CLUSTER_BALANCE_RATIO_MIN_THRESHOLD,
     CLUSTER_DAVIES_BOULDIN_GOOD_THRESHOLD,
+    CLUSTER_DAVIES_BOULDIN_STRONG_THRESHOLD,
+    CLUSTER_SHAPE_BALANCE_WARNING_THRESHOLD,
     CLUSTER_SILHOUETTE_GOOD_THRESHOLD,
+    CLUSTER_SILHOUETTE_STRONG_THRESHOLD,
     CLUSTER_STABILITY_ARI_GOOD_THRESHOLD,
+    CLUSTER_STABILITY_ARI_STRONG_THRESHOLD,
 )
 
 from .types import ClusterLabel, ClusterMethod, ClusterMetrics, ClusteringMethodRow
@@ -40,14 +45,14 @@ def compute_segmentation_strength(
     )
     k_mismatch = bool(recommended_k and cluster_count) and int(recommended_k) != int(cluster_count)
     stability_gap = initialization_ari - stability_ari if initialization_ari else 0.0
-    requires_caution = configuration_mismatch or k_mismatch or stability_gap >= 0.18
+    requires_caution = configuration_mismatch or k_mismatch or stability_gap >= CLUSTER_SHAPE_BALANCE_WARNING_THRESHOLD
 
     if (
         not has_microclusters
-        and silhouette >= 0.40
-        and davies_bouldin <= 1.00
-        and stability_ari >= 0.70
-        and balance_ratio >= 0.18
+        and silhouette >= CLUSTER_SILHOUETTE_STRONG_THRESHOLD
+        and davies_bouldin <= CLUSTER_DAVIES_BOULDIN_STRONG_THRESHOLD
+        and stability_ari >= CLUSTER_STABILITY_ARI_STRONG_THRESHOLD
+        and balance_ratio >= CLUSTER_BALANCE_RATIO_STRONG_THRESHOLD
         and not requires_caution
     ):
         return {
@@ -68,7 +73,7 @@ def compute_segmentation_strength(
             caution_suffix = " При этом итог лучше трактовать осторожнее: на том же наборе признаков более убедительно выглядит другая конфигурация весов или параметров."
         elif k_mismatch:
             caution_suffix = " При этом итог лучше трактовать осторожнее: рабочее число кластеров не совпадает с рекомендацией по совокупности метрик."
-        elif stability_gap >= 0.18:
+        elif stability_gap >= CLUSTER_SHAPE_BALANCE_WARNING_THRESHOLD:
             caution_suffix = " При этом итог лучше трактовать осторожнее: устойчивость на одном и том же датасете заметно выше, чем на повторных подвыборках."
         return {
             "label": "Умеренная",
@@ -124,3 +129,4 @@ def compute_recommended_method_row(method_rows: Sequence[ClusteringMethodRow]) -
     ):
         return best_row
     return current_row
+_STABILITY_ARI_GOOD = CLUSTER_STABILITY_ARI_GOOD_THRESHOLD
