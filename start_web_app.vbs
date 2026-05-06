@@ -111,7 +111,7 @@ End If
 
 startCommand = _
     "cmd /c cd /d " & Quote(projectRoot) & _
-    " && " & Quote(venvPython) & " -m uvicorn app.main:app --host " & appHost & " --port " & resolvedPort & " --reload"
+    " && " & Quote(venvPython) & " -m uvicorn app.main:app --host " & appHost & " --port " & resolvedPort & " --reload --env-file .env"
 
 LogMessage "Starting server command."
 shell.Run startCommand & " >> " & Quote(logFilePath) & " 2>>&1", 0, False
@@ -392,7 +392,7 @@ Function InstallRequirements(rootPath, venvPythonPath, requirementsPath, startup
     Dim installCommand
     installCommand = _
         "cmd /c cd /d " & Quote(rootPath) & _
-        " && " & Quote(venvPythonPath) & " -m pip install --disable-pip-version-check -r " & Quote(requirementsPath)
+        " && " & Quote(venvPythonPath) & " -m pip install --disable-pip-version-check --no-cache-dir -r " & Quote(requirementsPath)
     InstallRequirements = shell.Run(installCommand & " >> " & Quote(startupLogPath) & " 2>>&1", 0, True)
 End Function
 

@@ -11,6 +11,7 @@ from app.labels import CLUSTERING_FEATURE_METADATA, CLUSTERING_WEIGHTING_STRATEG
 from config.constants import (
     CARD_TONES,
     CLUSTER_COUNT_OPTIONS,
+    CLUSTER_STABILITY_ARI_GOOD_THRESHOLD,
     CLUSTERING_RANDOM_STATE,
     FEATURE_SELECTION_MIN_IMPROVEMENT,
     LOW_SUPPORT_TERRITORY_THRESHOLD,
@@ -38,7 +39,6 @@ from .analysis_stats import (
     _restore_raw_centers,
 )
 from .quality_assessment import (
-    _STABILITY_ARI_GOOD,
     compute_diagnostics_row_sort_key,
     compute_recommended_method_row,
 )
@@ -527,7 +527,7 @@ def _build_notes(
         notes.append("Кластеры отделены достаточно чётко для исследовательского сравнения типов территорий риска.")
 
     if stability_ari is not None:
-        if stability_ari < _STABILITY_ARI_GOOD:
+        if stability_ari < CLUSTER_STABILITY_ARI_GOOD_THRESHOLD:
             notes.append(
                 f"На повторных подвыборках устойчивость низкая ({_format_number(stability_ari, 3)}): сегментация заметно меняется от состава выборки, поэтому кластеры лучше проверять по представителям и центрам."
             )
