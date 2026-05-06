@@ -43,9 +43,8 @@
 {% endblock %}
 
 {% block content %}
-<main
+<div
     class="main dashboard-main simple-page-main"
-    id="page-content"
     data-table-name="{{ table_name }}"
     data-columns-count="{{ columns | length }}"
 >
@@ -218,7 +217,7 @@
             </table>
         </div>
     </section>
-</main>
+</div>
 {% endblock %}
 
 {% block scripts %}
@@ -230,4 +229,3 @@
 <script src="/static/js/analytics_shared.js?v={{ analytics_shared_js_version }}"></script>
 <script src="/static/js/table_view.js?v={{ table_view_js_version }}"></script>
 {% endblock %}
-

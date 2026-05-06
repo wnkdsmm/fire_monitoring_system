@@ -10,7 +10,7 @@
 {% endblock %}
 
 {% block content %}
-<main class="main column-search-main" id="page-content">
+<div class="main column-search-main">
     <section class="column-search-toolbar">
         <h1>Таблица: <span id="columnSearchTableTitle">{{ selected_table or 'Не выбрана' }}</span></h1>
         <p id="columnSearchRowsInfo">Раздел предназначен для поиска колонок по ключевым словам и формирования новой таблицы из найденных и тематически сгруппированных полей.</p>
@@ -72,7 +72,7 @@
             <div class="mini-empty">После выполнения поиска здесь будет представлена таблица.</div>
         </div>
     </section>
-</main>
+</div>
 {% endblock %}
 
 {% block page_data %}
