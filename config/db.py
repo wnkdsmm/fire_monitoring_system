@@ -2,9 +2,11 @@ import logging
 import os
 from typing import Tuple
 
+from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine.url import make_url
 
+load_dotenv(".env")
 DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
     raise ValueError("DATABASE_URL environment variable is not set")
