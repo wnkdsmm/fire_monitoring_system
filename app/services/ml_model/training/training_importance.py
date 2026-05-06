@@ -47,7 +47,7 @@ def _build_feature_importance(model_bundle: dict[str, Any], dataset: pd.DataFram
         rng = np.random.default_rng(42)
         sample_positions = rng.choice(len(holdout_X), size=sample_size, replace=False)
         sample_X = holdout_X.iloc[sample_positions]
-        sample_y = holdout_y[split_index + sample_positions]
+        sample_y = holdout_y[sample_positions]
         try:
             if parallel_backend is not None:
                 with parallel_backend('threading', n_jobs=-1):
