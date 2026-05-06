@@ -8,6 +8,8 @@ from app.services.shared.formatting import (
 )
 from config.constants import (
     CORE_SERVICE_TIME_MINUTES,
+    DISTANCE_SCORE_MIN_KM,
+    DISTANCE_SCORE_RANGE_KM,
     LOGISTICS_FALLBACK_TRAVEL_RURAL_MIN,
     LOGISTICS_FALLBACK_TRAVEL_URBAN_MIN,
     LOGISTICS_MINIMUM_SPEED_KMH,
@@ -17,9 +19,42 @@ from config.constants import (
     LOGISTICS_RESPONSE_OBSERVATIONS_THRESHOLD,
     LOGISTICS_RURAL_SPEED_KMH,
     LOGISTICS_URBAN_SPEED_KMH,
+    RESPONSE_PRESSURE_RANGE_MIN,
+    RESPONSE_PRESSURE_TARGET_MIN,
     SERVICE_DISTANCE_TARGET_KM,
     SERVICE_TIME_TARGET_MINUTES,
 )
+
+COVERAGE_BLEND_FULL_RESPONSE = 0.50
+COVERAGE_BLEND_FULL_TRAVEL = 0.30
+COVERAGE_BLEND_FULL_DISTANCE = 0.20
+COVERAGE_BLEND_RESPONSE_ONLY_RESPONSE = 0.72
+COVERAGE_BLEND_RESPONSE_ONLY_TRAVEL = 0.28
+COVERAGE_BLEND_DISTANCE_ONLY_TRAVEL = 0.62
+COVERAGE_BLEND_DISTANCE_ONLY_DISTANCE = 0.38
+COVERAGE_FALLBACK_RURAL = 0.46
+COVERAGE_FALLBACK_URBAN = 0.58
+
+DISTANCE_COVERAGE_LOW_MULTIPLIER = 1.3
+DISTANCE_COVERAGE_HIGH_MULTIPLIER = 1.5
+
+LOGISTICS_PRIORITY_TRAVEL_WEIGHT = 0.44
+LOGISTICS_PRIORITY_COVERAGE_WEIGHT = 0.34
+LOGISTICS_PRIORITY_ZONE_WEIGHT = 0.14
+LOGISTICS_PRIORITY_DISTANCE_WEIGHT = 0.08
+
+SERVICE_ZONE_CORE_COVERAGE_MIN = 0.72
+SERVICE_ZONE_NORM_COVERAGE_MIN = 0.55
+SERVICE_ZONE_TENSION_TIME_MAX = 28.0
+SERVICE_ZONE_TENSION_COVERAGE_MIN = 0.35
+
+COVERAGE_LABEL_STABLE_MIN = 0.75
+COVERAGE_LABEL_BORDER_MIN = 0.55
+COVERAGE_LABEL_TENSION_MIN = 0.35
+
+LOGISTICS_PRIORITY_CRITICAL_MIN = 70.0
+LOGISTICS_PRIORITY_HIGH_MIN = 50.0
+LOGISTICS_PRIORITY_TARGETED_MIN = 35.0
 
 
 def build_explainable_logistics_profile(
@@ -74,13 +109,13 @@ def build_explainable_logistics_profile(
         )
         travel_time_source = 'Осторожный fallback без прямой логистики'
 
-    distance_pressure = _clamp(((safe_distance or 14.0) - 6.0) / 24.0, 0.0, 1.0)
+    distance_pressure = _clamp(((safe_distance or 14.0) - DISTANCE_SCORE_MIN_KM) / DISTANCE_SCORE_RANGE_KM, 0.0, 1.0)
     response_pressure = (
-        _clamp((safe_response - 12.0) / 18.0, 0.0, 1.0)
+        _clamp((safe_response - RESPONSE_PRESSURE_TARGET_MIN) / RESPONSE_PRESSURE_RANGE_MIN, 0.0, 1.0)
         if safe_response is not None
         else _clamp(0.32 + distance_pressure * 0.55, 0.0, 1.0)
     )
-    travel_time_pressure = _clamp((travel_time_minutes - 12.0) / 18.0, 0.0, 1.0)
+    travel_time_pressure = _clamp((travel_time_minutes - RESPONSE_PRESSURE_TARGET_MIN) / RESPONSE_PRESSURE_RANGE_MIN, 0.0, 1.0)
 
     response_coverage = None
     if response_observations > 0:
@@ -92,22 +127,34 @@ def build_explainable_logistics_profile(
         1.0,
     )
     distance_coverage = _clamp(
-        1.0 - max(0.0, (safe_distance or SERVICE_DISTANCE_TARGET_KM * 1.3) - SERVICE_DISTANCE_TARGET_KM) / (SERVICE_DISTANCE_TARGET_KM * 1.5),
+        1.0
+        - max(0.0, (safe_distance or SERVICE_DISTANCE_TARGET_KM * DISTANCE_COVERAGE_LOW_MULTIPLIER) - SERVICE_DISTANCE_TARGET_KM)
+        / (SERVICE_DISTANCE_TARGET_KM * DISTANCE_COVERAGE_HIGH_MULTIPLIER),
         0.05,
         1.0,
     )
 
     if response_coverage is not None and distance_observations > 0:
-        service_coverage_ratio = 0.50 * response_coverage + 0.30 * travel_time_coverage + 0.20 * distance_coverage
+        service_coverage_ratio = (
+            COVERAGE_BLEND_FULL_RESPONSE * response_coverage
+            + COVERAGE_BLEND_FULL_TRAVEL * travel_time_coverage
+            + COVERAGE_BLEND_FULL_DISTANCE * distance_coverage
+        )
         coverage_source = 'Факт прибытия + удалённость'
     elif response_coverage is not None:
-        service_coverage_ratio = 0.72 * response_coverage + 0.28 * travel_time_coverage
+        service_coverage_ratio = (
+            COVERAGE_BLEND_RESPONSE_ONLY_RESPONSE * response_coverage
+            + COVERAGE_BLEND_RESPONSE_ONLY_TRAVEL * travel_time_coverage
+        )
         coverage_source = 'Фактическое прибытие'
     elif distance_observations > 0 or estimated_from_distance is not None:
-        service_coverage_ratio = 0.62 * travel_time_coverage + 0.38 * distance_coverage
+        service_coverage_ratio = (
+            COVERAGE_BLEND_DISTANCE_ONLY_TRAVEL * travel_time_coverage
+            + COVERAGE_BLEND_DISTANCE_ONLY_DISTANCE * distance_coverage
+        )
         coverage_source = 'Расстояние и модель travel-time'
     else:
-        fallback_coverage = 0.46 if is_rural else 0.58
+        fallback_coverage = COVERAGE_FALLBACK_RURAL if is_rural else COVERAGE_FALLBACK_URBAN
         service_coverage_ratio = fallback_coverage
         coverage_source = 'Осторожный fallback'
 
@@ -120,10 +167,10 @@ def build_explainable_logistics_profile(
     )
     logistics_priority_score = _clamp(
         100.0 * (
-            0.44 * travel_time_pressure
-            + 0.34 * service_coverage_gap
-            + 0.14 * service_zone_pressure
-            + 0.08 * distance_pressure
+            LOGISTICS_PRIORITY_TRAVEL_WEIGHT * travel_time_pressure
+            + LOGISTICS_PRIORITY_COVERAGE_WEIGHT * service_coverage_gap
+            + LOGISTICS_PRIORITY_ZONE_WEIGHT * service_zone_pressure
+            + LOGISTICS_PRIORITY_DISTANCE_WEIGHT * distance_pressure
         ),
         0.0,
         100.0,
@@ -160,31 +207,31 @@ def build_explainable_logistics_profile(
 
 
 def _service_zone(*, travel_time_minutes: float, coverage_ratio: float) -> tuple[str, str, float]:
-    if travel_time_minutes <= CORE_SERVICE_TIME_MINUTES and coverage_ratio >= 0.72:
+    if travel_time_minutes <= CORE_SERVICE_TIME_MINUTES and coverage_ratio >= SERVICE_ZONE_CORE_COVERAGE_MIN:
         return 'Ядро зоны обслуживания', 'forest', 0.10
-    if travel_time_minutes <= SERVICE_TIME_TARGET_MINUTES and coverage_ratio >= 0.55:
+    if travel_time_minutes <= SERVICE_TIME_TARGET_MINUTES and coverage_ratio >= SERVICE_ZONE_NORM_COVERAGE_MIN:
         return 'Граница нормативного прикрытия', 'sky', 0.34
-    if travel_time_minutes <= 28.0 and coverage_ratio >= 0.35:
+    if travel_time_minutes <= SERVICE_ZONE_TENSION_TIME_MAX and coverage_ratio >= SERVICE_ZONE_TENSION_COVERAGE_MIN:
         return 'Зона напряженного доезда', 'sand', 0.68
     return 'Удаленная зона обслуживания', 'fire', 0.92
 
 
 def _coverage_label(coverage_ratio: float) -> str:
-    if coverage_ratio >= 0.75:
+    if coverage_ratio >= COVERAGE_LABEL_STABLE_MIN:
         return 'Устойчивое прикрытие'
-    if coverage_ratio >= 0.55:
+    if coverage_ratio >= COVERAGE_LABEL_BORDER_MIN:
         return 'Пограничное прикрытие'
-    if coverage_ratio >= 0.35:
+    if coverage_ratio >= COVERAGE_LABEL_TENSION_MIN:
         return 'Напряженное прикрытие'
     return 'Дефицит прикрытия'
 
 
 def _logistics_priority_label(score: float) -> str:
-    if score >= 70.0:
+    if score >= LOGISTICS_PRIORITY_CRITICAL_MIN:
         return 'Критичный логистический приоритет'
-    if score >= 50.0:
+    if score >= LOGISTICS_PRIORITY_HIGH_MIN:
         return 'Высокий логистический приоритет'
-    if score >= 35.0:
+    if score >= LOGISTICS_PRIORITY_TARGETED_MIN:
         return 'Точечный логистический контроль'
     return 'Плановый логистический контроль'
 

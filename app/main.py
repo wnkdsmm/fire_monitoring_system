@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import os
 
 from fastapi import FastAPI
@@ -9,6 +10,8 @@ from app.routes.pages import router as pages_router
 from app.runtime_invalidation import warmup_runtime_caches
 from config.db import check_connection, get_db_info
 from config.paths import STATIC_DIR
+
+logger = logging.getLogger(__name__)
 
 if int(os.environ.get("WEB_CONCURRENCY", 1)) > 1:
     import warnings
@@ -34,10 +37,10 @@ app = create_app()
 async def startup_event() -> None:
     success, message = check_connection()
     if success:
-        print(f"[OK] {message} ({get_db_info()})")
+        logger.info("[OK] %s (%s)", message, get_db_info())
         asyncio.create_task(
-            asyncio.to_thread(warmup_runtime_caches, lambda w: print(f"[WARN] {w}"))
+            asyncio.to_thread(warmup_runtime_caches, lambda w: logger.warning("[WARN] %s", w))
         )
     else:
-        print(f"[ERROR] {message}")
-        print("  Проверьте настройки DATABASE_URL в файле .env")
+        logger.error("[ERROR] %s", message)
+        logger.error("  Проверьте настройки DATABASE_URL в файле .env")
