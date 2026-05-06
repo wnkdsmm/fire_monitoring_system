@@ -27,7 +27,7 @@
 {% endblock %}
 
 {% block content %}
-<main class="main dashboard-main simple-page-main" id="page-content">
+<div class="dashboard-main simple-page-main">
     <section class="hero-panel simple-page-intro">
         <div class="hero-copy">
             <span class="eyebrow">Навигатор по таблицам</span>
@@ -107,7 +107,7 @@
         </ul>
         <div id="tableListEmpty" class="mini-empty{% if tables %} is-hidden{% endif %}" {% if tables %}hidden{% endif %}>В базе данных таблицы отсутствуют.</div>
     </section>
-</main>
+</div>
 <input type="file" id="fileInput" class="hidden-file-input">
 {% endblock %}
 
@@ -121,4 +121,3 @@
 <script src="/static/js/tables.js?v={{ tables_js_version }}"></script>
 {{ super() }}
 {% endblock %}
-
