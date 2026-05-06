@@ -32,6 +32,15 @@ FACTOR_WEIGHTS = {
     NIGHT_CODE: 6.0,
     HEATING_CODE: 4.0,
 }
+SEVERITY_SEVERE_WEIGHT = 0.58
+SEVERITY_VICTIM_WEIGHT = 0.24
+SEVERITY_DAMAGE_WEIGHT = 0.18
+RECURRENCE_FREQUENCY_WEIGHT = 0.70
+RECURRENCE_INCIDENTS_WEIGHT = 0.30
+UNCERTAINTY_ARRIVAL_WEIGHT = 0.35
+UNCERTAINTY_WATER_WEIGHT = 0.30
+UNCERTAINTY_DISTANCE_WEIGHT = 0.20
+UNCERTAINTY_SUPPORT_WEIGHT = 0.15
 
 ACCESS_POINT_NUMERIC_COLUMNS = (
     "incident_count",
@@ -132,7 +141,7 @@ def _resolve_access_point_weight_context(
     active_reason_codes = set(normalized_selected_features)
     selected_weight_sum = sum(float(FACTOR_WEIGHTS[code]) for code in normalized_selected_features if code in FACTOR_WEIGHTS)
     normalized_factor_weights = {
-        code: (94.0 * float(weight) / selected_weight_sum) if code in active_reason_codes and selected_weight_sum > 0 else 0.0
+        code: ((100.0 - UNCERTAINTY_PENALTY_MAX) * float(weight) / selected_weight_sum) if code in active_reason_codes and selected_weight_sum > 0 else 0.0
         for code, weight in FACTOR_WEIGHTS.items()
     }
     return normalized_selected_features, active_reason_codes, normalized_factor_weights
@@ -290,19 +299,19 @@ def _build_access_point_factor_series(base: _AccessPointBaseSeries) -> _AccessPo
         distance_norm=distance_norm_series,
         response_norm=response_norm_series,
         severity_factor=(
-            (0.58 * base.severe_share)
-            + (0.24 * base.victim_share)
-            + (0.18 * base.major_damage_share)
+            (SEVERITY_SEVERE_WEIGHT * base.severe_share)
+            + (SEVERITY_VICTIM_WEIGHT * base.victim_share)
+            + (SEVERITY_DAMAGE_WEIGHT * base.major_damage_share)
         ).clip(lower=0.0, upper=1.0),
         recurrence_factor=(
-            (0.70 * frequency_norm_series)
-            + (0.30 * incidents_norm_series)
+            (RECURRENCE_FREQUENCY_WEIGHT * frequency_norm_series)
+            + (RECURRENCE_INCIDENTS_WEIGHT * incidents_norm_series)
         ).clip(lower=0.0, upper=1.0),
         uncertainty_factor=(
-            (0.35 * base.arrival_missing_share)
-            + (0.30 * base.water_unknown_share)
-            + (0.20 * base.distance_missing_share)
-            + (0.15 * (1.0 - base.support_weight))
+            (UNCERTAINTY_ARRIVAL_WEIGHT * base.arrival_missing_share)
+            + (UNCERTAINTY_WATER_WEIGHT * base.water_unknown_share)
+            + (UNCERTAINTY_DISTANCE_WEIGHT * base.distance_missing_share)
+            + (UNCERTAINTY_SUPPORT_WEIGHT * (1.0 - base.support_weight))
         ).clip(lower=0.0, upper=1.0),
     )
 

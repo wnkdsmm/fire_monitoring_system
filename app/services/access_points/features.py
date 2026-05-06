@@ -11,6 +11,11 @@ from .constants import (
     DEFAULT_ACCESS_POINT_FEATURES,
     MAX_ACCESS_POINT_FEATURE_OPTIONS,
 )
+from .analysis_factors import (
+    SEVERITY_DAMAGE_WEIGHT,
+    SEVERITY_SEVERE_WEIGHT,
+    SEVERITY_VICTIM_WEIGHT,
+)
 
 
 def _normalize_access_point_feature_columns(feature_columns: Sequence[str] | None) -> list[str]:
@@ -51,7 +56,7 @@ def _access_point_feature_series(entity_frame: pd.DataFrame, feature_name: str) 
         severe_share = pd.to_numeric(entity_frame.get("severe_share"), errors="coerce").fillna(0.0)
         victim_share = pd.to_numeric(entity_frame.get("victim_share"), errors="coerce").fillna(0.0)
         major_damage_share = pd.to_numeric(entity_frame.get("major_damage_share"), errors="coerce").fillna(0.0)
-        return (0.58 * severe_share) + (0.24 * victim_share) + (0.18 * major_damage_share)
+        return (SEVERITY_SEVERE_WEIGHT * severe_share) + (SEVERITY_VICTIM_WEIGHT * victim_share) + (SEVERITY_DAMAGE_WEIGHT * major_damage_share)
     if feature_name == "REPEAT_FIRES":
         return pd.to_numeric(entity_frame.get("incidents_per_year"), errors="coerce")
     if feature_name == "NIGHT_PROFILE":
