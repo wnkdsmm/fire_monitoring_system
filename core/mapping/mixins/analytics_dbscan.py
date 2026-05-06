@@ -38,10 +38,14 @@ def build_dbscan_cluster_result(
         total_weight = sum(item['weight'] for item in items)
         center_lat = sum(item['latitude'] * item['weight'] for item in items) / max(total_weight, 0.1)
         center_lon = sum(item['longitude'] * item['weight'] for item in items) / max(total_weight, 0.1)
-        radius_km = max(
-            max(km_distance(item, {'latitude': center_lat, 'longitude': center_lon}) for item in items),
-            eps_km,
-        )
+        if len(items) == 1:
+            radius_km = 0.0
+        else:
+            distances_from_center = [
+                km_distance(item, {'latitude': center_lat, 'longitude': center_lon})
+                for item in items
+            ]
+            radius_km = float(np.percentile(distances_from_center, 95))
         risk_score = round((total_weight / max_weight) * 100.0, 1)
         risk_label, risk_tone = risk_level(risk_score)
         avg_response = nanmean_record_value(items, 'response_minutes')
@@ -84,7 +88,7 @@ def estimate_dbscan_eps_km(
     if len(records) < 4 or not sklearn_available or nearest_neighbors_cls is None:
         return 1.0
     xy = project_records_to_local_xy(records)
-    neighbours = min(5, len(records))
+    neighbours = min(5, max(1, len(records) - 1))
     model = nearest_neighbors_cls(n_neighbors=neighbours)
     model.fit(xy)
     distances, _ = model.kneighbors(xy)

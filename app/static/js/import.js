@@ -89,8 +89,10 @@ function initializeImportLogs() {
         logsRefreshStarted = true;
         const pollLogs = async () => {
             await refreshLogs();
+            logsRefreshTimers.clear();
             logsRefreshTimers.set(pollLogs, LOG_REFRESH_INTERVAL_MS);
         };
+        logsRefreshTimers.clear();
         logsRefreshTimers.set(pollLogs, LOG_REFRESH_INTERVAL_MS);
     }
 }

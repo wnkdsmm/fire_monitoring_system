@@ -49,7 +49,7 @@
 
             function isLatestRequest(requestId) {
                 var latestRequestId = state ? state.get('latestRequestId') : fallbackLatestRequestId;
-                return requestId == latestRequestId;
+                return requestId === latestRequestId;
             }
 
             return {

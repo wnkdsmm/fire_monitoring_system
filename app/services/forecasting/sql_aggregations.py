@@ -264,8 +264,9 @@ class AggregationQueryBuilder(QueryBuilder):
                 fire_date,
                 SUM(incident_count) AS incident_count,
                 CASE
-                    WHEN SUM(temperature_samples) > 0
-                    THEN SUM(COALESCE(avg_temperature, 0.0) * temperature_samples) / SUM(temperature_samples)
+                    WHEN SUM(CASE WHEN avg_temperature IS NOT NULL THEN temperature_samples ELSE 0 END) > 0
+                    THEN SUM(CASE WHEN avg_temperature IS NOT NULL THEN avg_temperature * temperature_samples ELSE 0.0 END)
+                        / SUM(CASE WHEN avg_temperature IS NOT NULL THEN temperature_samples ELSE 0 END)
                     ELSE NULL
                 END AS avg_temperature,
                 SUM(temperature_samples) AS temperature_samples
@@ -302,8 +303,8 @@ class AggregationQueryBuilder(QueryBuilder):
             SELECT
                 fire_date,
                 SUM(incident_count) AS incident_count,
-                SUM(COALESCE(avg_temperature, 0.0) * temperature_samples) AS temperature_sum,
-                SUM(temperature_samples) AS temperature_samples
+                SUM(CASE WHEN avg_temperature IS NOT NULL THEN avg_temperature * temperature_samples ELSE 0.0 END) AS temperature_sum,
+                SUM(CASE WHEN avg_temperature IS NOT NULL THEN temperature_samples ELSE 0 END) AS temperature_samples
             FROM {quote_identifier(self._daily_aggregate_view_name(table_name))}
             WHERE {" AND ".join(conditions)}
             GROUP BY fire_date

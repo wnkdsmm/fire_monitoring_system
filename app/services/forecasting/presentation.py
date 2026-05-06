@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from statistics import mean
 from typing import Any
 
@@ -82,7 +83,7 @@ def _build_summary(
     history_counts = [float(item["count"]) for item in daily_history]
     active_days = sum(1 for item in daily_history if item["count"] > 0)
     predicted_total = sum(item["forecast_value"] for item in forecast_rows)
-    predicted_average = predicted_total / len(forecast_rows) if forecast_rows else 0.0
+    predicted_average = predicted_total / len(forecast_rows) if len(forecast_rows) > 0 else 0.0
     average_probability = (
         mean(_normalize_probability(item.get("fire_probability", 0.0)) for item in forecast_rows)
         if forecast_rows
@@ -92,7 +93,11 @@ def _build_summary(
     recent_counts = history_counts[-28:] if len(history_counts) >= 28 else history_counts
     recent_average = mean(recent_counts) if recent_counts else historical_average
     active_days_share = active_days / len(daily_history) if daily_history else 0.0
-    delta_ratio = (predicted_average - recent_average) / recent_average if recent_average > 0 else 0.0
+    if recent_average > 0:
+        delta_ratio = (predicted_average - recent_average) / recent_average
+    else:
+        logging.warning("recent_average is 0, delta_ratio set to 0.0")
+        delta_ratio = 0.0
     scenario_label, _scenario_tone = _forecast_level_label(
         predicted_average,
         recent_average if recent_average > 0 else historical_average,
@@ -325,10 +330,15 @@ def _build_insights(
         recent_values = [float(item["count"]) for item in (daily_history[-28:] if len(daily_history) >= 28 else daily_history)]
         recent_average = mean(recent_values) if recent_values else 0.0
         forecast_average = mean(float(item["forecast_value"]) for item in forecast_rows)
+        if recent_average > 0:
+            compare_recent_ratio = (forecast_average - recent_average) / recent_average
+        else:
+            logging.warning("recent_average is 0, delta_ratio set to 0.0")
+            compare_recent_ratio = 0.0
         insights.append(
             {
                 "label": FORECASTING_INSIGHT_LABEL_COMPARE_RECENT,
-                "value": _format_signed_percent((forecast_average - recent_average) / recent_average if recent_average > 0 else 0.0),
+                "value": _format_signed_percent(compare_recent_ratio),
                 "meta": FORECASTING_INSIGHT_META_COMPARE_RECENT_TEMPLATE.format(
                     level_label=_forecast_level_label(forecast_average, recent_average)[0],
                 ),

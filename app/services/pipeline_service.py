@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import io
 import os
+import re
 import shutil
 from contextlib import redirect_stdout
 from pathlib import Path
@@ -279,8 +280,18 @@ def _invalidate_runtime_caches(session_id: str, job_id: str) -> None:
 
 
 def _build_upload_file_path(session_id: str, job_id: str, original_filename: str) -> Path:
+    def _sanitize_path_component(value: str) -> str:
+        if not re.fullmatch(r"[a-zA-Z0-9_\-]{1,64}", value):
+            raise ValueError(f"Invalid path component: {value!r}")
+        return value
+
     safe_name = Path(original_filename).name or "uploaded_file.xlsx"
+    session_id = _sanitize_path_component(session_id)
+    job_id = _sanitize_path_component(job_id)
     job_folder = UPLOAD_FOLDER / session_id / job_id
+    resolved = job_folder.resolve()
+    if not str(resolved).startswith(str(UPLOAD_FOLDER.resolve())):
+        raise ValueError("Path traversal detected")
     job_folder.mkdir(parents=True, exist_ok=True)
     return job_folder / safe_name
 

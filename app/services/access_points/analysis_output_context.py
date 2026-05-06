@@ -107,6 +107,11 @@ def _build_incomplete_note(
 
 
 def _access_point_row_metrics(precomputed: dict[str, Sequence[Any]], row_index: int) -> _AccessPointRowMetrics:
+    array_len = len(precomputed.get("incident_count", []))
+    if row_index < 0 or row_index >= array_len:
+        raise IndexError(
+            f"row_index {row_index} out of bounds for precomputed arrays of length {array_len}"
+        )
     return _AccessPointRowMetrics(
         incident_count=int(precomputed["incident_count"][row_index]),
         years_observed=int(precomputed["years_observed"][row_index]),

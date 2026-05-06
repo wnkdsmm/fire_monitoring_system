@@ -142,7 +142,7 @@ def _resolve_access_point_weight_context(
     active_reason_codes = set(normalized_selected_features)
     selected_weight_sum = sum(float(FACTOR_WEIGHTS[code]) for code in normalized_selected_features if code in FACTOR_WEIGHTS)
     normalized_factor_weights = {
-        code: ((100.0 - UNCERTAINTY_PENALTY_MAX) * float(weight) / selected_weight_sum) if code in active_reason_codes and selected_weight_sum > 0 else 0.0
+        code: (float(weight) / selected_weight_sum) if code in active_reason_codes and selected_weight_sum > 0 else 0.0
         for code, weight in FACTOR_WEIGHTS.items()
     }
     return normalized_selected_features, active_reason_codes, normalized_factor_weights
@@ -341,20 +341,17 @@ def _build_access_point_score_series(
                 active_reason_codes,
                 (
                     (
-                        FACTOR_WEIGHTS[DISTANCE_CODE]
-                        / (FACTOR_WEIGHTS[DISTANCE_CODE] + FACTOR_WEIGHTS[RESPONSE_CODE] + FACTOR_WEIGHTS[LONG_ARRIVAL_CODE]),
+                        FACTOR_WEIGHTS[DISTANCE_CODE],
                         DISTANCE_CODE,
                         factors.distance_norm,
                     ),
                     (
-                        FACTOR_WEIGHTS[RESPONSE_CODE]
-                        / (FACTOR_WEIGHTS[DISTANCE_CODE] + FACTOR_WEIGHTS[RESPONSE_CODE] + FACTOR_WEIGHTS[LONG_ARRIVAL_CODE]),
+                        FACTOR_WEIGHTS[RESPONSE_CODE],
                         RESPONSE_CODE,
                         factors.response_norm,
                     ),
                     (
-                        FACTOR_WEIGHTS[LONG_ARRIVAL_CODE]
-                        / (FACTOR_WEIGHTS[DISTANCE_CODE] + FACTOR_WEIGHTS[RESPONSE_CODE] + FACTOR_WEIGHTS[LONG_ARRIVAL_CODE]),
+                        FACTOR_WEIGHTS[LONG_ARRIVAL_CODE],
                         LONG_ARRIVAL_CODE,
                         base.long_arrival_share,
                     ),
@@ -367,20 +364,17 @@ def _build_access_point_score_series(
                 active_reason_codes,
                 (
                     (
-                        FACTOR_WEIGHTS[RECURRENCE_CODE]
-                        / (FACTOR_WEIGHTS[RECURRENCE_CODE] + FACTOR_WEIGHTS[NIGHT_CODE] + FACTOR_WEIGHTS[HEATING_CODE]),
+                        FACTOR_WEIGHTS[RECURRENCE_CODE],
                         RECURRENCE_CODE,
                         factors.recurrence_factor,
                     ),
                     (
-                        FACTOR_WEIGHTS[NIGHT_CODE]
-                        / (FACTOR_WEIGHTS[RECURRENCE_CODE] + FACTOR_WEIGHTS[NIGHT_CODE] + FACTOR_WEIGHTS[HEATING_CODE]),
+                        FACTOR_WEIGHTS[NIGHT_CODE],
                         NIGHT_CODE,
                         base.night_share,
                     ),
                     (
-                        FACTOR_WEIGHTS[HEATING_CODE]
-                        / (FACTOR_WEIGHTS[RECURRENCE_CODE] + FACTOR_WEIGHTS[NIGHT_CODE] + FACTOR_WEIGHTS[HEATING_CODE]),
+                        FACTOR_WEIGHTS[HEATING_CODE],
                         HEATING_CODE,
                         base.heating_share,
                     ),

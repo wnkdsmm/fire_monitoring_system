@@ -1,4 +1,4 @@
-(function () {
+﻿(function () {
     var shared = window.FireUi;
     var byId = shared.byId;
     var escapeHtml = shared.escapeHtml;
@@ -57,12 +57,12 @@
         }
 
         if (count > 0) {
-            badge.textContent = 'База доступна';
+            badge.textContent = 'Р‘Р°Р·Р° РґРѕСЃС‚СѓРїРЅР°';
             badge.classList.add('status-badge-live');
             return;
         }
 
-        badge.textContent = 'Таблиц нет';
+        badge.textContent = 'РўР°Р±Р»РёС† РЅРµС‚';
         badge.classList.remove('status-badge-live');
     }
 
@@ -79,7 +79,7 @@
                     '<a class="table-link-title" href="' + href + '">' + escapeHtml(safeTable) + '</a>' +
                 '</div>' +
                 '<div class="table-link-actions">' +
-                    '<a class="table-link-inline-action" href="' + href + '">Открыть</a>' +
+                    '<a class="table-link-inline-action" href="' + href + '">РћС‚РєСЂС‹С‚СЊ</a>' +
                 '</div>' +
             '</article>' +
         '</li>';
@@ -136,7 +136,7 @@
 
         var meta = byId('tablesSelectionMeta');
         if (meta) {
-            meta.textContent = hasTables ? ('Выбрано: ' + selectedCount) : 'Таблиц нет';
+            meta.textContent = hasTables ? ('Р’С‹Р±СЂР°РЅРѕ: ' + selectedCount) : 'РўР°Р±Р»РёС† РЅРµС‚';
         }
 
         var selectAllButton = byId('selectAllTablesButton');
@@ -153,8 +153,8 @@
         if (deleteButton) {
             deleteButton.disabled = !selectedCount;
             deleteButton.dataset.defaultLabel = selectedCount > 0
-                ? ('Удалить выбранные (' + selectedCount + ')')
-                : 'Удалить выбранные';
+                ? ('РЈРґР°Р»РёС‚СЊ РІС‹Р±СЂР°РЅРЅС‹Рµ (' + selectedCount + ')')
+                : 'РЈРґР°Р»РёС‚СЊ РІС‹Р±СЂР°РЅРЅС‹Рµ';
             if (!deleteButton.classList.contains('is-loading')) {
                 deleteButton.textContent = deleteButton.dataset.defaultLabel;
             }
@@ -180,14 +180,14 @@
     function confirmDelete(tableNames) {
         var count = tableNames.length;
         var preview = tableNames.slice(0, 5).join(', ');
-        var suffix = count > 5 ? '\n\nПервые выбранные: ' + preview + '...' : '\n\nВыбраны: ' + preview;
-        return window.confirm('Удалить выбранные таблицы из базы данных?\n\nКоличество: ' + count + suffix + '\n\nЭто действие необратимо.');
+        var suffix = count > 5 ? '\n\nРџРµСЂРІС‹Рµ РІС‹Р±СЂР°РЅРЅС‹Рµ: ' + preview + '...' : '\n\nР’С‹Р±СЂР°РЅС‹: ' + preview;
+        return window.confirm('РЈРґР°Р»РёС‚СЊ РІС‹Р±СЂР°РЅРЅС‹Рµ С‚Р°Р±Р»РёС†С‹ РёР· Р±Р°Р·С‹ РґР°РЅРЅС‹С…?\n\nРљРѕР»РёС‡РµСЃС‚РІРѕ: ' + count + suffix + '\n\nР­С‚Рѕ РґРµР№СЃС‚РІРёРµ РЅРµРѕР±СЂР°С‚РёРјРѕ.');
     }
 
     async function requestBulkDelete(button) {
         var selectedNames = getSelectedTableNames();
         if (!selectedNames.length) {
-            setStatus('Сначала отметьте таблицы галочками.', 'error');
+            setStatus('РЎРЅР°С‡Р°Р»Р° РѕС‚РјРµС‚СЊС‚Рµ С‚Р°Р±Р»РёС†С‹ РіР°Р»РѕС‡РєР°РјРё.', 'error');
             refreshSelectionState();
             return;
         }
@@ -196,8 +196,8 @@
             return;
         }
 
-        setStatus('Удаляем выбранные таблицы...', 'info');
-        setButtonBusy(button, true, 'Удаление...');
+        setStatus('РЈРґР°Р»СЏРµРј РІС‹Р±СЂР°РЅРЅС‹Рµ С‚Р°Р±Р»РёС†С‹...', 'info');
+        setButtonBusy(button, true, 'РЈРґР°Р»РµРЅРёРµ...');
 
         try {
             var result = await fetchJson('/api/tables/delete', {
@@ -209,19 +209,19 @@
                 body: JSON.stringify({
                     table_names: selectedNames
                 })
-            }, 'Не удалось удалить таблицы.');
+            }, 'РќРµ СѓРґР°Р»РѕСЃСЊ СѓРґР°Р»РёС‚СЊ С‚Р°Р±Р»РёС†С‹.');
 
             var payload = result.payload;
             if (!payload || payload.ok !== true) {
-                throw new Error(payload && payload.message ? payload.message : 'Не удалось удалить таблицы.');
+                throw new Error(payload && payload.message ? payload.message : 'РќРµ СѓРґР°Р»РѕСЃСЊ СѓРґР°Р»РёС‚СЊ С‚Р°Р±Р»РёС†С‹.');
             }
 
             var remainingTables = Array.isArray(payload.remaining_tables) ? payload.remaining_tables : [];
             applyTableState(remainingTables);
-            setStatus(payload.message || 'Выбранные таблицы удалены из базы данных.', 'success');
+            setStatus(payload.message || 'Р’С‹Р±СЂР°РЅРЅС‹Рµ С‚Р°Р±Р»РёС†С‹ СѓРґР°Р»РµРЅС‹ РёР· Р±Р°Р·С‹ РґР°РЅРЅС‹С….', 'success');
         } catch (error) {
             console.error(error);
-            setStatus(error && error.message ? error.message : 'Не удалось удалить таблицы.', 'error');
+            setStatus(error && error.message ? error.message : 'РќРµ СѓРґР°Р»РѕСЃСЊ СѓРґР°Р»РёС‚СЊ С‚Р°Р±Р»РёС†С‹.', 'error');
         } finally {
             setButtonBusy(button, false);
             refreshSelectionState();
@@ -263,7 +263,7 @@
     document.addEventListener('DOMContentLoaded', function () {
         window.fireTables = {
             afterImport: function () {
-                setStatus('Импорт завершён. Обновляем список таблиц...', 'success');
+                setStatus('РРјРїРѕСЂС‚ Р·Р°РІРµСЂС€С‘РЅ. РћР±РЅРѕРІР»СЏРµРј СЃРїРёСЃРѕРє С‚Р°Р±Р»РёС†...', 'success');
                 window.setTimeout(function () {
                     window.location.reload();
                 }, 900);
@@ -274,3 +274,4 @@
         applyTableState(getRenderedTableNames());
     });
 })();
+

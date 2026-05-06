@@ -35,7 +35,7 @@ def _is_generic_object_name(value: str) -> bool:
 
 def _smooth_share(successes: int, observations: int, prior_mean: float, minimum_support: int) -> float:
     if observations <= 0:
-        return 0.0
+        return float(prior_mean)
     support_gap = max(0, int(minimum_support) - int(observations))
     if support_gap <= 0:
         return successes / float(observations)
