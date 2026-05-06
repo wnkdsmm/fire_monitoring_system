@@ -5,6 +5,7 @@ from typing import Any, Sequence
 from sqlalchemy import text
 
 from app.db_metadata import get_table_columns_cached
+from app.domain.fire_columns import FIRE_DATE_COLUMN_CANDIDATES
 from app.services.shared.sql_helpers import build_scope_conditions, build_select_parts
 from app.shared.sql_utils import quote_identifier
 from config.db import engine
@@ -15,7 +16,6 @@ from .constants import (
     CASUALTY_FLAG_COLUMN_CANDIDATES,
     CAUSE_COLUMN_CANDIDATES,
     CONSEQUENCE_COLUMN_CANDIDATES,
-    DATE_COLUMN,
     DEATHS_COLUMN_CANDIDATES,
     DESTROYED_AREA_COLUMN_CANDIDATES,
     DESTROYED_BUILDINGS_COLUMN_CANDIDATES,
@@ -164,7 +164,7 @@ def _load_table_metadata(table_name: str) -> RiskTableMetadata:
     except ValueError as exc:
         raise ValueError(f"\u0422\u0430\u0431\u043b\u0438\u0446\u0430 '{table_name}' \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u0430 \u0432 \u0431\u0430\u0437\u0435 \u0434\u0430\u043d\u043d\u044b\u0445.") from exc
     resolved_columns = {
-        "date": _resolve_column_name(columns, [DATE_COLUMN]),
+        "date": _resolve_column_name(columns, FIRE_DATE_COLUMN_CANDIDATES),
         "district": _resolve_column_name(columns, DISTRICT_COLUMN_CANDIDATES),
         "cause": _resolve_column_name(columns, CAUSE_COLUMN_CANDIDATES),
         "object_category": _resolve_column_name(columns, [OBJECT_CATEGORY_COLUMN, "\u041a\u0430\u0442\u0435\u0433\u043e\u0440\u0438\u044f \u043e\u0431\u044a\u0435\u043a\u0442\u0430 \u043f\u043e\u0436\u0430\u0440\u0430"]),

@@ -304,7 +304,7 @@ function renderManagementCards(items) {
         setText('injuriesValue', summary.injuries_display || '0');
         setText('evacuatedValue', summary.evacuated_display || '0');
         setText('childrenTotalValue', summary.children_total_display || '0');
-        setText('severityValue', (summary.lethality_rate_display || '0.0') + ' на 100 пожаров');
+        setText('severityValue', (summary.deaths_per_fire_pct_display || '0.0') + ' на 100 пожаров');
 
         setText('sidebarDatabaseTablesCount', scope.database_tables_count_display || '0');
         setText('sidebarYearsCoveredCount', summary.years_covered_display || '0');
@@ -347,4 +347,3 @@ function renderManagementCards(items) {
         }
     };
 }(window));
-

@@ -81,6 +81,7 @@ function getFormParams() {
             updateUrl(params);
         } catch (error) {
             if (error && error.name === 'AbortError') {
+                renderApi.hideLoading();
                 return;
             }
             if (!state.isLatestRequest(requestId)) {

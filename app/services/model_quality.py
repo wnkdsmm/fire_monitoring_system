@@ -82,6 +82,8 @@ def compute_classification_metrics(
     threshold: float = 0.5,
 ) -> dict[str, float | None]:
     actual = np.asarray(list(actuals), dtype=int)
+    positive_rate = float(actual.sum() / len(actual)) if len(actual) > 0 else 0.5
+    class_balance_warning = positive_rate < 0.1 or positive_rate > 0.9
     predicted_probabilities = np.clip(_as_float_array(probabilities), 0.001, 0.999)
     baseline_values = (
         np.clip(_as_float_array(baseline_probabilities), 0.001, 0.999)
@@ -91,6 +93,7 @@ def compute_classification_metrics(
     if actual.size == 0:
         return {
             'available': False,
+            'class_balance_warning': class_balance_warning,
             'brier_score': None,
             'baseline_brier_score': None,
             'roc_auc': None,
@@ -100,6 +103,7 @@ def compute_classification_metrics(
     if not _has_both_classes(actual):
         return {
             'available': False,
+            'class_balance_warning': class_balance_warning,
             'brier_score': None,
             'baseline_brier_score': None,
             'roc_auc': None,
@@ -120,6 +124,7 @@ def compute_classification_metrics(
 
     return {
         'available': True,
+        'class_balance_warning': class_balance_warning,
         'brier_score': float(brier_score_loss(actual, predicted_probabilities)),
         'baseline_brier_score': baseline_brier,
         'roc_auc': roc_auc,

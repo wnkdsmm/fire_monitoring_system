@@ -84,6 +84,9 @@ def _build_geo_prediction(
     cells: dict[tuple[int, int], dict[str, Any]] = {}
 
     for record in geo_records:
+        date_val = record.get("date")
+        if date_val is None:
+            continue
         latitude = float(record["latitude"])
         longitude = float(record["longitude"])
         key = (math.floor(latitude / cell_size), math.floor(longitude / cell_size))
@@ -101,17 +104,20 @@ def _build_geo_prediction(
             },
         )
 
-        age_days = max(0, (last_observed_date - record["date"]).days)
-        recency_weight = max(GEO_RECENCY_WEIGHT_MIN, 1 - min(age_days, GEO_LOOKBACK_DAYS) / GEO_LOOKBACK_DAYS)
-        month_weight = 1.0 + GEO_MONTH_WEIGHT_BOOST * (future_months.get(record["date"].month, 0) / future_horizon)
-        weekday_weight = 1.0 + GEO_WEEKDAY_WEIGHT_BOOST * (future_weekdays.get(record["date"].weekday(), 0) / future_horizon)
+        age_days = max(0, (last_observed_date - date_val).days)
+        if not GEO_LOOKBACK_DAYS:
+            recency_weight = GEO_RECENCY_WEIGHT_MIN
+        else:
+            recency_weight = max(GEO_RECENCY_WEIGHT_MIN, 1 - min(age_days, GEO_LOOKBACK_DAYS) / GEO_LOOKBACK_DAYS)
+        month_weight = 1.0 + GEO_MONTH_WEIGHT_BOOST * (future_months.get(date_val.month, 0) / future_horizon)
+        weekday_weight = 1.0 + GEO_WEEKDAY_WEIGHT_BOOST * (future_weekdays.get(date_val.weekday(), 0) / future_horizon)
         score = recency_weight * month_weight * weekday_weight
 
         cell["score"] += score
         cell["incidents"] += 1
         cell["lat_sum"] += latitude
         cell["lon_sum"] += longitude
-        cell["last_fire"] = record["date"] if cell["last_fire"] is None else max(cell["last_fire"], record["date"])
+        cell["last_fire"] = date_val if cell["last_fire"] is None else max(cell["last_fire"], date_val)
         if record.get("district"):
             cell["districts"][record["district"]] += 1
         if record.get("cause"):

@@ -24,6 +24,9 @@
 
             if (form && tableFilter) {
                 tableFilter.addEventListener('change', function () {
+                    if (typeof global.stopClusteringJobPolling === 'function') {
+                        global.stopClusteringJobPolling();
+                    }
                     Array.prototype.forEach.call(
                         form.querySelectorAll('input[name="feature_columns"]'),
                         function (field) {

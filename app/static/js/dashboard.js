@@ -36,9 +36,7 @@ function buildDashboardApiError(response, payload) {
         }
 
         if (payload.bootstrap_mode === 'deferred') {
-            const contractError = new Error('Данные ещё загружаются. Обновите страницу через несколько секунд.');
-            contractError.dashboardStatusCode = 502;
-            throw contractError;
+            return { __deferred: true };
         }
 
         return payload;
@@ -86,6 +84,9 @@ async function fetchDashboardData() {
                     'Accept': 'application/json'
                 }
             });
+            if (data && data.__deferred) {
+                return;
+            }
             renderApi.applyDashboardData(data);
             window.history.replaceState({}, '', renderApi.buildDashboardPageHref(state.collectSelectedFilters()));
         } catch (error) {

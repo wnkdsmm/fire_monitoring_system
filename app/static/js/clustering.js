@@ -30,6 +30,7 @@ var getClusteringErrorMessage = shared.getErrorMessage;
     function stopClusteringJobPolling() {
         state.clearPollTimer();
     }
+    global.stopClusteringJobPolling = stopClusteringJobPolling;
 
     
 

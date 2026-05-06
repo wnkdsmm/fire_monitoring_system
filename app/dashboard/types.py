@@ -68,8 +68,8 @@ class SummaryResult(TypedDict, total=False):
     year_label: str
     deaths: float
     deaths_display: str
-    lethality_rate: float
-    lethality_rate_display: str
+    deaths_per_fire_pct: float
+    deaths_per_fire_pct_display: str
     injuries: float
     injuries_display: str
     evacuated: float

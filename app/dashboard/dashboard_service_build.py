@@ -255,8 +255,13 @@ def _build_dashboard_payload(
     notes = list(metadata["errors"][:5])
     if not PLOTLY_AVAILABLE:
         notes.append("Библиотека Plotly не найдена в окружении. Интерактивные графики не будут показаны.")
+    data_overlap_disclaimer = (
+        "Показатели суммированы по выбранным таблицам без проверки пересечений."
+        if int(summary.get("tables_used") or 0) > 1
+        else None
+    )
 
-    return {
+    payload = {
         "generated_at": _format_datetime(datetime.now()),
         "has_data": bool(selected_tables),
         "summary": summary,
@@ -287,6 +292,9 @@ def _build_dashboard_payload(
         },
         "notes": notes,
     }
+    if data_overlap_disclaimer:
+        payload["data_overlap_disclaimer"] = data_overlap_disclaimer
+    return payload
 
 
 def _empty_dashboard_data(

@@ -8,6 +8,7 @@ from app.services.shared.formatting import (
 )
 from config.constants import (
     CORE_SERVICE_TIME_MINUTES,
+    DISTANCE_FALLBACK_KM,
     DISTANCE_SCORE_MIN_KM,
     DISTANCE_SCORE_RANGE_KM,
     LOGISTICS_FALLBACK_TRAVEL_RURAL_MIN,
@@ -20,6 +21,8 @@ from config.constants import (
     LOGISTICS_RURAL_SPEED_KMH,
     LOGISTICS_URBAN_SPEED_KMH,
     RESPONSE_PRESSURE_RANGE_MIN,
+    RESPONSE_PRESSURE_FALLBACK_BASE,
+    RESPONSE_PRESSURE_FALLBACK_DISTANCE_WEIGHT,
     RESPONSE_PRESSURE_TARGET_MIN,
     SERVICE_DISTANCE_TARGET_KM,
     SERVICE_TIME_TARGET_MINUTES,
@@ -109,11 +112,11 @@ def build_explainable_logistics_profile(
         )
         travel_time_source = 'Осторожный fallback без прямой логистики'
 
-    distance_pressure = _clamp(((safe_distance or 14.0) - DISTANCE_SCORE_MIN_KM) / DISTANCE_SCORE_RANGE_KM, 0.0, 1.0)
+    distance_pressure = _clamp(((safe_distance or DISTANCE_FALLBACK_KM) - DISTANCE_SCORE_MIN_KM) / DISTANCE_SCORE_RANGE_KM, 0.0, 1.0)
     response_pressure = (
         _clamp((safe_response - RESPONSE_PRESSURE_TARGET_MIN) / RESPONSE_PRESSURE_RANGE_MIN, 0.0, 1.0)
         if safe_response is not None
-        else _clamp(0.32 + distance_pressure * 0.55, 0.0, 1.0)
+        else _clamp(RESPONSE_PRESSURE_FALLBACK_BASE + distance_pressure * RESPONSE_PRESSURE_FALLBACK_DISTANCE_WEIGHT, 0.0, 1.0)
     )
     travel_time_pressure = _clamp((travel_time_minutes - RESPONSE_PRESSURE_TARGET_MIN) / RESPONSE_PRESSURE_RANGE_MIN, 0.0, 1.0)
 

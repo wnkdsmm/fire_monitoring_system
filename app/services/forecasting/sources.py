@@ -5,12 +5,12 @@ from typing import Any, Sequence
 from sqlalchemy import text
 
 from app.db_metadata import get_table_columns_cached
+from app.domain.fire_columns import FIRE_DATE_COLUMN_CANDIDATES
 from config.constants import MIN_TEMPERATURE_COVERAGE, MIN_TEMPERATURE_NON_NULL_DAYS
 from config.db import engine
 
 from .constants import (
     CAUSE_COLUMN_CANDIDATES,
-    DATE_COLUMN,
     DISTRICT_COLUMN_CANDIDATES,
     LATITUDE_COLUMN_CANDIDATES,
     LONGITUDE_COLUMN_CANDIDATES,
@@ -161,7 +161,7 @@ def _load_table_metadata(table_name: str) -> ForecastingTableMetadata:
     except ValueError as exc:
         raise ValueError(f"Таблица '{table_name}' не найдена в базе данных.") from exc
     resolved_columns = {
-        "date": _resolve_column_name(columns, [DATE_COLUMN]),
+        "date": _resolve_column_name(columns, FIRE_DATE_COLUMN_CANDIDATES),
         "district": _resolve_column_name(columns, DISTRICT_COLUMN_CANDIDATES),
         "temperature": _resolve_column_name(columns, TEMPERATURE_COLUMN_CANDIDATES),
         "cause": _resolve_column_name(columns, CAUSE_COLUMN_CANDIDATES),

@@ -35,6 +35,16 @@
             throw error;
         }
 
+        if (response.status === 404) {
+            if (payload && payload.status === 'missing') {
+                return {
+                    payload: payload,
+                    response: response
+                };
+            }
+            throw createApiError(response, payload, fallback);
+        }
+
         if (!response.ok || (payload && payload.ok === false)) {
             throw createApiError(response, payload, fallback);
         }

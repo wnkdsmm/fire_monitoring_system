@@ -223,9 +223,9 @@ def _build_summary(
     evacuated_adults = impact_totals["evacuated"]
     rescued_adults = impact_totals["rescued_total"]
     children_total = impact_totals["evacuated_children"] + impact_totals["rescued_children"]
-    lethality_rate = (impact_totals["deaths"] / fires_count * 100) if fires_count > 0 else 0.0
+    deaths_per_fire_pct = (impact_totals["deaths"] / fires_count * 100) if fires_count > 0 else 0.0  # deaths per 100 fires
 
-    return {
+    summary_result = {
         "fires_count": fires_count,
         "fires_count_display": _format_number(fires_count, integer=True),
         "total_area": total_area,
@@ -244,8 +244,8 @@ def _build_summary(
         "year_label": str(selected_year) if selected_year is not None else "Все годы",
         "deaths": impact_totals["deaths"],
         "deaths_display": _format_number(impact_totals["deaths"], integer=True),
-        "lethality_rate": lethality_rate,
-        "lethality_rate_display": f"{lethality_rate:.1f}",
+        "deaths_per_fire_pct": deaths_per_fire_pct,
+        "deaths_per_fire_pct_display": f"{deaths_per_fire_pct:.1f}",
         "injuries": impact_totals["injuries"],
         "injuries_display": _format_number(impact_totals["injuries"], integer=True),
         "evacuated": impact_totals["evacuated"],
@@ -263,6 +263,10 @@ def _build_summary(
         "children_total": children_total,
         "children_total_display": _format_number(children_total, integer=True),
     }
+    if tables_used > 1:
+        summary_result["multi_table_warning"] = True
+        summary_result["multi_table_count"] = tables_used
+    return summary_result
 
 
 def _build_yearly_chart(

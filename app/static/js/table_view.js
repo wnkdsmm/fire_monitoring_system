@@ -11,9 +11,9 @@
 
     const form = byId('tablePaginationForm');
     const pageInput = byId('tablePageInput');
-    const pageSizeSelect = byId('tablePageSize');
-    const prevLink = byId('tablePrevLink');
-    const nextLink = byId('tableNextLink');
+    let pageSizeSelect = byId('tablePageSize');
+    let prevLink = byId('tablePrevLink');
+    let nextLink = byId('tableNextLink');
     const pageCount = byId('tablePageCount');
     const pageStatus = byId('tablePageStatus');
     const pageSizeValue = byId('tablePageSizeValue');
@@ -33,9 +33,19 @@
     const criteriaGroups = byId('tableCriteriaGroups');
     const inlineError = byId('tableInlineError');
     const inlineErrorMessage = byId('tableInlineErrorMessage');
-    const inlineRetryButton = byId('tableInlineRetryButton');
+    let inlineRetryButton = byId('tableInlineRetryButton');
 
     let isLoading = false;
+    const POPSTATE_HANDLER_KEY = '__tableViewPopstateHandler__';
+
+    function replaceElementForFreshListeners(element) {
+        if (!element) {
+            return element;
+        }
+        const cloned = element.cloneNode(true);
+        element.replaceWith(cloned);
+        return cloned;
+    }
 
     function formatInteger(value) {
         const numericValue = Number(value ?? 0);
@@ -278,6 +288,7 @@
         loadPage(targetPage, targetPageSize);
     });
 
+    pageSizeSelect = replaceElementForFreshListeners(pageSizeSelect);
     pageSizeSelect?.addEventListener('change', () => {
         if (pageInput) {
             pageInput.value = '1';
@@ -289,6 +300,8 @@
         }
     });
 
+    prevLink = replaceElementForFreshListeners(prevLink);
+    nextLink = replaceElementForFreshListeners(nextLink);
     [prevLink, nextLink].forEach((link) => {
         link?.addEventListener('click', (event) => {
             if (link.classList.contains('is-disabled')) {
@@ -303,13 +316,20 @@
         });
     });
 
-    window.addEventListener('popstate', () => {
+    function handlePopState() {
         const params = new URLSearchParams(window.location.search);
         const targetPage = Math.max(Number(params.get('page') || 1), 1);
         const targetPageSize = Number(params.get('page_size') || pageSizeSelect?.value || 100);
         loadPage(targetPage, targetPageSize, { updateHistory: false });
-    });
+    }
+    const previousPopstateHandler = window[POPSTATE_HANDLER_KEY];
+    if (typeof previousPopstateHandler === 'function') {
+        window.removeEventListener('popstate', previousPopstateHandler);
+    }
+    window[POPSTATE_HANDLER_KEY] = handlePopState;
+    window.addEventListener('popstate', handlePopState);
 
+    inlineRetryButton = replaceElementForFreshListeners(inlineRetryButton);
     inlineRetryButton?.addEventListener('click', () => {
         const targetPage = Math.max(Number(pageInput?.value || 1), 1);
         const targetPageSize = Number(pageSizeSelect?.value || 100);
