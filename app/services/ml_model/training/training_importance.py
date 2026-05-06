@@ -36,23 +36,18 @@ def _build_feature_importance(model_bundle: dict[str, Any], dataset: pd.DataFram
     design = _build_design_matrix(dataset, model_bundle['columns'])
     target = dataset['count'].to_numpy(dtype=float)
     grouped_scores: dict[str, float] = defaultdict(float)
-    importance_sample_size = 0
 
     if permutation_importance is not None and model_bundle.get('backend') == 'sklearn':
         split_index = int(len(design) * IMPORTANCE_TRAIN_SPLIT_RATIO)
         holdout_X = design.iloc[split_index:]
         holdout_y = target[split_index:]
         if len(holdout_X) < 20:
-            # fixed: no data leakage
-            return [{
-                'importance': None,
-                'insufficient_data': True,
-                'importance_sample_size': int(len(holdout_X)),
-            }]
+            return []
         sample_size = min(len(holdout_X), IMPORTANCE_MAX_SAMPLE_SIZE)
-        sample_X = holdout_X.sample(n=sample_size, random_state=42)
-        sample_y = holdout_y[sample_X.index.to_numpy(dtype=int) - split_index]
-        importance_sample_size = int(sample_size)
+        rng = np.random.default_rng(42)
+        sample_positions = rng.choice(len(holdout_X), size=sample_size, replace=False)
+        sample_X = holdout_X.iloc[sample_positions]
+        sample_y = holdout_y[split_index + sample_positions]
         try:
             if parallel_backend is not None:
                 with parallel_backend('threading', n_jobs=-1):
@@ -100,7 +95,6 @@ def _build_feature_importance(model_bundle: dict[str, Any], dataset: pd.DataFram
                 'importance': round(float(share), 4),
                 'importance_display': _format_number(float(share) * 100.0),
                 'insufficient_data': False,
-                'importance_sample_size': int(importance_sample_size),
             }
         )
     return items

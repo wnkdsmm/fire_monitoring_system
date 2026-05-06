@@ -229,7 +229,7 @@ def _logistics_fields(
     avg_response = bucket["response_sum"] / bucket["response_count"] if bucket["response_count"] else None
     avg_distance = bucket["distance_sum"] / bucket["distance_count"] if bucket["distance_count"] else None
     distance_score = _clamp(
-        ((avg_distance or float(defaults.get("distance_km_baseline", DEFAULT_DISTANCE_KM_BASELINE))) - DISTANCE_SCORE_MIN_KM) / DISTANCE_SCORE_RANGE_KM,
+                ((avg_distance or float(defaults.get("distance_km_baseline") or DEFAULT_DISTANCE_KM_BASELINE)) - DISTANCE_SCORE_MIN_KM) / DISTANCE_SCORE_RANGE_KM,
         0.0,
         1.0,
     )
@@ -247,7 +247,7 @@ def _logistics_fields(
         if avg_response is not None
         else _clamp(
             max(
-                float(defaults.get("response_pressure_unknown", RESPONSE_PRESSURE_UNKNOWN_FALLBACK)),
+            float(defaults.get("response_pressure_unknown") or RESPONSE_PRESSURE_UNKNOWN_FALLBACK),
                 distance_score * RESPONSE_PRESSURE_DISTANCE_SCALE,
             ),
             0.0,
@@ -293,7 +293,7 @@ def _water_fields(
     water_gap_rate = (
         1.0 - (bucket["water_available"] / bucket["water_known"])
         if bucket["water_known"]
-        else float(defaults.get("water_gap_unknown", WATER_GAP_UNKNOWN_DEFAULT))
+            else float(defaults.get("water_gap_unknown") or WATER_GAP_UNKNOWN_DEFAULT)
     )
     tanker_dependency = _clamp(
         TANKER_DEPENDENCY_DISTANCE_WEIGHT * distance_score + TANKER_DEPENDENCY_RESPONSE_WEIGHT * response_pressure,

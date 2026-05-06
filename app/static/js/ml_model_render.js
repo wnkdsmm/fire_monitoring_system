@@ -146,6 +146,44 @@
         renderMetricCards(containerId, items, emptyMessage || '');
     }
 
+    function renderClassBalanceWarning(containerId, classBalanceWarning) {
+        var container = byId(containerId);
+        if (!container) {
+            return;
+        }
+
+        var warningNode = container.querySelector('[data-role="class-balance-warning"]');
+        if (!warningNode) {
+            warningNode = document.createElement('p');
+            warningNode.setAttribute('data-role', 'class-balance-warning');
+            warningNode.className = 'help is-warning is-hidden';
+            warningNode.textContent = 'Классы несбалансированы (< 10% или > 90%). F1 может быть неинформативным.';
+        }
+
+        var f1Card = null;
+        Array.prototype.forEach.call(container.querySelectorAll('.stat-card'), function (card) {
+            if (f1Card) {
+                return;
+            }
+            var labelNode = card.querySelector('.stat-label');
+            if (!labelNode) {
+                return;
+            }
+            var labelText = String(labelNode.textContent || '').trim().toUpperCase();
+            if (labelText === 'F1') {
+                f1Card = card;
+            }
+        });
+
+        if (f1Card) {
+            f1Card.insertAdjacentElement('afterend', warningNode);
+        } else if (!warningNode.parentElement) {
+            container.appendChild(warningNode);
+        }
+
+        warningNode.classList.toggle('is-hidden', !classBalanceWarning);
+    }
+
     function renderIntervalCoverage(card) {
         var safeCard = card || {};
         setText('mlIntervalCoverageTitle', safeCard.label || 'Покрытие интервала на отложенных окнах');
@@ -335,6 +373,7 @@
         renderStatsSkeletons();
         renderCardSkeletons('mlQualityMetricCards', 4);
         renderOptionalMetricCards('mlQualityEventMetricsSection', 'mlQualityEventMetricCards', []);
+        renderClassBalanceWarning('mlQualityEventMetricCards', false);
         renderTableSkeleton('mlCountTableShell', 8, 4);
         charts.renderChartSkeleton('mlForecastChart', 'mlForecastChartFallback');
         renderTableSkeleton('mlForecastTableShell', 6, 4);
@@ -372,6 +411,10 @@
         renderMetricCards('mlQualityMetricCards', quality.metric_cards || [], 'После расчета здесь появятся метрики качества ML-прогноза.');
         renderIntervalCoverage(quality.interval_card || null);
         renderOptionalMetricCards('mlQualityEventMetricsSection', 'mlQualityEventMetricCards', quality.event_metric_cards || [], '');
+        renderClassBalanceWarning(
+            'mlQualityEventMetricCards',
+            Boolean(quality.class_balance_warning || data.class_balance_warning)
+        );
         setText('mlCountTableTitle', 'Сравнение моделей по числу пожаров');
         renderCountTable(quality.count_table || {});
         setText('mlForecastTitle', 'Сколько пожаров ожидается по дням');

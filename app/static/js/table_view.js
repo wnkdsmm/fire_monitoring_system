@@ -9,7 +9,7 @@
         return;
     }
 
-    const form = byId('tablePaginationForm');
+    let form = byId('tablePaginationForm');
     const pageInput = byId('tablePageInput');
     let pageSizeSelect = byId('tablePageSize');
     let prevLink = byId('tablePrevLink');
@@ -281,6 +281,7 @@
         }
     }
 
+    form = replaceElementForFreshListeners(form);
     form?.addEventListener('submit', (event) => {
         event.preventDefault();
         const targetPage = Math.max(Number(pageInput?.value || 1), 1);

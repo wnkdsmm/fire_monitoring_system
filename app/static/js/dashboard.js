@@ -11,6 +11,8 @@
     var state = global.DashboardState.create({
         initialData: global.__FIRE_DASHBOARD_INITIAL_DATA__ || null
     });
+    var deferredRetryTimer = null;
+    var deferredRetryAttempts = 0;
 
 function buildDashboardApiError(response, payload) {
         const errorPayload = payload && payload.error ? payload.error : {};
@@ -64,6 +66,10 @@ function buildDashboardApiError(response, payload) {
     }
 
 async function fetchDashboardData() {
+        if (deferredRetryTimer) {
+            clearTimeout(deferredRetryTimer);
+            deferredRetryTimer = null;
+        }
         const form = byId('filtersForm');
         const button = byId('refreshDashboardButton');
         if (!form) {
@@ -85,8 +91,19 @@ async function fetchDashboardData() {
                 }
             });
             if (data && data.__deferred) {
+                const deferredMessage = new Error('Данные загружаются, обновите страницу через несколько секунд.');
+                deferredMessage.dashboardStatusCode = 0;
+                renderApi.showDashboardError(deferredMessage);
+                if (deferredRetryAttempts < 3) {
+                    deferredRetryAttempts += 1;
+                    deferredRetryTimer = setTimeout(function () {
+                        deferredRetryTimer = null;
+                        fetchDashboardData();
+                    }, 4000);
+                }
                 return;
             }
+            deferredRetryAttempts = 0;
             renderApi.applyDashboardData(data);
             window.history.replaceState({}, '', renderApi.buildDashboardPageHref(state.collectSelectedFilters()));
         } catch (error) {

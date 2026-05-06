@@ -83,12 +83,12 @@
                 </div>
                 {% else %}
                 <div class="mini-empty">После загрузки данных здесь будут доступны факторы, которые можно включать и исключать из модели ранжирования проблемных точек.</div>
-                {% for selected_feature in filters.feature_columns or [] %}
-                <input type="hidden" name="feature_columns" value="{{ selected_feature }}">
-                {% endfor %}
                 {% endif %}
                 <span class="access-point-feature-help">Выбранные факторы напрямую участвуют в расчете итогового балла риска, объяснении причин и ранжировании верхних позиций.</span>
             </div>
+            {% for selected_feature in filters.feature_columns or [] %}
+            <input type="hidden" name="feature_columns" value="{{ selected_feature }}">
+            {% endfor %}
         </form>
         <div class="filter-summary" id="accessPointsSummaryLine">{{ summary.filter_description }} | точек в рейтинге: {{ summary.total_points_display }} | критичный приоритет: {{ summary.critical_points_display }}</div>
     </section>
