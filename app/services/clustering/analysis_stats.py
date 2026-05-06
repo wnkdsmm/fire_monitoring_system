@@ -16,6 +16,7 @@ from sklearn.preprocessing import StandardScaler
 from app.labels import CLUSTERING_LOG_SCALE_FEATURES
 from config.constants import GAP_STAT_MAX_WORKERS, GAP_STAT_N_REFERENCES
 from config.constants import (
+    CLUSTER_SHAPE_MICROCLUSTER_MIN_SIZE,
     CLUSTER_RISK_HIGH_THRESHOLD,
     CLUSTER_RISK_MEDIUM_THRESHOLD,
     CLUSTER_QUALITY_BALANCE_WEIGHT,
@@ -31,9 +32,18 @@ from config.constants import (
     CLUSTER_SHAPE_MICROCLUSTER_PENALTY_SCALE,
     CLUSTER_COUNT_OPTIONS,
     MODEL_N_INIT,
+    HOPKINS_MAX_SAMPLE_SIZE,
+    HOPKINS_MIN_ROW_COUNT,
+    HOPKINS_SAMPLE_DIVISOR,
+    LOG_TRANSFORM_SKEW_THRESHOLD,
     RATE_SMOOTHING_PRIOR_STRENGTH,
+    STABILITY_MIN_OVERLAP,
     STABILITY_RANDOM_SEEDS,
+    STABILITY_RESAMPLE_MIN_ROWS,
     STABILITY_RESAMPLE_RATIO,
+    STABILITY_RESAMPLE_SIZE_MULTIPLIER,
+    SUBSET_MIN_NON_NULL_ABSOLUTE,
+    SUBSET_MIN_NON_NULL_RATIO,
     WEIGHTING_STRATEGY_INCIDENT_LOG,
     WEIGHTING_STRATEGY_NOT_APPLICABLE,
     WEIGHTING_STRATEGY_UNIFORM,
@@ -177,7 +187,7 @@ def _cluster_quality_score(
 def _cluster_shape_diagnostics(metrics: dict[str, float | None], row_count: int) -> dict[str, float | bool | int]:
     smallest_cluster_size = int(metrics.get("smallest_cluster_size") or 0)
     balance_ratio = float(metrics.get("cluster_balance_ratio") or 0.0)
-    microcluster_threshold = max(3, int(math.ceil(max(float(row_count), 1.0) * CLUSTER_SHAPE_MICROCLUSTER_DENSITY_THRESHOLD)))
+    microcluster_threshold = max(CLUSTER_SHAPE_MICROCLUSTER_MIN_SIZE, int(math.ceil(max(float(row_count), 1.0) * CLUSTER_SHAPE_MICROCLUSTER_DENSITY_THRESHOLD)))
     has_microclusters = 0 < smallest_cluster_size < microcluster_threshold
     has_balance_warning = balance_ratio < CLUSTER_SHAPE_BALANCE_WARNING_THRESHOLD
 
@@ -208,7 +218,7 @@ def _prepare_subset_frame(
     selected_features: Sequence[str],
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     numeric_frame = feature_frame.loc[:, list(selected_features)].apply(pd.to_numeric, errors="coerce")
-    required_non_null = min(len(selected_features), max(2, math.ceil(len(selected_features) * 0.6)))
+    required_non_null = min(len(selected_features), max(SUBSET_MIN_NON_NULL_ABSOLUTE, math.ceil(len(selected_features) * SUBSET_MIN_NON_NULL_RATIO)))
     row_mask = numeric_frame.notna().sum(axis=1) >= required_non_null
     prepared_numeric = numeric_frame.loc[row_mask].copy()
     prepared_entities = entity_frame.loc[row_mask].copy()
@@ -326,11 +336,11 @@ def _compute_hopkins_statistic(
     if points.ndim != 2:
         return None
     row_count, feature_count = points.shape
-    if row_count < 10 or feature_count <= 0:
+    if row_count < HOPKINS_MIN_ROW_COUNT or feature_count <= 0:
         return None
 
     if sample_size is None:
-        m = min(row_count // 10, 50)
+        m = min(row_count // HOPKINS_SAMPLE_DIVISOR, HOPKINS_MAX_SAMPLE_SIZE)
     else:
         m = min(max(int(sample_size), 1), row_count)
     if m <= 0:
@@ -538,10 +548,10 @@ def _estimate_resampled_stability(
     algorithm_key: str = "kmeans",
 ) -> float | None:
     row_count = len(scaled_points)
-    if row_count <= max(cluster_count + 1, 8):
+    if row_count <= max(cluster_count + 1, STABILITY_RESAMPLE_MIN_ROWS):
         return None
 
-    subset_size = min(row_count, max(cluster_count * 2, int(round(row_count * STABILITY_RESAMPLE_RATIO))))
+    subset_size = min(row_count, max(cluster_count * STABILITY_RESAMPLE_SIZE_MULTIPLIER, int(round(row_count * STABILITY_RESAMPLE_RATIO))))
     resampled_models: list[dict[str, Any]] = []
     for seed in STABILITY_RANDOM_SEEDS:
         rng = np.random.default_rng(seed)
@@ -560,7 +570,7 @@ def _estimate_resampled_stability(
         resampled_models.append({"indexes": sampled_indexes, "labels": labels})
 
     pair_scores: list[float] = []
-    minimum_overlap = max(cluster_count + 2, 4)
+    minimum_overlap = max(cluster_count + 2, STABILITY_MIN_OVERLAP)
     for left_model, right_model in combinations(resampled_models, 2):
         overlap_indexes = np.intersect1d(left_model["indexes"], right_model["indexes"])
         if len(overlap_indexes) < minimum_overlap:
@@ -587,7 +597,7 @@ def _prepare_model_frame(cluster_frame: pd.DataFrame) -> tuple[pd.DataFrame, set
         if column not in LOG_SCALE_FEATURES:
             continue
         series = transformed[column].clip(lower=0.0)
-        if float(series.skew(skipna=True) or 0.0) < 1.0:
+        if float(series.skew(skipna=True) or 0.0) < LOG_TRANSFORM_SKEW_THRESHOLD:
             continue
         transformed[column] = np.log1p(series)
         transformed_columns.add(column)

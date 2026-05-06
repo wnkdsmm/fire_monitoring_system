@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Any, Sequence
 
+from app.domain.access_points_metadata import WATCH_RISK_THRESHOLD
+from config.constants import TOP_POINT_CARD_COUNT
 from app.services.shared.data_utils import _clean_text, _unique_non_empty
 from app.services.shared.formatting import _format_integer
 from app.services.shared.summary_cards import build_summary_cards
@@ -146,7 +148,7 @@ def _build_notes(
             notes.append(
                 f"Для {_format_integer(broad_points)} точек рейтинг построен на fallback-сущности уровня населённого пункта, территории или района, потому что более точный адрес/объект не найден."
             )
-        if len(rows) < 5:
+        if len(rows) < TOP_POINT_CARD_COUNT:
             notes.append(
                 "После выбранных фильтров осталось мало уникальных точек, поэтому ranking стоит трактовать как ориентир для просмотра, а не как устойчивую типологию."
             )
@@ -155,7 +157,7 @@ def _build_notes(
                 "Блок «Данные неполные» показывает точки, где нужны уточнения по воде, времени прибытия или дистанции до ПЧ, прежде чем принимать жёсткие управленческие меры."
             )
         max_score = max(float(row.get("total_score") or row.get("score") or 0.0) for row in rows)
-        if max_score < 40.0:
+        if max_score < WATCH_RISK_THRESHOLD:
             notes.append(
                 "Даже верхняя часть рейтинга сейчас скорее про наблюдение, чем про критическое перераспределение сил: явных выбросов по score не видно."
             )

@@ -4,6 +4,12 @@ import math
 from datetime import date, datetime
 from typing import Any, Sequence
 
+from config.constants import (
+    FORMAT_SIGNED_PERCENT_ZERO_THRESHOLD,
+    PROBABILITY_MAX_DOUBLE_PERCENT,
+    PROBABILITY_SCALE_THRESHOLD,
+)
+
 MISSING_VALUE = "—"
 
 
@@ -74,8 +80,8 @@ def normalize_probability(value: Any) -> float:
     # - 0..1 (ratio)
     # - 0..100 (already percent)
     # - 0..10000 (double-converted percent, e.g. 9049.6)
-    if numeric > 1.5:
-        while numeric > 1.0 and numeric <= 10000.0:
+    if numeric > PROBABILITY_SCALE_THRESHOLD:
+        while numeric > 1.0 and numeric <= PROBABILITY_MAX_DOUBLE_PERCENT:
             numeric = numeric / 100.0
     return _clamp(numeric, 0.0, 1.0)
 
@@ -120,7 +126,7 @@ def _format_percent(value: float) -> str:
 
 def _format_signed_percent(value: float) -> str:
     percent_value = value * 100.0
-    if abs(percent_value) < 0.05:
+    if abs(percent_value) < FORMAT_SIGNED_PERCENT_ZERO_THRESHOLD:
         return "0%"
     rounded = round(percent_value, 1)
     if abs(rounded - round(rounded)) < 1e-9:
