@@ -413,7 +413,7 @@
         renderOptionalMetricCards('mlQualityEventMetricsSection', 'mlQualityEventMetricCards', quality.event_metric_cards || [], '');
         renderClassBalanceWarning(
             'mlQualityEventMetricCards',
-            Boolean(quality.class_balance_warning || data.class_balance_warning)
+            Boolean(quality.class_balance_warning)
         );
         setText('mlCountTableTitle', 'Сравнение моделей по числу пожаров');
         renderCountTable(quality.count_table || {});

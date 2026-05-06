@@ -485,8 +485,10 @@ def _build_quality_assessment(ml_result: MlBacktestPresentationResult) -> Backte
     ]
     event_metric_cards: list[dict[str, str]] = []
     event_rate = ml_result.get('event_backtest_event_rate')
+    event_backtest_available = ml_result.get('event_backtest_available')
     class_balance_warning = (
-        event_rate is not None
+        event_backtest_available
+        and event_rate is not None
         and (float(event_rate) < 0.1 or float(event_rate) > 0.9)
     )
     if ml_result.get('event_backtest_available'):

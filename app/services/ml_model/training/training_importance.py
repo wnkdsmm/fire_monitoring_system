@@ -94,7 +94,6 @@ def _build_feature_importance(model_bundle: dict[str, Any], dataset: pd.DataFram
                 'label': FEATURE_LABELS.get(feature_name, feature_name),
                 'importance': round(float(share), 4),
                 'importance_display': _format_number(float(share) * 100.0),
-                'insufficient_data': False,
             }
         )
     return items
