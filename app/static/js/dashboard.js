@@ -70,6 +70,7 @@ async function fetchDashboardData() {
             clearTimeout(deferredRetryTimer);
             deferredRetryTimer = null;
         }
+        deferredRetryAttempts = 0;
         const form = byId('filtersForm');
         const button = byId('refreshDashboardButton');
         if (!form) {
