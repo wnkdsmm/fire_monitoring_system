@@ -470,28 +470,28 @@ def _build_notes(
     feature_selection_report: FeatureSelectionReport | None = None,
 ) -> list[str]:
     notes = [
-        f"Кластеризация построена по { _format_integer(sampled_entities) } территориям/населённым пунктам, агрегированным из { _format_integer(total_incidents) } пожаров.",
+        f"Кластеризация построена по {_format_integer(sampled_entities)} территориям/населённым пунктам, агрегированным из {_format_integer(total_incidents)} пожаров.",
     ]
     if total_entities > sampled_entities:
         sampling_strategy = str((feature_selection_report or {}).get("sampling_strategy") or "").strip().lower()
         if sampling_strategy == "stratified":
             sampling_note = (
-                f"До кластеризации были собраны агрегаты по { _format_integer(total_entities) } территориям, "
+                f"До кластеризации были собраны агрегаты по {_format_integer(total_entities)} территориям, "
                 "а затем отобрана подвыборка с пропорциональной стратификацией."
             )
         elif sampling_strategy == "random":
             sampling_note = (
-                f"До кластеризации были собраны агрегаты по { _format_integer(total_entities) } территориям, "
+                f"До кластеризации были собраны агрегаты по {_format_integer(total_entities)} территориям, "
                 "а затем отобрана равномерная случайная подвыборка."
             )
         elif sampling_strategy == "systematic":
             sampling_note = (
-                f"До кластеризации были собраны агрегаты по { _format_integer(total_entities) } территориям, "
+                f"До кластеризации были собраны агрегаты по {_format_integer(total_entities)} территориям, "
                 "а затем выполнен систематический отбор подвыборки."
             )
         else:
             sampling_note = (
-                f"До кластеризации были собраны агрегаты по { _format_integer(total_entities) } территориям, "
+                f"До кластеризации были собраны агрегаты по {_format_integer(total_entities)} территориям, "
                 "а затем отобрана подвыборка."
             )
         notes.append(sampling_note)
