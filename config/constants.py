@@ -206,8 +206,6 @@ FIRE_PROBABILITY_CLAMP_MAX = 0.995
 # Distance score normalization (km)
 DISTANCE_SCORE_MIN_KM = 6.0
 DISTANCE_SCORE_RANGE_KM = 24.0
-# Empirical fallback when distance is missing in source records.
-DISTANCE_FALLBACK_KM = 14.0
 
 # Response pressure normalization (minutes)
 RESPONSE_PRESSURE_TARGET_MIN = 12.0
@@ -216,10 +214,6 @@ RESPONSE_PRESSURE_NORMALIZATION_RANGE_MIN = 18.0
 # Fallback response pressure when avg_response is unknown
 RESPONSE_PRESSURE_UNKNOWN_FALLBACK = 0.42
 RESPONSE_PRESSURE_DISTANCE_SCALE = 0.72
-# Empirical fallback, no direct response-time observations.
-RESPONSE_PRESSURE_FALLBACK_BASE = 0.32
-# Empirical distance contribution for response-pressure fallback.
-RESPONSE_PRESSURE_FALLBACK_DISTANCE_WEIGHT = 0.55
 
 # Arrival probability component weights (must sum to 1.0)
 ARRIVAL_PROB_LONG_ARRIVAL_WEIGHT = 0.26
