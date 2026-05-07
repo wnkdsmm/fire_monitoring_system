@@ -3,7 +3,7 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Any
 
-from config.constants import DEFAULT_DISTANCE_KM_BASELINE
+from config.constants import DEFAULT_DISTANCE_KM_BASELINE, RESPONSE_PRESSURE_UNKNOWN_FALLBACK
 
 from .types import ComponentWeightRow, RiskProfile
 from .utils import _format_decimal, _format_integer
@@ -92,7 +92,7 @@ EXPERT_RISK_WEIGHT_PROFILE: RiskProfile = {
         "water_gap_unknown": 0.38,
         "distance_km_baseline": DEFAULT_DISTANCE_KM_BASELINE,
         "distance_pressure_unknown": 0.30,
-        "response_pressure_unknown": 0.42,
+        "response_pressure_unknown": RESPONSE_PRESSURE_UNKNOWN_FALLBACK,
     },
     "notes": [
         "Для сельских территорий вес логистики и водоснабжения автоматически повышается.",
@@ -103,9 +103,9 @@ EXPERT_RISK_WEIGHT_PROFILE: RiskProfile = {
         "ready": False,
         "targets": [
             "top1_hit_rate",
-            "top3_capture_rate",
-            "precision_at_3",
-            "ndcg_at_3",
+            "topk_capture_rate",
+            "precision_at_k",
+            "ndcg_at_k",
         ],
         "notes": [
             "Экспертный профиль остается резервным режимом, если истории недостаточно для устойчивой калибровки.",
@@ -133,9 +133,9 @@ ADAPTIVE_RISK_WEIGHT_PROFILE.update(
             "used_fallback": True,
             "targets": [
                 "top1_hit_rate",
-                "top3_capture_rate",
-                "precision_at_3",
-                "ndcg_at_3",
+                "topk_capture_rate",
+                "precision_at_k",
+                "ndcg_at_k",
             ],
             "notes": [
                 "Калибровка идет по историческим окнам без использования будущих наблюдений внутри каждого окна.",
@@ -162,6 +162,12 @@ CALIBRATABLE_RISK_WEIGHT_PROFILE.update(
         ],
         "calibration": {
             "ready": False,
+            "targets": [
+                "top1_hit_rate",
+                "topk_capture_rate",
+                "precision_at_k",
+                "ndcg_at_k",
+            ],
             "notes": [
                 "Calibratable-профиль предназначен для ручного подбора весов, "
                 "историческая калибровка не запускалась.",

@@ -13,6 +13,11 @@ from core.processing.pipeline import PipelineStep
 logger = logging.getLogger(__name__)
 
 
+def _quote_pg_identifier(name: str) -> str:
+    """Safely quote a PostgreSQL identifier by escaping embedded double quotes."""
+    return '"' + name.replace('"', '""') + '"'
+
+
 class CreateCleanTableStep(PipelineStep):
     def __init__(self):
         super().__init__("Создание очищенной таблицы")
@@ -78,11 +83,13 @@ class CreateCleanTableStep(PipelineStep):
         logger.info("Колонок останется: %s", len(keep_columns))
         logger.info("Колонок будет исключено: %s", len(removed_columns))
 
-        columns_sql = ", ".join(f'"{col}"' for col in keep_columns)
-        create_table_query = f'CREATE TABLE "{new_table}" AS SELECT {columns_sql} FROM "{source_table}"'
+        columns_sql = ", ".join(_quote_pg_identifier(col) for col in keep_columns)
+        quoted_new_table = _quote_pg_identifier(new_table)
+        quoted_source_table = _quote_pg_identifier(source_table)
+        create_table_query = f"CREATE TABLE {quoted_new_table} AS SELECT {columns_sql} FROM {quoted_source_table}"
 
         with engine.begin() as conn:
-            conn.execute(text(f'DROP TABLE IF EXISTS "{new_table}"'))
+            conn.execute(text(f"DROP TABLE IF EXISTS {quoted_new_table}"))
             conn.execute(text(create_table_query))
 
         logger.info("Таблица создана: %s", new_table)
@@ -96,7 +103,7 @@ class CreateCleanTableStep(PipelineStep):
                 clean_df = resolved_source_df.loc[:, keep_columns].copy()
 
         if clean_df is None:
-            clean_df = pd.read_sql(f'SELECT {columns_sql} FROM "{new_table}"', engine)
+            clean_df = pd.read_sql(f"SELECT {columns_sql} FROM {quoted_new_table}", engine)
 
         clean_df.to_excel(export_file, index=False, engine="openpyxl")
 

@@ -41,7 +41,7 @@ from config.constants import (
     LOGISTICS_RESPONSE_OBSERVATIONS_THRESHOLD,
     LOGISTICS_RURAL_SPEED_KMH,
     LOGISTICS_URBAN_SPEED_KMH,
-    RESPONSE_PRESSURE_RANGE_MIN,
+    RESPONSE_PRESSURE_NORMALIZATION_RANGE_MIN,
     RESPONSE_PRESSURE_FALLBACK_BASE,
     RESPONSE_PRESSURE_FALLBACK_DISTANCE_WEIGHT,
     RESPONSE_PRESSURE_TARGET_MIN,
@@ -107,11 +107,11 @@ def build_explainable_logistics_profile(
 
     distance_pressure = _clamp(((safe_distance or DISTANCE_FALLBACK_KM) - DISTANCE_SCORE_MIN_KM) / DISTANCE_SCORE_RANGE_KM, 0.0, 1.0)
     response_pressure = (
-        _clamp((safe_response - RESPONSE_PRESSURE_TARGET_MIN) / RESPONSE_PRESSURE_RANGE_MIN, 0.0, 1.0)
+        _clamp((safe_response - RESPONSE_PRESSURE_TARGET_MIN) / RESPONSE_PRESSURE_NORMALIZATION_RANGE_MIN, 0.0, 1.0)
         if safe_response is not None
         else _clamp(RESPONSE_PRESSURE_FALLBACK_BASE + distance_pressure * RESPONSE_PRESSURE_FALLBACK_DISTANCE_WEIGHT, 0.0, 1.0)
     )
-    travel_time_pressure = _clamp((travel_time_minutes - RESPONSE_PRESSURE_TARGET_MIN) / RESPONSE_PRESSURE_RANGE_MIN, 0.0, 1.0)
+    travel_time_pressure = _clamp((travel_time_minutes - RESPONSE_PRESSURE_TARGET_MIN) / RESPONSE_PRESSURE_NORMALIZATION_RANGE_MIN, 0.0, 1.0)
 
     response_coverage = None
     if response_observations > 0:

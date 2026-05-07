@@ -33,6 +33,8 @@ def _component_weights_for_rural(
 
 
 def _history_date_bounds(records: Sequence[RiskEventRecord]) -> tuple[Any, Any]:
+    if not records:
+        raise ValueError("_history_date_bounds: records must not be empty")
     record_iterator = iter(records)
     first_record = next(record_iterator)
     history_start = first_record["date"]
@@ -148,8 +150,9 @@ def _update_territory_bucket(
         bucket["night_incidents"] += 1
     if record["heating_season"]:
         bucket["heating_incidents"] += 1
-    bucket["risk_score_sum"] += float(record["risk_category_score"])
-    bucket["risk_score_count"] += 1
+    if record["risk_category_score"] is not None:
+        bucket["risk_score_sum"] += float(record["risk_category_score"])
+        bucket["risk_score_count"] += 1
     if record["cause"]:
         bucket["causes"][record["cause"]] += 1
     if record["object_category"]:

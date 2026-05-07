@@ -57,7 +57,7 @@ from config.constants import (
     LONG_ARRIVAL_FALLBACK_MAX,
     LONG_ARRIVAL_FALLBACK_MIN,
     RESPONSE_PRESSURE_DISTANCE_SCALE,
-    RESPONSE_PRESSURE_RANGE_MIN,
+    RESPONSE_PRESSURE_NORMALIZATION_RANGE_MIN,
     RESPONSE_PRESSURE_TARGET_MIN,
     RESPONSE_PRESSURE_UNKNOWN_FALLBACK,
     RISK_SCORE_CLAMP_MAX,
@@ -255,7 +255,7 @@ def _logistics_fields(
         )
     )
     response_pressure = (
-        _clamp((avg_response - RESPONSE_PRESSURE_TARGET_MIN) / RESPONSE_PRESSURE_RANGE_MIN, 0.0, 1.0)
+        _clamp((avg_response - RESPONSE_PRESSURE_TARGET_MIN) / RESPONSE_PRESSURE_NORMALIZATION_RANGE_MIN, 0.0, 1.0)
         if avg_response is not None
         else _clamp(
             max(

@@ -8,6 +8,8 @@ from statistics import mean
 from typing import Any, Sequence
 
 from config.constants import (
+    FORECAST_RISK_RANKING_K as DEFAULT_RANKING_K,
+    NDCG_RELEVANCE_CAP,
     VALIDATION_MAX_CUTOFFS,
     VALIDATION_MIN_TRAINING_DAYS,
     VALIDATION_OBJECTIVE_CAPTURE_WEIGHT,
@@ -41,7 +43,6 @@ from .types import (
 )
 from .utils import _clamp, _format_decimal, _format_integer, _format_probability, _unique_non_empty
 
-DEFAULT_RANKING_K = 3
 MIN_VALIDATION_WINDOWS = 3
 
 
@@ -448,8 +449,13 @@ def _compute_ndcg_at_k(actual_counts: Counter, ranked_labels: Sequence[str], k_v
     if not ranked_labels or k_value <= 0:
         return 0.0
     effective_k = max(1, min(k_value, len(ranked_labels)))
-    predicted_relevance = [min(float(actual_counts.get(label, 0)), 5.0) for label in ranked_labels[:effective_k]]
-    ideal_relevance = sorted((min(float(v), 5.0) for v in actual_counts.values()), reverse=True)[:effective_k]
+    predicted_relevance = [
+        min(float(actual_counts.get(label, 0)), NDCG_RELEVANCE_CAP) for label in ranked_labels[:effective_k]
+    ]
+    ideal_relevance = sorted(
+        (min(float(v), NDCG_RELEVANCE_CAP) for v in actual_counts.values()),
+        reverse=True,
+    )[:effective_k]
     dcg = _discounted_gain(predicted_relevance)
     idcg = _discounted_gain(ideal_relevance)
     if idcg <= 0:

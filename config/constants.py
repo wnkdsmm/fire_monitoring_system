@@ -131,6 +131,8 @@ VALIDATION_STATUS_STABLE_NDCG = 0.62
 VALIDATION_STATUS_WORKING_WINDOWS = 3
 VALIDATION_STATUS_WORKING_CAPTURE = 0.45
 VALIDATION_STATUS_WORKING_NDCG = 0.48
+FORECAST_RISK_RANKING_K = 3  # k used for top-k ranking evaluation metrics
+NDCG_RELEVANCE_CAP = 5.0  # maximum relevance grade per territory in NDCG computation
 CALIBRATION_FOCUS_DEFAULT_WEIGHT = 0.18
 CALIBRATION_FOCUS_TARGET_WEIGHT = 0.46
 CALIBRATION_SHIFT_SMALL = 0.04
@@ -209,7 +211,7 @@ DISTANCE_FALLBACK_KM = 14.0
 
 # Response pressure normalization (minutes)
 RESPONSE_PRESSURE_TARGET_MIN = 12.0
-RESPONSE_PRESSURE_RANGE_MIN = 18.0
+RESPONSE_PRESSURE_NORMALIZATION_RANGE_MIN = 18.0
 
 # Fallback response pressure when avg_response is unknown
 RESPONSE_PRESSURE_UNKNOWN_FALLBACK = 0.42
@@ -443,14 +445,14 @@ LOGISTIC_PARAMS = {
     "solver": "liblinear",
     "max_iter": 500,
     "class_weight": "balanced",
-    "random_state": 42,
+    "random_state": CLUSTERING_RANDOM_STATE,
 }
 
 
 def _validate_weight_group(name: str, *values: float) -> None:
     total = sum(values)
     if abs(total - 1.0) > 1e-9:
-        raise ValueError(f"Константы {name} должны суммироваться в 1.0, получено {total:.6f}")
+        raise ValueError(f"Weight group '{name}' must sum to 1.0, got {total:.6f}")
 
 
 _validate_weight_group(
