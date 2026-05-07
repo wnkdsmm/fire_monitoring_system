@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import math
 from typing import Any, Sequence
@@ -111,6 +111,17 @@ from .types import (
     TerritoryIdentity,
     WaterFactors,
 )
+
+def _pluralize_ball(value: float) -> str:
+    n = abs(int(round(value)))
+    if 11 <= n % 100 <= 19:
+        return "баллов"
+    rem = n % 10
+    if rem == 1:
+        return "балл"
+    if 2 <= rem <= 4:
+        return "балла"
+    return "баллов"
 
 
 def _normalization_fields(
@@ -229,7 +240,8 @@ def _logistics_fields(
     avg_response = bucket["response_sum"] / bucket["response_count"] if bucket["response_count"] else None
     avg_distance = bucket["distance_sum"] / bucket["distance_count"] if bucket["distance_count"] else None
     distance_score = _clamp(
-                ((avg_distance or float(defaults.get("distance_km_baseline") or DEFAULT_DISTANCE_KM_BASELINE)) - DISTANCE_SCORE_MIN_KM) / DISTANCE_SCORE_RANGE_KM,
+        ((avg_distance or float(defaults.get("distance_km_baseline") or DEFAULT_DISTANCE_KM_BASELINE)) - DISTANCE_SCORE_MIN_KM)
+        / DISTANCE_SCORE_RANGE_KM,
         0.0,
         1.0,
     )
@@ -602,7 +614,7 @@ def _score_component(
         "weight": round(float(component_weight.get("weight", 0.0)), 4),
         "weight_display": component_weight.get("weight_display") or "0%",
         "contribution": round(contribution, 1),
-        "contribution_display": f"{_format_number(contribution)} балла",
+        "contribution_display": f"{_format_number(contribution)} {_pluralize_ball(contribution)}",
         "tone": tone,
         "signals": signal_rows,
         "bar_width": f"{max(BAR_WIDTH_MIN_COMPONENT, min(BAR_WIDTH_MAX, round(score)))}%",

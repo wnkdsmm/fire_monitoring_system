@@ -165,7 +165,7 @@ def get_ml_model_data(
     forecast_days: str = '14',
     history_window: str = 'all',
     current_user_date: str = '',
-    progress_callback: MlProgressCallback = None,
+    progress_callback: MlProgressCallback | None = None,
     caches: MLModelCaches | None = None,
 ) -> MlPayload:
     cache_set = caches or _DEFAULT_CACHES

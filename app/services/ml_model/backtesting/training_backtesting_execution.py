@@ -330,8 +330,8 @@ def _validate_backtest_run_context(context: _BacktestRunContext) -> BacktestRunR
     if len(context.history_frame) > context.max_horizon_days and context.min_train_rows > 0:
         return None
     return _not_ready_backtest(
-        f'Lead-time-aware rolling-origin backtesting is unavailable for the {_lead_time_label(context.validation_horizon_days)} '
-        'lead because the history is too short after lagged features are built.'
+        f'Rolling-origin backtesting недоступен для горизонта {_lead_time_label(context.validation_horizon_days)}: '
+        'история слишком короткая после формирования лаговых признаков.'
     )
 
 
@@ -358,8 +358,7 @@ def _emit_backtest_start_progress(
         progress_callback,
         'ml_backtest.running',
         (
-            f'Backtesting started: {total_windows} rolling origins with lead-time-aware evaluation '
-            f'for horizons 1-{max_horizon_days} days.'
+            f'Запускаем backtesting: {total_windows} скользящих окон, горизонты 1–{max_horizon_days} дней.'
         ),
     )
 
@@ -367,7 +366,7 @@ def _emit_backtest_start_progress(
 def _run_backtest(
     history_frame: pd.DataFrame,
     dataset: pd.DataFrame,
-    progress_callback: MlProgressCallback = None,
+    progress_callback: MlProgressCallback | None = None,
     validation_horizon_days: int = 1,
     max_horizon_days: int | None = None,
     history_frame_is_prepared: bool = False,
@@ -394,8 +393,8 @@ def _run_backtest(
 
     if origin_selection.available_backtest_points <= 0:
         return _not_ready_backtest(
-            f'Lead-time-aware rolling-origin backtesting for the {_lead_time_label(context.validation_horizon_days)} lead '
-            'has no comparable origins after lagged features are built.'
+            f'Backtesting для горизонта {_lead_time_label(context.validation_horizon_days)}: '
+            'нет пригодных окон после формирования лаговых признаков.'
         )
 
     selected_origin_dates = origin_selection.selected_origin_dates
@@ -425,8 +424,8 @@ def _run_backtest(
         perf.update(valid_windows=len(valid_rows), comparable_windows=comparable_windows)
     if not valid_rows:
         return _not_ready_backtest(
-            f'Lead-time-aware validation collected no comparable origins for the '
-            f'{_lead_time_label(context.validation_horizon_days)} lead.'
+            f'Валидация на горизонте {_lead_time_label(context.validation_horizon_days)}: '
+            'не найдено ни одного сопоставимого окна.'
         )
 
     artifacts = _build_backtest_evaluation_artifacts(
@@ -440,8 +439,8 @@ def _run_backtest(
         progress_callback,
         'ml_backtest.completed',
         (
-            f'Backtesting completed: {len(artifacts.backtest_rows)} comparable origins, '
-            f'lead-time-aware summary on the {_lead_time_label(context.validation_horizon_days)} lead.'
+            f'Backtesting завершён: {len(artifacts.backtest_rows)} сопоставимых окон, '
+            f'сводка по горизонту {_lead_time_label(context.validation_horizon_days)}.'
         ),
     )
 

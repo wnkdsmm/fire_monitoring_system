@@ -138,11 +138,14 @@ def _run_clustering(
         raw_centers, scaled_centers = _derive_cluster_centers(cluster_frame, scaled_points, labels, cluster_count)
         inertia = _compute_cluster_inertia(scaled_points, labels, scaled_centers=scaled_centers)
         initialization_ari = None
-    pca = PCA(n_components=2)
+    n_pca_components = min(2, scaled_points.shape[1])
+    pca = PCA(n_components=n_pca_components)
     pca_points = pca.fit_transform(scaled_points)
     explained = [float(item) for item in pca.explained_variance_ratio_[:2]]
     while len(explained) < 2:
         explained.append(0.0)
+    if pca_points.shape[1] < 2:
+        pca_points = np.hstack([pca_points, np.zeros((pca_points.shape[0], 2 - pca_points.shape[1]))])
     cluster_labels = _cluster_labels(cluster_count)
     pca_projection_result = _compute_pca_projection(
         scaled_points=scaled_points,
@@ -194,7 +197,15 @@ def _evaluate_cluster_counts(
     weighting_strategy: str = WEIGHTING_STRATEGY_INCIDENT_LOG,
 ) -> ClusteringDiagnosticsResult:
     if len(cluster_frame) < 3:
-        return {"rows": [], "best_silhouette_k": None, "best_quality_k": None, "elbow_k": None}
+        return {
+            "rows": [],
+            "method_rows_by_cluster_count": {},
+            "best_silhouette_k": None,
+            "best_quality_k": None,
+            "best_gap_k": None,
+            "best_configuration": None,
+            "elbow_k": None,
+        }
     available_ks = [
         cluster_count
         for cluster_count in CLUSTER_COUNT_OPTIONS
@@ -502,8 +513,10 @@ def _build_notes(
                 )
 
     if feature_selection_report:
-        notes.append(str(feature_selection_report.get("volume_note") or ""))
-        weighting_note = str(feature_selection_report.get("weighting_note") or "")
+        volume_note = str(feature_selection_report.get("volume_note") or "").strip()
+        if volume_note:
+            notes.append(volume_note)
+        weighting_note = str(feature_selection_report.get("weighting_note") or "").strip()
         if weighting_note:
             notes.append(weighting_note)
         negative_adds = [
