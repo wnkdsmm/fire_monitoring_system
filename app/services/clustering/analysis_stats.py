@@ -146,16 +146,16 @@ def compute_cluster_risk_scores(
 
         risk_score = float(np.clip(weighted_score / effective_weight_sum, 0.0, 1.0))
         if risk_score > CLUSTER_RISK_HIGH_THRESHOLD:
-            risk_level = "Высокий"
+            risk_level = "Выше среднего"
         elif risk_score > CLUSTER_RISK_MEDIUM_THRESHOLD:
-            risk_level = "Средний"
+            risk_level = "Средний по группе"
         else:
-            risk_level = "Низкий"
+            risk_level = "Ниже среднего"
         risk_rows.append(
             {
                 "cluster_id": int(cluster_id),
                 "cluster_label": f"Тип {int(cluster_id) + 1}",
-                "risk_score": round(risk_score, 4),
+                "relative_risk_score": round(risk_score, 4),
                 "risk_level": risk_level,
             }
         )

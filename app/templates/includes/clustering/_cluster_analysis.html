@@ -95,7 +95,7 @@
                         </thead>
                         <tbody>
                             {% for row in data.cluster_risk %}
-                            {% set risk_class = 'risk-high' if row.risk_level == 'Высокий' else ('risk-medium' if row.risk_level == 'Средний' else ('risk-low' if row.risk_level == 'Низкий' else '')) %}
+                            {% set risk_class = 'risk-high' if row.risk_level == 'Выше среднего' else ('risk-medium' if row.risk_level == 'Средний по группе' else ('risk-low' if row.risk_level == 'Ниже среднего' else '')) %}
                             <tr>
                                 <td>{{ row.cluster_label }}</td>
                                 <td class="{{ risk_class }}">{{ row.risk_level }}</td>

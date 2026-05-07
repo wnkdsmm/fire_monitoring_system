@@ -95,7 +95,7 @@ def _make_decomposition_item(
         ),
         "value_display": value_display,
         "is_penalty": is_penalty,
-        "tone": _component_tone(contribution_points * 5.0),
+        "tone": _component_tone(contribution_points),
     }
 
 

@@ -93,15 +93,15 @@ def _build_incomplete_note(
     uncertainty_flag: bool,
     uncertainty_penalty_display: str,
 ) -> str:
-    if uncertainty_flag:
-        return (
-            f"Неопределённость добавляет {uncertainty_penalty_display} п. "
-            "и требует верификации воды, времени прибытия и дистанции."
-        )
     if missing_data_priority:
         return (
             "Высокий приоритет проверки связан прежде всего с "
             "пропусками по доступности, воде или времени прибытия."
+        )
+    if uncertainty_flag:
+        return (
+            f"Неопределённость добавляет {uncertainty_penalty_display} п. "
+            "и требует верификации воды, времени прибытия и дистанции."
         )
     return low_support_note
 
@@ -208,7 +208,7 @@ def _build_access_point_score_decomposition(
                 code=code,
                 factor_score=factor_score,
                 weight_points=normalized_factor_weights[code],
-                contribution_points=normalized_factor_weights[code] * factor_value * metrics.support_weight,
+                contribution_points=normalized_factor_weights[code] * factor_score * metrics.support_weight,
                 value_display=value_display,
             )
         )

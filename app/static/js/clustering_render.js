@@ -188,11 +188,11 @@ function syncClusteringAsyncContainer() {
                 var riskLevel = String(row.risk_level || '-');
                 var clusterDisplay = Number.isFinite(clusterId) ? String(clusterId + 1) : String(row.cluster_id != null ? row.cluster_id : '-');
                 var riskClass = '';
-                if (riskLevel === 'Высокий') {
+                if (riskLevel === 'Выше среднего') {
                     riskClass = 'risk-high';
-                } else if (riskLevel === 'Средний') {
+                } else if (riskLevel === 'Средний по группе') {
                     riskClass = 'risk-medium';
-                } else if (riskLevel === 'Низкий') {
+                } else if (riskLevel === 'Ниже среднего') {
                     riskClass = 'risk-low';
                 }
                 return ''

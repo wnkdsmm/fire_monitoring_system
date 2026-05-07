@@ -109,7 +109,7 @@ def _resolve_point_identity(record: PointRecord) -> PointIdentity:
         return {
             "point_id": f"territory:{normalized_territory}",
             "label": territory_label,
-            "entity_type": "Territory label",
+            "entity_type": "Территория",
             "entity_code": "territory",
             "granularity_rank": 2,
         }

@@ -84,8 +84,9 @@ class FiresFeatureProfilingStep(PipelineStep):
         reason_definitions = self._build_reason_definitions(thresholds)
 
         os.makedirs(output_folder, exist_ok=True)
-        output_csv = os.path.join(output_folder, f"{table_name}{PROFILING_CSV_SUFFIX}")
-        output_xlsx = os.path.join(output_folder, f"{table_name}{PROFILING_XLSX_SUFFIX}")
+        safe_name = os.path.basename(table_name)
+        output_csv = os.path.join(output_folder, f"{safe_name}{PROFILING_CSV_SUFFIX}")
+        output_xlsx = os.path.join(output_folder, f"{safe_name}{PROFILING_XLSX_SUFFIX}")
 
         logger.info("Таблица для профилирования: %s", table_name)
         logger.info("Папка результатов: %s", output_folder)
