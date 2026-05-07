@@ -259,7 +259,7 @@ def _logistics_fields(
         if avg_response is not None
         else _clamp(
             max(
-            float(defaults.get("response_pressure_unknown") or RESPONSE_PRESSURE_UNKNOWN_FALLBACK),
+                float(defaults.get("response_pressure_unknown") or RESPONSE_PRESSURE_UNKNOWN_FALLBACK),
                 distance_score * RESPONSE_PRESSURE_DISTANCE_SCALE,
             ),
             0.0,
@@ -413,7 +413,11 @@ def _component_score_bundle(
         }
         for item in component_scores
     }
-    risk_score = _clamp(sum(item["contribution"] for item in component_scores), RISK_SCORE_CLAMP_MIN, RISK_SCORE_CLAMP_MAX)
+    risk_score = _clamp(
+        sum(float(item.get("contribution_raw", item["contribution"])) for item in component_scores),
+        RISK_SCORE_CLAMP_MIN,
+        RISK_SCORE_CLAMP_MAX,
+    )
     return component_scores, component_score_map, risk_score
 
 
@@ -493,7 +497,7 @@ def _territory_row_payload(
         "action_hint": action_hint,
         "recommendations": recommendations,
         "explanation": (
-            f"Итоговый риск { _format_number(risk_score) } / 100. "
+            f"Итоговый риск {_format_number(risk_score)} / 100. "
             f"Формула: {formula_display}. "
             f"Ключевые причины: {drivers_display}."
         ),
@@ -613,6 +617,7 @@ def _score_component(
         "score_display": f"{_format_number(score)} / 100",
         "weight": round(float(component_weight.get("weight", 0.0)), 4),
         "weight_display": component_weight.get("weight_display") or "0%",
+        "contribution_raw": contribution,
         "contribution": round(contribution, 1),
         "contribution_display": f"{_format_number(contribution)} {_pluralize_ball(contribution)}",
         "tone": tone,

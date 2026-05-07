@@ -277,8 +277,10 @@ def _fit_clustering_labels(
         )
         labels = model.labels_
     elif algorithm_key == "agglomerative":
+        _ = sample_weights, n_init
         labels = AgglomerativeClustering(n_clusters=cluster_count, linkage="ward").fit_predict(scaled_points)
     elif algorithm_key == "birch":
+        _ = sample_weights, n_init
         labels = Birch(n_clusters=cluster_count).fit_predict(scaled_points)
     else:
         raise ValueError(f"Unsupported clustering algorithm: {algorithm_key}")

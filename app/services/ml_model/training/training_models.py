@@ -134,8 +134,6 @@ def _has_warning_instability(caught_warnings: list[warnings.WarningMessage]) -> 
 def _fit_with_convergence_guard(model: Any, X_train: pd.DataFrame, y_train: np.ndarray) -> bool:
     with warnings.catch_warnings(record=True) as caught_warnings:
         warnings.simplefilter('always')
-        if ConvergenceWarning is not None:
-            warnings.simplefilter('always', ConvergenceWarning)
         model.fit(X_train, y_train)
     return not _has_warning_instability(caught_warnings)
 
@@ -180,8 +178,6 @@ def _fit_negative_binomial_model_from_design(X_train: pd.DataFrame, y_train: np.
         prepared_X, scaled_columns, scaler = _prepare_statsmodels_count_design(X_train)
         with warnings.catch_warnings(record=True) as caught_warnings:
             warnings.simplefilter('always')
-            if ConvergenceWarning is not None:
-                warnings.simplefilter('always', ConvergenceWarning)
             if StatsmodelsConvergenceWarning is not None:
                 warnings.simplefilter('always', StatsmodelsConvergenceWarning)
             if PerfectSeparationWarning is not None:

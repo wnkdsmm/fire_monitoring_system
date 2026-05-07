@@ -1,10 +1,13 @@
 import os
 from pathlib import Path
+from typing import Any
 
 from config.paths import get_result_folder
 
 
 class Settings:
+    _pipeline_source_df: Any | None
+    _pipeline_import_csv: str | None
 
     def __init__(self, input_file=None, selected_table=None, output_folder=None):
         """
@@ -34,6 +37,8 @@ class Settings:
 
         self.app_host = os.getenv("APP_HOST", "127.0.0.1")
         self.app_port = int(os.getenv("APP_PORT", "8000"))
+        self._pipeline_source_df = None
+        self._pipeline_import_csv = None
     
     def __repr__(self):
         return (
