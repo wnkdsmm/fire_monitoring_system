@@ -13,6 +13,7 @@ from sklearn.decomposition import PCA
 from sklearn.metrics import adjusted_rand_score
 from sklearn.preprocessing import StandardScaler
 
+from app.domain.fire_columns import ENTITY_INCIDENT_COUNT_COLUMN
 from app.labels import CLUSTERING_LOG_SCALE_FEATURES
 from config.constants import GAP_STAT_MAX_WORKERS, GAP_STAT_N_REFERENCES
 from config.constants import (
@@ -246,10 +247,10 @@ def _build_sample_weights(
 ) -> np.ndarray:
     if (
         weighting_strategy in {WEIGHTING_STRATEGY_UNIFORM, WEIGHTING_STRATEGY_NOT_APPLICABLE}
-        or "Число пожаров" not in entity_frame.columns
+        or ENTITY_INCIDENT_COUNT_COLUMN not in entity_frame.columns
     ):
         return np.ones(len(entity_frame), dtype=float)
-    counts = pd.to_numeric(entity_frame["Число пожаров"], errors="coerce").fillna(1.0).clip(lower=1.0).to_numpy(dtype=float)
+    counts = pd.to_numeric(entity_frame[ENTITY_INCIDENT_COUNT_COLUMN], errors="coerce").fillna(1.0).clip(lower=1.0).to_numpy(dtype=float)
     weights = np.log1p(counts)
     mean_weight = float(np.mean(weights))
     if mean_weight <= 0:
@@ -316,13 +317,7 @@ def _compute_cluster_inertia(
     scaled_centers: np.ndarray | None = None,
 ) -> float:
     if scaled_centers is None:
-        cluster_count = int(np.max(labels)) + 1
-        _, scaled_centers = _derive_cluster_centers(
-            pd.DataFrame(scaled_points),
-            scaled_points,
-            labels,
-            cluster_count,
-        )
+        raise ValueError("_compute_cluster_inertia requires scaled_centers to be provided")
     distances = scaled_points - scaled_centers[labels]
     return float(np.sum(np.square(distances)))
 
@@ -456,7 +451,7 @@ def _compute_gap_statistic(
     k_range: Sequence[int],
     n_references: int = GAP_STAT_N_REFERENCES,
     random_state: int = 42,
-) -> dict[int, float]:
+) -> dict[int, tuple[float, float]]:
     points = np.asarray(scaled_points, dtype=float)
     weights = np.asarray(sample_weights, dtype=float)
     if points.ndim != 2 or len(points) == 0:
@@ -474,7 +469,7 @@ def _compute_gap_statistic(
     data_min = np.min(points, axis=0)
     data_max = np.max(points, axis=0)
 
-    gap_scores: dict[int, float] = {}
+    gap_scores: dict[int, tuple[float, float]] = {}
     with ThreadPoolExecutor(max_workers=GAP_STAT_MAX_WORKERS) as executor:
         for cluster_count in valid_ks:
             model = KMeans(n_clusters=cluster_count, random_state=random_state, n_init=MODEL_N_INIT)
@@ -494,26 +489,29 @@ def _compute_gap_statistic(
             indices = range(len(reference_points_list))
             ref_logs = list(executor.map(_fit, indices, reference_points_list))
 
-            gap_scores[cluster_count] = float(np.mean(ref_logs) - np.log(observed_inertia))
+            gap_score = float(np.mean(ref_logs) - np.log(observed_inertia))
+            se_k = float(np.std(ref_logs, ddof=1) * math.sqrt(1.0 + 1.0 / len(ref_logs)))
+            if not math.isfinite(se_k):
+                se_k = 0.0
+            gap_scores[cluster_count] = (gap_score, se_k)
     return gap_scores
 
 
-def _estimate_best_k_gap(gap_scores: dict[int, float]) -> int | None:
+def _estimate_best_k_gap(gap_scores: dict[int, tuple[float, float]]) -> int | None:
     if not gap_scores:
         return None
     ordered_ks = sorted(int(k) for k in gap_scores)
     if len(ordered_ks) < 2:
         return None
 
-    gap_values = np.asarray([float(gap_scores[k]) for k in ordered_ks], dtype=float)
+    gap_values = np.asarray([float(gap_scores[k][0]) for k in ordered_ks], dtype=float)
     if gap_values.size < 2:
         return None
-    std_gap = float(np.std(gap_values, ddof=1)) if gap_values.size > 1 else 0.0
 
     for index in range(len(ordered_ks) - 1):
-        current_gap = float(gap_scores[ordered_ks[index]])
-        next_gap = float(gap_scores[ordered_ks[index + 1]])
-        if current_gap >= (next_gap - std_gap):
+        current_gap = float(gap_scores[ordered_ks[index]][0])
+        next_gap, se_of_next_k = gap_scores[ordered_ks[index + 1]]
+        if current_gap >= (float(next_gap) - float(se_of_next_k)):
             return ordered_ks[index]
     return ordered_ks[int(np.argmax(gap_values))]
 
@@ -645,4 +643,3 @@ def _estimate_elbow_k(rows: Sequence[dict[str, Any]]) -> int | None:
     if not interior_distances:
         return None
     return interior_ks[int(np.argmax(interior_distances))]
-

@@ -311,7 +311,11 @@ def _compare_clustering_methods(
             metrics = compute_clustering_metrics(scaled_points, labels)
             shape_diagnostics = _cluster_shape_diagnostics(metrics, row_count)
             quality_score = _cluster_quality_score(metrics, row_count, shape_diagnostics=shape_diagnostics)
-            inertia = _compute_cluster_inertia(scaled_points, labels)
+            cluster_count_local = int(np.max(labels)) + 1
+            scaled_centers_local = np.vstack(
+                [np.mean(scaled_points[labels == cluster_id], axis=0) for cluster_id in range(cluster_count_local)]
+            )
+            inertia = _compute_cluster_inertia(scaled_points, labels, scaled_centers=scaled_centers_local)
             metrics_cache[key] = (metrics, shape_diagnostics, quality_score, inertia)
         else:
             metrics, shape_diagnostics, quality_score, inertia = cached
