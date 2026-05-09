@@ -193,7 +193,6 @@ async function fetchClusteringData() {
                     if (renderApi.setTableChecklistOpen) {
                         renderApi.setTableChecklistOpen(true);
                     }
-                    fetchClusteringData();
                 } else {
                     if (renderApi.setTableChecklistOpen) {
                         renderApi.setTableChecklistOpen(false);

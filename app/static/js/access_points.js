@@ -155,7 +155,6 @@
                     if (renderApi.setTableChecklistOpen) {
                         renderApi.setTableChecklistOpen(true);
                     }
-                    fetchAccessPoints(getFormParams());
                 } else {
                     if (renderApi.setTableChecklistOpen) {
                         renderApi.setTableChecklistOpen(false);

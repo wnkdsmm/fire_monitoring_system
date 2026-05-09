@@ -746,7 +746,6 @@
                         mlTableChecklist.selectAll();
                     }
                     setTableChecklistOpen(true);
-                    startMlModelJob();
                 }
             });
         }
