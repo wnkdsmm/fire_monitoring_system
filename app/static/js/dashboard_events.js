@@ -51,9 +51,6 @@
                     if (options && typeof options.onFilterChange === 'function') {
                         options.onFilterChange();
                     }
-                    if (event && event.target && event.target.name === 'table_names') {
-                        setTableFilterOpen(false);
-                    }
                 });
             }
 

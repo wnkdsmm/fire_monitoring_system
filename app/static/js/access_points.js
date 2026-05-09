@@ -140,9 +140,6 @@
                 if (renderApi.syncTableChecklistSummary) {
                     renderApi.syncTableChecklistSummary();
                 }
-                if (renderApi.setTableChecklistOpen) {
-                    renderApi.setTableChecklistOpen(false);
-                }
             },
             onToggleTableFilter: function () {
                 var root = byId('accessPointsTableFilter');

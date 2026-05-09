@@ -718,9 +718,6 @@
             });
             form.addEventListener('change', function (event) {
                 syncScreenLinks();
-                if (event && event.target && event.target.name === 'table_names') {
-                    setTableChecklistOpen(false);
-                }
             });
             form.addEventListener('input', function (event) {
                 if (event && event.target && event.target.tagName === 'INPUT') {
