@@ -8,7 +8,7 @@ from typing import Any, Sequence
 
 import numpy as np
 import pandas as pd
-from sklearn.cluster import AgglomerativeClustering, Birch, KMeans
+from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 from sklearn.metrics import adjusted_rand_score
 from sklearn.preprocessing import StandardScaler
@@ -262,28 +262,18 @@ def _fit_clustering_labels(
     scaled_points: np.ndarray,
     cluster_count: int,
     *,
-    algorithm_key: str,
     sample_weights: np.ndarray,
     random_state: int,
     n_init: int,
 ) -> np.ndarray:
-    if algorithm_key == "kmeans":
-        model = _fit_weighted_kmeans(
-            scaled_points,
-            sample_weights,
-            cluster_count,
-            random_state=random_state,
-            n_init=n_init,
-        )
-        labels = model.labels_
-    elif algorithm_key == "agglomerative":
-        _ = sample_weights, n_init
-        labels = AgglomerativeClustering(n_clusters=cluster_count, linkage="ward").fit_predict(scaled_points)
-    elif algorithm_key == "birch":
-        _ = sample_weights, n_init
-        labels = Birch(n_clusters=cluster_count).fit_predict(scaled_points)
-    else:
-        raise ValueError(f"Unsupported clustering algorithm: {algorithm_key}")
+    model = _fit_weighted_kmeans(
+        scaled_points,
+        sample_weights,
+        cluster_count,
+        random_state=random_state,
+        n_init=n_init,
+    )
+    labels = model.labels_
     _validate_cluster_labels(labels, cluster_count)
     return labels
 
@@ -545,7 +535,6 @@ def _estimate_resampled_stability(
     scaled_points: np.ndarray,
     cluster_count: int,
     sample_weights: np.ndarray,
-    algorithm_key: str = "kmeans",
 ) -> float | None:
     row_count = len(scaled_points)
     if row_count <= max(cluster_count + 1, STABILITY_RESAMPLE_MIN_ROWS):
@@ -560,7 +549,6 @@ def _estimate_resampled_stability(
             labels = _fit_clustering_labels(
                 scaled_points[sampled_indexes],
                 cluster_count,
-                algorithm_key=algorithm_key,
                 sample_weights=sample_weights[sampled_indexes],
                 random_state=seed,
                 n_init=MODEL_N_INIT,

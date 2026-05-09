@@ -206,11 +206,6 @@ def _fit_negative_binomial_model_from_design(X_train: pd.DataFrame, y_train: np.
     }
 
 
-def _predict_count_model(model_bundle: dict[str, Any], frame: pd.DataFrame) -> np.ndarray:  # one-off
-    X = _build_design_matrix(frame, model_bundle['columns'])
-    return _predict_count_from_design(model_bundle, X)
-
-
 def _nonnegative_finite_column(X: pd.DataFrame, column_name: str, fill_value: float) -> np.ndarray:
     if column_name not in X.columns:
         return np.full(len(X), fill_value, dtype=float)
@@ -330,11 +325,6 @@ def _fit_event_model_from_design(X_train: pd.DataFrame, y_train: np.ndarray) -> 
         'model': model,
         'columns': list(X_train.columns),
     }
-
-
-def _predict_event_probability(model_bundle: dict[str, Any], frame: pd.DataFrame) -> np.ndarray:  # one-off
-    X = _build_design_matrix(frame, model_bundle['columns'])
-    return _predict_event_probability_from_design(model_bundle, X)
 
 
 def _predict_event_probability_from_design(model_bundle: dict[str, Any], X: pd.DataFrame) -> np.ndarray:  # one-off

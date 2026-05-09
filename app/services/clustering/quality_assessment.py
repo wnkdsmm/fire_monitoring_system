@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import math
-from typing import Sequence
 
 from config.constants import (
     CLUSTER_BALANCE_RATIO_STRONG_THRESHOLD,
@@ -98,34 +97,3 @@ def compute_diagnostics_row_sort_key(result: ClusteringMethodRow) -> tuple[float
         float(result.get("cluster_balance_ratio", 0.0)),
         -float(result.get("shape_penalty", 0.0)),
     )
-
-
-def compute_recommended_method_row(method_rows: Sequence[ClusteringMethodRow]) -> ClusteringMethodRow | None:
-    if not method_rows:
-        return None
-    current_row = next((row for row in method_rows if row.get("is_selected")), None)
-    if current_row is None:
-        current_row = next(
-            (
-                row
-                for row in method_rows
-                if str(row.get("algorithm_key") or row.get("method_key") or "").startswith("kmeans")
-            ),
-            method_rows[0],
-        )
-    best_row = max(method_rows, key=compute_diagnostics_row_sort_key)
-    if best_row.get("method_key") == current_row.get("method_key"):
-        return current_row
-
-    quality_gap = float(best_row.get("quality_score") or 0.0) - float(current_row.get("quality_score") or 0.0)
-    balance_gap = float(best_row.get("cluster_balance_ratio") or 0.0) - float(current_row.get("cluster_balance_ratio") or 0.0)
-    smallest_gap = int(best_row.get("smallest_cluster_size") or 0) - int(current_row.get("smallest_cluster_size") or 0)
-    if (
-        quality_gap >= 0.01
-        and not bool(best_row.get("has_microclusters"))
-        and float(best_row.get("shape_penalty") or 0.0) <= float(current_row.get("shape_penalty") or 0.0) + 0.01
-        and balance_gap >= -0.05
-        and smallest_gap >= -2
-    ):
-        return best_row
-    return current_row

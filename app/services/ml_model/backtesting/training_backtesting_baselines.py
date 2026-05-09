@@ -1,8 +1,5 @@
 from __future__ import annotations
 
-import math
-from typing import Any
-
 import pandas as pd
 from config.constants import (
     BASELINE_RECENT_WINDOW_DAYS,
@@ -34,13 +31,3 @@ def _baseline_event_probability(train: pd.DataFrame, target_date: pd.Timestamp) 
     return _bound_probability(probability)
 
 
-def _scenario_reference_forecast(
-    train: pd.DataFrame,
-    test: pd.DataFrame,
-    temperature_stats: dict[str, Any] | None = None,
-) -> tuple[float, float | None]:
-    if train.empty:
-        return 0.0, None
-    target_date = pd.Timestamp(test['date'].iloc[0])
-    fallback_count = _baseline_expected_count(train, target_date)
-    return fallback_count, _bound_probability(1.0 - math.exp(-max(0.0, fallback_count)))

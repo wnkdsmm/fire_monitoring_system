@@ -7,7 +7,7 @@ import pandas as pd
 from sklearn.decomposition import PCA
 
 from app.services.model_quality import compute_clustering_metrics
-from app.labels import CLUSTERING_FEATURE_METADATA, CLUSTERING_WEIGHTING_STRATEGY_LABELS
+from app.labels import CLUSTERING_FEATURE_METADATA
 from config.constants import (
     CARD_TONES,
     CLUSTER_COUNT_OPTIONS,
@@ -17,8 +17,6 @@ from config.constants import (
     LOW_SUPPORT_TERRITORY_THRESHOLD,
     MODEL_N_INIT,
     WEIGHTING_STRATEGY_INCIDENT_LOG,
-    WEIGHTING_STRATEGY_NOT_APPLICABLE,
-    WEIGHTING_STRATEGY_UNIFORM,
 )
 
 from .analysis_stats import (
@@ -38,10 +36,7 @@ from .analysis_stats import (
     _prepare_model_inputs,
     _restore_raw_centers,
 )
-from .quality_assessment import (
-    compute_diagnostics_row_sort_key,
-    compute_recommended_method_row,
-)
+from .quality_assessment import compute_diagnostics_row_sort_key
 from .types import (
     ClusteringDiagnosticsResult,
     ClusteringMethodCandidate,
@@ -53,8 +48,6 @@ from .utils import _format_integer, _format_number, _format_percent
 
 FEATURE_METADATA = CLUSTERING_FEATURE_METADATA
 MAX_K_DIAGNOSTICS = max(CLUSTER_COUNT_OPTIONS)
-WEIGHTING_STRATEGY_UNIFORM_LABEL = CLUSTERING_WEIGHTING_STRATEGY_LABELS[WEIGHTING_STRATEGY_UNIFORM]
-WEIGHTING_STRATEGY_INCIDENT_LOG_LABEL = CLUSTERING_WEIGHTING_STRATEGY_LABELS[WEIGHTING_STRATEGY_INCIDENT_LOG]
 
 
 def _primary_method_key(weighting_strategy: str) -> str:
@@ -62,43 +55,14 @@ def _primary_method_key(weighting_strategy: str) -> str:
 
 
 def _build_method_candidates(weighting_strategy: str) -> list[ClusteringMethodCandidate]:
-    candidates = [
+    return [
         {
             "method_key": _primary_method_key(weighting_strategy),
             "algorithm_key": "kmeans",
-            "method_label": _build_kmeans_method_label(weighting_strategy, selected_weighting_strategy=weighting_strategy),
+            "method_label": "KMeans",
             "weighting_strategy": weighting_strategy,
         }
     ]
-    if weighting_strategy != WEIGHTING_STRATEGY_UNIFORM:
-        candidates.append(
-            {
-                "method_key": _primary_method_key(WEIGHTING_STRATEGY_UNIFORM),
-                "algorithm_key": "kmeans",
-                "method_label": _build_kmeans_method_label(
-                    WEIGHTING_STRATEGY_UNIFORM,
-                    selected_weighting_strategy=weighting_strategy,
-                ),
-                "weighting_strategy": WEIGHTING_STRATEGY_UNIFORM,
-            }
-        )
-    candidates.extend(
-        [
-            {
-                "method_key": "agglomerative",
-                "algorithm_key": "agglomerative",
-                "method_label": "Агломеративная кластеризация (Ward)",
-                "weighting_strategy": WEIGHTING_STRATEGY_NOT_APPLICABLE,
-            },
-            {
-                "method_key": "birch",
-                "algorithm_key": "birch",
-                "method_label": "Birch",
-                "weighting_strategy": WEIGHTING_STRATEGY_NOT_APPLICABLE,
-            },
-        ]
-    )
-    return candidates
 
 
 def _run_clustering(
@@ -130,7 +94,6 @@ def _run_clustering(
         labels = _fit_clustering_labels(
             scaled_points,
             cluster_count,
-            algorithm_key=algorithm_key,
             sample_weights=sample_weights,
             random_state=CLUSTERING_RANDOM_STATE,
             n_init=MODEL_N_INIT,
@@ -160,7 +123,6 @@ def _run_clustering(
         scaled_points,
         cluster_count,
         sample_weights,
-        algorithm_key=algorithm_key,
     )
 
     return {
@@ -268,7 +230,6 @@ def _compare_clustering_methods(
     entity_frame: pd.DataFrame,
     cluster_count: int,
     weighting_strategy: str = WEIGHTING_STRATEGY_INCIDENT_LOG,
-    selected_method_key: str | None = None,
     prepared_model_inputs: tuple[pd.DataFrame, np.ndarray, Any, set[str], np.ndarray] | None = None,
 ) -> list[ClusteringMethodRow]:
     if prepared_model_inputs is None:
@@ -281,7 +242,6 @@ def _compare_clustering_methods(
         _, scaled_points, _, _, _ = prepared_model_inputs
     rows: list[ClusteringMethodRow] = []
     row_count = len(cluster_frame)
-    primary_method_key = selected_method_key or _primary_method_key(weighting_strategy)
     metrics_cache: dict[
         tuple[int, bytes],
         tuple[dict[str, float | int | None], dict[str, float | bool], float, float],
@@ -293,12 +253,11 @@ def _compare_clustering_methods(
 
     def _append_method_row(candidate: ClusteringMethodCandidate) -> None:
         try:
-            row_weighting_strategy = str(candidate.get("weighting_strategy") or WEIGHTING_STRATEGY_NOT_APPLICABLE)
+            row_weighting_strategy = str(candidate["weighting_strategy"])
             sample_weights = _build_sample_weights(entity_frame, weighting_strategy=row_weighting_strategy)
             labels = _fit_clustering_labels(
                 scaled_points,
                 cluster_count,
-                algorithm_key=str(candidate["algorithm_key"]),
                 sample_weights=sample_weights,
                 random_state=CLUSTERING_RANDOM_STATE,
                 n_init=MODEL_N_INIT,
@@ -324,7 +283,8 @@ def _compare_clustering_methods(
                 "method_key": candidate["method_key"],
                 "algorithm_key": candidate["algorithm_key"],
                 "method_label": candidate["method_label"],
-                "is_selected": candidate["method_key"] == primary_method_key,
+                "is_selected": True,
+                "is_recommended": True,
                 "weighting_strategy": row_weighting_strategy,
                 "inertia": inertia,
                 "silhouette": metrics.get("silhouette"),
@@ -342,23 +302,7 @@ def _compare_clustering_methods(
 
     for candidate in _build_method_candidates(weighting_strategy):
         _append_method_row(candidate)
-    recommended_method = _select_recommended_method_row(rows)
-    recommended_key = recommended_method["method_key"] if recommended_method else None
-    for row in rows:
-        row["is_recommended"] = row.get("method_key") == recommended_key
     return rows
-
-
-def _build_kmeans_method_label(weighting_strategy: str, selected_weighting_strategy: str) -> str:
-    if weighting_strategy == WEIGHTING_STRATEGY_UNIFORM:
-        if selected_weighting_strategy == WEIGHTING_STRATEGY_UNIFORM:
-            return "KMeans"
-        return f"KMeans ({WEIGHTING_STRATEGY_UNIFORM_LABEL.lower()})"
-    return f"KMeans ({WEIGHTING_STRATEGY_INCIDENT_LOG_LABEL.lower()})"
-
-
-def _select_recommended_method_row(method_rows: Sequence[ClusteringMethodRow]) -> ClusteringMethodRow | None:
-    return compute_recommended_method_row(method_rows)
 
 
 def _build_cluster_profiles(
@@ -616,3 +560,4 @@ def _format_feature_value(column_name: str, value: Any) -> str:
     if meta.get("format") == "percent":
         return _format_percent(float(value))
     return _format_number(value, 2)
+

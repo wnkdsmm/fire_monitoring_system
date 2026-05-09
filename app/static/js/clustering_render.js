@@ -182,32 +182,7 @@ function syncClusteringAsyncContainer() {
             + '</article>';
     }
 
-    function renderQualityTable(rows) {
-        var container = byId('clusteringQualityTableShell');
-        if (!container) {
-            return;
-        }
-
-        if (!Array.isArray(rows) || !rows.length) {
-            container.innerHTML = '<div class="mini-empty">Сравнение алгоритмов появится после расчета.</div>';
-            return;
-        }
-
-        container.innerHTML = ''
-            + '<table class="data-table table-stack-mobile">'
-            + '<thead><tr><th>Метод</th><th>Силуэт</th><th>Индекс Дэвиса-Болдина</th><th>Индекс Калински-Харабаза</th><th>Баланс</th><th>Статус</th></tr></thead>'
-            + '<tbody>' + rows.map(function (row) {
-                return ''
-                    + '<tr>'
-                    + '<td data-label="Метод">' + escapeHtml(row.method_label || '-') + '</td>'
-                    + '<td data-label="Силуэт">' + escapeHtml(row.silhouette_display || '-') + '</td>'
-                    + '<td data-label="Индекс Дэвиса-Болдина">' + escapeHtml(row.davies_display || '-') + '</td>'
-                    + '<td data-label="Индекс Калински-Харабаза">' + escapeHtml(row.calinski_display || '-') + '</td>'
-                    + '<td data-label="Баланс">' + escapeHtml(row.balance_display || '-') + '</td>'
-                    + '<td data-label="Статус">' + escapeHtml(row.selection_label || '-') + '</td>'
-                    + '</tr>';
-            }).join('') + '</tbody></table>';
-    }    function renderClusterRiskTable(rows) {
+    function renderClusterRiskTable(rows) {
         var container = byId('clusterRiskTableShell');
         if (!container) {
             return;
@@ -360,7 +335,6 @@ function applyClusteringData(data) {
         setText('clusteringQualitySubtitle', quality.subtitle || 'После расчета здесь появятся внутренние метрики качества и сравнение алгоритмов.');
         renderMetricCards('clusteringQualityMetrics', quality.metric_cards || [], 'После расчета здесь появятся внутренние метрики качества кластеризации.');
         renderMetricCards('clusteringQualityMethodology', quality.methodology_items || [], 'Методология сравнения появится после расчета.');
-        renderQualityTable(quality.comparison_rows || []);
         renderListItems('clusteringQualityNotes', quality.quality_notes || [], 'После расчета здесь появятся формулировки для раздела о качестве.', { filterEmpty: true });
 
         setText('clusterScatterTitle', charts.scatter ? charts.scatter.title : 'Кластеры территорий на двумерной проекции');
@@ -397,3 +371,4 @@ function applyClusteringData(data) {
         }
     };
 }(window));
+

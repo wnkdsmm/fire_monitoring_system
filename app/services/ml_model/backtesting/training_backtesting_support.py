@@ -73,17 +73,6 @@ def _selected_count_arrays_from_rows(
     return prediction_array, np.asarray(event_probabilities, dtype=float)
 
 
-def _selected_count_predictions(
-    rows: list[BacktestWindowRow],
-    selected_count_model_key: str,
-) -> np.ndarray:
-    return _selected_count_arrays_from_rows(
-        rows,
-        selected_count_model_key,
-        include_event_probabilities=False,
-    )[0]
-
-
 def _optional_probability_from_array(value: Any) -> float | None:
     return None if not np.isfinite(value) else float(value)
 

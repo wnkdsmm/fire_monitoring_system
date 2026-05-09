@@ -69,7 +69,6 @@ def _build_damage_dashboard_charts(
     from . import service as _service_module
 
     collect_damage_counts = getattr(_service_module, "_collect_damage_counts", _collect_damage_counts)
-    build_damage_overview_chart = getattr(_service_module, "_build_distribution_chart", _build_damage_overview_chart)
     damage_counts = damage_counts if damage_counts is not None else collect_damage_counts(selected_tables, selected_year)
     damage_item_bundle = _build_damage_dashboard_item_bundle(selected_tables, selected_year, damage_counts)
     damage_category_items = damage_item_bundle["category_items"]

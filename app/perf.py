@@ -147,7 +147,7 @@ def profiled(event_name: str, *, engine: Any | None = None):
         def wrapper(*args: Any, **kwargs: Any) -> Any:
             if engine is not None:
                 ensure_sqlalchemy_timing(engine)
-            with perf_trace(event_name) as trace:
+            with perf_trace(event_name):
                 return func(*args, **kwargs)
 
         return wrapper
