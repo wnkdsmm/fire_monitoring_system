@@ -149,6 +149,14 @@ async function fetchDashboardData() {
         global.DashboardEvents.init({
             onBootstrap: bootstrap,
             onFilterChange: syncBriefLink,
+            onTableFilterOpen: function () {
+                syncBriefLink();
+                fetchDashboardData();
+            },
+            onTableFilterChange: function () {
+                syncBriefLink();
+                fetchDashboardData();
+            },
             onRetry: fetchDashboardData,
             onSubmit: fetchDashboardData
         });

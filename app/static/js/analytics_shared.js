@@ -236,6 +236,15 @@
             return selectedValues;
         }
 
+        function selectAll() {
+            if (!menuId) { return []; }
+            Array.prototype.forEach.call(
+                document.querySelectorAll('#' + menuId + ' input[name="' + checkboxName + '"]:not(:checked)'),
+                function (checkbox) { checkbox.checked = true; }
+            );
+            return syncSummary();
+        }
+
         function setOpen(isOpen) {
             var root = getNode(rootId);
             var menu = getNode(menuId);
@@ -253,9 +262,81 @@
             renderChecklist: renderChecklist,
             renderSelectedLabel: renderSelectedLabel,
             setOpen: setOpen,
+            selectAll: selectAll,
             summarizeSelected: summarizeSelected,
             syncSummary: syncSummary
         };
+    }
+
+    function initTableFilter(config) {
+        var settings = config || {};
+        var checklist = settings.checklist;
+        var rootId = settings.rootId;
+        var formId = settings.formId;
+        var checkboxName = settings.checkboxName || 'table_names';
+        var onOpen = settings.onOpen;
+        var onChange = settings.onChange;
+
+        function isDropdownOpen() {
+            var root = rootId ? byId(rootId) : null;
+            return root ? root.classList.contains('is-open') : false;
+        }
+
+        function setDropdownOpen(open) {
+            if (checklist && typeof checklist.setOpen === 'function') {
+                checklist.setOpen(open);
+            }
+        }
+
+        var toggle = settings.toggleId ? byId(settings.toggleId) : null;
+        if (toggle) {
+            toggle.addEventListener('click', function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+                if (isDropdownOpen()) {
+                    setDropdownOpen(false);
+                } else {
+                    if (checklist && typeof checklist.selectAll === 'function') {
+                        checklist.selectAll();
+                    }
+                    setDropdownOpen(true);
+                    if (typeof onOpen === 'function') {
+                        onOpen();
+                    }
+                }
+            });
+        }
+
+        var form = formId ? byId(formId) : null;
+        if (form) {
+            form.addEventListener('change', function (event) {
+                if (!event || !event.target || event.target.name !== checkboxName) {
+                    return;
+                }
+                if (checklist && typeof checklist.syncSummary === 'function') {
+                    checklist.syncSummary();
+                }
+                setDropdownOpen(false);
+                if (typeof onChange === 'function') {
+                    onChange();
+                }
+            });
+        }
+
+        var rootNode = rootId ? byId(rootId) : null;
+        document.addEventListener('click', function (event) {
+            if (!rootNode) { return; }
+            if (!rootNode.contains(event.target)) {
+                setDropdownOpen(false);
+            }
+        });
+        document.addEventListener('keydown', function (event) {
+            if (event && event.key === 'Escape') {
+                setDropdownOpen(false);
+            }
+        });
+
+        return { setOpen: setDropdownOpen };
     }
 
     global.FireUi = {
@@ -277,6 +358,7 @@
         renderPlotlyFigure: plotlyHelpers.renderPlotlyFigure,
         renderPlotlyInContainer: plotlyHelpers.renderPlotlyInContainer,
         createTableChecklist: createTableChecklist,
+        initTableFilter: initTableFilter,
         runProgressSequence: runProgressSequence,
         revealPageContent: revealPageContent,
         setHref: uiHelpers.setHref,

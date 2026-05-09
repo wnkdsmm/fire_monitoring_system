@@ -723,6 +723,10 @@
             });
             form.addEventListener('change', function (event) {
                 syncScreenLinks();
+                if (event && event.target && event.target.name === 'table_names') {
+                    setTableChecklistOpen(false);
+                    startMlModelJob();
+                }
             });
             form.addEventListener('input', function (event) {
                 if (event && event.target && event.target.tagName === 'INPUT') {
@@ -735,7 +739,15 @@
                 event.preventDefault();
                 event.stopPropagation();
                 var isOpen = tableFilterRoot && tableFilterRoot.classList.contains('is-open');
-                setTableChecklistOpen(!isOpen);
+                if (isOpen) {
+                    setTableChecklistOpen(false);
+                } else {
+                    if (mlTableChecklist && typeof mlTableChecklist.selectAll === 'function') {
+                        mlTableChecklist.selectAll();
+                    }
+                    setTableChecklistOpen(true);
+                    startMlModelJob();
+                }
             });
         }
         document.addEventListener('click', function (event) {

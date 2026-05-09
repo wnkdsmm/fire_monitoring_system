@@ -46,6 +46,12 @@ function getSelectedTableNamesFromForm() {
         }
     }
 
+    function selectAllTableNames() {
+        if (clusterTableChecklist && typeof clusterTableChecklist.selectAll === 'function') {
+            clusterTableChecklist.selectAll();
+        }
+    }
+
     function setTableChecklistOpen(isOpen) {
         if (clusterTableChecklist && typeof clusterTableChecklist.setOpen === 'function') {
             clusterTableChecklist.setOpen(isOpen);
@@ -367,6 +373,7 @@ function applyClusteringData(data) {
                 getSelectedTableNamesFromForm: getSelectedTableNamesFromForm,
                 hideClusteringError: hideClusteringError,
                 renderClusteringJobRuntime: renderClusteringJobRuntime,
+                selectAllTableNames: selectAllTableNames,
                 setTableChecklistOpen: setTableChecklistOpen,
                 showClusteringError: showClusteringError,
                 syncTableChecklistSummary: syncTableChecklistSummary,

@@ -178,12 +178,26 @@ async function fetchClusteringData() {
                 if (renderApi.syncTableChecklistSummary) {
                     renderApi.syncTableChecklistSummary();
                 }
+                if (renderApi.setTableChecklistOpen) {
+                    renderApi.setTableChecklistOpen(false);
+                }
+                fetchClusteringData();
             },
             onToggleTableFilter: function () {
                 var root = byId('clusterTableFilter');
                 var isOpen = root && root.classList.contains('is-open');
-                if (renderApi.setTableChecklistOpen) {
-                    renderApi.setTableChecklistOpen(!isOpen);
+                if (!isOpen) {
+                    if (renderApi.selectAllTableNames) {
+                        renderApi.selectAllTableNames();
+                    }
+                    if (renderApi.setTableChecklistOpen) {
+                        renderApi.setTableChecklistOpen(true);
+                    }
+                    fetchClusteringData();
+                } else {
+                    if (renderApi.setTableChecklistOpen) {
+                        renderApi.setTableChecklistOpen(false);
+                    }
                 }
             },
             onCloseTableFilter: function () {

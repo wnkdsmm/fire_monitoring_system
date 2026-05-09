@@ -5,13 +5,12 @@
         init: function initDashboardPage(options) {
             var byId = shared.byId;
             var createTableChecklist = shared.createTableChecklist;
+            var initTableFilter = shared.initTableFilter;
             if (!byId) {
                 return;
             }
 
             var form = byId('filtersForm');
-            var tableFilterRoot = byId('dashboardTableFilter');
-            var tableFilterToggle = byId('dashboardTableFilterToggle');
             var dashboardTableChecklist = typeof createTableChecklist === 'function'
                 ? createTableChecklist({
                     rootId: 'dashboardTableFilter',
@@ -24,50 +23,42 @@
                 })
                 : null;
 
+            if (typeof initTableFilter === 'function') {
+                initTableFilter({
+                    checklist: dashboardTableChecklist,
+                    rootId: 'dashboardTableFilter',
+                    toggleId: 'dashboardTableFilterToggle',
+                    formId: 'filtersForm',
+                    onOpen: function () {
+                        if (options && typeof options.onTableFilterOpen === 'function') {
+                            options.onTableFilterOpen();
+                        }
+                    },
+                    onChange: function () {
+                        updateTableSummary();
+                        if (options && typeof options.onTableFilterChange === 'function') {
+                            options.onTableFilterChange();
+                        }
+                    }
+                });
+            }
+
             function updateTableSummary() {
                 if (dashboardTableChecklist && typeof dashboardTableChecklist.syncSummary === 'function') {
                     dashboardTableChecklist.syncSummary();
                 }
             }
 
-            function setTableFilterOpen(isOpen) {
-                if (dashboardTableChecklist && typeof dashboardTableChecklist.setOpen === 'function') {
-                    dashboardTableChecklist.setOpen(isOpen);
-                }
-            }
-
-            if (tableFilterToggle) {
-                tableFilterToggle.addEventListener('click', function (event) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    var isOpen = tableFilterRoot && tableFilterRoot.classList.contains('is-open');
-                    setTableFilterOpen(!isOpen);
-                });
-            }
-
             if (form) {
                 form.addEventListener('change', function (event) {
-                    updateTableSummary();
+                    if (event && event.target && event.target.name === 'table_names') {
+                        return;
+                    }
                     if (options && typeof options.onFilterChange === 'function') {
                         options.onFilterChange();
                     }
                 });
             }
-
-            document.addEventListener('click', function (event) {
-                if (!tableFilterRoot) {
-                    return;
-                }
-                if (!tableFilterRoot.contains(event.target)) {
-                    setTableFilterOpen(false);
-                }
-            });
-
-            document.addEventListener('keydown', function (event) {
-                if (event && event.key === 'Escape') {
-                    setTableFilterOpen(false);
-                }
-            });
 
             updateTableSummary();
 
