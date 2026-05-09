@@ -111,8 +111,6 @@ class QualityNoteContext(TypedDict):
 
     segmentation_summary: ClusterLabel
     stability_note: str
-    method_note: str
-    comparison_scope_note: str
     cluster_shape_note: str
     label_context: QualityLabelContext
     ablation_note: str

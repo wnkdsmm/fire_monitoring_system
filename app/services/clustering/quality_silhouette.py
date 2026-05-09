@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from typing import Any, Sequence
 
@@ -49,8 +49,8 @@ def _build_kmeans_description(weighting_strategy: str) -> str:
 
 def _format_configuration_label(configuration: ClusterMethod | None) -> str:
     if not configuration:
-        return "вЂ”"
-    method_label = str(configuration.get("method_label") or "РњРµС‚РѕРґ")
+        return "—"
+    method_label = str(configuration.get("method_label") or "Метод")
     cluster_count = configuration.get("cluster_count")
     if cluster_count:
         return f"{method_label}, k={_format_integer(cluster_count)}"
@@ -60,12 +60,12 @@ def _format_configuration_label(configuration: ClusterMethod | None) -> str:
 def _empty_clustering_quality_assessment() -> ClusteringQualityAssessment:
     return {
         "ready": False,
-        "title": "РћС†РµРЅРєР° РєР°С‡РµСЃС‚РІР° РєР»Р°СЃС‚РµСЂРёР·Р°С†РёРё",
-        "subtitle": "РџРѕСЃР»Рµ СЂР°СЃС‡РµС‚Р° Р·РґРµСЃСЊ РїРѕСЏРІРёС‚СЃСЏ РїРѕРЅСЏС‚РЅР°СЏ СЃРІРѕРґРєР°: РЅР°СЃРєРѕР»СЊРєРѕ РіСЂСѓРїРїС‹ СЂР°Р·Р»РёС‡Р°СЋС‚СЃСЏ, РЅР°СЃРєРѕР»СЊРєРѕ СЂРµР·СѓР»СЊС‚Р°С‚ СѓСЃС‚РѕР№С‡РёРІ Рё РєР°РєР°СЏ РЅР°СЃС‚СЂРѕР№РєР° РІС‹РіР»СЏРґРёС‚ Р»СѓС‡С€РµР№.",
+        "title": "Оценка качества кластеризации",
+        "subtitle": "После расчета здесь появится понятная сводка: насколько группы различаются, насколько результат устойчив и какая настройка выглядит лучшей.",
         "metric_cards": [],
         "methodology_items": [],
         "comparison_rows": [],
-        "quality_notes": ["РџРѕРєР° РЅРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РґР°РЅРЅС‹С… РґР»СЏ СЂР°СЃС‡РµС‚Р° РјРµС‚СЂРёРє РєР°С‡РµСЃС‚РІР° РєР»Р°СЃС‚РµСЂРёР·Р°С†РёРё."],
+        "quality_notes": ["Пока недостаточно данных для расчета метрик качества кластеризации."],
     }
 
 
@@ -88,9 +88,9 @@ def _build_feature_selection_quality_label_context(
 ) -> QualityLabelContext:
     report = feature_selection_report or {}
     return {
-        "mode_label": str(report.get("volume_role_label") or "РџСЂРѕС„РёР»СЊ С‚РµСЂСЂРёС‚РѕСЂРёРё"),
+        "mode_label": str(report.get("volume_role_label") or "Профиль территории"),
         "mode_note": str(report.get("volume_note") or ""),
-        "weighting_label": str(report.get("weighting_label") or "Р Р°РІРЅС‹Р№ РІРµСЃ С‚РµСЂСЂРёС‚РѕСЂРёР№"),
+        "weighting_label": str(report.get("weighting_label") or "Равный вес территорий"),
         "weighting_note": str(report.get("weighting_note") or ""),
         "weighting_meta": str(report.get("weighting_meta") or ""),
         "ablation_rows": list(report.get("ablation_rows") or []),
@@ -106,19 +106,19 @@ def _build_ablation_warning_note(ablation_rows: Sequence[FeatureAblationRow]) ->
 
     worst_feature = min(negative_adds, key=lambda item: float(item.get("delta_score") or 0.0))
     return (
-        f"Р’ РїСЂРѕР±РЅРѕРј СЃСЂР°РІРЅРµРЅРёРё РїСЂРёР·РЅР°РєРѕРІ РєРѕР»РѕРЅРєР° '{worst_feature['feature']}' РЅРµ РІРѕС€Р»Р° РІ РёС‚РѕРіРѕРІС‹Р№ РЅР°Р±РѕСЂ, "
-        "РїРѕС‚РѕРјСѓ С‡С‚Рѕ СЃ РЅРµР№ РєР»Р°СЃС‚РµСЂС‹ СЂР°Р·РґРµР»СЏР»РёСЃСЊ С…СѓР¶Рµ."
+        f"В пробном сравнении признаков колонка '{worst_feature['feature']}' не вошла в итоговый набор, "
+        "потому что с ней кластеры разделялись хуже."
     )
 
 
 def _format_quality_method_selection_label(row: ClusterMethod) -> str:
     if row.get("is_selected") and row.get("is_recommended"):
-        return "Р Р°Р±РѕС‡РёР№ Рё Р»СѓС‡С€РёР№ РЅР° С‚РµРєСѓС‰РµРј k"
+        return "Рабочий и лучший на текущем k"
     if row.get("is_selected"):
-        return "Р Р°Р±РѕС‡РёР№ РІС‹РІРѕРґ"
+        return "Рабочий вывод"
     if row.get("is_recommended"):
-        return "Р›СѓС‡С€Рµ РЅР° С‚РµРєСѓС‰РµРј k"
-    return "РЎСЂР°РІРЅРµРЅРёРµ"
+        return "Лучше на текущем k"
+    return "Сравнение"
 
 
 def _build_quality_method_comparison_rows(
@@ -126,7 +126,7 @@ def _build_quality_method_comparison_rows(
 ) -> list[MethodComparisonRow]:
     return [
         {
-            "method_label": row.get("method_label", "РњРµС‚РѕРґ"),
+            "method_label": row.get("method_label", "Метод"),
             "selection_label": _format_quality_method_selection_label(row),
             "silhouette_display": _format_number(row.get("silhouette"), 3),
             "davies_display": _format_number(row.get("davies_bouldin"), 3),
@@ -155,15 +155,15 @@ def _build_quality_notes(
         segmentation_note,
         str(cluster_count_guidance.get("quality_note") or ""),
         (
-            f"РџРѕ С‡С‘С‚РєРѕСЃС‚Рё РіСЂР°РЅРёС† Р»СѓС‡С€РёР№ СЂРµР·СѓР»СЊС‚Р°С‚ РѕС‚РґРµР»СЊРЅРѕ РґР°С‘С‚ k={_format_integer(best_silhouette_k)}, "
-            "РЅРѕ РёС‚РѕРіРѕРІРѕРµ С‡РёСЃР»Рѕ РіСЂСѓРїРї РІСЃС‘ СЂР°РІРЅРѕ РІС‹Р±РёСЂР°РµС‚СЃСЏ РІРјРµСЃС‚Рµ СЃ РїСЂРѕРІРµСЂРєРѕР№ Р±Р°Р»Р°РЅСЃР° СЂР°Р·РјРµСЂРѕРІ."
+            f"По чёткости границ лучший результат отдельно даёт k={_format_integer(best_silhouette_k)}, "
+            "но итоговое число групп всё равно выбирается вместе с проверкой баланса размеров."
             if recommended_k and best_silhouette_k and recommended_k != best_silhouette_k
-            else "РћСЃРЅРѕРІРЅС‹Рµ РїРѕРєР°Р·Р°С‚РµР»Рё РєР°С‡РµСЃС‚РІР° РЅРµ СЃРїРѕСЂСЏС‚ РјРµР¶РґСѓ СЃРѕР±РѕР№ РїРѕ РІС‹Р±РѕСЂСѓ С‡РёСЃР»Р° РіСЂСѓРїРї."
+            else "Основные показатели качества не спорят между собой по выбору числа групп."
         ),
         stability_note,
         (
-            f"РЈ {low_support_display} С‚РµСЂСЂРёС‚РѕСЂРёР№ РїРѕР¶Р°СЂРѕРІ РЅРµРјРЅРѕРіРѕ, РїРѕСЌС‚РѕРјСѓ РёС… РґРѕР»РµРІС‹Рµ РїРѕРєР°Р·Р°С‚РµР»Рё СЃР»РµРіРєР° "
-            "РїРѕРґС‚СЏРЅСѓС‚С‹ Рє РѕР±С‰РµРјСѓ СѓСЂРѕРІРЅСЋ, С‡С‚РѕР±С‹ РµРґРёРЅРёС‡РЅС‹Рµ СЃР»СѓС‡Р°Рё РЅРµ РёСЃРєР°Р¶Р°Р»Рё СЂР°Р·Р±РёРµРЅРёРµ."
+            f"У {low_support_display} территорий пожаров немного, поэтому их долевые показатели слегка "
+            "подтянуты к общему уровню, чтобы единичные случаи не искажали разбиение."
         ),
     ]
     if cluster_shape_note:
@@ -205,33 +205,33 @@ def _build_quality_note_context(
 def _build_quality_metric_cards(clustering: ClusterMetrics, resample_share_label: str) -> list[QualityScore]:
     return [
         {
-            "label": "РќР°СЃРєРѕР»СЊРєРѕ РєР»Р°СЃС‚РµСЂС‹ РѕС‚РґРµР»РµРЅС‹",
+            "label": "Насколько кластеры отделены",
             "value": _format_number(clustering.get("silhouette"), 3),
-            "meta": "Р§РµРј РІС‹С€Рµ Р·РЅР°С‡РµРЅРёРµ, С‚РµРј Р·Р°РјРµС‚РЅРµРµ РіСЂР°РЅРёС†С‹ РјРµР¶РґСѓ РіСЂСѓРїРїР°РјРё",
+            "meta": "Чем выше значение, тем заметнее границы между группами",
         },
         {
-            "label": "РќР°СЃРєРѕР»СЊРєРѕ РєР»Р°СЃС‚РµСЂС‹ СЃРјРµС€РёРІР°СЋС‚СЃСЏ",
+            "label": "Насколько кластеры смешиваются",
             "value": _format_number(clustering.get("davies_bouldin"), 3),
-            "meta": "Р§РµРј РЅРёР¶Рµ Р·РЅР°С‡РµРЅРёРµ, С‚РµРј РјРµРЅСЊС€Рµ СЃРѕСЃРµРґРЅРёРµ РіСЂСѓРїРїС‹ Р·Р°С…РѕРґСЏС‚ РґСЂСѓРі РІ РґСЂСѓРіР°",
+            "meta": "Чем ниже значение, тем меньше соседние группы заходят друг в друга",
         },
         {
-            "label": "РќР°СЃРєРѕР»СЊРєРѕ РіСЂСѓРїРїС‹ СЃРѕР±СЂР°РЅС‹ РїР»РѕС‚РЅРѕ",
+            "label": "Насколько группы собраны плотно",
             "value": _format_number(clustering.get("calinski_harabasz"), 1),
-            "meta": "Р§РµРј РІС‹С€Рµ Р·РЅР°С‡РµРЅРёРµ, С‚РµРј СЃРѕР±СЂР°РЅРЅРµРµ С‚РµСЂСЂРёС‚РѕСЂРёРё РІРЅСѓС‚СЂРё СЃРІРѕРёС… РіСЂСѓРїРї",
+            "meta": "Чем выше значение, тем собраннее территории внутри своих групп",
         },
         {
-            "label": "РќР°СЃРєРѕР»СЊРєРѕ РіСЂСѓРїРїС‹ СЂР°РІРЅРѕРјРµСЂРЅС‹",
+            "label": "Насколько группы равномерны",
             "value": _format_percent(clustering.get("cluster_balance_ratio") or 0.0),
             "meta": (
-                f"Р Р°Р·РјРµСЂ СЃР°РјРѕР№ РјР°Р»РµРЅСЊРєРѕР№ Рё СЃР°РјРѕР№ Р±РѕР»СЊС€РѕР№ РіСЂСѓРїРїС‹: "
+                f"Размер самой маленькой и самой большой группы: "
                 f"{_format_integer(clustering.get('smallest_cluster_size'))} / "
                 f"{_format_integer(clustering.get('largest_cluster_size'))}"
             ),
         },
         {
-            "label": "РќР°СЃРєРѕР»СЊРєРѕ СЂРµР·СѓР»СЊС‚Р°С‚ РїРѕРІС‚РѕСЂСЏРµС‚СЃСЏ",
+            "label": "Насколько результат повторяется",
             "value": _format_number(clustering.get("stability_ari"), 3),
-            "meta": f"РџСЂРѕРІРµСЂРµРЅРѕ РЅР° РїРѕРІС‚РѕСЂРЅС‹С… {resample_share_label}-РїРѕРґРІС‹Р±РѕСЂРєР°С…",
+            "meta": f"Проверено на повторных {resample_share_label}-подвыборках",
         },
     ]
 
@@ -256,34 +256,34 @@ def _build_quality_methodology_items(
             ),
         },
         {
-            "label": "РќР°СЃРєРѕР»СЊРєРѕ РєР»Р°СЃС‚РµСЂС‹ СЂР°Р·Р»РёС‡РёРјС‹",
+            "label": "Насколько кластеры различимы",
             "value": segmentation_label,
-            "meta": "РС‚РѕРіРѕРІР°СЏ РѕС†РµРЅРєР° РїРѕ СЂР°Р·РґРµР»РµРЅРёСЋ РіСЂСѓРїРї, СѓСЃС‚РѕР№С‡РёРІРѕСЃС‚Рё Рё РёС… СЂР°Р·РјРµСЂР°Рј",
+            "meta": "Итоговая оценка по разделению групп, устойчивости и их размерам",
         },
         {
-            "label": "Р§С‚Рѕ РёРјРµРЅРЅРѕ РєР»Р°СЃС‚РµСЂРёР·СѓРµРј",
+            "label": "Что именно кластеризуем",
             "value": mode_label,
-            "meta": "РљР°РєРѕР№ РїСЂРѕС„РёР»СЊ С‚РµСЂСЂРёС‚РѕСЂРёРё СЃСЂР°РІРЅРёРІР°РµС‚СЃСЏ РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ",
+            "meta": "Какой профиль территории сравнивается по умолчанию",
         },
         {
-            "label": "Р’РµСЃС‹ С‚РµСЂСЂРёС‚РѕСЂРёР№",
+            "label": "Весы территорий",
             "value": weighting_label,
-            "meta": weighting_meta or "РџРѕРєР°Р·С‹РІР°РµС‚, РІР»РёСЏРµС‚ Р»Рё С‡РёСЃР»Рѕ РїРѕР¶Р°СЂРѕРІ РЅР° РїРѕР»РѕР¶РµРЅРёРµ С‚РµСЂСЂРёС‚РѕСЂРёРё РІ РєР»Р°СЃС‚РµСЂРµ",
+            "meta": weighting_meta or "Показывает, влияет ли число пожаров на положение территории в кластере",
         },
         {
-            "label": "РЎРєРѕР»СЊРєРѕ РїСЂРёР·РЅР°РєРѕРІ РІРѕС€Р»Рѕ РІ СЂР°СЃС‡С‘С‚",
+            "label": "Сколько признаков вошло в расчёт",
             "value": _format_integer(len(selected_features)),
-            "meta": "РћС‚РѕР±СЂР°РЅС‹ РїРѕС‚РѕРјСѓ, С‡С‚Рѕ РЅР° С‚РµРєСѓС‰РµРј СЃСЂРµР·Рµ Р»СѓС‡С€Рµ СЂР°Р·РґРµР»СЏСЋС‚ С‚РµСЂСЂРёС‚РѕСЂРёРё",
+            "meta": "Отобраны потому, что на текущем срезе лучше разделяют территории",
         },
         {
-            "label": "РўРµСЂСЂРёС‚РѕСЂРёРё СЃ РєРѕСЂРѕС‚РєРѕР№ РёСЃС‚РѕСЂРёРµР№",
+            "label": "Территории с короткой историей",
             "value": low_support_display,
-            "meta": f"Р”Р»СЏ С‚РµСЂСЂРёС‚РѕСЂРёР№ СЃ в‰¤{LOW_SUPPORT_TERRITORY_THRESHOLD} РїРѕР¶Р°СЂР°РјРё Р·РЅР°С‡РµРЅРёСЏ СЃРіР»Р°Р¶РµРЅС‹, С‡С‚РѕР±С‹ СѓР±СЂР°С‚СЊ С€СѓРј",
+            "meta": f"Для территорий с ≤{LOW_SUPPORT_TERRITORY_THRESHOLD} пожарами значения сглажены, чтобы убрать шум",
         },
         {
-            "label": "РќР°СЃРєРѕР»СЊРєРѕ 2D-РєР°СЂС‚Р° РѕС‚СЂР°Р¶Р°РµС‚ РєР°СЂС‚РёРЅСѓ",
+            "label": "Насколько 2D-карта отражает картину",
             "value": _format_percent(explained_variance or 0.0),
-            "meta": "РЎРєРѕР»СЊРєРѕ РѕР±С‰РµР№ РєР°СЂС‚РёРЅС‹ СЃРѕС…СЂР°РЅСЏРµС‚СЃСЏ, РєРѕРіРґР° РґР°РЅРЅС‹Рµ СЃРІРѕРґРёРј Рє РїР»РѕСЃРєРѕР№ РєР°СЂС‚Рµ",
+            "meta": "Сколько общей картины сохраняется, когда данные сводим к плоской карте",
         },
     ]
 
@@ -303,7 +303,7 @@ def _build_clustering_quality_assessment(
 ) -> ClusteringQualityAssessment:
     if clustering.get("silhouette") is None:
         payload = _empty_clustering_quality_assessment()
-        payload["quality_notes"] = ["Р’ С‚РµРєСѓС‰РµРј СЃСЂРµР·Рµ РєР»Р°СЃС‚РµСЂРёР·Р°С†РёСЏ РїРѕСЃС‚СЂРѕРµРЅР°, РЅРѕ РІРЅСѓС‚СЂРµРЅРЅРёС… РјРµС‚СЂРёРє РїРѕРєР° РЅРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РґР»СЏ СѓСЃС‚РѕР№С‡РёРІРѕР№ РёРЅС‚РµСЂРїСЂРµС‚Р°С†РёРё РєР°С‡РµСЃС‚РІР°."]
+        payload["quality_notes"] = ["В текущем срезе кластеризация построена, но внутренних метрик пока недостаточно для устойчивой интерпретации качества."]
         return payload
 
     low_support_share = float((support_summary or {}).get("low_support_share") or 0.0)
@@ -367,8 +367,8 @@ def _build_clustering_quality_assessment(
     )
     return {
         "ready": True,
-        "title": "РћС†РµРЅРєР° РєР°С‡РµСЃС‚РІР° РєР»Р°СЃС‚РµСЂРёР·Р°С†РёРё",
-        "subtitle": "РќРёР¶Рµ РїРѕРєР°Р·Р°РЅРѕ, РЅР°СЃРєРѕР»СЊРєРѕ РіСЂСѓРїРїС‹ РґРµР№СЃС‚РІРёС‚РµР»СЊРЅРѕ СЂР°Р·Р»РёС‡Р°СЋС‚СЃСЏ, РЅР°СЃРєРѕР»СЊРєРѕ СЂРµР·СѓР»СЊС‚Р°С‚ СѓСЃС‚РѕР№С‡РёРІ РїСЂРё РїРѕРІС‚РѕСЂРЅРѕРј СЂР°СЃС‡РµС‚Рµ Рё РєР°РєР°СЏ РЅР°СЃС‚СЂРѕР№РєР° РєР»Р°СЃС‚РµСЂРёР·Р°С†РёРё РІС‹РіР»СЏРґРёС‚ Р»СѓС‡С€РµР№.",
+        "title": "Оценка качества кластеризации",
+        "subtitle": "Ниже показано, насколько группы действительно различаются, насколько результат устойчив при повторном расчете и какая настройка кластеризации выглядит лучшей.",
         "metric_cards": _build_quality_metric_cards(clustering, resample_share_label),
         "methodology_items": _build_quality_methodology_items(
 

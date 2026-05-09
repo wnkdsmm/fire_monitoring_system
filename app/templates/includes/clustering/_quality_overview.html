@@ -1,23 +1,23 @@
 <section class="stats-grid" id="clusteringStatsGrid">
     <article class="stat-card stat-card-accent">
-        <span class="stat-label">Пожаров в истории</span>
+        <span class="stat-label">РџРѕР¶Р°СЂРѕРІ РІ РёСЃС‚РѕСЂРёРё</span>
         <strong class="stat-value">{{ summary.total_incidents_display }}</strong>
-        <span class="stat-foot">Все инциденты, которые вошли в территориальные агрегаты.</span>
+        <span class="stat-foot">Р’СЃРµ РёРЅС†РёРґРµРЅС‚С‹, РєРѕС‚РѕСЂС‹Рµ РІРѕС€Р»Рё РІ С‚РµСЂСЂРёС‚РѕСЂРёР°Р»СЊРЅС‹Рµ Р°РіСЂРµРіР°С‚С‹.</span>
     </article>
     <article class="stat-card">
-        <span class="stat-label">Территорий в расчете</span>
+        <span class="stat-label">РўРµСЂСЂРёС‚РѕСЂРёР№ РІ СЂР°СЃС‡РµС‚Рµ</span>
         <strong class="stat-value">{{ summary.clustered_entities_display }}</strong>
-        <span class="stat-foot">После отбора по заполненности выбранных признаков.</span>
+        <span class="stat-foot">РџРѕСЃР»Рµ РѕС‚Р±РѕСЂР° РїРѕ Р·Р°РїРѕР»РЅРµРЅРЅРѕСЃС‚Рё РІС‹Р±СЂР°РЅРЅС‹С… РїСЂРёР·РЅР°РєРѕРІ.</span>
     </article>
     <article class="stat-card">
-        <span class="stat-label">Число кластеров</span>
+        <span class="stat-label">Р§РёСЃР»Рѕ РєР»Р°СЃС‚РµСЂРѕРІ</span>
         <strong class="stat-value">{{ summary.cluster_count_display }}</strong>
         <span class="stat-foot">{{ summary.cluster_count_note }}</span>
     </article>
     <article class="stat-card">
-        <span class="stat-label">Инерция</span>
+        <span class="stat-label">РРЅРµСЂС†РёСЏ</span>
         <strong class="stat-value">{{ summary.inertia_display }}</strong>
-        <span class="stat-foot">Внутрикластерная компактность после стандартизации агрегатов.</span>
+        <span class="stat-foot">Р’РЅСѓС‚СЂРёРєР»Р°СЃС‚РµСЂРЅР°СЏ РєРѕРјРїР°РєС‚РЅРѕСЃС‚СЊ РїРѕСЃР»Рµ СЃС‚Р°РЅРґР°СЂС‚РёР·Р°С†РёРё Р°РіСЂРµРіР°С‚РѕРІ.</span>
     </article>
 </section>
 
@@ -39,7 +39,7 @@
             </article>
             {% endfor %}
         {% else %}
-        <div class="mini-empty">После выполнения расчета здесь будут представлены внутренние метрики качества.</div>
+        <div class="mini-empty">РџРѕСЃР»Рµ РІС‹РїРѕР»РЅРµРЅРёСЏ СЂР°СЃС‡РµС‚Р° Р·РґРµСЃСЊ Р±СѓРґСѓС‚ РїСЂРµРґСЃС‚Р°РІР»РµРЅС‹ РІРЅСѓС‚СЂРµРЅРЅРёРµ РјРµС‚СЂРёРєРё РєР°С‡РµСЃС‚РІР° РєР»Р°СЃС‚РµСЂРёР·Р°С†РёРё.</div>
         {% endif %}
     </div>
 
@@ -53,7 +53,7 @@
             </article>
             {% endfor %}
         {% else %}
-        <div class="mini-empty">Методологические параметры появятся после расчета.</div>
+        <div class="mini-empty">РњРµС‚РѕРґРѕР»РѕРіРёС‡РµСЃРєРёРµ РїР°СЂР°РјРµС‚СЂС‹ РїРѕСЏРІСЏС‚СЃСЏ РїРѕСЃР»Рµ СЂР°СЃС‡РµС‚Р°.</div>
         {% endif %}
     </div>
 
@@ -63,7 +63,7 @@
             <li>{{ note }}</li>
             {% endfor %}
         {% else %}
-        <li>После выполнения расчета здесь появятся выводы по качеству кластеризации.</li>
+        <li>РџРѕСЃР»Рµ РІС‹РїРѕР»РЅРµРЅРёСЏ СЂР°СЃС‡РµС‚Р° Р·РґРµСЃСЊ РїРѕСЏРІСЏС‚СЃСЏ РІС‹РІРѕРґС‹ РїРѕ РєР°С‡РµСЃС‚РІСѓ РєР»Р°СЃС‚РµСЂРёР·Р°С†РёРё.</li>
         {% endif %}
     </ul>
 </section>
