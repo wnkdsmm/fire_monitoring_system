@@ -138,6 +138,12 @@
         cleanTableEl.textContent = summary.cleanTable || '-';
     }
 
+    function clearRunOutput() {
+        const outputSummary = document.getElementById('outputSummary');
+        if (!outputSummary) return;
+        outputSummary.innerHTML = '';
+    }
+
     function readThresholds() {
         const nullValue = Number(document.getElementById('nullThreshold')?.value ?? profilingDefaults.null_threshold_percent);
         const dominantValue = Number(document.getElementById('dominantThreshold')?.value ?? profilingDefaults.dominant_value_threshold_percent);
@@ -179,6 +185,7 @@
             runButton.classList.remove('is-loading');
         }
         renderRunSummary({ tableName, removedCount: '-', cleanTable: `clean_${tableName}` });
+        clearRunOutput();
         setStatus('idle', `Выбрана таблица <strong>${escapeHtml(tableName)}</strong>. Можно запускать очистку с текущими порогами.`);
     }
 
@@ -289,11 +296,12 @@
         isRunning = true;
         document.getElementById('resultsSection').hidden = true;
         document.getElementById('columnPairsSection').hidden = true;
+        clearRunOutput();
         const runButton = document.getElementById('runButton');
         runButton.disabled = true;
         runButton.classList.add('is-loading');
         runButton.textContent = 'Очистка выполняется...';
-        renderRunSummary({ tableName: selectedTable, removedCount: 'Считаем...', cleanTable: `clean_${selectedTable}` });
+        renderRunSummary({ tableName: selectedTable, removedCount: '-', cleanTable: '-' });
         setStatus('running', `Выполняем очистку для таблицы <strong>${escapeHtml(selectedTable)}</strong> с пользовательскими порогами.`);
 
         try {
