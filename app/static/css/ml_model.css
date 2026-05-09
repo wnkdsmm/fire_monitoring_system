@@ -380,6 +380,10 @@
     margin-bottom: 0;
 }
 
+.ml-table-shell {
+    margin-top: var(--space-token-32);
+}
+
 .forecast-table-ml {
     table-layout: auto !important;
     border-collapse: collapse;

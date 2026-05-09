@@ -151,32 +151,7 @@ def _build_quality_notes(
     ablation_note: str,
     kmeans_description: str,
 ) -> list[str]:
-    quality_notes = [
-        segmentation_note,
-        str(cluster_count_guidance.get("quality_note") or ""),
-        (
-            f"По чёткости границ лучший результат отдельно даёт k={_format_integer(best_silhouette_k)}, "
-            "но итоговое число групп всё равно выбирается вместе с проверкой баланса размеров."
-            if recommended_k and best_silhouette_k and recommended_k != best_silhouette_k
-            else "Основные показатели качества не спорят между собой по выбору числа групп."
-        ),
-        stability_note,
-        (
-            f"У {low_support_display} территорий пожаров немного, поэтому их долевые показатели слегка "
-            "подтянуты к общему уровню, чтобы единичные случаи не искажали разбиение."
-        ),
-    ]
-    if cluster_shape_note:
-        quality_notes.append(cluster_shape_note)
-    if weighting_note:
-        quality_notes.append(weighting_note)
-    if mode_note:
-        quality_notes.append(mode_note)
-    if ablation_note:
-        quality_notes.append(ablation_note)
-    if kmeans_description:
-        quality_notes.append(kmeans_description)
-    return [item for item in quality_notes if str(item).strip()]
+    return []
 
 def _build_quality_note_context(
     *,
