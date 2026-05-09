@@ -286,15 +286,14 @@
 
         container.innerHTML = ''
             + '<table class="forecast-table forecast-table-ml">'
-            + '<colgroup><col style="width:19%"><col style="width:19%"><col style="width:38%"><col style="width:24%"></colgroup>'
-            + '<thead><tr><th>Дата</th><th>Ожидаемое число пожаров</th><th>Диапазон</th><th>Индекс риска</th></tr></thead>'
+            + '<colgroup><col style="width:22%"><col style="width:22%"><col style="width:56%"></colgroup>'
+            + '<thead><tr><th>Дата</th><th>Ожидаемое число пожаров</th><th>Диапазон</th></tr></thead>'
             + '<tbody>' + rows.map(function (row) {
                 return ''
                     + '<tr>'
                     + '<td data-label="Дата">' + escapeHtml(row.date_display || '-') + '</td>'
                     + '<td data-label="Ожидаемое число пожаров">' + escapeHtml(row.forecast_value_display || '0') + '</td>'
                     + '<td data-label="Диапазон">' + escapeHtml(normalizeRangeDisplay(row.range_display || '—')) + '</td>'
-                    + '<td data-label="Индекс риска"><span class="ml-risk-pill ml-risk-' + escapeHtml(row.risk_level_tone || 'minimal') + '">' + escapeHtml(row.risk_index_display || '0 / 100') + '</span></td>'
                     + '</tr>';
             }).join('') + '</tbody></table>';
     }

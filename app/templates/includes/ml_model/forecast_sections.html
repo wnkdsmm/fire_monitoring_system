@@ -13,23 +13,20 @@
                 <div class="panel-head">
                     <h2>Прогноз по дням</h2>
                     <span class="panel-meta">Ожидаемое число пожаров по каждой дате с указанием диапазона неопределенности.</span>
-                    <span class="panel-meta">Индекс риска X/100 показывает, что прогноз выше, чем в X% исторических дней.</span>
                 </div>
                 <div class="ml-table-shell" id="mlForecastTableShell">
                     {% if data.forecast_rows %}
                     <table class="forecast-table forecast-table-ml">
                         <colgroup>
-                            <col style="width:19%">
-                            <col style="width:19%">
-                            <col style="width:38%">
-                            <col style="width:24%">
+                            <col style="width:22%">
+                            <col style="width:22%">
+                            <col style="width:56%">
                         </colgroup>
                         <thead>
                             <tr>
                                 <th>Дата</th>
                                 <th>Ожидаемое число пожаров</th>
                                 <th>Диапазон</th>
-                                <th>Индекс риска</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -38,7 +35,6 @@
                                 <td data-label="Дата">{{ row.date_display }}</td>
                                 <td data-label="Ожидаемое число пожаров">{{ row.forecast_value_display }}</td>
                                 <td data-label="Диапазон">{{ row.range_display.split(': ', 1)[1] if ': ' in row.range_display else row.range_display }}</td>
-                                <td data-label="Индекс риска"><span class="ml-risk-pill ml-risk-{{ row.risk_level_tone }}">{{ row.risk_index_display }}</span></td>
                             </tr>
                             {% endfor %}
                         </tbody>
