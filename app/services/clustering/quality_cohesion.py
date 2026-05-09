@@ -57,47 +57,6 @@ def _build_stability_note(clustering: ClusterMetrics, resample_share_label: str)
     )
 
 
-def _build_method_recommendation_note(
-    selected_method: ClusterMethod | None,
-    recommended_method: ClusterMethod | None,
-) -> str:
-    selected_label = str((selected_method or {}).get("method_label") or "KMeans")
-    recommended_label = str((recommended_method or {}).get("method_label") or selected_label)
-    if not selected_method:
-        return f"Для текущего среза рабочим методом остаётся {recommended_label}."
-    if (recommended_method or {}).get("method_key") != (selected_method or {}).get("method_key"):
-        if _resolve_method_algorithm_key(recommended_method) == _resolve_method_algorithm_key(selected_method):
-            return (
-                f"На странице сейчас показан вывод {selected_label}, но на том же алгоритме более убедительно выглядит "
-                f"конфигурация {recommended_label}: так эффект стратегии весов не смешивается с эффектом самого метода."
-            )
-        return (
-            f"Текущий вывод на странице построен методом {selected_label}, но по совокупности метрик и размеров кластеров для этого среза лучше выглядит {recommended_label}."
-        )
-    return f"{selected_label} остаётся предпочтительным методом: альтернативы не дают более сильного качества без ухудшения размеров кластеров."
-
-
-def _build_method_comparison_scope_note(method_comparison: Sequence[ClusterMethod]) -> str:
-    selected_method = next((row for row in method_comparison if row.get("is_selected")), None)
-    if not selected_method:
-        return ""
-    selected_algorithm = _resolve_method_algorithm_key(selected_method)
-    selected_key = str((selected_method or {}).get("method_key") or "")
-    same_algorithm_alternatives = [
-        row
-        for row in method_comparison
-        if row is not selected_method
-        and _resolve_method_algorithm_key(row) == selected_algorithm
-        and str(row.get("method_key") or "") != selected_key
-    ]
-    if not same_algorithm_alternatives:
-        return ""
-    return (
-        "Для честного сравнения влияние весов вынесено отдельно: рядом с рабочей конфигурацией KMeans показан KMeans "
-        "с другой стратегией весов, поэтому рекомендация по методу не смешивает эффект алгоритма и эффект весов."
-    )
-
-
 def _resolve_method_algorithm_key(method_row: ClusterMethod | None) -> str:
     return compute_method_algorithm_key(method_row)
 
@@ -126,11 +85,10 @@ def _build_cluster_shape_note(clustering: ClusterMetrics) -> str:
 
 __all__ = [
     '_summarize_segmentation_strength',
-    '_build_stability_note',
-    '_build_method_recommendation_note',
-    '_build_method_comparison_scope_note',
+    '_build_stability_note',
     '_resolve_method_algorithm_key',
     '_build_cluster_shape_note',
     'compute_method_algorithm_key',
     'compute_segmentation_strength',
 ]
+

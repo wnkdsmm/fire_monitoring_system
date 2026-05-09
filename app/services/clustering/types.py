@@ -93,12 +93,6 @@ class QualityConfigurationContext(TypedDict):
 
     recommended_k: int | None
     best_silhouette_k: int | None
-    selected_method: ClusterMethod | None
-    working_configuration: ClusterMethod
-    effective_recommended_configuration: ClusterMethod
-    recommended_method: ClusterMethod
-    working_config_label: str
-    recommended_config_label: str
 
 
 class QualityLabelContext(TypedDict):

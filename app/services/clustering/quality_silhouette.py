@@ -6,8 +6,8 @@ from config.constants import LOW_SUPPORT_TERRITORY_THRESHOLD, STABILITY_RESAMPLE
 from .count_guidance import _build_cluster_count_guidance
 from .quality_cohesion import (
     _build_cluster_shape_note,
-    _build_method_comparison_scope_note,
-    _build_method_recommendation_note,
+
+
     _build_stability_note,
     _resolve_method_algorithm_key,
     _summarize_segmentation_strength,
@@ -52,57 +52,17 @@ def _empty_clustering_quality_assessment() -> ClusteringQualityAssessment:
     }
 
 
-def _build_configuration_recommendation_note(
-    working_configuration: ClusterMethod | None,
-    recommended_configuration: ClusterMethod | None,
-    *,
-    cluster_count_is_explicit: bool,
-) -> str:
-    working_label = _format_configuration_label(working_configuration)
-    recommended_label = _format_configuration_label(recommended_configuration)
-    if not recommended_configuration or working_label == recommended_label:
-        if cluster_count_is_explicit:
-            return f"На пользовательском k текущий вывод уже использует лучшую сопоставимую конфигурацию: {working_label}."
-        return f"По умолчанию страница сразу показывает рекомендуемую конфигурацию: {working_label}."
-    if cluster_count_is_explicit:
-        return (
-            f"На пользовательском k текущий вывод использует лучшую сопоставимую конфигурацию {working_label}, "
-            f"но по всему доступному диапазону убедительнее выглядит {recommended_label}."
-        )
-    return (
-        f"Сейчас страница построена по конфигурации {working_label}, "
-        f"но по всему доступному диапазону лучше выглядит {recommended_label}."
-    )
-
-
 def _resolve_quality_configuration_context(
     *,
-    method_comparison: Sequence[ClusterMethod],
     diagnostics: QualityDiagnostics | None,
     cluster_count: int,
 ) -> QualityConfigurationContext:
     diagnostics = diagnostics or {}
     recommended_configuration = dict(diagnostics.get("best_configuration") or {})
     recommended_k = int(recommended_configuration.get("cluster_count") or diagnostics.get("best_quality_k") or cluster_count)
-    selected_method = next(
-        (row for row in method_comparison if row.get("is_selected")),
-        method_comparison[0] if method_comparison else None,
-    )
-    recommended_row = next((row for row in method_comparison if row.get("is_recommended")), selected_method)
-    working_configuration = {**dict(selected_method or {}), "cluster_count": cluster_count}
-    effective_recommended_configuration = (
-        recommended_configuration
-        or {**dict(recommended_row or {}), "cluster_count": recommended_k}
-    )
     return {
         "recommended_k": recommended_k,
         "best_silhouette_k": diagnostics.get("best_silhouette_k"),
-        "selected_method": selected_method,
-        "working_configuration": working_configuration,
-        "effective_recommended_configuration": effective_recommended_configuration,
-        "recommended_method": effective_recommended_configuration or recommended_row or selected_method,
-        "working_config_label": _format_configuration_label(working_configuration),
-        "recommended_config_label": _format_configuration_label(effective_recommended_configuration),
     }
 
 
@@ -163,16 +123,11 @@ def _build_quality_method_comparison_rows(
 def _build_quality_notes(
     *,
     segmentation_note: str,
-    method_note: str,
     cluster_count_guidance: ClusterCountGuidance,
-    recommended_config_label: str,
-    working_config_label: str,
     recommended_k: int | None,
     best_silhouette_k: Any,
     stability_note: str,
     low_support_display: str,
-    selected_features: Sequence[str],
-    comparison_scope_note: str,
     cluster_shape_note: str,
     weighting_note: str,
     mode_note: str,
@@ -180,28 +135,19 @@ def _build_quality_notes(
 ) -> list[str]:
     quality_notes = [
         segmentation_note,
-        method_note,
         str(cluster_count_guidance.get("quality_note") or ""),
         (
-            f"Если смотреть на весь доступный диапазон настроек, лучшей выглядит конфигурация {recommended_config_label}."
-            if recommended_config_label != working_config_label
-            else f"Текущая конфигурация {working_config_label} уже совпадает с лучшей найденной."
-        ),
-        (
-            f"По чёткости границ лучший результат отдельно даёт k={_format_integer(best_silhouette_k)}, "
-            "но итоговое число групп всё равно выбирается вместе с проверкой баланса размеров."
+            f"???? ???????????????? ???????????? ???????????? ?????????????????? ???????????????? ???????? k={_format_integer(best_silhouette_k)}, "
+            "???? ???????????????? ?????????? ?????????? ?????? ?????????? ???????????????????? ???????????? ?? ?????????????????? ?????????????? ????????????????."
             if recommended_k and best_silhouette_k and recommended_k != best_silhouette_k
-            else "Основные показатели качества не спорят между собой по выбору числа групп."
+            else "???????????????? ???????????????????? ???????????????? ???? ???????????? ?????????? ?????????? ???? ???????????? ?????????? ??????????."
         ),
         stability_note,
         (
-            f"У {low_support_display} территорий пожаров немного, поэтому их долевые показатели слегка "
-            "подтянуты к общему уровню, чтобы единичные случаи не искажали разбиение."
+            f"?? {low_support_display} ???????????????????? ?????????????? ??????????????, ?????????????? ???? ?????????????? ???????????????????? ???????????? "
+            "?????????????????? ?? ???????????? ????????????, ?????????? ?????????????????? ???????????? ???? ???????????????? ??????????????????."
         ),
-        f"Сравнение методов выполнено на том же наборе признаков: {', '.join(selected_features)}.",
     ]
-    if comparison_scope_note:
-        quality_notes.append(comparison_scope_note)
     if cluster_shape_note:
         quality_notes.append(cluster_shape_note)
     if weighting_note:
@@ -212,24 +158,17 @@ def _build_quality_notes(
         quality_notes.append(ablation_note)
     return [item for item in quality_notes if str(item).strip()]
 
-
 def _build_quality_note_context(
     *,
     clustering: ClusterMetrics,
-    selected_method: ClusterMethod | None,
-    working_configuration: ClusterMethod,
-    effective_recommended_configuration: ClusterMethod,
     recommended_method: ClusterMethod,
     cluster_count: int,
     recommended_k: int | None,
-    method_comparison: Sequence[ClusterMethod],
     feature_selection_report: FeatureSelectionReport | None,
     resample_share_label: str,
-    cluster_count_is_explicit: bool,
 ) -> QualityNoteContext:
     segmentation_summary = _summarize_segmentation_strength(
         clustering,
-        selected_method=selected_method,
         recommended_method=recommended_method,
         cluster_count=cluster_count,
         recommended_k=recommended_k,
@@ -238,17 +177,10 @@ def _build_quality_note_context(
     return {
         "segmentation_summary": segmentation_summary,
         "stability_note": _build_stability_note(clustering, resample_share_label),
-        "method_note": _build_configuration_recommendation_note(
-            working_configuration,
-            effective_recommended_configuration,
-            cluster_count_is_explicit=cluster_count_is_explicit,
-        ),
-        "comparison_scope_note": _build_method_comparison_scope_note(method_comparison),
         "cluster_shape_note": _build_cluster_shape_note(clustering),
         "label_context": label_context,
         "ablation_note": _build_ablation_warning_note(label_context["ablation_rows"]),
     }
-
 
 def _build_quality_metric_cards(clustering: ClusterMetrics, resample_share_label: str) -> list[QualityScore]:
     return [
@@ -287,9 +219,6 @@ def _build_quality_metric_cards(clustering: ClusterMetrics, resample_share_label
 def _build_quality_methodology_items(
     *,
     selected_features: Sequence[str],
-    selected_method: ClusterMethod | None,
-    working_config_label: str,
-    recommended_config_label: str,
     segmentation_label: str,
     mode_label: str,
     weighting_label: str,
@@ -298,21 +227,6 @@ def _build_quality_methodology_items(
     explained_variance: Any,
 ) -> list[QualityScore]:
     return [
-        {
-            "label": "Текущая настройка",
-            "value": working_config_label,
-            "meta": "Именно по этой настройке построены кластеры на странице",
-        },
-        {
-            "label": "Лучшая найденная настройка",
-            "value": recommended_config_label,
-            "meta": "Лучшая комбинация режима, весов, метода и числа кластеров в доступном диапазоне",
-        },
-        {
-            "label": "Метод сейчас",
-            "value": str((selected_method or {}).get("method_label") or "KMeans"),
-            "meta": "Лучший среди сопоставимых вариантов при текущем числе групп",
-        },
         {
             "label": "Насколько кластеры различимы",
             "value": segmentation_label,
@@ -368,7 +282,6 @@ def _build_clustering_quality_assessment(
     low_support_display = _format_percent(low_support_share)
     resample_share_label = f"{int(round(STABILITY_RESAMPLE_RATIO * 100.0))}%"
     quality_context = _resolve_quality_configuration_context(
-        method_comparison=method_comparison,
         diagnostics=diagnostics,
         cluster_count=cluster_count,
     )
@@ -381,25 +294,23 @@ def _build_clustering_quality_assessment(
         adjusted_requested_cluster_count=resolved_requested_cluster_count,
         cluster_count_is_explicit=cluster_count_is_explicit,
     )
-    selected_method = quality_context["selected_method"]
-    working_configuration = quality_context["working_configuration"]
-    effective_recommended_configuration = quality_context["effective_recommended_configuration"]
-    recommended_method = quality_context["recommended_method"]
-    working_config_label = quality_context["working_config_label"]
-    recommended_config_label = quality_context["recommended_config_label"]
+
+
+    recommended_method = method_comparison[0] if method_comparison else {
+        "method_key": "kmeans",
+        "method_label": "KMeans",
+        "algorithm_key": "kmeans",
+    }
+
+
 
     note_context = _build_quality_note_context(
         clustering=clustering,
-        selected_method=selected_method,
-        working_configuration=working_configuration,
-        effective_recommended_configuration=effective_recommended_configuration,
         recommended_method=recommended_method,
         cluster_count=cluster_count,
         recommended_k=recommended_k,
-        method_comparison=method_comparison,
         feature_selection_report=feature_selection_report,
         resample_share_label=resample_share_label,
-        cluster_count_is_explicit=cluster_count_is_explicit,
     )
     segmentation_summary = note_context["segmentation_summary"]
     label_context = note_context["label_context"]
@@ -411,32 +322,24 @@ def _build_clustering_quality_assessment(
     comparison_rows = _build_quality_method_comparison_rows(method_comparison)
     quality_notes = _build_quality_notes(
         segmentation_note=segmentation_summary["note"],
-        method_note=note_context["method_note"],
         cluster_count_guidance=cluster_count_guidance,
-        recommended_config_label=recommended_config_label,
-        working_config_label=working_config_label,
         recommended_k=recommended_k,
         best_silhouette_k=best_silhouette_k,
         stability_note=note_context["stability_note"],
         low_support_display=low_support_display,
-        selected_features=selected_features,
-        comparison_scope_note=note_context["comparison_scope_note"],
         cluster_shape_note=note_context["cluster_shape_note"],
         weighting_note=weighting_note,
         mode_note=mode_note,
         ablation_note=note_context["ablation_note"],
     )
-
     return {
         "ready": True,
         "title": "Оценка качества кластеризации",
         "subtitle": "Ниже показано, насколько группы действительно различаются, насколько результат устойчив при повторном расчете и какая настройка кластеризации выглядит лучшей.",
         "metric_cards": _build_quality_metric_cards(clustering, resample_share_label),
         "methodology_items": _build_quality_methodology_items(
+
             selected_features=selected_features,
-            selected_method=selected_method,
-            working_config_label=working_config_label,
-            recommended_config_label=recommended_config_label,
             segmentation_label=segmentation_summary["label"],
             mode_label=mode_label,
             weighting_label=weighting_label,
@@ -451,7 +354,6 @@ def _build_clustering_quality_assessment(
 __all__ = [
     '_format_configuration_label',
     '_empty_clustering_quality_assessment',
-    '_build_configuration_recommendation_note',
     '_resolve_quality_configuration_context',
     '_build_feature_selection_quality_label_context',
     '_build_ablation_warning_note',
@@ -463,4 +365,11 @@ __all__ = [
     '_build_quality_methodology_items',
     '_build_clustering_quality_assessment',
 ]
+
+
+
+
+
+
+
 
