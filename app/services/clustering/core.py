@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from .core_algorithms import (
-    _method_comparison_from_diagnostics,
     _run_clustering_diagnostics_bundle,
     _run_clustering_model_bundle,
     _run_clustering_model_stage,
@@ -60,7 +59,6 @@ __all__ = [
     "_empty_clustering_quality_assessment",
     "_load_clustering_dataset_for_request",
     "_load_clustering_stage",
-    "_method_comparison_from_diagnostics",
     "_normalize_clustering_cache_value",
     "_normalize_feature_columns",
     "_prepare_clustering_feature_selection",

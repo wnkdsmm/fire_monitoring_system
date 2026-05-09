@@ -67,7 +67,6 @@ def _run_clustering_model_bundle(
         entity_frame,
         actual_cluster_count,
         weighting_strategy=actual_weighting_strategy,
-        algorithm_key=actual_algorithm_key,
         method_key=actual_method_key,
         prepared_model_inputs=prepared_model_inputs,
     )

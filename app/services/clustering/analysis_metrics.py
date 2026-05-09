@@ -70,7 +70,6 @@ def _run_clustering(
     entity_frame: pd.DataFrame,
     cluster_count: int,
     weighting_strategy: str = WEIGHTING_STRATEGY_INCIDENT_LOG,
-    algorithm_key: str = "kmeans",
     method_key: str | None = None,
     prepared_model_inputs: tuple[pd.DataFrame, np.ndarray, Any, set[str], np.ndarray] | None = None,
 ) -> ClusteringRunResult:
@@ -82,25 +81,13 @@ def _run_clustering(
         )
     else:
         _, scaled_points, scaler, transformed_columns, sample_weights = prepared_model_inputs
-    if algorithm_key == "kmeans":
-        model = _fit_weighted_kmeans(scaled_points, sample_weights, cluster_count, random_state=CLUSTERING_RANDOM_STATE, n_init=MODEL_N_INIT)
-        labels = model.labels_
-        scaled_centers = model.cluster_centers_
-        transformed_centers = scaler.inverse_transform(model.cluster_centers_)
-        raw_centers = _restore_raw_centers(transformed_centers, cluster_frame.columns, transformed_columns)
-        inertia = float(model.inertia_)
-        initialization_ari = _estimate_kmeans_initialization_stability(scaled_points, cluster_count, sample_weights)
-    else:
-        labels = _fit_clustering_labels(
-            scaled_points,
-            cluster_count,
-            sample_weights=sample_weights,
-            random_state=CLUSTERING_RANDOM_STATE,
-            n_init=MODEL_N_INIT,
-        )
-        raw_centers, scaled_centers = _derive_cluster_centers(cluster_frame, scaled_points, labels, cluster_count)
-        inertia = _compute_cluster_inertia(scaled_points, labels, scaled_centers=scaled_centers)
-        initialization_ari = None
+    model = _fit_weighted_kmeans(scaled_points, sample_weights, cluster_count, random_state=CLUSTERING_RANDOM_STATE, n_init=MODEL_N_INIT)
+    labels = model.labels_
+    scaled_centers = model.cluster_centers_
+    transformed_centers = scaler.inverse_transform(model.cluster_centers_)
+    raw_centers = _restore_raw_centers(transformed_centers, cluster_frame.columns, transformed_columns)
+    inertia = float(model.inertia_)
+    initialization_ari = _estimate_kmeans_initialization_stability(scaled_points, cluster_count, sample_weights)
     n_pca_components = min(2, scaled_points.shape[1])
     pca = PCA(n_components=n_pca_components)
     pca_points = pca.fit_transform(scaled_points)
@@ -147,8 +134,8 @@ def _run_clustering(
         "pca_points": pca_points,
         "pca_projection": pca_projection_result,
         "explained_variance": float(sum(pca_projection_result["explained_variance"])),
-        "algorithm_key": algorithm_key,
-        "method_key": method_key or (_primary_method_key(weighting_strategy) if algorithm_key == "kmeans" else algorithm_key),
+        "algorithm_key": "kmeans",
+        "method_key": method_key or _primary_method_key(weighting_strategy),
         "weighting_strategy": weighting_strategy,
     }
 
@@ -446,18 +433,13 @@ def _build_notes(
     if support_summary:
         low_support_share = float(support_summary.get("low_support_share") or 0.0)
         if low_support_share > 0.2:
-            algorithm_key = str((feature_selection_report or {}).get("selected_algorithm_key") or "kmeans")
             if bool((feature_selection_report or {}).get("uses_incident_weights")):
                 notes.append(
                     f"{_format_percent(low_support_share)} территорий имеют не более {LOW_SUPPORT_TERRITORY_THRESHOLD} пожаров, поэтому для них редкие значения сглажены к общему уровню, а территории с более длинной историей влияют на результат немного сильнее."
                 )
-            elif algorithm_key == "kmeans":
-                notes.append(
-                    f"{_format_percent(low_support_share)} территорий имеют не более {LOW_SUPPORT_TERRITORY_THRESHOLD} пожаров, поэтому для них редкие значения сглажены к общему уровню, а все территории сохраняют одинаковый вес в расчёте."
-                )
             else:
                 notes.append(
-                    f"{_format_percent(low_support_share)} территорий имеют не более {LOW_SUPPORT_TERRITORY_THRESHOLD} пожаров, поэтому для них редкие значения сглажены к общему уровню, а выбранный алгоритм не добавляет отдельные веса территориям."
+                    f"{_format_percent(low_support_share)} территорий имеют не более {LOW_SUPPORT_TERRITORY_THRESHOLD} пожаров, поэтому для них редкие значения сглажены к общему уровню, а все территории сохраняют одинаковый вес в расчёте."
                 )
 
     if feature_selection_report:
