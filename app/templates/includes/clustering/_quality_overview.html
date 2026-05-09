@@ -1,0 +1,69 @@
+<section class="stats-grid" id="clusteringStatsGrid">
+    <article class="stat-card stat-card-accent">
+        <span class="stat-label">Пожаров в истории</span>
+        <strong class="stat-value">{{ summary.total_incidents_display }}</strong>
+        <span class="stat-foot">Все инциденты, которые вошли в территориальные агрегаты.</span>
+    </article>
+    <article class="stat-card">
+        <span class="stat-label">Территорий в расчете</span>
+        <strong class="stat-value">{{ summary.clustered_entities_display }}</strong>
+        <span class="stat-foot">После отбора по заполненности выбранных признаков.</span>
+    </article>
+    <article class="stat-card">
+        <span class="stat-label">Число кластеров</span>
+        <strong class="stat-value">{{ summary.cluster_count_display }}</strong>
+        <span class="stat-foot">{{ summary.cluster_count_note }}</span>
+    </article>
+    <article class="stat-card">
+        <span class="stat-label">Инерция</span>
+        <strong class="stat-value">{{ summary.inertia_display }}</strong>
+        <span class="stat-foot">Внутрикластерная компактность после стандартизации агрегатов.</span>
+    </article>
+</section>
+
+<section class="panel ml-quality-panel">
+    <div class="panel-head">
+        <div>
+            <h2 id="clusteringQualityTitle">{{ quality.title }}</h2>
+            <span class="panel-meta" id="clusteringQualitySubtitle">{{ quality.subtitle }}</span>
+        </div>
+    </div>
+
+    <div class="stats-grid" id="clusteringQualityMetrics">
+        {% if quality.metric_cards %}
+            {% for item in quality.metric_cards %}
+            <article class="stat-card">
+                <span class="stat-label">{{ item.label }}</span>
+                <strong class="stat-value">{{ item.value }}</strong>
+                <span class="stat-foot">{{ item.meta }}</span>
+            </article>
+            {% endfor %}
+        {% else %}
+        <div class="mini-empty">После выполнения расчета здесь будут представлены внутренние метрики качества.</div>
+        {% endif %}
+    </div>
+
+    <div class="stats-grid" id="clusteringQualityMethodology">
+        {% if quality.methodology_items %}
+            {% for item in quality.methodology_items %}
+            <article class="stat-card">
+                <span class="stat-label">{{ item.label }}</span>
+                <strong class="stat-value">{{ item.value }}</strong>
+                <span class="stat-foot">{{ item.meta }}</span>
+            </article>
+            {% endfor %}
+        {% else %}
+        <div class="mini-empty">Методологические параметры появятся после расчета.</div>
+        {% endif %}
+    </div>
+
+    <ul class="notice-list" id="clusteringQualityNotes">
+        {% if quality.quality_notes %}
+            {% for note in quality.quality_notes %}
+            <li>{{ note }}</li>
+            {% endfor %}
+        {% else %}
+        <li>После выполнения расчета здесь появятся выводы по качеству кластеризации.</li>
+        {% endif %}
+    </ul>
+</section>

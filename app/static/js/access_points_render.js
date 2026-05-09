@@ -400,6 +400,11 @@ function showLoading(message) {
         var selectedTableNames = Array.isArray(filters.table_names)
             ? filters.table_names
             : ((filters.table_name && filters.table_name !== 'all') ? [filters.table_name] : []);
+        if (!selectedTableNames.length && (!filters.table_name || filters.table_name === 'all')) {
+            selectedTableNames = (Array.isArray(filters.available_tables) ? filters.available_tables : [])
+                .map(function (option) { return option && option.value ? String(option.value).trim() : ''; })
+                .filter(function (value) { return value && value !== 'all'; });
+        }
         renderTableChecklist(filters.available_tables, selectedTableNames);
         setTableChecklistOpen(false);
         setSelectOptions('accessPointsDistrictFilter', filters.available_districts, filters.district, 'Все районы');
@@ -449,4 +454,3 @@ function showLoading(message) {
         }
     };
 }(window));
-
