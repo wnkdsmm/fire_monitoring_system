@@ -537,7 +537,6 @@ class ClusteringDiagnosticsRuntimeBundle(ClusteringRuntimeBundle):
     actual_method_key: NotRequired[str]
     actual_algorithm_key: NotRequired[str]
     actual_weighting_strategy: NotRequired[str]
-    method_comparison_reused: NotRequired[bool]
 
 
 class ClusteringLoadStageResult(TypedDict):
