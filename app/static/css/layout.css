@@ -141,6 +141,7 @@
     margin-left: calc(var(--sidebar-width) + 10px);
     max-width: none;
     padding-left: max(16px, calc(var(--page-padding) - 4px));
+    padding-right: max(16px, calc(var(--page-padding) - 4px));
 }
 
 .column-search-main,
@@ -265,6 +266,12 @@
         margin-left: 0;
         width: 100%;
         padding: 80px 16px 16px;
+    }
+
+    .dashboard-main {
+        margin-left: 0;
+        padding-left: 16px;
+        padding-right: 16px;
     }
 
     .column-search-main,

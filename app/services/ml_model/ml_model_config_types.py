@@ -66,6 +66,9 @@ from config.constants import (
 MODEL_NAME = L_ML_MODEL_NAME
 
 FORECAST_DAY_OPTIONS = list(C_ML_FORECAST_DAY_OPTIONS)
+# Fixed forecast horizon for UI and job/API requests. A shorter horizon
+# is more stable for this daily fire-count setup than extended 14-day runs.
+FIXED_FORECAST_DAYS = 7
 HISTORY_WINDOW_OPTIONS = [
     {"value": value, "label": L_ML_HISTORY_WINDOW_LABELS.get(value, value)}
     for value in C_ML_HISTORY_WINDOWS

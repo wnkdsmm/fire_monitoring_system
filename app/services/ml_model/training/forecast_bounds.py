@@ -7,6 +7,11 @@ import numpy as np
 from app.services.forecasting.utils import _format_number, _format_percent
 from app.services.shared.formatting import normalize_probability as _normalize_probability
 
+_INTERVAL_EXCESS_COVERAGE_START = 0.01
+_INTERVAL_EXCESS_COVERAGE_FULL = 0.10
+_INTERVAL_MAX_SHRINK = 0.45
+_INTERVAL_MIN_FLOOR_SHARE = 0.40
+
 
 def _resolve_interval_calibration(interval_calibration: dict[str, Any], horizon_days: int) -> dict[str, Any]:
     if 'absolute_error_quantile' in interval_calibration:
@@ -40,7 +45,7 @@ def _resolve_interval_calibration(interval_calibration: dict[str, Any], horizon_
 
 def _format_ratio_percent(value: float | None) -> str:
     if value is None:
-        return '—'
+        return '-'
     return f"{_format_number(float(value) * 100.0)}%"
 
 
@@ -54,21 +59,50 @@ def _forecast_interval_coverage_metadata(calibration: dict[str, Any]) -> dict[st
 
 
 def _prediction_interval_margin(prediction: float, calibration: dict[str, Any]) -> float:
+    def _coverage_shrink_factor() -> float:
+        if not bool(calibration.get('coverage_validated', False)):
+            return 1.0
+        validated_coverage = calibration.get('validated_coverage')
+        level = calibration.get('level')
+        if validated_coverage is None or level is None:
+            return 1.0
+        try:
+            excess_coverage = float(validated_coverage) - float(level)
+        except (TypeError, ValueError):
+            return 1.0
+        if not np.isfinite(excess_coverage) or excess_coverage <= _INTERVAL_EXCESS_COVERAGE_START:
+            return 1.0
+
+        denominator = max(1e-9, _INTERVAL_EXCESS_COVERAGE_FULL - _INTERVAL_EXCESS_COVERAGE_START)
+        excess_ratio = min(1.0, max(0.0, (excess_coverage - _INTERVAL_EXCESS_COVERAGE_START) / denominator))
+        shrink_share = _INTERVAL_MAX_SHRINK * excess_ratio
+        return max(1.0 - _INTERVAL_MAX_SHRINK, 1.0 - shrink_share)
+
     center = max(0.0, float(prediction))
     minimum_floor_raw = calibration.get('minimum_absolute_error_quantile')
     minimum_floor = None if minimum_floor_raw is None else max(0.0, float(minimum_floor_raw or 0.0))
     adaptive_bins = calibration.get('adaptive_bins') or []
     edge_values = calibration.get('adaptive_bin_edges') or []
+    shrink_factor = _coverage_shrink_factor()
+
+    def _apply_shrink(raw_margin: float) -> float:
+        shrunk_margin = max(0.0, float(raw_margin)) * shrink_factor
+        if minimum_floor is None:
+            return shrunk_margin
+        return max(minimum_floor * _INTERVAL_MIN_FLOOR_SHARE, shrunk_margin)
+
     if adaptive_bins:
         bin_index = int(np.searchsorted(np.asarray(edge_values, dtype=float), center, side='right'))
         bin_index = min(max(bin_index, 0), len(adaptive_bins) - 1)
         bin_quantile = adaptive_bins[bin_index].get('absolute_error_quantile')
         if bin_quantile is not None:
             margin = max(0.0, float(bin_quantile))
-            return max(minimum_floor, margin) if minimum_floor is not None else margin
+            margin = max(minimum_floor, margin) if minimum_floor is not None else margin
+            return _apply_shrink(margin)
 
     fallback_margin = max(0.0, float(calibration.get('absolute_error_quantile', 0.0)))
-    return max(minimum_floor, fallback_margin) if minimum_floor is not None else fallback_margin
+    fallback_margin = max(minimum_floor, fallback_margin) if minimum_floor is not None else fallback_margin
+    return _apply_shrink(fallback_margin)
 
 
 def _count_interval(prediction: float, calibration: dict[str, Any]) -> tuple[float, float]:
@@ -121,5 +155,5 @@ def _bound_probability(value: float) -> float:
 
 def _format_probability(value: float | None) -> str:
     if value is None:
-        return '—'
+        return '-'
     return _format_percent(_normalize_probability(value) * 100.0)

@@ -334,27 +334,29 @@
     margin-top: var(--space-token-32);
 }
 
-.ml-interval-panel {
-    margin-top: var(--space-token-32);
-}
-
-.ml-interval-panel .panel-head {
-    align-items: flex-start;
-}
-
-.ml-interval-value {
-    color: var(--ink-strong);
-    font-size: clamp(1.8rem, 2.8vw, 2.4rem);
-    font-weight: 800;
-    line-height: 1;
-    white-space: nowrap;
-}
-
-.ml-interval-meta {
-    margin: 0;
+.ml-quality-legend {
+    margin-top: 12px;
+    padding: 12px 14px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-control);
+    background: var(--surface-panel);
     color: var(--color-token-06);
-    font-size: var(--font-size-token-08);
-    line-height: 1.65;
+    font-size: var(--font-size-token-07);
+    line-height: 1.45;
+}
+
+.ml-quality-legend strong {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--ink-strong);
+}
+
+.ml-quality-legend p {
+    margin: 0 0 6px;
+}
+
+.ml-quality-legend p:last-child {
+    margin-bottom: 0;
 }
 
 .ml-quality-extra {
@@ -378,6 +380,41 @@
     margin-bottom: 0;
 }
 
+.forecast-table-ml {
+    table-layout: auto !important;
+    border-collapse: collapse;
+}
+
+.forecast-table-ml :is(th, td) {
+    vertical-align: middle;
+    font-variant-numeric: tabular-nums;
+    border-right: 1px solid var(--line);
+}
+
+.forecast-table-ml :is(th, td) {
+    text-align: left;
+}
+
+.forecast-table-ml :is(th:nth-child(1), td:nth-child(1)) {
+    white-space: nowrap;
+}
+
+.forecast-table-ml :is(th:nth-child(2), td:nth-child(2)) {
+    white-space: nowrap;
+}
+
+.forecast-table-ml :is(th:nth-child(4), td:nth-child(4)) {
+    text-align: center;
+}
+
+.forecast-table-ml td:nth-child(2) {
+    font-weight: 700;
+}
+
+.forecast-table-ml :is(th, td):last-child {
+    border-right: 0;
+}
+
 .ml-importance-note {
     margin: var(--space-token-14);
     color: var(--color-token-06);
@@ -397,13 +434,148 @@
         gap: 8px;
     }
 
-    .ml-interval-value {
-        white-space: normal;
-    }
 }
 
 .ml-form-grid {
     grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+}
+
+.ml-table-select {
+    position: relative;
+}
+
+.ml-table-select-toggle {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 11px 12px;
+    border: 1px solid var(--control-border);
+    border-radius: var(--radius-control);
+    background: var(--control-bg);
+    color: var(--ink);
+    font-size: var(--font-size-token-08);
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+    transition: var(--transition-interactive);
+}
+
+.ml-table-select-toggle:hover {
+    background: var(--control-bg-hover);
+    border-color: var(--color-token-32);
+}
+
+.ml-table-select-summary {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--ink);
+}
+
+.ml-table-select-caret {
+    flex: 0 0 auto;
+    color: var(--color-token-06);
+}
+
+.ml-table-select.is-open .ml-table-select-caret {
+    transform: rotate(180deg);
+}
+
+.ml-table-checklist {
+    position: absolute;
+    z-index: 30;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    display: grid;
+    gap: 8px;
+    max-height: 220px;
+    overflow: auto;
+    padding: 10px 12px;
+    border: 1px solid var(--color-token-19);
+    border-radius: var(--radius-control);
+    background: var(--control-bg);
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+}
+
+.ml-table-checklist.is-hidden {
+    display: none;
+}
+
+.ml-table-checklist-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--ink);
+    font-size: var(--font-size-token-08);
+    line-height: 1.35;
+}
+
+.ml-table-checklist-item span {
+    color: var(--ink);
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+.ml-table-checklist-item input[type="checkbox"] {
+    margin: 0;
+    width: 18px;
+    min-height: 18px;
+    height: 18px;
+    padding: 0;
+    flex: 0 0 18px;
+    accent-color: var(--accent);
+    cursor: pointer;
+}
+
+.ml-table-selected-list {
+    margin-top: 6px;
+    color: var(--color-token-06);
+    font-size: var(--font-size-token-07);
+    line-height: 1.35;
+    letter-spacing: 0;
+    text-transform: none;
+    word-break: break-word;
+}
+
+.ml-forecast-horizon-wrap {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 10px;
+}
+
+.ml-forecast-horizon {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-control);
+    background: var(--surface-panel);
+}
+
+.ml-forecast-horizon span {
+    color: var(--muted);
+    font-size: var(--font-size-token-07);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.ml-forecast-horizon #mlForecastDaysDisplay {
+    width: 86px;
+    min-height: 32px;
+    padding: 6px 10px;
+    border: 1px solid var(--control-border);
+    border-radius: 10px;
+    background: var(--control-bg);
+    color: var(--ink);
+    font-weight: 700;
+    text-align: center;
 }
 
 .ml-primary,
@@ -432,8 +604,11 @@
         grid-template-columns: 1fr;
     }
 
+    .ml-forecast-horizon-wrap {
+        justify-content: flex-start;
+    }
+
     .ml-secondary {
         grid-template-columns: 1fr;
     }
 }
-

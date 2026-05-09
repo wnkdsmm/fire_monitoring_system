@@ -237,6 +237,8 @@ class DashboardRequestState(TypedDict, total=False):
 
     selected_tables: list[DashboardTableRef]
     selected_table_name: str
+    selected_table_names: list[str]
+    selected_table_label: str
     selected_year: int | None
     selected_group_column: str
     available_years: list[DashboardOption]

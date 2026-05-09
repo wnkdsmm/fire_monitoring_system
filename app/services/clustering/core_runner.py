@@ -49,6 +49,7 @@ def _load_clustering_stage(
     *,
     base: ClusteringBaseState,
     selected_table: str,
+    selected_table_names: Sequence[str] | None,
     selected_sampling_strategy: str,
     normalized_feature_columns: Sequence[str] | None,
     requested_cluster_count: int,
@@ -58,6 +59,7 @@ def _load_clustering_stage(
     try:
         dataset = _load_clustering_dataset_for_request(
             selected_table=selected_table,
+            selected_table_names=selected_table_names,
             selected_sampling_strategy=selected_sampling_strategy,
             perf=perf,
             progress_callback=progress_callback,
@@ -240,6 +242,7 @@ def _render_clustering_payload_stage(
 
 def get_clustering_data(
     table_name: str = "",
+    table_names: Sequence[str] | None = None,
     cluster_count: str = "4",
     sampling_strategy: str = "stratified",
     feature_columns: Sequence[str] | None = None,
@@ -249,6 +252,7 @@ def get_clustering_data(
     perf = current_perf_trace()
     request_state = _build_clustering_request_state(
         table_name=table_name,
+        table_names=table_names,
         cluster_count=cluster_count,
         sampling_strategy=sampling_strategy,
         feature_columns=feature_columns,
@@ -256,6 +260,7 @@ def get_clustering_data(
     )
     table_options = request_state["table_options"]
     selected_table = request_state["selected_table"]
+    selected_table_names = request_state["selected_table_names"]
     requested_cluster_count = request_state["cluster_count"]
     selected_sampling_strategy = request_state["sampling_strategy"]
     normalized_feature_columns = request_state["feature_columns"]
@@ -264,7 +269,9 @@ def get_clustering_data(
     if perf is not None:
         perf.update(
             requested_table=table_name,
+            requested_table_names=list(table_names or []),
             selected_table=selected_table,
+            selected_table_names=selected_table_names,
             cluster_count=requested_cluster_count,
             sampling_strategy=selected_sampling_strategy,
         )
@@ -284,6 +291,7 @@ def get_clustering_data(
     base = _empty_clustering_data(
         table_options=table_options,
         selected_table=selected_table,
+        selected_table_names=selected_table_names,
         cluster_count=requested_cluster_count,
         sampling_strategy=selected_sampling_strategy,
     )
@@ -299,6 +307,7 @@ def get_clustering_data(
     load_stage = _load_clustering_stage(
         base=base,
         selected_table=selected_table,
+        selected_table_names=selected_table_names,
         selected_sampling_strategy=selected_sampling_strategy,
         normalized_feature_columns=normalized_feature_columns,
         requested_cluster_count=requested_cluster_count,

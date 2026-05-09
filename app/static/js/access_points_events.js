@@ -9,6 +9,8 @@
             }
 
             var form = byId('accessPointsForm');
+            var tableFilterRoot = byId('accessPointsTableFilter');
+            var tableFilterToggle = byId('accessPointsTableFilterToggle');
             if (form) {
                 form.addEventListener('submit', function (event) {
                     event.preventDefault();
@@ -16,7 +18,40 @@
                         options.onSubmit();
                     }
                 });
+                form.addEventListener('change', function (event) {
+                    if (!event || !event.target || event.target.name !== 'table_names') {
+                        return;
+                    }
+                    if (options && typeof options.onTableFilterChange === 'function') {
+                        options.onTableFilterChange();
+                    }
+                });
             }
+
+            if (tableFilterToggle) {
+                tableFilterToggle.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    if (options && typeof options.onToggleTableFilter === 'function') {
+                        options.onToggleTableFilter();
+                    }
+                });
+            }
+
+            document.addEventListener('click', function (event) {
+                if (!tableFilterRoot) {
+                    return;
+                }
+                if (!tableFilterRoot.contains(event.target) && options && typeof options.onCloseTableFilter === 'function') {
+                    options.onCloseTableFilter();
+                }
+            });
+
+            document.addEventListener('keydown', function (event) {
+                if (event && event.key === 'Escape' && options && typeof options.onCloseTableFilter === 'function') {
+                    options.onCloseTableFilter();
+                }
+            });
 
             var retryButton = byId('accessPointsRetryButton');
             if (retryButton) {

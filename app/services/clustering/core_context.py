@@ -32,6 +32,7 @@ def _normalize_clustering_cache_value(value: str) -> str:
 
 def _build_clustering_cache_key(
     selected_table: str,
+    selected_table_names: Sequence[str] | None,
     cluster_count: int,
     sampling_strategy: str,
     feature_columns: Sequence[str] | None,
@@ -40,6 +41,11 @@ def _build_clustering_cache_key(
     return (
         _CLUSTERING_CACHE_SCHEMA_VERSION,
         selected_table,
+        *tuple(
+            "table:" + str(item).strip()
+            for item in (selected_table_names or [])
+            if str(item).strip()
+        ),
         str(cluster_count),
         _normalize_clustering_cache_value(sampling_strategy),
         "manual_k" if cluster_count_is_explicit else "auto_k",
@@ -51,20 +57,46 @@ def _normalize_feature_columns(feature_columns: Sequence[str] | None) -> list[st
     return [str(item).strip() for item in (feature_columns or []) if str(item).strip()]
 
 
+def _normalize_table_names(table_options: Sequence[dict[str, str]], table_names: Sequence[str] | None) -> list[str]:
+    allowed = {
+        str(item.get("value") or "").strip()
+        for item in table_options
+        if str(item.get("value") or "").strip() and str(item.get("value") or "").strip() != "all"
+    }
+    normalized: list[str] = []
+    for item in (table_names or []):
+        value = str(item or "").strip()
+        if not value or value == "all" or value not in allowed:
+            continue
+        if value not in normalized:
+            normalized.append(value)
+    return normalized
+
+
 def _build_clustering_request_state(
     table_name: str = "",
+    table_names: Sequence[str] | None = None,
     cluster_count: str = "4",
     sampling_strategy: str = "stratified",
     feature_columns: Sequence[str] | None = None,
     cluster_count_is_explicit: bool = False,
 ) -> dict[str, Any]:
     table_options = _build_table_options()
-    selected_table = _resolve_selected_table(table_options, table_name)
+    selected_table_names = _normalize_table_names(table_options, table_names)
+    if len(selected_table_names) == 1:
+        selected_table = selected_table_names[0]
+    elif len(selected_table_names) > 1:
+        selected_table = "all"
+    else:
+        selected_table = _resolve_selected_table(table_options, table_name)
+        if selected_table and selected_table != "all":
+            selected_table_names = [selected_table]
     requested_cluster_count = _parse_cluster_count(cluster_count)
     selected_sampling_strategy = _parse_sampling_strategy(sampling_strategy)
     normalized_feature_columns = _normalize_feature_columns(feature_columns)
     cache_key = _build_clustering_cache_key(
         selected_table=selected_table,
+        selected_table_names=selected_table_names,
         cluster_count=requested_cluster_count,
         sampling_strategy=selected_sampling_strategy,
         feature_columns=normalized_feature_columns,
@@ -73,6 +105,7 @@ def _build_clustering_request_state(
     return {
         "table_options": table_options,
         "selected_table": selected_table,
+        "selected_table_names": selected_table_names,
         "cluster_count": requested_cluster_count,
         "sampling_strategy": selected_sampling_strategy,
         "feature_columns": normalized_feature_columns,
@@ -83,6 +116,7 @@ def _build_clustering_request_state(
 
 def get_clustering_page_context(
     table_name: str = "",
+    table_names: Sequence[str] | None = None,
     cluster_count: str = "4",
     sampling_strategy: str = "stratified",
     feature_columns: Sequence[str] | None = None,
@@ -92,6 +126,7 @@ def get_clustering_page_context(
 
     initial_data = get_clustering_data(
         table_name=table_name,
+        table_names=table_names,
         cluster_count=cluster_count,
         sampling_strategy=sampling_strategy,
         feature_columns=feature_columns,
@@ -107,18 +142,29 @@ def get_clustering_page_context(
 
 def get_clustering_shell_context(
     table_name: str = "",
+    table_names: Sequence[str] | None = None,
     cluster_count: str = "4",
     sampling_strategy: str = "stratified",
     feature_columns: Sequence[str] | None = None,
     cluster_count_is_explicit: bool = False,
 ) -> dict[str, Any]:
-    table_options = _build_table_options()
-    selected_table = _resolve_selected_table(table_options, table_name)
-    requested_cluster_count = _parse_cluster_count(cluster_count)
-    selected_sampling_strategy = _parse_sampling_strategy(sampling_strategy)
+    request_state = _build_clustering_request_state(
+        table_name=table_name,
+        table_names=table_names,
+        cluster_count=cluster_count,
+        sampling_strategy=sampling_strategy,
+        feature_columns=feature_columns,
+        cluster_count_is_explicit=cluster_count_is_explicit,
+    )
+    table_options = request_state["table_options"]
+    selected_table = request_state["selected_table"]
+    selected_table_names = request_state["selected_table_names"]
+    requested_cluster_count = request_state["cluster_count"]
+    selected_sampling_strategy = request_state["sampling_strategy"]
     initial_data = _empty_clustering_data(
         table_options=table_options,
         selected_table=selected_table,
+        selected_table_names=selected_table_names,
         cluster_count=requested_cluster_count,
         sampling_strategy=selected_sampling_strategy,
     )
@@ -136,13 +182,17 @@ def get_clustering_shell_context(
 def _empty_clustering_data(
     table_options: list[dict[str, str]],
     selected_table: str,
+    selected_table_names: Sequence[str] | None,
     cluster_count: int,
     sampling_strategy: str,
 ) -> dict[str, Any]:
+    normalized_table_names = [str(item).strip() for item in (selected_table_names or []) if str(item).strip()]
     selected_table_label = next(
         (item.get("label") for item in table_options if str(item.get("value") or "") == selected_table),
         selected_table or "Нет таблицы",
     )
+    if len(normalized_table_names) > 1:
+        selected_table_label = f"Выбрано таблиц: {len(normalized_table_names)}"
     return {
         "generated_at": _format_datetime(datetime.now()),
         "has_data": False,
@@ -203,6 +253,7 @@ def _empty_clustering_data(
         "notes": [],
         "filters": {
             "table_name": selected_table,
+            "table_names": normalized_table_names,
             "cluster_count": str(cluster_count),
             "sampling_strategy": sampling_strategy,
             "feature_columns": [],

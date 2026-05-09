@@ -14,6 +14,42 @@
             var setSelectOptions = shared.setSelectOptions;
             var setText = shared.setText;
             var setHidden = shared.setHidden;
+            var createTableChecklist = shared.createTableChecklist;
+            var accessPointsTableChecklist = typeof createTableChecklist === 'function'
+                ? createTableChecklist({
+                    rootId: 'accessPointsTableFilter',
+                    menuId: 'accessPointsTableFilterMenu',
+                    toggleId: 'accessPointsTableFilterToggle',
+                    summaryId: 'accessPointsTableFilterSummary',
+                    selectedListId: 'accessPointsTableFilterSelectedList',
+                    itemClassName: 'access-points-table-checklist-item'
+                })
+                : null;
+
+    function getSelectedTableNamesFromForm() {
+        if (accessPointsTableChecklist && typeof accessPointsTableChecklist.getSelectedValues === 'function') {
+            return accessPointsTableChecklist.getSelectedValues();
+        }
+        return [];
+    }
+
+    function renderTableChecklist(options, selectedTableNames) {
+        if (accessPointsTableChecklist && typeof accessPointsTableChecklist.renderChecklist === 'function') {
+            accessPointsTableChecklist.renderChecklist(options, selectedTableNames);
+        }
+    }
+
+    function syncTableChecklistSummary() {
+        if (accessPointsTableChecklist && typeof accessPointsTableChecklist.syncSummary === 'function') {
+            accessPointsTableChecklist.syncSummary();
+        }
+    }
+
+    function setTableChecklistOpen(isOpen) {
+        if (accessPointsTableChecklist && typeof accessPointsTableChecklist.setOpen === 'function') {
+            accessPointsTableChecklist.setOpen(isOpen);
+        }
+    }
 
 function showLoading(message) {
         var loadingNode = byId('accessPointsLoadingState');
@@ -77,7 +113,6 @@ function showLoading(message) {
         setText('accessPointsLead', data.top_point_explanation || 'Недостаточно данных для выделения приоритетных точек.');
         setText('accessPointsTableLabel', summary.selected_table_label || 'Все таблицы');
         setText('accessPointsDistrictLabel', summary.selected_district_label || 'Все районы');
-        setText('accessPointsYearLabel', summary.selected_year_label || 'Все годы');
         setText('accessPointsLimitLabel', summary.limit_display || '25');
         setText('accessPointsHeroLabel', data.top_point_label || '-');
         setText(
@@ -362,9 +397,12 @@ function showLoading(message) {
 
     function renderFilters(data) {
         var filters = data.filters || {};
-        setSelectOptions('accessPointsTableFilter', filters.available_tables, filters.table_name, 'Нет таблиц');
+        var selectedTableNames = Array.isArray(filters.table_names)
+            ? filters.table_names
+            : ((filters.table_name && filters.table_name !== 'all') ? [filters.table_name] : []);
+        renderTableChecklist(filters.available_tables, selectedTableNames);
+        setTableChecklistOpen(false);
         setSelectOptions('accessPointsDistrictFilter', filters.available_districts, filters.district, 'Все районы');
-        setSelectOptions('accessPointsYearFilter', filters.available_years, filters.year, 'Все годы');
         setSelectOptions('accessPointsLimitFilter', filters.available_limits, filters.limit, 'Топ 25');
         renderFeaturePicker(filters);
     }
@@ -399,17 +437,16 @@ function showLoading(message) {
     }
 
             return {
+                getSelectedTableNamesFromForm: getSelectedTableNamesFromForm,
                 hideLoading: hideLoading,
                 render: render,
                 renderCharts: renderCharts,
+                setTableChecklistOpen: setTableChecklistOpen,
                 showError: showError,
-                showLoading: showLoading
+                showLoading: showLoading,
+                syncTableChecklistSummary: syncTableChecklistSummary
             };
         }
     };
 }(window));
-
-
-
-
 

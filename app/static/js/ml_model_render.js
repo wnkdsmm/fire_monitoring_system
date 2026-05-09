@@ -14,9 +14,20 @@
     var setText = shared.setText;
     var setValue = shared.setValue;
     var setHidden = shared.setHidden;
+    var createTableChecklist = shared.createTableChecklist;
 
     var currentMlData = null;
     var progressTimers = createTimerGroup();
+    var mlTableChecklist = typeof createTableChecklist === 'function'
+        ? createTableChecklist({
+            rootId: 'mlTableFilter',
+            menuId: 'mlTableFilterMenu',
+            toggleId: 'mlTableFilterToggle',
+            summaryId: 'mlTableFilterSummary',
+            selectedListId: 'mlTableFilterSelectedList',
+            itemClassName: 'ml-table-checklist-item'
+        })
+        : null;
     var progressSteps = [
         {
             label: 'Загрузка данных',
@@ -39,6 +50,11 @@
             message: 'Подставляем графики, таблицы и карточки результата.'
         }
     ];
+
+    function normalizeRangeDisplay(value) {
+        var text = String(value || '').trim();
+        return text.replace(/^\d+\s*%\s*:\s*/, '');
+    }
 
     function renderSidebarStatus(data) {
         var container = byId('mlSidebarStatus');
@@ -77,9 +93,7 @@
         if (heroTags) {
             heroTags.innerHTML = ''
                 + '<span class="hero-tag">Таблица: <strong>' + escapeHtml(summary.selected_table_label || 'Нет таблицы') + '</strong></span>'
-                + '<span class="hero-tag">История для расчёта: <strong>' + escapeHtml(summary.history_window_label || 'Все годы') + '</strong></span>'
                 + '<span class="hero-tag">Главный фактор модели: <strong>' + escapeHtml(summary.top_feature_label || '-') + '</strong></span>'
-                + '<span class="hero-tag">Температурный сценарий: <strong>' + escapeHtml(summary.temperature_scenario_display || 'Историческая температура') + '</strong></span>'
                 + '<span class="hero-tag">'
                 + (summary.event_probability_enabled
                     ? 'Средняя вероятность P(>=1 пожара): <strong>' + escapeHtml(summary.average_event_probability_display || '—') + '</strong>'
@@ -184,16 +198,6 @@
         warningNode.classList.toggle('is-hidden', !classBalanceWarning);
     }
 
-    function renderIntervalCoverage(card) {
-        var safeCard = card || {};
-        setText('mlIntervalCoverageTitle', safeCard.label || 'Покрытие интервала на отложенных окнах');
-        setText('mlIntervalCoverageValue', safeCard.value || '—');
-        setText(
-            'mlIntervalCoverageMeta',
-            safeCard.meta || 'После расчета здесь появится проверка того, как часто фактическое число пожаров попадало в прогнозный интервал.'
-        );
-    }
-
     function renderImportanceNote(note) {
         var node = byId('mlImportanceChartNote');
         if (!node) {
@@ -219,6 +223,25 @@
         }).join('');
     }
 
+    function getSelectedTableNamesFromForm() {
+        if (mlTableChecklist && typeof mlTableChecklist.getSelectedValues === 'function') {
+            return mlTableChecklist.getSelectedValues();
+        }
+        return [];
+    }
+
+    function renderTableChecklist(options, selectedTableNames) {
+        if (mlTableChecklist && typeof mlTableChecklist.renderChecklist === 'function') {
+            mlTableChecklist.renderChecklist(options, selectedTableNames);
+        }
+    }
+
+    function setTableChecklistOpen(isOpen) {
+        if (mlTableChecklist && typeof mlTableChecklist.setOpen === 'function') {
+            mlTableChecklist.setOpen(isOpen);
+        }
+    }
+
     function renderCountTable(table) {
         var container = byId('mlCountTableShell');
         var safeTable = table || {};
@@ -234,7 +257,7 @@
 
         container.innerHTML = ''
             + '<table class="forecast-table">'
-            + '<thead><tr><th>Метод</th><th>Роль</th><th>MAE</th><th>RMSE</th><th>SMAPE</th><th>Девиация Пуассона</th><th>MAE к базовой модели</th><th>Статус</th></tr></thead>'
+            + '<thead><tr><th>Метод</th><th>Роль</th><th>MAE</th><th>RMSE</th><th>sMAPE</th><th>Девиация Пуассона</th><th>ΔMAE к базовой модели</th><th>Статус</th></tr></thead>'
             + '<tbody>' + rows.map(function (row) {
                 return ''
                     + '<tr>'
@@ -262,16 +285,16 @@
         }
 
         container.innerHTML = ''
-            + '<table class="forecast-table">'
-            + '<thead><tr><th>Дата</th><th>Ожидаемое число пожаров</th><th>Диапазон</th><th>Индекс риска</th><th>Температура</th></tr></thead>'
+            + '<table class="forecast-table forecast-table-ml">'
+            + '<colgroup><col style="width:19%"><col style="width:19%"><col style="width:38%"><col style="width:24%"></colgroup>'
+            + '<thead><tr><th>Дата</th><th>Ожидаемое число пожаров</th><th>Диапазон</th><th>Индекс риска</th></tr></thead>'
             + '<tbody>' + rows.map(function (row) {
                 return ''
                     + '<tr>'
                     + '<td data-label="Дата">' + escapeHtml(row.date_display || '-') + '</td>'
                     + '<td data-label="Ожидаемое число пожаров">' + escapeHtml(row.forecast_value_display || '0') + '</td>'
-                    + '<td data-label="Диапазон">' + escapeHtml(row.range_display || '—') + '</td>'
+                    + '<td data-label="Диапазон">' + escapeHtml(normalizeRangeDisplay(row.range_display || '—')) + '</td>'
                     + '<td data-label="Индекс риска"><span class="ml-risk-pill ml-risk-' + escapeHtml(row.risk_level_tone || 'minimal') + '">' + escapeHtml(row.risk_index_display || '0 / 100') + '</span></td>'
-                    + '<td data-label="Температура">' + escapeHtml(row.temperature_display || '—') + '</td>'
                     + '</tr>';
             }).join('') + '</tbody></table>';
     }
@@ -376,7 +399,7 @@
         renderClassBalanceWarning('mlQualityEventMetricCards', false);
         renderTableSkeleton('mlCountTableShell', 8, 4);
         charts.renderChartSkeleton('mlForecastChart', 'mlForecastChartFallback');
-        renderTableSkeleton('mlForecastTableShell', 6, 4);
+        renderTableSkeleton('mlForecastTableShell', 4, 4);
         charts.renderChartSkeleton('mlImportanceChart', 'mlImportanceChartFallback');
         renderImportanceNote('');
         renderFeatureSkeleton();
@@ -398,24 +421,24 @@
         renderSidebarStatus(data);
         renderHero(data);
         renderSummaryCards(summary);
-
-        setSelectOptions('mlTableFilter', filters.available_tables, filters.table_name, 'Нет таблиц');
-        setSelectOptions('mlHistoryWindowFilter', filters.available_history_windows, filters.history_window, 'Все годы');
+        var selectedTableNames = Array.isArray(filters.table_names)
+            ? filters.table_names
+            : ((filters.table_name && filters.table_name !== 'all') ? [filters.table_name] : []);
+        renderTableChecklist(filters.available_tables, selectedTableNames);
+        setTableChecklistOpen(false);
         setSelectOptions('mlCauseFilter', filters.available_causes, filters.cause, 'Все причины');
         setSelectOptions('mlObjectCategoryFilter', filters.available_object_categories, filters.object_category, 'Все категории');
-        setSelectOptions('mlForecastDaysFilter', filters.available_forecast_days, filters.forecast_days, '14 дней');
-        setValue('mlTemperatureInput', filters.temperature || '');
+        setValue('mlForecastDaysDisplay', (summary.forecast_days_display || '7') + ' дней');
 
-        setText('mlQualityTitle', 'Насколько можно доверять ML-прогнозу');
-        setText('mlQualitySubtitle', quality.subtitle || 'Что показывает блок: насколько модель предсказывала именно число пожаров на прошлой истории и чем она лучше простых подходов.');
+        setText('mlQualityTitle', quality.title || 'Валидация качества ML-прогноза количества пожаров');
+        setText('mlQualitySubtitle', quality.subtitle || 'Метрики рассчитаны на единой исторической выборке и показывают точность прогноза количества пожаров по дням.');
         renderMetricCards('mlQualityMetricCards', quality.metric_cards || [], 'После расчета здесь появятся метрики качества ML-прогноза.');
-        renderIntervalCoverage(quality.interval_card || null);
         renderOptionalMetricCards('mlQualityEventMetricsSection', 'mlQualityEventMetricCards', quality.event_metric_cards || [], '');
         renderClassBalanceWarning(
             'mlQualityEventMetricCards',
             Boolean(quality.class_balance_warning)
         );
-        setText('mlCountTableTitle', 'Сравнение моделей по числу пожаров');
+        setText('mlCountTableTitle', (quality.count_table && quality.count_table.title) || 'Сравнение методов прогноза количества пожаров');
         renderCountTable(quality.count_table || {});
         setText('mlForecastTitle', 'Сколько пожаров ожидается по дням');
         charts.renderLineChart(chartData.forecast, 'mlForecastChart', 'mlForecastChartFallback');
@@ -435,11 +458,9 @@
         renderCriticalNotes(data.notes || []);
         updateMlScreenLinks({
             table_name: filters.table_name || 'all',
+            table_names: selectedTableNames,
             cause: filters.cause || 'all',
             object_category: filters.object_category || 'all',
-            temperature: filters.temperature || '',
-            forecast_days: filters.forecast_days || '14',
-            history_window: filters.history_window || 'all'
         });
         if (shared.revealPageContent) { shared.revealPageContent(); }
     }
@@ -552,14 +573,19 @@
     }
 
     function collectMlFiltersFromForm() {
+        var tableNames = getSelectedTableNamesFromForm();
         return {
-            table_name: byId('mlTableFilter') ? byId('mlTableFilter').value : 'all',
+            table_name: tableNames.length === 1 ? tableNames[0] : 'all',
+            table_names: tableNames,
             cause: byId('mlCauseFilter') ? byId('mlCauseFilter').value : 'all',
             object_category: byId('mlObjectCategoryFilter') ? byId('mlObjectCategoryFilter').value : 'all',
-            temperature: byId('mlTemperatureInput') ? byId('mlTemperatureInput').value : '',
-            forecast_days: byId('mlForecastDaysFilter') ? byId('mlForecastDaysFilter').value : '14',
-            history_window: byId('mlHistoryWindowFilter') ? byId('mlHistoryWindowFilter').value : 'all'
         };
+    }
+
+    function syncTableChecklistSummary() {
+        if (mlTableChecklist && typeof mlTableChecklist.syncSummary === 'function') {
+            mlTableChecklist.syncSummary();
+        }
     }
 
     function buildMlNavigationHref(path, filters, options) {
@@ -567,11 +593,23 @@
         var settings = options || {};
         var params = new URLSearchParams();
 
-        if (safeFilters.table_name && safeFilters.table_name !== 'all') {
+        var selectedTables = Array.isArray(safeFilters.table_names) ? safeFilters.table_names : [];
+        if (settings.onlyTable && selectedTables.length) {
+            if (selectedTables.length === 1) {
+                params.set('table_name', selectedTables[0]);
+            }
+        } else if (selectedTables.length) {
+            selectedTables.forEach(function (tableName) {
+                var normalized = String(tableName || '').trim();
+                if (normalized) {
+                    params.append('table_names', normalized);
+                }
+            });
+        } else if (safeFilters.table_name && safeFilters.table_name !== 'all') {
             params.set('table_name', safeFilters.table_name);
         }
         if (!settings.onlyTable) {
-            ['cause', 'object_category', 'temperature', 'forecast_days', 'history_window'].forEach(function (key) {
+            ['cause', 'object_category'].forEach(function (key) {
                 var value = safeFilters[key];
                 if (value != null && value !== '' && value !== 'all') {
                     params.set(key, value);
@@ -666,7 +704,10 @@
     function init() {
         var form = byId('mlModelForm');
         var initialData = global.__FIRE_ML_INITIAL__ || null;
+        var tableFilterRoot = byId('mlTableFilter');
+        var tableFilterToggle = byId('mlTableFilterToggle');
         var syncScreenLinks = function () {
+            syncTableChecklistSummary();
             updateMlScreenLinks(collectMlFiltersFromForm());
         };
 
@@ -675,13 +716,39 @@
                 event.preventDefault();
                 startMlModelJob();
             });
-            Array.prototype.forEach.call(form.querySelectorAll('select, input'), function (field) {
-                field.addEventListener('change', syncScreenLinks);
-                if (field.tagName === 'INPUT') {
-                    field.addEventListener('input', syncScreenLinks);
+            form.addEventListener('change', function (event) {
+                syncScreenLinks();
+                if (event && event.target && event.target.name === 'table_names') {
+                    setTableChecklistOpen(false);
+                }
+            });
+            form.addEventListener('input', function (event) {
+                if (event && event.target && event.target.tagName === 'INPUT') {
+                    syncScreenLinks();
                 }
             });
         }
+        if (tableFilterToggle) {
+            tableFilterToggle.addEventListener('click', function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+                var isOpen = tableFilterRoot && tableFilterRoot.classList.contains('is-open');
+                setTableChecklistOpen(!isOpen);
+            });
+        }
+        document.addEventListener('click', function (event) {
+            if (!tableFilterRoot) {
+                return;
+            }
+            if (!tableFilterRoot.contains(event.target)) {
+                setTableChecklistOpen(false);
+            }
+        });
+        document.addEventListener('keydown', function (event) {
+            if (event && event.key === 'Escape') {
+                setTableChecklistOpen(false);
+            }
+        });
         var retryButton = byId('mlRetryButton');
         if (retryButton) {
             retryButton.addEventListener('click', function () {

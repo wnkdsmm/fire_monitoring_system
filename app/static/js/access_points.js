@@ -10,13 +10,22 @@
         initialData: global.__FIRE_ACCESS_POINTS_INITIAL__ || {}
     });
 
-function getFormParams() {
+    function getSelectedTableNames(form) {
+        if (renderApi && typeof renderApi.getSelectedTableNamesFromForm === 'function') {
+            return renderApi.getSelectedTableNamesFromForm();
+        }
+        return [];
+    }
+
+    function getFormParams() {
         var form = byId('accessPointsForm');
         var formData = form ? new FormData(form) : new FormData();
+        var tableNames = getSelectedTableNames(form);
         return {
-            table_name: String(formData.get('table_name') || 'all'),
+            table_name: tableNames.length === 1 ? tableNames[0] : 'all',
+            table_names: tableNames,
             district: String(formData.get('district') || 'all'),
-            year: String(formData.get('year') || 'all'),
+            year: 'all',
             limit: String(formData.get('limit') || '25'),
             feature_columns: formData.getAll('feature_columns').map(function (value) {
                 return String(value || '').trim();
@@ -26,9 +35,20 @@ function getFormParams() {
 
     function buildAccessPointsQuery(params) {
         var query = new URLSearchParams();
-        query.set('table_name', params.table_name || 'all');
+        var tableNames = Array.isArray(params.table_names) ? params.table_names : [];
+        if (tableNames.length === 1) {
+            query.set('table_name', tableNames[0]);
+        } else if (tableNames.length > 1) {
+            tableNames.forEach(function (tableName) {
+                var normalized = String(tableName || '').trim();
+                if (normalized) {
+                    query.append('table_names', normalized);
+                }
+            });
+        } else {
+            query.set('table_name', params.table_name || 'all');
+        }
         query.set('district', params.district || 'all');
-        query.set('year', params.year || 'all');
         query.set('limit', params.limit || '25');
         (Array.isArray(params.feature_columns) ? params.feature_columns : []).forEach(function (value) {
             query.append('feature_columns', value);
@@ -115,6 +135,26 @@ function getFormParams() {
             },
             onSubmit: function () {
                 fetchAccessPoints(getFormParams());
+            },
+            onTableFilterChange: function () {
+                if (renderApi.syncTableChecklistSummary) {
+                    renderApi.syncTableChecklistSummary();
+                }
+                if (renderApi.setTableChecklistOpen) {
+                    renderApi.setTableChecklistOpen(false);
+                }
+            },
+            onToggleTableFilter: function () {
+                var root = byId('accessPointsTableFilter');
+                var isOpen = root && root.classList.contains('is-open');
+                if (renderApi.setTableChecklistOpen) {
+                    renderApi.setTableChecklistOpen(!isOpen);
+                }
+            },
+            onCloseTableFilter: function () {
+                if (renderApi.setTableChecklistOpen) {
+                    renderApi.setTableChecklistOpen(false);
+                }
             }
         });
     }

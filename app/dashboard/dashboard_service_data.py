@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Sequence
 from typing import Any
 
 from app.perf import ensure_sqlalchemy_timing, perf_trace
@@ -64,16 +65,40 @@ def _normalize_horizon_days(horizon_days: int | str) -> int:
     return value if value in DASHBOARD_HORIZON_OPTIONS else PRIORITY_HORIZON_DAYS
 
 
+def _selected_table_label(table_names: Sequence[str], *, selected_table: str) -> str:
+    concrete = [str(item or "").strip() for item in table_names if str(item or "").strip()]
+    if selected_table == "all":
+        if not concrete:
+            return "Все таблицы"
+        if len(concrete) == 1:
+            return concrete[0]
+        preview = ", ".join(concrete[:2])
+        suffix = "" if len(concrete) <= 2 else f" +{len(concrete) - 2}"
+        return f"{preview}{suffix}"
+    if not concrete:
+        return selected_table or "Все таблицы"
+    if len(concrete) == 1:
+        return concrete[0]
+    preview = ", ".join(concrete[:2])
+    suffix = "" if len(concrete) <= 2 else f" +{len(concrete) - 2}"
+    return f"{preview}{suffix}"
+
+
 def _build_dashboard_cache_key(
     metadata: DashboardMetadata,
     table_name: str,
+    table_names: Sequence[str] | None,
     year: str,
     normalized_group_column: str,
     horizon_days: int,
 ) -> tuple[Any, ...]:
+    normalized_table_names = tuple(
+        sorted({str(item or "").strip() for item in (table_names or []) if str(item or "").strip()})
+    )
     return (
         _metadata_table_names(metadata),
         table_name,
+        normalized_table_names,
         year,
         normalized_group_column,
         horizon_days,
@@ -83,6 +108,7 @@ def _build_dashboard_cache_key(
 def _build_resolved_dashboard_cache_key(
     metadata: DashboardMetadata,
     selected_table_name: str,
+    selected_table_names: Sequence[str] | None,
     selected_year: int | None,
     selected_group_column: str,
     horizon_days: int,
@@ -90,6 +116,7 @@ def _build_resolved_dashboard_cache_key(
     return _build_dashboard_cache_key(
         metadata,
         selected_table_name,
+        selected_table_names,
         str(selected_year) if selected_year is not None else "all",
         selected_group_column,
         horizon_days,
@@ -143,6 +170,7 @@ def _build_dashboard_shell_initial_data(
     initial_data = _empty_dashboard_data(horizon_days=horizon_days)
     initial_data["bootstrap_mode"] = "deferred"
     initial_data["filters"]["table_name"] = filter_state["selected_table_name"]
+    initial_data["filters"]["table_names"] = filter_state.get("selected_table_names") or []
     initial_data["filters"]["year"] = str(filter_state["selected_year"]) if filter_state["selected_year"] is not None else "all"
     initial_data["filters"]["group_column"] = selected_group_column
     initial_data["filters"]["horizon_days"] = str(horizon_days)
@@ -150,10 +178,9 @@ def _build_dashboard_shell_initial_data(
     initial_data["filters"]["available_years"] = filter_state["available_years"]
     initial_data["filters"]["available_group_columns"] = available_group_columns
     initial_data["filters"]["available_horizon_days"] = build_horizon_day_options()
-    initial_data["scope"]["table_label"] = _find_option_label(
-        metadata["table_options"],
-        filter_state["selected_table_name"],
-        "Все таблицы",
+    initial_data["scope"]["table_label"] = _selected_table_label(
+        filter_state.get("selected_table_names") or [],
+        selected_table=filter_state["selected_table_name"],
     )
     initial_data["scope"]["year_label"] = (
         str(filter_state["selected_year"]) if filter_state["selected_year"] is not None else "Все годы"
@@ -169,6 +196,7 @@ def _build_dashboard_shell_initial_data(
 def _resolve_requested_dashboard_cache(
     metadata: DashboardMetadata,
     table_name: str,
+    table_names: Sequence[str] | None,
     year: str,
     group_column: str,
     horizon_days: int,
@@ -177,6 +205,7 @@ def _resolve_requested_dashboard_cache(
     cache_key = _build_dashboard_cache_key(
         metadata,
         table_name,
+        table_names,
         year,
         normalized_group_column,
         horizon_days,
@@ -188,6 +217,7 @@ def _build_dashboard_request_state(
     metadata: DashboardMetadata,
     *,
     table_name: str,
+    table_names: Sequence[str] | None,
     year: str,
     normalized_group_column: str,
     horizon_days: int,
@@ -198,6 +228,7 @@ def _build_dashboard_request_state(
     filter_state = resolve_dashboard_filters(
         metadata=metadata,
         table_name=table_name,
+        table_names=table_names or [],
         year=year,
         group_column=normalized_group_column,
     )
@@ -206,9 +237,14 @@ def _build_dashboard_request_state(
         "resolved_cache_key": _build_resolved_dashboard_cache_key(
             metadata,
             filter_state["selected_table_name"],
+            filter_state.get("selected_table_names") or [],
             filter_state["selected_year"],
             filter_state["selected_group_column"],
             horizon_days,
+        ),
+        "selected_table_label": _selected_table_label(
+            filter_state.get("selected_table_names") or [],
+            selected_table=filter_state["selected_table_name"],
         ),
         "horizon_days": horizon_days,
     }
@@ -239,11 +275,13 @@ def build_dashboard_context(
     year: str = "all",
     group_column: str = "",
     horizon_days: int = PRIORITY_HORIZON_DAYS,
+    table_names: Sequence[str] | None = None,
 ) -> DashboardContext:
     normalized_horizon_days = _normalize_horizon_days(horizon_days)
     metadata = _collect_dashboard_metadata_cached()
     initial_data = get_dashboard_data(
         table_name=table_name,
+        table_names=table_names,
         year=year,
         group_column=group_column or metadata["default_group_column"],
         horizon_days=normalized_horizon_days,
@@ -264,10 +302,12 @@ def get_dashboard_page_context(
     year: str = "all",
     group_column: str = "",
     horizon_days: int = PRIORITY_HORIZON_DAYS,
+    table_names: Sequence[str] | None = None,
  ) -> DashboardContext:
     try:
         return build_dashboard_context(
             table_name=table_name,
+            table_names=table_names,
             year=year,
             group_column=group_column,
             horizon_days=horizon_days,
@@ -283,6 +323,7 @@ def get_dashboard_shell_context(
     year: str = "all",
     group_column: str = "",
     horizon_days: int = PRIORITY_HORIZON_DAYS,
+    table_names: Sequence[str] | None = None,
  ) -> DashboardContext:
     try:
         normalized_horizon_days = _normalize_horizon_days(horizon_days)
@@ -290,6 +331,7 @@ def get_dashboard_shell_context(
         filter_state = _resolve_dashboard_filters(
             metadata=metadata,
             table_name=table_name,
+            table_names=table_names or [],
             year=year,
             group_column=group_column or metadata["default_group_column"],
         )
@@ -315,6 +357,7 @@ def get_dashboard_data(
     year: str = "all",
     group_column: str = "",
     horizon_days: int = PRIORITY_HORIZON_DAYS,
+    table_names: Sequence[str] | None = None,
     metadata: DashboardMetadata | None = None,
     allow_fallback: bool = True,
 ) -> DashboardPayload:
@@ -350,6 +393,7 @@ def get_dashboard_data(
     with perf_trace(
         "dashboard",
         requested_table=table_name,
+        requested_tables=len([item for item in (table_names or []) if str(item or "").strip()]),
         requested_year=year,
         requested_group_column=group_column or "",
         requested_horizon_days=horizon_days,
@@ -363,6 +407,7 @@ def get_dashboard_data(
                 cache_key = build_dashboard_cache_key(
                     metadata,
                     table_name,
+                    table_names,
                     year,
                     normalized_group_column,
                     normalized_horizon_days,
@@ -380,6 +425,7 @@ def get_dashboard_data(
                 request_state = build_dashboard_request_state(
                     metadata,
                     table_name=table_name,
+                    table_names=table_names,
                     year=year,
                     normalized_group_column=normalized_group_column,
                     horizon_days=normalized_horizon_days,
@@ -411,6 +457,7 @@ def get_dashboard_data(
                     selected_year=request_state["selected_year"],
                     selected_group_column=request_state["selected_group_column"],
                     selected_table_name=request_state["selected_table_name"],
+                    selected_table_label=request_state.get("selected_table_label", ""),
                     available_years=request_state["available_years"],
                     available_group_columns=request_state["available_group_columns"],
                     horizon_days=request_state["horizon_days"],
@@ -424,6 +471,7 @@ def get_dashboard_data(
                     aggregation=aggregation,
                     selected_tables=request_state["selected_tables"],
                     selected_table_name=request_state["selected_table_name"],
+                    selected_table_names=request_state.get("selected_table_names") or [],
                     selected_year=request_state["selected_year"],
                     selected_group_column=request_state["selected_group_column"],
                     available_years=request_state["available_years"],

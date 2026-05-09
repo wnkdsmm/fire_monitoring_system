@@ -3,22 +3,40 @@
             <h2>Параметры ML-прогноза</h2>
             <span class="panel-meta">Выбор исходных данных и сценарных условий для расчета ожидаемого количества пожаров по дням.</span>
         </div>
-        <form class="filters-grid ml-form-grid" id="mlModelForm" method="get" action="/ml-model">
+                <form class="filters-grid ml-form-grid" id="mlModelForm" method="get" action="/ml-model">
             <label class="filter-field">
-                <span>Таблица</span>
-                <select id="mlTableFilter" name="table_name">
-                    {% for option in filters.available_tables %}
-                    <option value="{{ option.value }}" {% if option.value == filters.table_name %}selected{% endif %}>{{ option.label }}</option>
-                    {% endfor %}
-                </select>
-            </label>
-            <label class="filter-field">
-                <span>История для расчета</span>
-                <select id="mlHistoryWindowFilter" name="history_window">
-                    {% for option in filters.available_history_windows %}
-                    <option value="{{ option.value }}" {% if option.value == filters.history_window %}selected{% endif %}>{{ option.label }}</option>
-                    {% endfor %}
-                </select>
+                <span>Таблицы</span>
+                <div id="mlTableFilter" class="ml-table-select">
+                    <button
+                        id="mlTableFilterToggle"
+                        class="ml-table-select-toggle"
+                        type="button"
+                        aria-haspopup="true"
+                        aria-expanded="false"
+                        aria-controls="mlTableFilterMenu"
+                    >
+                        <span id="mlTableFilterSummary" class="ml-table-select-summary">Все таблицы</span>
+                        <span class="ml-table-select-caret" aria-hidden="true">▾</span>
+                    </button>
+                    <div
+                        id="mlTableFilterMenu"
+                        class="ml-table-checklist is-hidden"
+                        role="group"
+                        aria-label="Выбор таблиц для ML-прогноза"
+                    >
+                        {% set selected_tables = filters.table_names if filters.table_names is defined else [] %}
+                        {% if not selected_tables and filters.table_name and filters.table_name != 'all' %}
+                            {% set selected_tables = [filters.table_name] %}
+                        {% endif %}
+                        {% for option in filters.available_tables if option.value != 'all' %}
+                        <label class="ml-table-checklist-item">
+                            <input type="checkbox" name="table_names" value="{{ option.value }}" {% if option.value in selected_tables %}checked{% endif %}>
+                            <span>{{ option.label }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div id="mlTableFilterSelectedList" class="ml-table-selected-list"></div>
             </label>
             <label class="filter-field">
                 <span>Причина пожара</span>
@@ -36,23 +54,17 @@
                     {% endfor %}
                 </select>
             </label>
-            <label class="filter-field">
-                <span>Температура сценария, °C</span>
-                <input id="mlTemperatureInput" name="temperature" type="number" step="0.1" value="{{ filters.temperature }}" placeholder="При пустом поле используется историческое температурное значение">
-            </label>
-            <label class="filter-field">
-                <span>Горизонт прогноза, дней</span>
-                <select id="mlForecastDaysFilter" name="forecast_days">
-                    {% for option in filters.available_forecast_days %}
-                    <option value="{{ option.value }}" {% if option.value == filters.forecast_days %}selected{% endif %}>{{ option.label }}</option>
-                    {% endfor %}
-                </select>
-            </label>
             <div class="filter-field filter-actions ml-actions">
                 <span>Действие</span>
                 <button id="mlRefreshButton" class="primary-action" type="submit">Пересчитать ML-прогноз</button>
             </div>
         </form>
+        <div class="ml-forecast-horizon-wrap">
+            <div class="ml-forecast-horizon">
+                <span>Горизонт прогноза</span>
+                <input id="mlForecastDaysDisplay" type="text" value="{{ summary.forecast_days_display }} дней" readonly disabled>
+            </div>
+        </div>
         <div id="mlAsyncState" class="analysis-async ml-async-state{% if data.bootstrap_mode == 'deferred' %}{% else %} is-hidden{% endif %}">
             <div id="mlLoadingState" class="analysis-status-card ml-loading-state{% if data.bootstrap_mode == 'deferred' %} is-pending{% else %} is-hidden{% endif %}" aria-live="polite">
                 <div class="analysis-status-head u-flex-between-gap-12 ml-loading-head">
@@ -133,3 +145,4 @@
             {% endfor %}
         </ul>
     </article>
+

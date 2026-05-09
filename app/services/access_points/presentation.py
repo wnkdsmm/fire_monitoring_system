@@ -21,11 +21,10 @@ def _selection_label(options: Sequence[OptionItem], selected_value: str, fallbac
 
 
 def _build_filter_description(selected_table_label: str, selected_district_label: str, selected_year_label: str) -> str:
+    del selected_year_label
     parts = [f"таблица: {selected_table_label}"]
     if selected_district_label and selected_district_label != "Все районы":
         parts.append(f"район: {selected_district_label}")
-    if selected_year_label and selected_year_label != "Все годы":
-        parts.append(f"год: {selected_year_label}")
     return " | ".join(parts)
 
 

@@ -123,6 +123,141 @@
         }
     }
 
+    function createTableChecklist(config) {
+        var settings = config || {};
+        var checkboxName = settings.checkboxName || 'table_names';
+        var rootId = settings.rootId || '';
+        var menuId = settings.menuId || '';
+        var toggleId = settings.toggleId || '';
+        var summaryId = settings.summaryId || '';
+        var selectedListId = settings.selectedListId || '';
+        var itemClassName = settings.itemClassName || 'table-checklist-item';
+        var allSelectedLabel = settings.allSelectedLabel || '\u0412\u044b\u0431\u0440\u0430\u043d\u044b \u0432\u0441\u0435 \u0442\u0430\u0431\u043b\u0438\u0446\u044b';
+        var selectedPrefix = settings.selectedPrefix || '\u0412\u044b\u0431\u0440\u0430\u043d\u044b: ';
+        var singleSelectedPrefix = settings.singleSelectedPrefix || selectedPrefix;
+        var selectedListPrefix = settings.selectedListPrefix || '\u0422\u0430\u0431\u043b\u0438\u0446\u044b: ';
+        var maxSummaryNames = Number.isFinite(settings.maxSummaryNames) ? settings.maxSummaryNames : 2;
+        var esc = typeof uiHelpers.escapeHtml === 'function'
+            ? uiHelpers.escapeHtml
+            : function (value) {
+                return String(value == null ? '' : value)
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#39;');
+            };
+
+        function normalizeValue(value) {
+            return String(value == null ? '' : value).trim();
+        }
+
+        function getNode(id) {
+            return id ? byId(id) : null;
+        }
+
+        function getSelectedValues() {
+            if (!menuId) {
+                return [];
+            }
+            return Array.prototype.map.call(
+                document.querySelectorAll('#' + menuId + ' input[name="' + checkboxName + '"]:checked'),
+                function (node) { return normalizeValue(node.value); }
+            ).filter(function (value) { return value.length > 0; });
+        }
+
+        function summarizeSelected(values) {
+            var list = Array.isArray(values) ? values : [];
+            if (!list.length) {
+                return allSelectedLabel;
+            }
+            var safeMax = maxSummaryNames > 0 ? maxSummaryNames : 2;
+            if (list.length === 1) {
+                return singleSelectedPrefix + list[0];
+            }
+            var visible = list.slice(0, safeMax).join(', ');
+            var extraCount = list.length - safeMax;
+            if (extraCount > 0) {
+                return selectedPrefix + visible + ' +' + extraCount;
+            }
+            return selectedPrefix + visible;
+        }
+
+        function renderSelectedLabel(values) {
+            var labelNode = getNode(selectedListId);
+            if (!labelNode) {
+                return;
+            }
+            var list = Array.isArray(values) ? values : [];
+            labelNode.textContent = list.length ? (selectedListPrefix + list.join(', ')) : allSelectedLabel;
+        }
+
+        function renderChecklist(options, selectedValues) {
+            var container = getNode(menuId);
+            var summaryNode = getNode(summaryId);
+            if (!container) {
+                return;
+            }
+
+            var normalizedSelected = (Array.isArray(selectedValues) ? selectedValues : [])
+                .map(normalizeValue)
+                .filter(function (value) { return value.length > 0; });
+            var selectedSet = new Set(normalizedSelected);
+            var safeOptions = Array.isArray(options)
+                ? options.filter(function (option) {
+                    var optionValue = normalizeValue(option && option.value);
+                    return optionValue && optionValue !== 'all';
+                })
+                : [];
+
+            container.innerHTML = safeOptions.map(function (option) {
+                var value = normalizeValue(option.value);
+                var checked = selectedSet.has(value) ? ' checked' : '';
+                return ''
+                    + '<label class="' + esc(itemClassName) + '">'
+                    + '<input type="checkbox" name="' + esc(checkboxName) + '" value="' + esc(value) + '"' + checked + '>'
+                    + '<span>' + esc(option.label || value) + '</span>'
+                    + '</label>';
+            }).join('');
+
+            if (summaryNode) {
+                summaryNode.textContent = summarizeSelected(normalizedSelected);
+            }
+            renderSelectedLabel(normalizedSelected);
+        }
+
+        function syncSummary() {
+            var summaryNode = getNode(summaryId);
+            var selectedValues = getSelectedValues();
+            if (summaryNode) {
+                summaryNode.textContent = summarizeSelected(selectedValues);
+            }
+            renderSelectedLabel(selectedValues);
+            return selectedValues;
+        }
+
+        function setOpen(isOpen) {
+            var root = getNode(rootId);
+            var menu = getNode(menuId);
+            var toggle = getNode(toggleId);
+            if (!root || !menu || !toggle) {
+                return;
+            }
+            root.classList.toggle('is-open', !!isOpen);
+            menu.classList.toggle('is-hidden', !isOpen);
+            toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        }
+
+        return {
+            getSelectedValues: getSelectedValues,
+            renderChecklist: renderChecklist,
+            renderSelectedLabel: renderSelectedLabel,
+            setOpen: setOpen,
+            summarizeSelected: summarizeSelected,
+            syncSummary: syncSummary
+        };
+    }
+
     global.FireUi = {
         applyToneClass: uiHelpers.applyToneClass,
         byId: byId,
@@ -141,6 +276,7 @@
         renderMetricCards: uiHelpers.renderMetricCards,
         renderPlotlyFigure: plotlyHelpers.renderPlotlyFigure,
         renderPlotlyInContainer: plotlyHelpers.renderPlotlyInContainer,
+        createTableChecklist: createTableChecklist,
         runProgressSequence: runProgressSequence,
         revealPageContent: revealPageContent,
         setHref: uiHelpers.setHref,

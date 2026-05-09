@@ -26,6 +26,7 @@ _CLUSTERING_JOB_IDS_BY_CACHE_KEY: dict[tuple[str, str], str] = {}
 def start_clustering_job(
     session_id: str,
     table_name: str = "",
+    table_names: list[str] | None = None,
     cluster_count: str = "4",
     sampling_strategy: str = "stratified",
     feature_columns: list[str] | None = None,
@@ -33,6 +34,7 @@ def start_clustering_job(
 ) -> dict[str, Any]:  # one-off
     request_state = _build_clustering_request_state(
         table_name=table_name,
+        table_names=table_names,
         cluster_count=cluster_count,
         sampling_strategy=sampling_strategy,
         feature_columns=feature_columns,
@@ -41,6 +43,7 @@ def start_clustering_job(
     cache_key_token = serialize_job_cache_key(request_state["cache_key"])
     params_payload = _build_params_payload(
         table_name=table_name,
+        table_names=table_names,
         cluster_count=cluster_count,
         sampling_strategy=sampling_strategy,
         feature_columns=feature_columns,
@@ -107,6 +110,7 @@ def _run_clustering_job(
         on_start=lambda: _start_clustering_job_execution(session_id=session_id, job_id=job_id),
         execute=lambda: get_clustering_data(
             table_name=str(params_payload["table_name"]),
+            table_names=list(params_payload.get("table_names") or []),
             cluster_count=str(params_payload["cluster_count"]),
             sampling_strategy=str(params_payload["sampling_strategy"]),
             feature_columns=list(params_payload.get("feature_columns") or []),
@@ -244,6 +248,7 @@ def _finalize_clustering_job_failure(
 def _build_params_payload(
     *,
     table_name: str,
+    table_names: list[str] | None,
     cluster_count: str,
     sampling_strategy: str,
     feature_columns: list[str] | None,
@@ -251,6 +256,7 @@ def _build_params_payload(
 ) -> dict[str, Any]:  # one-off
     return {
         "table_name": str(table_name or ""),
+        "table_names": [str(item).strip() for item in (table_names or []) if str(item).strip()],
         "cluster_count": str(cluster_count or "4"),
         "sampling_strategy": str(sampling_strategy or "stratified"),
         "feature_columns": [str(item).strip() for item in (feature_columns or []) if str(item).strip()],

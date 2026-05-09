@@ -4,9 +4,9 @@ from datetime import datetime
 from typing import Any
 
 from app.services.forecasting.presentation import _build_feature_cards_with_quality
-from app.services.forecasting.utils import _format_datetime, _format_float_for_input, _history_window_label
+from app.services.forecasting.utils import _format_datetime, _history_window_label
 
-from .ml_model_config_types import FORECAST_DAY_OPTIONS, HISTORY_WINDOW_OPTIONS, ML_PREDICTIVE_BLOCK_DESCRIPTION, MODEL_NAME
+from .ml_model_config_types import ML_PREDICTIVE_BLOCK_DESCRIPTION, MODEL_NAME
 from .training.presentation_backtesting import _build_quality_assessment
 from .training.presentation_meta import _build_notes
 from .training.presentation_training import (
@@ -34,6 +34,8 @@ def _build_ml_payload(
     *,
     table_options: list[dict[str, str]],
     selected_table: str,
+    selected_tables: list[str],
+    selected_table_label: str,
     selected_cause: str,
     selected_object_category: str,
     temperature: str,
@@ -52,6 +54,7 @@ def _build_ml_payload(
 ) -> dict[str, Any]:
     summary = _build_summary(
         selected_table=selected_table,
+        selected_table_label=selected_table_label,
         selected_cause=selected_cause,
         selected_object_category=selected_object_category,
         daily_history=daily_history,
@@ -90,16 +93,13 @@ def _build_ml_payload(
         ),
         'filters': {
             'table_name': selected_table,
+            'table_names': selected_tables,
             'cause': selected_cause,
             'object_category': selected_object_category,
-            'temperature': temperature if scenario_temperature is None else _format_float_for_input(scenario_temperature),
             'forecast_days': str(days_ahead),
-            'history_window': selected_history_window,
             'available_tables': table_options,
             'available_causes': option_catalog['causes'],
             'available_object_categories': option_catalog['object_categories'],
-            'available_forecast_days': [{'value': str(item), 'label': f'{item} дней'} for item in FORECAST_DAY_OPTIONS],
-            'available_history_windows': HISTORY_WINDOW_OPTIONS,
         },
     }
 
@@ -107,6 +107,8 @@ def _build_ml_payload(
 def _empty_ml_model_data(
     table_options: list[dict[str, str]],
     selected_table: str,
+    selected_tables: list[str],
+    selected_table_label: str,
     forecast_days: int,
     temperature: str,
     history_window: str,
@@ -117,7 +119,7 @@ def _empty_ml_model_data(
         'has_data': False,
         'model_description': '',
         'summary': {
-            'selected_table_label': 'Все таблицы' if selected_table == 'all' else (selected_table or 'Нет таблицы'),
+            'selected_table_label': selected_table_label or ('Все таблицы' if selected_table == 'all' else (selected_table or 'Нет таблицы')),
             'slice_label': 'Все пожары',
             'hero_summary': 'После расчета здесь появится краткий вывод по ожидаемому числу пожаров на ближайшие даты.',
             'history_period_label': 'Нет данных',
@@ -177,16 +179,13 @@ def _empty_ml_model_data(
         'notes': [],
         'filters': {
             'table_name': selected_table,
+            'table_names': selected_tables,
             'cause': 'all',
             'object_category': 'all',
-            'temperature': temperature,
             'forecast_days': str(forecast_days),
-            'history_window': history_window,
             'available_tables': table_options,
             'available_causes': [{'value': 'all', 'label': 'Все причины'}],
             'available_object_categories': [{'value': 'all', 'label': 'Все категории'}],
-            'available_forecast_days': [{'value': str(item), 'label': f'{item} дней'} for item in FORECAST_DAY_OPTIONS],
-            'available_history_windows': HISTORY_WINDOW_OPTIONS,
         },
     }
 

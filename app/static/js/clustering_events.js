@@ -9,7 +9,8 @@
             }
 
             var form = byId('clusteringForm');
-            var tableFilter = byId('clusterTableFilter');
+            var tableFilterRoot = byId('clusterTableFilter');
+            var tableFilterToggle = byId('clusterTableFilterToggle');
             var retryButton = byId('clusteringRetryButton');
             var initialData = options && options.initialData ? options.initialData : null;
 
@@ -22,22 +23,44 @@
                 });
             }
 
-            if (form && tableFilter) {
-                tableFilter.addEventListener('change', function () {
-                    if (typeof global.stopClusteringJobPolling === 'function') {
-                        global.stopClusteringJobPolling();
-                    }
-                    Array.prototype.forEach.call(
-                        form.querySelectorAll('input[name="feature_columns"]'),
-                        function (field) {
-                            field.checked = false;
-                        }
-                    );
-                    if (options && typeof options.onTableChange === 'function') {
-                        options.onTableChange();
+            if (tableFilterToggle) {
+                tableFilterToggle.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    if (options && typeof options.onToggleTableFilter === 'function') {
+                        options.onToggleTableFilter();
                     }
                 });
             }
+
+            if (form) {
+                form.addEventListener('change', function (event) {
+                    if (!event || !event.target || event.target.name !== 'table_names') {
+                        return;
+                    }
+                    if (typeof global.stopClusteringJobPolling === 'function') {
+                        global.stopClusteringJobPolling();
+                    }
+                    if (options && typeof options.onTableFilterChange === 'function') {
+                        options.onTableFilterChange();
+                    }
+                });
+            }
+
+            document.addEventListener('click', function (event) {
+                if (!tableFilterRoot) {
+                    return;
+                }
+                if (!tableFilterRoot.contains(event.target) && options && typeof options.onCloseTableFilter === 'function') {
+                    options.onCloseTableFilter();
+                }
+            });
+
+            document.addEventListener('keydown', function (event) {
+                if (event && event.key === 'Escape' && options && typeof options.onCloseTableFilter === 'function') {
+                    options.onCloseTableFilter();
+                }
+            });
 
             if (retryButton) {
                 retryButton.addEventListener('click', function () {

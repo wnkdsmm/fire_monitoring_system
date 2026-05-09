@@ -106,6 +106,7 @@ def _append_clustering_feature_notes(
 def _load_clustering_dataset_for_request(
     *,
     selected_table: str,
+    selected_table_names: Sequence[str] | None,
     selected_sampling_strategy: str,
     perf: Any,
     progress_callback: Callable[[str, str], None] | None,
@@ -117,7 +118,7 @@ def _load_clustering_dataset_for_request(
     )
     aggregation_context = perf.span("aggregation") if perf is not None else nullcontext()
     with aggregation_context:
-        dataset = _load_territory_dataset(selected_table, selected_sampling_strategy)
+        dataset = _load_territory_dataset(selected_table, selected_sampling_strategy, table_names=selected_table_names)
         if perf is not None:
             perf.update(
                 input_rows=dataset["total_incidents"],

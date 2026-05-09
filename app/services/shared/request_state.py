@@ -121,6 +121,7 @@ def build_ml_cache_key(
     *,
     cache_schema_version: int,
     selected_table: str,
+    source_tables: Sequence[str],
     cause: str,
     object_category: str,
     temperature: str,
@@ -131,6 +132,7 @@ def build_ml_cache_key(
     return (
         cache_schema_version,
         selected_table,
+        *tuple(source_tables),
         normalize_cache_value(cause, fallback="all"),
         normalize_cache_value(object_category, fallback="all"),
         normalize_cache_value(temperature),
@@ -143,6 +145,7 @@ def build_ml_cache_key(
 def build_ml_request_state(
     *,
     table_name: str = "all",
+    table_names: Sequence[str] | None = None,
     cause: str = "all",
     object_category: str = "all",
     temperature: str = "",
@@ -170,6 +173,18 @@ def build_ml_request_state(
         forecast_days_parser=forecast_days_parser,
         history_window_parser=history_window_parser,
     )
+    selected_tables = [str(item or "").strip() for item in (table_names or []) if str(item or "").strip()]
+    if selected_tables:
+        concrete = {
+            str(option.get("value") or "").strip()
+            for option in state["table_options"]
+            if str(option.get("value") or "").strip() and str(option.get("value") or "").strip() != "all"
+        }
+        filtered = [item for item in selected_tables if item in concrete]
+        if filtered:
+            state["source_tables"] = filtered
+            state["selected_table"] = filtered[0] if len(filtered) == 1 else "all"
+            state["source_table_notes"] = []
     resolved_history_window = state.pop("resolved_history_window")
     scenario_temperature = temperature_parser(temperature)
     state["selected_history_window"] = resolved_history_window
@@ -178,6 +193,7 @@ def build_ml_request_state(
     state["cache_key"] = build_ml_cache_key(
         cache_schema_version=cache_schema_version,
         selected_table=state["selected_table"],
+        source_tables=state["source_tables"],
         cause=cause,
         object_category=object_category,
         temperature=temperature_formatter(scenario_temperature) if scenario_temperature is not None else "",

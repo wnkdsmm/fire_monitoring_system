@@ -113,12 +113,14 @@ def favicon() -> Response:
 @router.get("/brief/dashboard.txt")
 def dashboard_brief_download(
     table_name: str = "all",
+    table_names: list[str] | None = Query(None),
     year: str = "all",
     group_column: str = "",
     horizon_days: int = PRIORITY_HORIZON_DAYS,
 ) -> Response:
     data = get_dashboard_page_context(
         table_name=table_name,
+        table_names=table_names or [],
         year=year,
         group_column=group_column,
         horizon_days=horizon_days,
@@ -130,6 +132,7 @@ def dashboard_brief_download(
 def home(
     request: Request,
     table_name: str = "all",
+    table_names: list[str] | None = Query(None),
     year: str = "all",
     group_column: str = "",
     horizon_days: int = PRIORITY_HORIZON_DAYS,
@@ -141,6 +144,7 @@ def home(
         shell_loader=get_dashboard_shell_context,
         page_kwargs={
             "table_name": table_name,
+            "table_names": table_names or [],
             "year": year,
             "group_column": group_column,
             "horizon_days": horizon_days,
@@ -163,20 +167,22 @@ def home(
 def ml_model_page(
     request: Request,
     table_name: str = "all",
+    table_names: list[str] | None = Query(None),
     cause: str = "all",
     object_category: str = "all",
     temperature: str = "",
-    forecast_days: str = "14",
+    forecast_days: str = "7",
     history_window: str = "all",
     current_user_date: str = "",
 ):
     page_kwargs = {
         "table_name": table_name,
+        "table_names": table_names or [],
         "cause": cause,
         "object_category": object_category,
         "temperature": temperature,
-        "forecast_days": forecast_days,
-        "history_window": history_window,
+        "forecast_days": "7",
+        "history_window": "all",
         "current_user_date": current_user_date,
     }
     ml_model = get_ml_model_shell_context(**page_kwargs, prefer_cached=True)
@@ -197,12 +203,14 @@ def ml_model_page(
 def clustering_page(
     request: Request,
     table_name: str = "",
+    table_names: list[str] | None = Query(None),
     cluster_count: str = "4",
     sampling_strategy: str = "stratified",
     feature_columns: list[str] | None = Query(None),
 ):
     clustering = get_clustering_shell_context(
         table_name=table_name,
+        table_names=table_names or [],
         cluster_count=cluster_count,
         sampling_strategy=sampling_strategy,
         feature_columns=feature_columns or [],
@@ -225,6 +233,7 @@ def clustering_page(
 def access_points_page(
     request: Request,
     table_name: str = "all",
+    table_names: list[str] | None = Query(None),
     district: str = "all",
     year: str = "all",
     limit: str = "25",
@@ -232,6 +241,7 @@ def access_points_page(
 ):
     access_points = get_access_points_shell_context(
         table_name=table_name,
+        table_names=table_names or [],
         district=district,
         year=year,
         limit=limit,

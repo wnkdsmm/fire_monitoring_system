@@ -22,34 +22,4 @@
         <div class="mini-empty">Короткий вывод появится после расчета.</div>
         {% endif %}
     </div>
-    {% if show_brief_footer | default(true) %}
-    <div class="executive-brief-foot">
-        <article class="executive-brief-summary tone-{{ brief.confidence_tone | default('sky') }}">
-            <div class="executive-brief-summary-copy">
-                <span class="stat-label">{{ brief.export_title }}</span>
-                <strong class="executive-brief-summary-title">{{ brief_summary_title | default('Что можно быстро передать дальше') }}</strong>
-                <p id="{{ excerpt_id | default('executiveBriefExportExcerpt') }}" class="executive-brief-summary-text">{{ brief.export_excerpt }}</p>
-            </div>
-            {% if export_href %}
-            <a class="secondary-action executive-brief-summary-action" href="{{ export_href }}">Открыть текст</a>
-            {% endif %}
-        </article>
-        <article class="executive-brief-trust tone-{{ brief.confidence_tone | default('sky') }}">
-            <div class="executive-brief-summary-copy">
-                <span class="stat-label">{{ brief_trust_title | default('Можно ли опираться на вывод') }}</span>
-                <strong class="executive-brief-summary-title">{{ brief.confidence_label }} <small>{{ brief.confidence_score_display }}</small></strong>
-                <p class="executive-brief-summary-text">{{ brief.confidence_summary }}</p>
-            </div>
-            <ul id="{{ notes_id | default('executiveBriefNotes') }}" class="notice-list forecast-note-list executive-brief-notes">
-                {% if brief.notes %}
-                    {% for note in brief.notes %}
-                    <li>{{ note }}</li>
-                    {% endfor %}
-                {% else %}
-                <li>Примечания и ограничения появятся после расчета.</li>
-                {% endif %}
-            </ul>
-        </article>
-    </div>
-    {% endif %}
 </section>

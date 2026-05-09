@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 import re
 from typing import Any, Callable
 
@@ -222,7 +223,80 @@ def _comparison_metric_card(
     return {
         'label': label,
         'value': formatter(value),
-        'meta': f"seasonal baseline: {formatter(baseline_value)}; heuristic forecast: {formatter(heuristic_value)}",
+        'meta': (
+            f"сезонная базовая модель: {formatter(baseline_value)}; "
+            f"сценарный эвристический прогноз: {formatter(heuristic_value)}"
+        ),
+    }
+
+
+def _as_float(value: Any) -> float | None:
+    try:
+        numeric = float(value)
+    except (TypeError, ValueError):
+        return None
+    if not math.isfinite(numeric):
+        return None
+    return numeric
+
+
+def _event_metric_interpretation(label: str, value: Any) -> str:
+    metric_value = _as_float(value)
+    if metric_value is None:
+        return 'интерпретация недоступна'
+
+    if label.startswith('ROC-AUC'):
+        if metric_value < 0.5:
+            return 'ниже случайного уровня'
+        if metric_value < 0.7:
+            return 'умеренная различимость'
+        if metric_value < 0.85:
+            return 'хорошая различимость'
+        return 'очень хорошая различимость'
+
+    if label.startswith('F1'):
+        if metric_value <= 0.0:
+            return 'событие почти не распознаётся'
+        if metric_value < 0.3:
+            return 'низкое качество'
+        if metric_value < 0.6:
+            return 'среднее качество'
+        return 'хорошее качество'
+
+    if label.startswith('Brier score'):
+        if metric_value < 0.10:
+            return 'очень хорошая оценка вероятности'
+        if metric_value < 0.20:
+            return 'хорошая оценка вероятности'
+        if metric_value < 0.30:
+            return 'приемлемая оценка вероятности'
+        return 'слабая оценка вероятности'
+
+    if label.startswith('Log-loss'):
+        if metric_value < 0.35:
+            return 'хорошая калибровка'
+        if metric_value < 0.70:
+            return 'приемлемая калибровка'
+        return 'слабая калибровка'
+
+    return 'интерпретация недоступна'
+
+
+def _event_metric_card(
+    label: str,
+    value: Any,
+    baseline_value: Any,
+    heuristic_value: Any,
+    formatter: Callable[[Any], str],
+) -> dict[str, str]:
+    return {
+        'label': label,
+        'value': formatter(value),
+        'meta': (
+            f"базовая: {formatter(baseline_value)} | "
+            f"эвристическая: {formatter(heuristic_value)} | "
+            f"оценка: {_event_metric_interpretation(label, value)}"
+        ),
     }
 
 
@@ -455,28 +529,28 @@ def _build_quality_assessment(ml_result: MlBacktestPresentationResult) -> Backte
 
     count_metric_cards = [
         _comparison_metric_card(
-            'MAE по числу пожаров',
+            'MAE (средняя абсолютная ошибка), пож./день',
             ml_result.get('count_mae'),
             ml_result.get('baseline_count_mae'),
             ml_result.get('heuristic_count_mae'),
             _format_optional_number,
         ),
         _comparison_metric_card(
-            'RMSE по числу пожаров',
+            'RMSE (квадратичная ошибка), пож./день',
             ml_result.get('count_rmse'),
             ml_result.get('baseline_count_rmse'),
             ml_result.get('heuristic_count_rmse'),
             _format_optional_number,
         ),
         _comparison_metric_card(
-            'sMAPE по числу пожаров',
+            'sMAPE (симметричная процентная ошибка), %',
             ml_result.get('count_smape'),
             ml_result.get('baseline_count_smape'),
             ml_result.get('heuristic_count_smape'),
             _format_optional_percent,
         ),
         _comparison_metric_card(
-            'Poisson deviance',
+            'Девиация Пуассона (качество счётной модели)',
             ml_result.get('count_poisson_deviance'),
             ml_result.get('baseline_count_poisson_deviance'),
             ml_result.get('heuristic_count_poisson_deviance'),
@@ -494,28 +568,28 @@ def _build_quality_assessment(ml_result: MlBacktestPresentationResult) -> Backte
     if ml_result.get('event_backtest_available'):
         event_metric_cards.extend(
             [
-                _comparison_metric_card(
+                _event_metric_card(
                     'Brier score',
                     ml_result.get('brier_score'),
                     ml_result.get('baseline_brier_score'),
                     ml_result.get('heuristic_brier_score'),
                     _format_optional_number,
                 ),
-                _comparison_metric_card(
+                _event_metric_card(
                     'ROC-AUC',
                     ml_result.get('roc_auc'),
                     ml_result.get('baseline_roc_auc'),
                     ml_result.get('heuristic_roc_auc'),
                     _format_optional_number,
                 ),
-                _comparison_metric_card(
-                    'F1',
+                _event_metric_card(
+                    'F1-мера',
                     ml_result.get('f1_score'),
                     ml_result.get('baseline_f1_score'),
                     ml_result.get('heuristic_f1_score'),
                     _format_optional_number,
                 ),
-                _comparison_metric_card(
+                _event_metric_card(
                     'Log-loss',
                     ml_result.get('log_loss'),
                     ml_result.get('baseline_log_loss'),
@@ -527,8 +601,11 @@ def _build_quality_assessment(ml_result: MlBacktestPresentationResult) -> Backte
 
     return {
         'ready': bool(ml_result.get('is_ready')),
-        'title': 'Оценка качества ML-блока',
-        'subtitle': 'Ключевые метрики и сравнение методов на одной и той же истории. Блок проверяет именно прогноз числа пожаров, а не приоритет территорий.',
+        'title': 'Валидация качества ML-прогноза количества пожаров',
+        'subtitle': (
+            'Метрики рассчитаны на единой исторической выборке и показывают точность '
+            'прогноза количества пожаров по дням, а не приоритизацию территорий.'
+        ),
         'methodology_items': [
             _methodology_item(
                 'Схема валидации',
@@ -566,9 +643,12 @@ def _build_quality_assessment(ml_result: MlBacktestPresentationResult) -> Backte
         'class_balance_warning': class_balance_warning,
         'model_choice': _model_choice_section(ml_result, overview),
         'count_table': {
-            'title': 'Сравнение по числу пожаров',
+            'title': 'Сравнение методов прогноза количества пожаров',
             'rows': count_rows,
-            'empty_message': 'Сравнение seasonal baseline, heuristic forecast и count-model появится после проверки на истории.',
+            'empty_message': (
+                'Таблица сравнения сезонной базовой модели, сценарного эвристического '
+                'прогноза и счётной ML-модели появится после завершения backtesting.'
+            ),
         },
         'event_table': event_table,
         'event_probability_reason_code': event_context['reason_code'],

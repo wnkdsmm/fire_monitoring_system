@@ -469,6 +469,7 @@ class AccessPointFilters(TypedDict, total=False):
     """Filter payload passed to access-points presentation layer."""
 
     table_name: str
+    table_names: list[str]
     district: str
     year: str
     limit: str

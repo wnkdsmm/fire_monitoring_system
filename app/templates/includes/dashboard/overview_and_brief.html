@@ -2,13 +2,13 @@
     {% set section_id = 'dashboardBrief' %}
     {% set brief_heading = 'Краткий аналитический вывод по территориям' %}
     {% set brief_purpose = 'Сводный территориальный приоритет на ближайшие ' ~ management.priority_horizon_days ~ ' дней с обоснованием выбора и оценкой надежности вывода.' %}
-    {% set brief_summary_title = 'Ключевые результаты для оперативной передачи' %}
-    {% set brief_trust_title = 'Оценка применимости вывода' %}
-    {% set export_href = '/brief/dashboard.txt?table_name=' ~ filters.table_name ~ '&year=' ~ filters.year ~ '&group_column=' ~ filters.group_column ~ '&horizon_days=' ~ (filters.horizon_days or management.priority_horizon_days) %}
+    {% set export_query = namespace(value='table_name=' ~ filters.table_name) %}
+    {% for selected_table in (filters.table_names or []) %}
+        {% set export_query.value = export_query.value ~ '&table_names=' ~ selected_table %}
+    {% endfor %}
+    {% set export_href = '/brief/dashboard.txt?' ~ export_query.value ~ '&group_column=' ~ filters.group_column %}
     {% set export_link_id = 'dashboardExportBriefLink' %}
     {% set cards_id = 'managementBriefCards' %}
-    {% set excerpt_id = 'dashboardExportBriefExcerpt' %}
-    {% set notes_id = 'managementNotesList' %}
 
     <section class="dashboard-overview-stack">
                 <section class="stats-grid dashboard-stats">
@@ -42,26 +42,44 @@
                 <section id="dashboardFilters" class="panel filters-panel">
                     <div class="panel-head">
                         <h2>Параметры аналитического среза</h2>
-                        <span class="panel-meta">Выбор источника данных, периода наблюдений и группировочного признака для построения обзора.</span>
+                        <span class="panel-meta">Выбор источника данных и группировочного признака для построения обзора.</span>
                     </div>
                     <form class="filters-grid filters-grid-dashboard" id="filtersForm" method="get" action="/">
                         <label class="filter-field">
-                            <span>Таблица</span>
-                            <select id="tableFilter" name="table_name">
-                                {% for option in filters.available_tables %}
-                                <option value="{{ option.value }}" {% if option.value == filters.table_name %}selected{% endif %}>{{ option.label }}</option>
-                                {% endfor %}
-                            </select>
-                        </label>
-                        <label class="filter-field">
-                            <span>Год</span>
-                            <select id="yearFilter" name="year">
-                                <option value="all" {% if filters.year in ["", "all"] %}selected{% endif %}>Все годы</option>
-                                {% for option in filters.available_years %}
-                                <option value="{{ option.value }}" {% if option.value == filters.year %}selected{% endif %}>{{ option.label }}</option>
-                                {% endfor %}
-                            </select>
-                            <small class="filter-hint">Позволяет сопоставлять отдельный год с полным историческим горизонтом наблюдений.</small>
+                            <span>Таблицы</span>
+                            <div id="dashboardTableFilter" class="dashboard-table-select">
+                                <button
+                                    id="dashboardTableFilterToggle"
+                                    class="dashboard-table-select-toggle"
+                                    type="button"
+                                    aria-haspopup="true"
+                                    aria-expanded="false"
+                                    aria-controls="dashboardTableFilterMenu"
+                                >
+                                    {% set selected_tables = filters.table_names if filters.table_names is defined else [] %}
+                                    {% if not selected_tables and filters.table_name and filters.table_name != 'all' %}
+                                        {% set selected_tables = [filters.table_name] %}
+                                    {% endif %}
+                                    <span id="dashboardTableFilterSummary" class="dashboard-table-select-summary">
+                                        {% if selected_tables %}Выбрано таблиц: {{ selected_tables|length }}{% else %}Выбраны все таблицы{% endif %}
+                                    </span>
+                                    <span class="dashboard-table-select-caret" aria-hidden="true">▾</span>
+                                </button>
+                                <div
+                                    id="dashboardTableFilterMenu"
+                                    class="dashboard-table-checklist is-hidden"
+                                    role="group"
+                                    aria-label="Выбор таблиц для аналитического среза"
+                                >
+                                    {% for option in filters.available_tables if option.value != 'all' %}
+                                    <label class="dashboard-table-checklist-item">
+                                        <input type="checkbox" name="table_names" value="{{ option.value }}" {% if option.value in selected_tables %}checked{% endif %}>
+                                        <span>{{ option.label }}</span>
+                                    </label>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div id="dashboardTableFilterSelectedList" class="dashboard-table-selected-list"></div>
                         </label>
                         <label class="filter-field">
                             <span>Разрез</span>
@@ -71,15 +89,6 @@
                                 {% endfor %}
                             </select>
                             <small class="filter-hint">Определяет аналитическую группировку для сравнения территорий, причин и иных категорий.</small>
-                        </label>
-                        <label class="filter-field">
-                            <span>Горизонт приоритета</span>
-                            <select id="horizonDaysFilter" name="horizon_days">
-                                {% for option in filters.available_horizon_days %}
-                                <option value="{{ option.value }}" {% if option.value == (filters.horizon_days or management.priority_horizon_days|string) %}selected{% endif %}>{{ option.label }}</option>
-                                {% endfor %}
-                            </select>
-                            <small class="filter-hint">Определяет длительность окна приоритизации территорий.</small>
                         </label>
                         <div class="filter-field filter-actions">
                             <span>Действие</span>

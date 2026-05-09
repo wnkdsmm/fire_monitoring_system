@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from contextlib import nullcontext
 from datetime import datetime
-from typing import Any
+from typing import Any, Sequence
 
 from app.perf import current_perf_trace, profiled
 from app.services.forecasting.data import (
@@ -26,10 +26,14 @@ from app.services.forecasting.utils import (
     _parse_optional_iso_date,
     _resolve_option_value,
 )
-from app.services.shared.request_state import build_ml_request_state as _build_ml_request_state_impl
+from app.services.forecasting.selection import _canonicalize_source_tables
+from app.services.shared.request_state import (
+    build_ml_cache_key as _build_ml_cache_key,
+    build_ml_request_state as _build_ml_request_state_impl,
+)
 from config.db import engine
 
-from .ml_model_config_types import ML_CACHE_SCHEMA_VERSION, MlProgressCallback, _emit_progress
+from .ml_model_config_types import FIXED_FORECAST_DAYS, ML_CACHE_SCHEMA_VERSION, MlProgressCallback, _emit_progress
 from .caches import MLModelCaches, create_default_caches
 from .training.data_access import (
     clear_ml_model_input_cache,
@@ -52,18 +56,32 @@ def _build_ml_context(initial_data: MlPayload) -> MlContext:
     }
 
 
+def _selected_table_label(table_names: Sequence[str], *, selected_table: str) -> str:
+    concrete = [str(item or "").strip() for item in table_names if str(item or "").strip()]
+    if selected_table == 'all':
+        return 'Все таблицы'
+    if not concrete:
+        return 'Нет таблицы'
+    if len(concrete) == 1:
+        return concrete[0]
+    preview = ', '.join(concrete[:2])
+    suffix = '' if len(concrete) <= 2 else f' +{len(concrete) - 2}'
+    return f'{preview}{suffix}'
+
+
 def _build_ml_deferred_shell_data(
     request_state: MlRequestState,
     *,
     cause: str,
     object_category: str,
-    temperature: str,
 ) -> MlPayload:
     initial_data = _empty_ml_model_data(
         request_state['table_options'],
         request_state['selected_table'],
+        request_state['selected_tables'],
+        request_state['selected_table_label'],
         request_state['days_ahead'],
-        temperature,
+        "",
         request_state['selected_history_window'],
     )
     initial_data['bootstrap_mode'] = 'deferred'
@@ -123,10 +141,11 @@ def _load_ml_aggregation_inputs(
 
 def get_ml_model_shell_context(
     table_name: str = 'all',
+    table_names: Sequence[str] | None = None,
     cause: str = 'all',
     object_category: str = 'all',
     temperature: str = '',
-    forecast_days: str = '14',
+    forecast_days: str = '7',
     history_window: str = 'all',
     current_user_date: str = '',
     prefer_cached: bool = False,
@@ -135,11 +154,12 @@ def get_ml_model_shell_context(
     cache_set = caches or _DEFAULT_CACHES
     request_state = _build_ml_request_state(
         table_name=table_name,
+        table_names=table_names,
         cause=cause,
         object_category=object_category,
-        temperature=temperature,
-        forecast_days=forecast_days,
-        history_window=history_window,
+        temperature="",
+        forecast_days=str(FIXED_FORECAST_DAYS),
+        history_window="all",
         current_user_date=current_user_date,
     )
     cached = _cache_get(request_state['cache_key'], cache_set) if prefer_cached else None
@@ -150,7 +170,6 @@ def get_ml_model_shell_context(
         request_state,
         cause=cause,
         object_category=object_category,
-        temperature=temperature,
     )
     return _build_ml_context(initial_data)
 
@@ -159,10 +178,11 @@ def get_ml_model_shell_context(
 
 def get_ml_model_data(
     table_name: str = 'all',
+    table_names: Sequence[str] | None = None,
     cause: str = 'all',
     object_category: str = 'all',
     temperature: str = '',
-    forecast_days: str = '14',
+    forecast_days: str = '7',
     history_window: str = 'all',
     current_user_date: str = '',
     progress_callback: MlProgressCallback | None = None,
@@ -172,15 +192,18 @@ def get_ml_model_data(
     perf = current_perf_trace()
     request_state = _build_ml_request_state(
         table_name=table_name,
+        table_names=table_names,
         cause=cause,
         object_category=object_category,
-        temperature=temperature,
-        forecast_days=forecast_days,
-        history_window=history_window,
+        temperature="",
+        forecast_days=str(FIXED_FORECAST_DAYS),
+        history_window="all",
         current_user_date=current_user_date,
     )
     table_options = request_state['table_options']
     selected_table = request_state['selected_table']
+    selected_tables = request_state['selected_tables']
+    selected_table_label = request_state['selected_table_label']
     source_tables = request_state['source_tables']
     source_table_notes = request_state['source_table_notes']
     days_ahead = request_state['days_ahead']
@@ -206,7 +229,15 @@ def get_ml_model_data(
 
     if perf is not None:
         perf.update(cache_hit=False)
-    base = _empty_ml_model_data(table_options, selected_table, days_ahead, temperature, selected_history_window)
+    base = _empty_ml_model_data(
+        table_options,
+        selected_table,
+        selected_tables,
+        selected_table_label,
+        days_ahead,
+        "",
+        selected_history_window,
+    )
     if not source_tables:
         base = _build_no_source_ml_payload(base, source_table_notes=source_table_notes)
         if perf is not None:
@@ -267,9 +298,11 @@ def get_ml_model_data(
         payload = _build_ml_payload(
             table_options=table_options,
             selected_table=selected_table,
+            selected_tables=selected_tables,
+            selected_table_label=selected_table_label,
             selected_cause=selected_cause,
             selected_object_category=selected_object_category,
-            temperature=temperature,
+            temperature="",
             days_ahead=days_ahead,
             selected_history_window=selected_history_window,
             option_catalog=option_catalog,
@@ -295,7 +328,7 @@ def get_ml_model_data(
 
 
 def _cache_get(
-    cache_key: tuple[int, str, str, str, str, int, str, str],
+    cache_key: tuple[Any, ...],
     caches: MLModelCaches | None = None,
 ) -> MlPayload | None:
     cache_set = caches or _DEFAULT_CACHES
@@ -303,7 +336,7 @@ def _cache_get(
 
 
 def _cache_store(
-    cache_key: tuple[int, str, str, str, str, int, str, str],
+    cache_key: tuple[Any, ...],
     payload: MlPayload,
     caches: MLModelCaches | None = None,
 ) -> MlPayload:
@@ -314,10 +347,11 @@ def _cache_store(
 
 def _build_ml_request_state(
     table_name: str = 'all',
+    table_names: Sequence[str] | None = None,
     cause: str = 'all',
     object_category: str = 'all',
     temperature: str = '',
-    forecast_days: str = '14',
+    forecast_days: str = '7',
     history_window: str = 'all',
     current_user_date: str = '',
 ) -> MlRequestState:
@@ -327,11 +361,12 @@ def _build_ml_request_state(
     )
     state = _build_ml_request_state_impl(
         table_name=table_name,
+        table_names=table_names,
         cause=cause,
         object_category=object_category,
-        temperature=temperature,
-        forecast_days=forecast_days,
-        history_window=history_window,
+        temperature="",
+        forecast_days=str(FIXED_FORECAST_DAYS),
+        history_window="all",
         current_user_date=normalized_current_user_date,
         cache_schema_version=ML_CACHE_SCHEMA_VERSION,
         table_options_builder=_build_forecasting_table_options,
@@ -342,6 +377,35 @@ def _build_ml_request_state(
         history_window_parser=_parse_history_window,
         temperature_parser=_parse_float,
         temperature_formatter=_format_float_for_input,
+    )
+    normalized_requested = [str(item or "").strip() for item in (table_names or []) if str(item or "").strip()]
+    if normalized_requested and 'all' not in normalized_requested:
+        available = {
+            str(item.get('value') or '').strip()
+            for item in state['table_options']
+            if str(item.get('value') or '').strip() and str(item.get('value') or '').strip() != 'all'
+        }
+        raw_selected = [name for name in normalized_requested if name in available]
+        if raw_selected:
+            normalized_sources, dedupe_notes = _canonicalize_source_tables(raw_selected)
+            state['source_tables'] = normalized_sources
+            state['source_table_notes'] = dedupe_notes
+            state['selected_table'] = normalized_sources[0] if len(normalized_sources) == 1 else 'multi'
+    state['selected_tables'] = list(state['source_tables'])
+    state['selected_table_label'] = _selected_table_label(
+        state['selected_tables'],
+        selected_table=str(state['selected_table'] or ''),
+    )
+    state['cache_key'] = _build_ml_cache_key(
+        cache_schema_version=ML_CACHE_SCHEMA_VERSION,
+        selected_table=state['selected_table'],
+        source_tables=state['source_tables'],
+        cause=cause,
+        object_category=object_category,
+        temperature=_format_float_for_input(state['scenario_temperature']) if state['scenario_temperature'] is not None else "",
+        days_ahead=state['days_ahead'],
+        history_window=state['selected_history_window'],
+        current_user_date=normalized_current_user_date,
     )
     state['current_user_date'] = normalized_current_user_date
     state['current_user_day'] = parsed_current_user_date

@@ -134,6 +134,16 @@ def _resolve_selected_tables(tables: list[dict[str, Any]], table_name: str) -> l
     return [table for table in tables if table["name"] == table_name]
 
 
+def _resolve_selected_tables_by_names(
+    tables: list[dict[str, Any]],
+    table_names: Sequence[str],
+) -> list[dict[str, Any]]:
+    requested = {str(item or "").strip() for item in table_names if str(item or "").strip()}
+    if not requested:
+        return []
+    return [table for table in tables if table["name"] in requested]
+
+
 def _collect_year_options(tables: list[dict[str, Any]]) -> list[dict[str, str]]:
     years = sorted({year for table in tables for year in table["years"]}, reverse=True)
     return [{"value": str(year), "label": str(year)} for year in years]
@@ -180,11 +190,26 @@ def _is_damage_group_selection(group_column: str) -> bool:
 def _resolve_dashboard_filters(
     metadata: dict[str, Any],
     table_name: str,
-    year: str,
-    group_column: str,
+    year: str = "all",
+    group_column: str = "",
+    table_names: Sequence[str] | None = None,
 ) -> dict[str, Any]:
     resolved_table_name = _resolve_original_table_name(table_name, [table["name"] for table in metadata["tables"]])
-    selected_tables = _resolve_selected_tables(metadata["tables"], resolved_table_name)
+    normalized_requested_table_names = []
+    for raw_name in table_names or []:
+        normalized = str(raw_name or "").strip()
+        if not normalized or normalized == "all":
+            continue
+        normalized_requested_table_names.append(
+            _resolve_original_table_name(normalized, [table["name"] for table in metadata["tables"]])
+        )
+    selected_tables = _resolve_selected_tables_by_names(metadata["tables"], normalized_requested_table_names)
+    if not selected_tables:
+        selected_tables = _resolve_selected_tables(metadata["tables"], resolved_table_name)
+    selected_table_names = [table["name"] for table in selected_tables]
+    all_table_names = [table["name"] for table in metadata["tables"]]
+    if len(selected_table_names) == len(all_table_names):
+        selected_table_names = []
     available_years = _collect_year_options(selected_tables)
     requested_year = _parse_year(year)
     available_year_values = {item["value"] for item in available_years}
@@ -200,8 +225,13 @@ def _resolve_dashboard_filters(
         if any(item["value"] == resolved_table_name for item in metadata["table_options"])
         else "all"
     )
+    if len(selected_table_names) == 1:
+        selected_table_name = selected_table_names[0]
+    elif len(selected_table_names) > 1:
+        selected_table_name = "all"
     return {
         "selected_tables": selected_tables,
+        "selected_table_names": selected_table_names,
         "available_years": available_years,
         "selected_year": selected_year,
         "available_group_columns": available_group_columns,
@@ -217,4 +247,5 @@ __all__ = [
     "_resolve_dashboard_filters",
     "_resolve_group_column",
     "_resolve_selected_tables",
+    "_resolve_selected_tables_by_names",
 ]

@@ -269,6 +269,8 @@ class MlRequestState(TypedDict, total=False):
 
     table_options: list[dict[str, str]]
     selected_table: str
+    selected_tables: list[str]
+    selected_table_label: str
     source_tables: list[str]
     source_table_notes: list[str]
     days_ahead: int

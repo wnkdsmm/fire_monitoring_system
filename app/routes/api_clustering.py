@@ -51,6 +51,7 @@ def get_clustering_job_status(**kwargs):
 def clustering_data_endpoint(
     request: Request,
     table_name: str = "",
+    table_names: list[str] | None = None,
     cluster_count: str = "4",
     sampling_strategy: str = "stratified",
     feature_columns: list[str] | None = None,
@@ -58,6 +59,7 @@ def clustering_data_endpoint(
     return run_analytics_request(
         lambda: _build_clustering_api_payload(
             table_name=table_name,
+            table_names=table_names or [],
             cluster_count=cluster_count,
             sampling_strategy=sampling_strategy,
             feature_columns=feature_columns or [],
@@ -76,6 +78,7 @@ def start_clustering_job_endpoint(request: Request, payload: dict = Body(...)):
         lambda session_id: start_clustering_job(
             session_id=session_id,
             table_name=str(payload.get("table_name") or ""),
+            table_names=coerce_string_list(payload.get("table_names")),
             cluster_count=str(payload.get("cluster_count") or "4"),
             sampling_strategy=str(payload.get("sampling_strategy") or "stratified"),
             feature_columns=coerce_string_list(payload.get("feature_columns")),

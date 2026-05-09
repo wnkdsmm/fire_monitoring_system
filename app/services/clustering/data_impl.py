@@ -129,7 +129,23 @@ def _parse_sampling_strategy(value: str) -> str:
     return normalized if normalized in allowed else SAMPLING_STRATEGY_OPTIONS[0]["value"]
 
 
-def _resolve_source_tables(table_name: str) -> list[str]:
+def _resolve_source_tables(table_name: str, table_names: Sequence[str] | None = None) -> list[str]:
+    if table_names:
+        available_tables = {
+            item
+            for item in get_user_table_names(prefer_clean=True)
+            if item and not item.startswith(TABLE_EXCLUDED_PREFIXES)
+        }
+        explicit_tables: list[str] = []
+        for item in table_names:
+            normalized_item = str(item or "").strip()
+            if not normalized_item or normalized_item == ALL_TABLES_VALUE or normalized_item in explicit_tables:
+                continue
+            if normalized_item in available_tables:
+                explicit_tables.append(normalized_item)
+        if explicit_tables:
+            return explicit_tables
+
     normalized = str(table_name or "").strip()
     if not normalized:
         return []
@@ -142,8 +158,12 @@ def _resolve_source_tables(table_name: str) -> list[str]:
     return [normalized]
 
 
-def _load_territory_dataset(table_name: str, sampling_strategy: str) -> ClusteringDatasetBundle:
-    source_tables = _resolve_source_tables(table_name)
+def _load_territory_dataset(
+    table_name: str,
+    sampling_strategy: str,
+    table_names: Sequence[str] | None = None,
+) -> ClusteringDatasetBundle:
+    source_tables = _resolve_source_tables(table_name, table_names=table_names)
     _, records, notes = _collect_risk_inputs(source_tables)
     if not records:
         if str(table_name or "").strip() == ALL_TABLES_VALUE:

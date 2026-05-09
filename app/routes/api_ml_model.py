@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Body, Request
+from fastapi import APIRouter, Body, Query, Request
 
 from .api_common import job_status_response, run_analytics_request, run_session_json_action
 
@@ -30,21 +30,23 @@ def get_ml_job_status(**kwargs):
 @router.get("/api/ml-model-data")
 def ml_model_data_endpoint(
     table_name: str = "all",
+    table_names: list[str] | None = Query(None),
     cause: str = "all",
     object_category: str = "all",
     temperature: str = "",
-    forecast_days: str = "14",
+    forecast_days: str = "7",
     history_window: str = "all",
     current_user_date: str = "",
 ):
     return run_analytics_request(
         lambda: get_ml_model_data(
             table_name=table_name,
+            table_names=table_names or [],
             cause=cause,
             object_category=object_category,
             temperature=temperature,
-            forecast_days=forecast_days,
-            history_window=history_window,
+            forecast_days="7",
+            history_window="all",
             current_user_date=current_user_date,
         ),
         invalid_code="ml_model_invalid_request",
@@ -55,16 +57,23 @@ def ml_model_data_endpoint(
 
 @router.post("/api/ml-model-jobs")
 def start_ml_model_job_endpoint(request: Request, payload: dict = Body(...)):
+    raw_table_names = payload.get("table_names")
+    table_names = (
+        [str(item or "").strip() for item in raw_table_names if str(item or "").strip()]
+        if isinstance(raw_table_names, list)
+        else []
+    )
     return run_session_json_action(
         request,
         lambda session_id: start_ml_model_job(
             session_id=session_id,
             table_name=str(payload.get("table_name") or "all"),
+            table_names=table_names,
             cause=str(payload.get("cause") or "all"),
             object_category=str(payload.get("object_category") or "all"),
             temperature=str(payload.get("temperature") or ""),
-            forecast_days=str(payload.get("forecast_days") or "14"),
-            history_window=str(payload.get("history_window") or "all"),
+            forecast_days="7",
+            history_window="all",
             current_user_date=str(payload.get("current_user_date") or ""),
         ),
     )

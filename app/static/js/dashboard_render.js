@@ -14,6 +14,24 @@
             var setHref = shared.setHref;
             var setSelectOptions = shared.setSelectOptions;
             var setText = shared.setText;
+            var createTableChecklist = shared.createTableChecklist;
+            var dashboardTableChecklist = typeof createTableChecklist === 'function'
+                ? createTableChecklist({
+                    rootId: 'dashboardTableFilter',
+                    menuId: 'dashboardTableFilterMenu',
+                    toggleId: 'dashboardTableFilterToggle',
+                    summaryId: 'dashboardTableFilterSummary',
+                    selectedListId: 'dashboardTableFilterSelectedList',
+                    itemClassName: 'dashboard-table-checklist-item',
+                    singleSelectedPrefix: 'Выбрана: '
+                })
+                : null;
+
+    function renderTableChecklist(options, selectedTableNames) {
+        if (dashboardTableChecklist && typeof dashboardTableChecklist.renderChecklist === 'function') {
+            dashboardTableChecklist.renderChecklist(options, selectedTableNames);
+        }
+    }
 
     function renderRankingList(containerId, items, emptyMessage, accentClass) {
         const container = byId(containerId);
@@ -170,18 +188,19 @@ function renderManagementCards(items) {
     function buildDashboardBriefHref(filters) {
         const params = new URLSearchParams();
         const safeFilters = filters || {};
-
-        if (safeFilters.table_name) {
+        const selectedTables = Array.isArray(safeFilters.table_names) ? safeFilters.table_names : [];
+        if (selectedTables.length) {
+            selectedTables.forEach(function (tableName) {
+                var normalized = String(tableName || '').trim();
+                if (normalized) {
+                    params.append('table_names', normalized);
+                }
+            });
+        } else if (safeFilters.table_name) {
             params.set('table_name', safeFilters.table_name);
-        }
-        if (safeFilters.year) {
-            params.set('year', safeFilters.year);
         }
         if (safeFilters.group_column) {
             params.set('group_column', safeFilters.group_column);
-        }
-        if (safeFilters.horizon_days) {
-            params.set('horizon_days', safeFilters.horizon_days);
         }
 
         const query = params.toString();
@@ -191,7 +210,7 @@ function renderManagementCards(items) {
     function updateDashboardBriefExport(filters) {
         const href = buildDashboardBriefHref(filters || {});
         Array.prototype.forEach.call(
-            document.querySelectorAll('#dashboardBrief .executive-brief-download, #dashboardBrief .executive-brief-summary-action'),
+            document.querySelectorAll('#dashboardBrief .executive-brief-download'),
             function (link) {
                 link.setAttribute('href', href);
             }
@@ -201,11 +220,20 @@ function renderManagementCards(items) {
     function buildDashboardScreenHref(path, filters, hash) {
         const params = new URLSearchParams();
         const safeFilters = filters || {};
-
-        if (safeFilters.table_name && safeFilters.table_name !== 'all') {
+        const selectedTables = Array.isArray(safeFilters.table_names) ? safeFilters.table_names : [];
+        if (selectedTables.length) {
+            selectedTables.forEach(function (tableName) {
+                var normalized = String(tableName || '').trim();
+                if (normalized) {
+                    params.append('table_names', normalized);
+                }
+            });
+            if (selectedTables.length === 1) {
+                params.set('table_name', selectedTables[0]);
+            }
+        } else if (safeFilters.table_name && safeFilters.table_name !== 'all') {
             params.set('table_name', safeFilters.table_name);
         }
-
         const query = params.toString();
         return path + (query ? '?' + query : '') + (hash || '');
     }
@@ -219,18 +247,19 @@ function renderManagementCards(items) {
     function buildDashboardPageHref(filters, mode) {
         const params = new URLSearchParams();
         const safeFilters = filters || {};
-
-        if (safeFilters.table_name) {
+        const selectedTables = Array.isArray(safeFilters.table_names) ? safeFilters.table_names : [];
+        if (selectedTables.length) {
+            selectedTables.forEach(function (tableName) {
+                var normalized = String(tableName || '').trim();
+                if (normalized) {
+                    params.append('table_names', normalized);
+                }
+            });
+        } else if (safeFilters.table_name) {
             params.set('table_name', safeFilters.table_name);
-        }
-        if (safeFilters.year) {
-            params.set('year', safeFilters.year);
         }
         if (safeFilters.group_column) {
             params.set('group_column', safeFilters.group_column);
-        }
-        if (safeFilters.horizon_days) {
-            params.set('horizon_days', safeFilters.horizon_days);
         }
         if (mode) {
             params.set('mode', mode);
@@ -254,36 +283,35 @@ function renderManagementCards(items) {
         const management = data.management || {};
         const brief = management.brief || {};
 
-        setSelectOptions('tableFilter', filters.available_tables, filters.table_name, 'Все таблицы');
-        setSelectOptions('yearFilter', [{ value: 'all', label: 'Все годы' }].concat(filters.available_years || []), filters.year || 'all', 'Все годы');
+        var selectedTableNames = Array.isArray(filters.table_names)
+            ? filters.table_names
+            : ((filters.table_name && filters.table_name !== 'all') ? [filters.table_name] : []);
+        renderTableChecklist(filters.available_tables, selectedTableNames);
         setSelectOptions('groupColumnFilter', filters.available_group_columns, filters.group_column, 'Нет доступных колонок');
-        setSelectOptions('horizonDaysFilter', filters.available_horizon_days, filters.horizon_days || '14', '14 дней');
 
         setText('heroTableLabel', scope.table_label || 'Все таблицы');
         setText('heroYearLabel', scope.year_label || 'Все годы');
         setText('heroGroupLabel', scope.group_label || 'Нет данных');
-        setText('heroHorizonDays', String(management.priority_horizon_days || filters.horizon_days || '14') + ' дней');
+        setText('heroHorizonDays', String(management.priority_horizon_days || '14') + ' дней');
         setText('dashboardLeadSummary', brief.lead || management.summary_line || 'После загрузки данных здесь появится краткий территориальный вывод и первая территория для проверки.');
         setText('managementHeroPriority', brief.top_territory_label || management.priority_territory_label || '-');
         setText('managementHeroPriorityMeta', brief.priority_reason || management.priority_reason || 'Недостаточно данных для определения первой территории.');
         setText('managementHeroConfidence', brief.confidence_label || management.confidence_label || 'Ограниченная');
         setText('managementHeroConfidenceScore', brief.confidence_score_display || management.confidence_score_display || '0 / 100');
         setText('managementHeroConfidenceMeta', brief.confidence_summary || management.confidence_summary || 'После загрузки данных здесь появится пояснение, насколько надежен территориальный приоритет.');
-        setText('dashboardExportBriefExcerpt', brief.export_excerpt || management.export_excerpt || 'Краткая экспортируемая справка появится после загрузки данных.');
         applyToneClass(byId('dashboardPriorityCard'), brief.priority_tone || management.priority_tone || 'sky');
         applyToneClass(byId('dashboardConfidenceCard'), brief.confidence_tone || management.confidence_tone || 'fire');
         renderManagementCards(brief.cards || management.brief_cards || []);
         renderManagementTerritories(management.territories || []);
         renderManagementActions(management.actions || []);
-        renderListItems('managementNotesList', brief.notes || management.notes || [], 'Ограничения и примечания к территориальному выводу появятся после загрузки данных.');
         updateDashboardBriefExport({
             table_name: filters.table_name || '',
-            year: filters.year || 'all',
-            group_column: filters.group_column || '',
-            horizon_days: filters.horizon_days || '14'
+            table_names: selectedTableNames,
+            group_column: filters.group_column || ''
         });
         updateDashboardScreenLinks({
-            table_name: filters.table_name || ''
+            table_name: filters.table_name || '',
+            table_names: selectedTableNames
         });
 
         setText('trendTitle', trend.title || 'Как менялась ситуация');

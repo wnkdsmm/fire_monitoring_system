@@ -78,10 +78,6 @@
                 </select>
             </label>
             <div class="filter-field filter-actions map-actions">
-                <span>Действие</span>
-                <button class="primary-action" type="submit">Показать карту</button>
-            </div>
-            <div class="filter-field filter-actions map-actions">
                 <span>Отдельное окно</span>
                 {% if data.selected_table %}
                 <a class="secondary-action" href="/fire-map/embed?table_name={{ data.selected_table }}" target="_blank" rel="noopener">Открыть отдельно</a>
@@ -168,4 +164,19 @@
         </div>
     </section>
 </div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var tableFilter = document.getElementById('mapTableFilter');
+    if (!tableFilter || !tableFilter.form) {
+        return;
+    }
+    tableFilter.addEventListener('change', function () {
+        tableFilter.form.submit();
+    });
+});
+</script>
 {% endblock %}

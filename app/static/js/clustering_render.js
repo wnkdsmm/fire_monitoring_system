@@ -15,6 +15,42 @@
             var setSelectOptions = shared.setSelectOptions;
             var setText = shared.setText;
             var setHidden = shared.setHidden;
+            var createTableChecklist = shared.createTableChecklist;
+            var clusterTableChecklist = typeof createTableChecklist === 'function'
+                ? createTableChecklist({
+                    rootId: 'clusterTableFilter',
+                    menuId: 'clusterTableFilterMenu',
+                    toggleId: 'clusterTableFilterToggle',
+                    summaryId: 'clusterTableFilterSummary',
+                    selectedListId: 'clusterTableFilterSelectedList',
+                    itemClassName: 'cluster-table-checklist-item'
+                })
+                : null;
+
+function getSelectedTableNamesFromForm() {
+        if (clusterTableChecklist && typeof clusterTableChecklist.getSelectedValues === 'function') {
+            return clusterTableChecklist.getSelectedValues();
+        }
+        return [];
+    }
+
+    function renderTableChecklist(options, selectedTableNames) {
+        if (clusterTableChecklist && typeof clusterTableChecklist.renderChecklist === 'function') {
+            clusterTableChecklist.renderChecklist(options, selectedTableNames);
+        }
+    }
+
+    function syncTableChecklistSummary() {
+        if (clusterTableChecklist && typeof clusterTableChecklist.syncSummary === 'function') {
+            clusterTableChecklist.syncSummary();
+        }
+    }
+
+    function setTableChecklistOpen(isOpen) {
+        if (clusterTableChecklist && typeof clusterTableChecklist.setOpen === 'function') {
+            clusterTableChecklist.setOpen(isOpen);
+        }
+    }
 
 function syncClusteringAsyncContainer() {
         var errorNode = byId('clusteringErrorState');
@@ -309,7 +345,11 @@ function applyClusteringData(data) {
 
         renderHero(data);
 
-        setSelectOptions('clusterTableFilter', filters.available_tables, filters.table_name, 'Нет таблиц');
+        var selectedTableNames = Array.isArray(filters.table_names)
+            ? filters.table_names
+            : ((filters.table_name && filters.table_name !== 'all') ? [filters.table_name] : []);
+        renderTableChecklist(filters.available_tables, selectedTableNames);
+        setTableChecklistOpen(false);
         setSelectOptions('clusterCountFilter', filters.available_cluster_counts, filters.cluster_count, '4 кластера');
         setSelectOptions('clusterSamplingStrategyFilter', filters.available_sampling_strategies, filters.sampling_strategy, 'Стратифицированная');
         renderFeaturePicker(filters);
@@ -345,14 +385,15 @@ function applyClusteringData(data) {
 
             return {
                 applyClusteringData: applyClusteringData,
+                getSelectedTableNamesFromForm: getSelectedTableNamesFromForm,
                 hideClusteringError: hideClusteringError,
                 renderClusteringJobRuntime: renderClusteringJobRuntime,
+                setTableChecklistOpen: setTableChecklistOpen,
                 showClusteringError: showClusteringError,
+                syncTableChecklistSummary: syncTableChecklistSummary,
                 syncClusteringAsyncContainer: syncClusteringAsyncContainer,
                 updateClusteringAsyncStateForJob: updateClusteringAsyncStateForJob
             };
         }
     };
 }(window));
-
-

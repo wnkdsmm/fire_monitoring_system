@@ -70,6 +70,7 @@ def _build_dashboard_aggregation(
     available_years: list[DashboardOption],
     available_group_columns: list[DashboardOption],
     horizon_days: int = PRIORITY_HORIZON_DAYS,
+    selected_table_label: str = "",
 ) -> DashboardAggregation:
     # Compatibility: allow legacy monkeypatches on app.dashboard.service.*
     # to affect the split implementation transparently.
@@ -189,6 +190,8 @@ def _build_dashboard_aggregation(
             available_group_columns=available_group_columns,
             available_years=available_years,
         )
+        if selected_table_label:
+            scope["table_label"] = selected_table_label
     except TypeError:
         scope = _build_dashboard_scope(
             summary=summary,
@@ -198,6 +201,8 @@ def _build_dashboard_aggregation(
             available_group_columns=available_group_columns,
             available_years=available_years,
         )
+        if selected_table_label:
+            scope["table_label"] = selected_table_label
 
     return {
         "summary": summary,
@@ -229,6 +234,7 @@ def _build_dashboard_payload(
     available_years: list[DashboardOption],
     available_group_columns: list[DashboardOption],
     horizon_days: int = PRIORITY_HORIZON_DAYS,
+    selected_table_names: list[str] | None = None,
 ) -> DashboardPayload:
     summary = aggregation["summary"]
     scope = aggregation["scope"]
@@ -282,6 +288,7 @@ def _build_dashboard_payload(
         },
         "filters": {
             "table_name": selected_table_name,
+            "table_names": selected_table_names or [],
             "year": str(selected_year) if selected_year is not None else "all",
             "group_column": selected_group_column,
             "horizon_days": str(horizon_days),
@@ -387,6 +394,7 @@ def _empty_dashboard_data(
         },
         "filters": {
             "table_name": "all",
+            "table_names": [],
             "year": "",
             "group_column": "",
             "horizon_days": str(horizon_days),

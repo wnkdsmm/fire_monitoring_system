@@ -188,6 +188,7 @@ class ClusteringFilters(TypedDict):
     """Request filters and selectable options for clustering page payloads."""
 
     table_name: NotRequired[str]
+    table_names: NotRequired[list[str]]
     cluster_count: NotRequired[str]
     sampling_strategy: NotRequired[str]
     feature_columns: NotRequired[list[str]]

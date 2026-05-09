@@ -12,6 +12,108 @@
     background: var(--surface-panel-accent);
 }
 
+.cluster-table-select {
+    position: relative;
+}
+
+.cluster-table-select-toggle {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 11px 12px;
+    border: 1px solid var(--control-border);
+    border-radius: var(--radius-control);
+    background: var(--control-bg);
+    color: var(--ink);
+    font-size: var(--font-size-token-08);
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+    transition: var(--transition-interactive);
+}
+
+.cluster-table-select-toggle:hover {
+    background: var(--control-bg-hover);
+    border-color: var(--color-token-32);
+}
+
+.cluster-table-select-summary {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--ink);
+}
+
+.cluster-table-select-caret {
+    flex: 0 0 auto;
+    color: var(--color-token-06);
+}
+
+.cluster-table-select.is-open .cluster-table-select-caret {
+    transform: rotate(180deg);
+}
+
+.cluster-table-checklist {
+    position: absolute;
+    z-index: 30;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    display: grid;
+    gap: 8px;
+    max-height: 220px;
+    overflow: auto;
+    padding: 10px 12px;
+    border: 1px solid var(--color-token-19);
+    border-radius: var(--radius-control);
+    background: var(--control-bg);
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+}
+
+.cluster-table-checklist.is-hidden {
+    display: none;
+}
+
+.cluster-table-checklist-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--ink);
+    font-size: var(--font-size-token-08);
+    line-height: 1.35;
+}
+
+.cluster-table-checklist-item span {
+    color: var(--ink);
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+.cluster-table-checklist-item input[type="checkbox"] {
+    margin: 0;
+    width: 16px;
+    min-height: 16px;
+    height: 16px;
+    padding: 0;
+    flex: 0 0 16px;
+    accent-color: var(--accent);
+    cursor: pointer;
+}
+
+.cluster-table-selected-list {
+    margin-top: 6px;
+    color: var(--color-token-06);
+    font-size: var(--font-size-token-07);
+    line-height: 1.35;
+    letter-spacing: 0;
+    text-transform: none;
+    word-break: break-word;
+}
+
 .cluster-feature-picker {
     display: grid;
     gap: 16px;

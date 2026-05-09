@@ -7,9 +7,7 @@
             <p class="hero-context-note">Базовой единицей прогноза является ожидаемое количество пожаров на дату. Раздел не выполняет территориальную приоритизацию и не заменяет сценарный календарь вероятности пожара.</p>
             <div class="hero-tags" id="mlHeroTags">
                 <span class="hero-tag">Таблица: <strong>{{ summary.selected_table_label }}</strong></span>
-                <span class="hero-tag">История для расчета: <strong>{{ summary.history_window_label }}</strong></span>
                 <span class="hero-tag">Главный фактор модели: <strong>{{ summary.top_feature_label }}</strong></span>
-                <span class="hero-tag">Температурный сценарий: <strong>{{ summary.temperature_scenario_display }}</strong></span>
                 <span class="hero-tag">{% if summary.event_probability_enabled %}Средняя вероятность P(&gt;=1 пожара): <strong>{{ summary.average_event_probability_display }}</strong>{% else %}Событие пожара: <strong>не рассчитывается</strong>{% endif %}</span>
             </div>
         </div>

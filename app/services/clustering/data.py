@@ -25,8 +25,13 @@ class ClusteringDataLoader(DataLoader):
     def parse_sampling_strategy(self, value: str) -> str:
         return _impl._parse_sampling_strategy(value)
 
-    def load_territory_dataset(self, table_name: str, sampling_strategy: str) -> dict[str, Any]:
-        return _impl._load_territory_dataset(table_name, sampling_strategy)
+    def load_territory_dataset(
+        self,
+        table_name: str,
+        sampling_strategy: str,
+        table_names: Sequence[str] | None = None,
+    ) -> dict[str, Any]:
+        return _impl._load_territory_dataset(table_name, sampling_strategy, table_names=table_names)
 
     def resolve_selected_features(
         self,
@@ -74,8 +79,12 @@ def _parse_sampling_strategy(value: str) -> str:
     return _LOADER.parse_sampling_strategy(value)
 
 
-def _load_territory_dataset(table_name: str, sampling_strategy: str) -> dict[str, Any]:
-    return _LOADER.load_territory_dataset(table_name, sampling_strategy)
+def _load_territory_dataset(
+    table_name: str,
+    sampling_strategy: str,
+    table_names: Sequence[str] | None = None,
+) -> dict[str, Any]:
+    return _LOADER.load_territory_dataset(table_name, sampling_strategy, table_names=table_names)
 
 
 def _resolve_selected_features(

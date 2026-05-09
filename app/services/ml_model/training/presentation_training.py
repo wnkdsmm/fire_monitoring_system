@@ -129,6 +129,7 @@ def _build_importance_chart(feature_importance: list[TrainingFeatureImportanceRo
 
 def _build_summary(
     selected_table: str,
+    selected_table_label: str,
     selected_cause: str,
     selected_object_category: str,
     daily_history: list[ForecastingDailyHistoryRow],
@@ -184,7 +185,7 @@ def _build_summary(
     )
 
     return {
-        'selected_table_label': 'Все таблицы' if selected_table == 'all' else (selected_table or 'Нет таблицы'),
+        'selected_table_label': selected_table_label or ('Все таблицы' if selected_table == 'all' else (selected_table or 'Нет таблицы')),
         'slice_label': ' | '.join(slice_parts) if slice_parts else 'Все пожары выбранной истории',
         'hero_summary': hero_summary,
         'history_period_label': _format_period(history_dates),

@@ -6,7 +6,6 @@
             <div class="hero-tags">
                 <span class="hero-tag">Таблица: <strong id="accessPointsTableLabel">{{ summary.selected_table_label }}</strong></span>
                 <span class="hero-tag">Район: <strong id="accessPointsDistrictLabel">{{ summary.selected_district_label }}</strong></span>
-                <span class="hero-tag">Год: <strong id="accessPointsYearLabel">{{ summary.selected_year_label }}</strong></span>
                 <span class="hero-tag">Лимит: <strong id="accessPointsLimitLabel">{{ summary.limit_display }}</strong></span>
             </div>
         </div>
@@ -28,30 +27,48 @@
     <section class="panel filters-panel">
         <div class="panel-head">
             <h2>Фильтры рейтинга</h2>
-            <span class="panel-meta">Настройка рейтинга по таблице, району, году и объему выборки верхних позиций.</span>
+            <span class="panel-meta">Настройка рейтинга по таблицам, району и объему выборки верхних позиций.</span>
         </div>
         <form class="filters-grid access-points-form-grid" id="accessPointsForm" method="get" action="/access-points">
             <label class="filter-field">
-                <span>Таблица</span>
-                <select id="accessPointsTableFilter" name="table_name">
-                    {% for option in filters.available_tables %}
-                    <option value="{{ option.value }}" {% if option.value == filters.table_name %}selected{% endif %}>{{ option.label }}</option>
-                    {% endfor %}
-                </select>
+                <span>Таблицы</span>
+                <div id="accessPointsTableFilter" class="access-points-table-select">
+                    <button
+                        id="accessPointsTableFilterToggle"
+                        class="access-points-table-select-toggle"
+                        type="button"
+                        aria-haspopup="true"
+                        aria-expanded="false"
+                        aria-controls="accessPointsTableFilterMenu"
+                    >
+                        <span id="accessPointsTableFilterSummary" class="access-points-table-select-summary">Все таблицы</span>
+                        <span class="access-points-table-select-caret" aria-hidden="true">▾</span>
+                    </button>
+                    <div
+                        id="accessPointsTableFilterMenu"
+                        class="access-points-table-checklist is-hidden"
+                        role="group"
+                        aria-label="Выбор таблиц для рейтинга проблемных точек"
+                    >
+                        {% set selected_tables = filters.table_names if filters.table_names is defined else [] %}
+                        {% if not selected_tables and filters.table_name and filters.table_name != 'all' %}
+                            {% set selected_tables = [filters.table_name] %}
+                        {% endif %}
+                        {% for option in filters.available_tables if option.value != 'all' %}
+                        <label class="access-points-table-checklist-item">
+                            <input type="checkbox" name="table_names" value="{{ option.value }}" {% if option.value in selected_tables %}checked{% endif %}>
+                            <span>{{ option.label }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div id="accessPointsTableFilterSelectedList" class="access-points-table-selected-list"></div>
             </label>
             <label class="filter-field">
                 <span>Район</span>
                 <select id="accessPointsDistrictFilter" name="district">
                     {% for option in filters.available_districts %}
                     <option value="{{ option.value }}" {% if option.value == filters.district %}selected{% endif %}>{{ option.label }}</option>
-                    {% endfor %}
-                </select>
-            </label>
-            <label class="filter-field">
-                <span>Год</span>
-                <select id="accessPointsYearFilter" name="year">
-                    {% for option in filters.available_years %}
-                    <option value="{{ option.value }}" {% if option.value == filters.year %}selected{% endif %}>{{ option.label }}</option>
                     {% endfor %}
                 </select>
             </label>

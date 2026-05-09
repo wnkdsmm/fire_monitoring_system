@@ -15,10 +15,41 @@
 
 var getClusteringErrorMessage = shared.getErrorMessage;
 
+    function getSelectedTableNames(form) {
+        if (renderApi && typeof renderApi.getSelectedTableNamesFromForm === 'function') {
+            return renderApi.getSelectedTableNamesFromForm();
+        }
+        return [];
+    }
+
+    function buildClusteringQuery(form) {
+        var params = new URLSearchParams();
+        var formData = new FormData(form);
+        var tableNames = getSelectedTableNames(form);
+        if (tableNames.length === 1) {
+            params.set('table_name', tableNames[0]);
+        } else {
+            tableNames.forEach(function (tableName) {
+                params.append('table_names', tableName);
+            });
+        }
+        params.set('cluster_count', String(formData.get('cluster_count') || '4'));
+        params.set('sampling_strategy', String(formData.get('sampling_strategy') || 'stratified'));
+        formData.getAll('feature_columns').forEach(function (featureName) {
+            var normalized = String(featureName || '').trim();
+            if (normalized) {
+                params.append('feature_columns', normalized);
+            }
+        });
+        return params.toString();
+    }
+
     function buildClusteringJobBody(form) {
         var formData = new FormData(form);
+        var tableNames = getSelectedTableNames(form);
         return {
-            table_name: String(formData.get('table_name') || ''),
+            table_name: tableNames.length === 1 ? tableNames[0] : 'all',
+            table_names: tableNames,
             cluster_count: String(formData.get('cluster_count') || '4'),
             sampling_strategy: String(formData.get('sampling_strategy') || 'stratified'),
             feature_columns: formData.getAll('feature_columns').map(function (value) {
@@ -92,8 +123,7 @@ async function fetchClusteringData() {
             return;
         }
 
-        var params = new URLSearchParams(new FormData(form));
-        var query = params.toString();
+        var query = buildClusteringQuery(form);
         body = buildClusteringJobBody(form);
         if (button) {
             button.disabled = true;
@@ -144,7 +174,26 @@ async function fetchClusteringData() {
             },
             onRetry: fetchClusteringData,
             onSubmit: fetchClusteringData,
-            onTableChange: fetchClusteringData
+            onTableFilterChange: function () {
+                if (renderApi.syncTableChecklistSummary) {
+                    renderApi.syncTableChecklistSummary();
+                }
+                if (renderApi.setTableChecklistOpen) {
+                    renderApi.setTableChecklistOpen(false);
+                }
+            },
+            onToggleTableFilter: function () {
+                var root = byId('clusterTableFilter');
+                var isOpen = root && root.classList.contains('is-open');
+                if (renderApi.setTableChecklistOpen) {
+                    renderApi.setTableChecklistOpen(!isOpen);
+                }
+            },
+            onCloseTableFilter: function () {
+                if (renderApi.setTableChecklistOpen) {
+                    renderApi.setTableChecklistOpen(false);
+                }
+            }
         });
     }
 

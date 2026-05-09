@@ -1,8 +1,8 @@
 <section id="mlBacktestingSection" class="panel ml-quality-panel">
         <div class="panel-head">
             <div>
-                <h2 id="mlQualityTitle">Оценка надежности ML-прогноза</h2>
-                <span class="panel-meta" id="mlQualitySubtitle">{{ quality.subtitle or 'Качество прогнозирования количества пожаров на исторических данных и сопоставление с базовыми методами.' }}</span>
+                <h2 id="mlQualityTitle">{{ quality.title or 'Валидация качества ML-прогноза количества пожаров' }}</h2>
+                <span class="panel-meta" id="mlQualitySubtitle">{{ quality.subtitle or 'Метрики рассчитаны на единой исторической выборке и показывают точность прогноза количества пожаров по дням.' }}</span>
             </div>
         </div>
         <div class="stats-grid" id="mlQualityMetricCards">
@@ -15,26 +15,29 @@
                 </article>
                 {% endfor %}
             {% else %}
-            <div class="mini-empty">После выполнения расчета здесь будут представлены метрики качества ML-прогноза.</div>
+            <div class="mini-empty">После выполнения расчёта здесь будут представлены метрики качества ML-прогноза.</div>
             {% endif %}
         </div>
-
-        <article class="panel ml-interval-panel" id="mlIntervalCoveragePanel">
-            <div class="panel-head">
-                <div>
-                    <h2 id="mlIntervalCoverageTitle">{{ quality.interval_card.label }}</h2>
-                    <span class="panel-meta">Частота попадания фактического числа пожаров в прогнозный интервал на отложенных исторических окнах.</span>
-                </div>
-                <strong class="ml-interval-value" id="mlIntervalCoverageValue">{{ quality.interval_card.value }}</strong>
-            </div>
-            <p class="ml-interval-meta" id="mlIntervalCoverageMeta">{{ quality.interval_card.meta }}</p>
-        </article>
-
+        <div class="ml-quality-legend" id="mlQualityLegend">
+            <strong>Как интерпретировать проценты и относительные метрики</strong>
+            <p>
+                <b>sMAPE, %:</b> средняя относительная ошибка прогноза количества пожаров; меньше — лучше.
+                Ориентир: до ~20% — высокая точность, 20–35% — приемлемо, выше 35% — модель требует донастройки.
+            </p>
+            <p>
+                <b>ΔMAE к базовой модели:</b> отрицательное значение означает улучшение относительно сезонной базовой модели,
+                положительное — ухудшение.
+            </p>
+            <p>
+                <b>ROC-AUC:</b> 0,5 — уровень случайного угадывания; 0,7+ — полезная разделяющая способность.
+                <b>Brier score</b> и <b>Log-loss</b>: меньше — лучше.
+            </p>
+        </div>
         <div class="ml-quality-extra{% if not quality.event_metric_cards %} is-hidden{% endif %}" id="mlQualityEventMetricsSection">
             <div class="panel-head">
                 <div>
-                    <h3>Дополнительные метрики события пожара</h3>
-                    <span class="panel-meta">Качество оценки вероятности хотя бы одного пожара; вспомогательная проверка по отношению к количественному прогнозу.</span>
+                    <h3>Проверка качества прогноза события пожара</h3>
+                    <span class="panel-meta">Дополнительная оценка вероятности события (хотя бы одного пожара); используется как вспомогательный критерий к количественному прогнозу.</span>
                 </div>
             </div>
             <div class="stats-grid ml-quality-extra-grid" id="mlQualityEventMetricCards">
@@ -64,9 +67,9 @@
                             <th>Роль</th>
                             <th>MAE</th>
                             <th>RMSE</th>
-                            <th>SMAPE</th>
+                            <th>sMAPE</th>
                             <th>Девиация Пуассона</th>
-                            <th>MAE к базовой модели</th>
+                            <th>ΔMAE к базовой модели</th>
                             <th>Статус</th>
                         </tr>
                     </thead>
@@ -77,9 +80,9 @@
                             <td data-label="Роль">{{ row.role_label }}</td>
                             <td data-label="MAE">{{ row.mae_display }}</td>
                             <td data-label="RMSE">{{ row.rmse_display }}</td>
-                            <td data-label="SMAPE">{{ row.smape_display }}</td>
+                            <td data-label="sMAPE">{{ row.smape_display }}</td>
                             <td data-label="Девиация Пуассона">{{ row.poisson_display }}</td>
-                            <td data-label="MAE к базовой модели">{{ row.mae_delta_display }}</td>
+                            <td data-label="ΔMAE к базовой модели">{{ row.mae_delta_display }}</td>
                             <td data-label="Статус">{{ row.selection_label }}</td>
                         </tr>
                         {% endfor %}

@@ -4,25 +4,75 @@
     global.DashboardEvents = {
         init: function initDashboardPage(options) {
             var byId = shared.byId;
+            var createTableChecklist = shared.createTableChecklist;
             if (!byId) {
                 return;
             }
 
             var form = byId('filtersForm');
-            var tableSelect = byId('tableFilter');
-            var yearSelect = byId('yearFilter');
-            var groupColumnSelect = byId('groupColumnFilter');
-            var horizonDaysSelect = byId('horizonDaysFilter');
+            var tableFilterRoot = byId('dashboardTableFilter');
+            var tableFilterToggle = byId('dashboardTableFilterToggle');
+            var dashboardTableChecklist = typeof createTableChecklist === 'function'
+                ? createTableChecklist({
+                    rootId: 'dashboardTableFilter',
+                    menuId: 'dashboardTableFilterMenu',
+                    toggleId: 'dashboardTableFilterToggle',
+                    summaryId: 'dashboardTableFilterSummary',
+                    selectedListId: 'dashboardTableFilterSelectedList',
+                    itemClassName: 'dashboard-table-checklist-item',
+                    singleSelectedPrefix: '\u0412\u044b\u0431\u0440\u0430\u043d\u0430: '
+                })
+                : null;
 
-            [tableSelect, yearSelect, groupColumnSelect, horizonDaysSelect].forEach(function (selectNode) {
-                if (selectNode) {
-                    selectNode.addEventListener('change', function () {
-                        if (options && typeof options.onFilterChange === 'function') {
-                            options.onFilterChange();
-                        }
-                    });
+            function updateTableSummary() {
+                if (dashboardTableChecklist && typeof dashboardTableChecklist.syncSummary === 'function') {
+                    dashboardTableChecklist.syncSummary();
+                }
+            }
+
+            function setTableFilterOpen(isOpen) {
+                if (dashboardTableChecklist && typeof dashboardTableChecklist.setOpen === 'function') {
+                    dashboardTableChecklist.setOpen(isOpen);
+                }
+            }
+
+            if (tableFilterToggle) {
+                tableFilterToggle.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    var isOpen = tableFilterRoot && tableFilterRoot.classList.contains('is-open');
+                    setTableFilterOpen(!isOpen);
+                });
+            }
+
+            if (form) {
+                form.addEventListener('change', function (event) {
+                    updateTableSummary();
+                    if (options && typeof options.onFilterChange === 'function') {
+                        options.onFilterChange();
+                    }
+                    if (event && event.target && event.target.name === 'table_names') {
+                        setTableFilterOpen(false);
+                    }
+                });
+            }
+
+            document.addEventListener('click', function (event) {
+                if (!tableFilterRoot) {
+                    return;
+                }
+                if (!tableFilterRoot.contains(event.target)) {
+                    setTableFilterOpen(false);
                 }
             });
+
+            document.addEventListener('keydown', function (event) {
+                if (event && event.key === 'Escape') {
+                    setTableFilterOpen(false);
+                }
+            });
+
+            updateTableSummary();
 
             if (form) {
                 form.addEventListener('submit', function (event) {

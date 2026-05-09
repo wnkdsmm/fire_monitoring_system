@@ -213,7 +213,6 @@ def build_analytics_panel_html(analytics: SpatialAnalyticsPayload, idx: int, esc
 
     method_items = "".join(f"<span class='analytics-chip'>{escape(item)}</span>" for item in summary.get("methods", []))
     note_items = "".join(f"<li>{escape(item)}</li>" for item in summary.get("insights", [])) or _DEFAULT_NO_INSIGHTS_HTML
-    thesis_items = "".join(f"<p>{escape(item)}</p>" for item in summary.get("thesis_paragraphs", []))
     fallback_message = quality.get("fallback_message")
     fallback_html = f"<div class='analytics-warning'>{escape(fallback_message)}</div>" if fallback_message else ""
 
@@ -256,10 +255,6 @@ def build_analytics_panel_html(analytics: SpatialAnalyticsPayload, idx: int, esc
                 <div class="analytics-section-title">Ключевые выводы</div>
                 <ul class="analytics-list">{note_items}</ul>
             </div>
-            <details class="analytics-details">
-                <summary>Тезисы для магистерской</summary>
-                <div class="analytics-thesis">{thesis_items}</div>
-            </details>
         </div>
         """
 

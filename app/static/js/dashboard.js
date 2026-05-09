@@ -130,9 +130,8 @@ async function fetchDashboardData() {
         if (initialData && !isDeferredBootstrap) {
             renderApi.renderDashboardCharts(initialData.charts || {});
             if (shared.revealPageContent) { shared.revealPageContent(); }
-        } else {
-            syncBriefLink();
         }
+        syncBriefLink();
 
         if (shouldFetchOnLoad) {
             fetchDashboardData();

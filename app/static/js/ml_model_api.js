@@ -6,6 +6,7 @@
     var apiCall = apiClient.apiCall;
     var pollUntilDone = apiClient.pollUntilDone;
     var getErrorMessage = shared.getErrorMessage;
+    var FIXED_FORECAST_DAYS = '7';
 
     var jobPollTimer = createSingleTimer();
     var currentJobState = null;
@@ -52,6 +53,9 @@
 
     function withCurrentUserDate(query) {
         var params = new URLSearchParams(query || '');
+        params.delete('temperature');
+        params.delete('forecast_days');
+        params.delete('history_window');
         params.set('current_user_date', getCurrentUserDateIso());
         return params.toString();
     }
@@ -66,13 +70,27 @@
 
     function buildPayloadFromQuery(query) {
         var params = new URLSearchParams(query || '');
+        var tableNames = params.getAll('table_names').map(function (value) {
+            return String(value || '').trim();
+        }).filter(function (value) {
+            return value.length > 0;
+        });
+        if (!tableNames.length) {
+            var singleTable = String(params.get('table_name') || '').trim();
+            if (singleTable && singleTable !== 'all') {
+                tableNames = [singleTable];
+            }
+        }
+        var tableName = 'all';
+        if (tableNames.length === 1) {
+            tableName = tableNames[0];
+        }
         return {
-            table_name: params.get('table_name') || 'all',
+            table_name: tableName,
+            table_names: tableNames,
             cause: params.get('cause') || 'all',
             object_category: params.get('object_category') || 'all',
-            temperature: params.get('temperature') || '',
-            forecast_days: params.get('forecast_days') || '14',
-            history_window: params.get('history_window') || 'all',
+            forecast_days: FIXED_FORECAST_DAYS,
             current_user_date: params.get('current_user_date') || getCurrentUserDateIso()
         };
     }

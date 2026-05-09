@@ -19,6 +19,7 @@ from app.services.job_support import (
 from app.state import FINAL_JOB_STATUSES, job_store
 
 from .core import _build_ml_request_state, _cache_get, get_ml_model_data
+from .ml_model_config_types import FIXED_FORECAST_DAYS
 
 _ML_JOB_EXECUTOR = ThreadPoolExecutor(max_workers=2, thread_name_prefix="ml-model")
 _ML_JOB_LOCK = RLock()
@@ -34,30 +35,33 @@ _BACKTEST_STATUS_SPEC = LinkedJobStatusSpec(
 def start_ml_model_job(
     session_id: str,
     table_name: str = "all",
+    table_names: list[str] | None = None,
     cause: str = "all",
     object_category: str = "all",
     temperature: str = "",
-    forecast_days: str = "14",
+    forecast_days: str = "7",
     history_window: str = "all",
     current_user_date: str = "",
 ) -> dict[str, Any]:
     request_state = _build_ml_request_state(
         table_name=table_name,
+        table_names=table_names,
         cause=cause,
         object_category=object_category,
         temperature=temperature,
-        forecast_days=forecast_days,
-        history_window=history_window,
+        forecast_days=str(FIXED_FORECAST_DAYS),
+        history_window="all",
         current_user_date=current_user_date,
     )
     cache_key_token = _serialize_cache_key(request_state["cache_key"])
     params_payload = _build_params_payload(
         table_name=table_name,
+        table_names=table_names,
         cause=cause,
         object_category=object_category,
         temperature=temperature,
-        forecast_days=forecast_days,
-        history_window=history_window,
+        forecast_days=str(FIXED_FORECAST_DAYS),
+        history_window="all",
         current_user_date=current_user_date,
     )
     reuse_coordinator = JobReuseCoordinator(
@@ -102,7 +106,7 @@ def _run_ml_model_job(
     session_id: str,
     main_job_id: str,
     backtest_job_id: str,
-    params_payload: dict[str, str],
+    params_payload: dict[str, Any],
     cache_key_token: str,
 ) -> None:
     primary_reporter = StageTrackingJobProgressReporter(
@@ -131,6 +135,7 @@ def _run_ml_model_job(
         on_start=lambda: _start_ml_job_execution(session_id=session_id, main_job_id=main_job_id),
         execute=lambda: get_ml_model_data(
             table_name=params_payload["table_name"],
+            table_names=params_payload["table_names"],
             cause=params_payload["cause"],
             object_category=params_payload["object_category"],
             temperature=params_payload["temperature"],
@@ -159,7 +164,7 @@ def _create_ml_job_bundle(
     *,
     session_id: str,
     cache_key_token: str,
-    params_payload: dict[str, str],
+    params_payload: dict[str, Any],
     cache_hit: bool,
 ) -> JobLaunchBundle:
     main_job = job_store.create_or_reset_job(session_id=session_id, kind="ml_model")
@@ -237,7 +242,7 @@ def _submit_ml_job(
     *,
     session_id: str,
     bundle: JobLaunchBundle,
-    params_payload: dict[str, str],
+    params_payload: dict[str, Any],
     cache_key_token: str,
 ) -> None:
     _ML_JOB_EXECUTOR.submit(
@@ -330,20 +335,23 @@ def _build_job_status_payload(session_id: str, job_id: str, *, reused: bool) -> 
 
 def _build_params_payload(
     table_name: str,
+    table_names: list[str] | None,
     cause: str,
     object_category: str,
     temperature: str,
     forecast_days: str,
     history_window: str,
     current_user_date: str,
-) -> dict[str, str]:
+) -> dict[str, Any]:
+    normalized_table_names = [str(item or "").strip() for item in (table_names or []) if str(item or "").strip()]
     return {
         "table_name": str(table_name or "all"),
+        "table_names": normalized_table_names,
         "cause": str(cause or "all"),
         "object_category": str(object_category or "all"),
         "temperature": str(temperature or ""),
-        "forecast_days": str(forecast_days or "14"),
-        "history_window": str(history_window or "all"),
+        "forecast_days": str(FIXED_FORECAST_DAYS),
+        "history_window": "all",
         "current_user_date": str(current_user_date or ""),
     }
 

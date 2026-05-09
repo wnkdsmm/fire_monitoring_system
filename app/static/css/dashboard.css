@@ -68,6 +68,108 @@
     background: var(--surface-panel);
 }
 
+.dashboard-table-select {
+    position: relative;
+}
+
+.dashboard-table-select-toggle {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 11px 12px;
+    border: 1px solid var(--control-border);
+    border-radius: var(--radius-control);
+    background: var(--control-bg);
+    color: var(--ink);
+    font-size: var(--font-size-token-08);
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+    transition: var(--transition-interactive);
+}
+
+.dashboard-table-select-toggle:hover {
+    background: var(--control-bg-hover);
+    border-color: var(--color-token-32);
+}
+
+.dashboard-table-select-summary {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--ink);
+}
+
+.dashboard-table-select-caret {
+    flex: 0 0 auto;
+    color: var(--color-token-06);
+}
+
+.dashboard-table-select.is-open .dashboard-table-select-caret {
+    transform: rotate(180deg);
+}
+
+.dashboard-table-checklist {
+    position: absolute;
+    z-index: 30;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    display: grid;
+    gap: 8px;
+    max-height: 220px;
+    overflow: auto;
+    padding: 10px 12px;
+    border: 1px solid var(--color-token-19);
+    border-radius: var(--radius-control);
+    background: var(--control-bg);
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+}
+
+.dashboard-table-checklist.is-hidden {
+    display: none;
+}
+
+.dashboard-table-checklist-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--ink);
+    font-size: var(--font-size-token-08);
+    line-height: 1.35;
+}
+
+.dashboard-table-checklist-item span {
+    color: var(--ink);
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+.dashboard-table-checklist-item input[type="checkbox"] {
+    margin: 0;
+    width: 18px;
+    min-height: 18px;
+    height: 18px;
+    padding: 0;
+    flex: 0 0 18px;
+    accent-color: var(--accent);
+    cursor: pointer;
+}
+
+.dashboard-table-selected-list {
+    margin-top: 6px;
+    color: var(--color-token-06);
+    font-size: var(--font-size-token-07);
+    line-height: 1.35;
+    letter-spacing: 0;
+    text-transform: none;
+    word-break: break-word;
+}
+
 .dashboard-overview-column .stat-card {
     padding: var(--space-token-19);
 }
@@ -175,12 +277,6 @@
 .executive-brief-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
-    gap: 14px;
-}
-
-.executive-brief-foot {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr));
     gap: 14px;
 }
 
@@ -305,62 +401,6 @@
     background: var(--surface-soft);
 }
 
-.executive-brief-summary {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 18px;
-    align-items: center;
-    padding: var(--space-token-33);
-    border-radius: var(--radius-card);
-    border: 1px solid var(--line);
-    background: var(--surface-panel-accent);
-}
-
-.executive-brief-trust {
-    display: grid;
-    gap: 14px;
-    padding: var(--space-token-33);
-    border-radius: var(--radius-card);
-    border: 1px solid var(--line);
-    background: var(--tone-trust-soft);
-}
-
-.executive-brief-summary-copy {
-    display: grid;
-    gap: 8px;
-}
-
-.executive-brief-summary-title {
-    color: var(--ink);
-    font-size: var(--font-size-token-11); /* approx */
-    line-height: 1.2;
-}
-
-.executive-brief-summary-title small {
-    color: var(--accent-deep);
-    font-size: 0.72em;
-    font-weight: 700;
-}
-
-.executive-brief-summary-text {
-    margin: 0;
-    color: var(--muted);
-    line-height: 1.6;
-}
-
-.executive-brief-summary .secondary-action {
-    width: auto;
-    min-width: 11rem;
-}
-
-.executive-brief-notes {
-    margin: 0;
-}
-
-.executive-brief-trust .executive-brief-notes {
-    margin: 0;
-}
-
 .dashboard-section-intro {
     padding: var(--space-token-21);
 }
@@ -399,14 +439,12 @@
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .executive-panel-head,
-    .executive-brief-summary {
+    .executive-panel-head {
         grid-template-columns: minmax(0, 1fr);
     }
 }
 
 @media (max-width: 1040px) {
-    .executive-brief-foot,
     .executive-layout {
         grid-template-columns: minmax(0, 1fr);
     }

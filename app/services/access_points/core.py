@@ -120,6 +120,22 @@ def _build_access_points_cache_key(
     )
 
 
+def _normalize_table_names(table_options: list[dict[str, str]], table_names: list[str] | None) -> list[str]:
+    allowed = {
+        str(item.get("value") or "").strip()
+        for item in table_options
+        if str(item.get("value") or "").strip() and str(item.get("value") or "").strip() != "all"
+    }
+    normalized: list[str] = []
+    for item in (table_names or []):
+        value = str(item or "").strip()
+        if not value or value == "all" or value not in allowed:
+            continue
+        if value not in normalized:
+            normalized.append(value)
+    return normalized
+
+
 def _build_limit_options() -> list[dict[str, str]]:
     return [{"value": str(value), "label": f"Top {value}"} for value in ACCESS_POINT_LIMIT_OPTIONS]
 
@@ -151,14 +167,22 @@ def _empty_access_points_charts(message: str) -> dict[str, Any]:
 def _build_access_points_request_state(
     *,
     table_name: str = "all",
+    table_names: list[str] | None = None,
     district: str = "all",
     year: str = "all",
     limit: str = "25",
     feature_columns: list[str] | None = None,
 ) -> dict[str, Any]:
     table_options = _build_access_points_table_options()
-    selected_table = _resolve_selected_table(table_options, table_name)
-    source_tables = _selected_source_tables(table_options, selected_table)
+    selected_table_names = _normalize_table_names(table_options, table_names)
+    if selected_table_names:
+        selected_table = selected_table_names[0] if len(selected_table_names) == 1 else "all"
+        source_tables = list(selected_table_names)
+    else:
+        selected_table = _resolve_selected_table(table_options, table_name)
+        source_tables = _selected_source_tables(table_options, selected_table)
+        if selected_table and selected_table != "all":
+            selected_table_names = [selected_table]
     parsed_limit = _parse_limit(limit)
     normalized_feature_columns = _normalize_access_point_feature_columns(feature_columns)
     cache_key = _build_access_points_cache_key(
@@ -172,6 +196,7 @@ def _build_access_points_request_state(
     return {
         "table_options": table_options,
         "selected_table": selected_table,
+        "selected_table_names": selected_table_names,
         "source_tables": source_tables,
         "selected_district": str(district or "all").strip() or "all",
         "selected_year": str(year or "all").strip() or "all",
@@ -195,6 +220,7 @@ def _shell_options(current_value: str, all_label: str) -> list[dict[str, str]]:
 def get_access_points_shell_context(
     *,
     table_name: str = "all",
+    table_names: list[str] | None = None,
     district: str = "all",
     year: str = "all",
     limit: str = "25",
@@ -202,6 +228,7 @@ def get_access_points_shell_context(
 ) -> dict[str, Any]:
     request_state = _build_access_points_request_state(
         table_name=table_name,
+        table_names=table_names,
         district=district,
         year=year,
         limit=limit,
@@ -222,6 +249,8 @@ def get_access_points_shell_context(
         request_state["selected_table"],
         "Все таблицы",
     )
+    if len(request_state["selected_table_names"]) > 1:
+        selected_table_label = f"Выбрано таблиц: {len(request_state['selected_table_names'])}"
     selected_district_label = (
         request_state["selected_district"] if request_state["selected_district"] != "all" else "Все районы"
     )
@@ -229,6 +258,7 @@ def get_access_points_shell_context(
 
     filters = {
         "table_name": request_state["selected_table"],
+        "table_names": list(request_state["selected_table_names"]),
         "district": request_state["selected_district"],
         "year": request_state["selected_year"],
         "limit": str(request_state["limit"]),
@@ -271,6 +301,7 @@ def get_access_points_shell_context(
 def get_access_points_data(
     *,
     table_name: str = "all",
+    table_names: list[str] | None = None,
     district: str = "all",
     year: str = "all",
     limit: str = "25",
@@ -278,6 +309,7 @@ def get_access_points_data(
 ) -> dict[str, Any]:
     request_state = _build_access_points_request_state(
         table_name=table_name,
+        table_names=table_names,
         district=district,
         year=year,
         limit=limit,
@@ -289,6 +321,7 @@ def get_access_points_data(
 
     filters = {
         "table_name": request_state["selected_table"],
+        "table_names": list(request_state["selected_table_names"]),
         "district": request_state["selected_district"],
         "year": request_state["selected_year"],
         "limit": str(request_state["limit"]),
@@ -304,6 +337,8 @@ def get_access_points_data(
         request_state["selected_table"],
         "Все таблицы",
     )
+    if len(request_state["selected_table_names"]) > 1:
+        selected_table_label = f"Выбрано таблиц: {len(request_state['selected_table_names'])}"
 
     if not request_state["source_tables"]:
         summary = _build_summary(
@@ -346,6 +381,7 @@ def get_access_points_data(
 
     filters = {
         "table_name": request_state["selected_table"],
+        "table_names": list(request_state["selected_table_names"]),
         "district": selected_district,
         "year": selected_year_value,
         "limit": str(request_state["limit"]),
@@ -439,4 +475,3 @@ def get_access_points_data(
         "notes": notes,
     }
     return _ACCESS_POINTS_CACHE.set(request_state["cache_key"], _sanitize_json_payload(payload))
-

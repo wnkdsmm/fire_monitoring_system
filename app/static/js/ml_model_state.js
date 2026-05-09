@@ -1,6 +1,7 @@
 (function (global) {
     var shared = global.FireUi || {};
     var byId = shared.byId;
+    var createTableChecklist = shared.createTableChecklist;
     var factory = global.FireStateFactory || {};
     var createModuleState = factory.createModuleState;
 
@@ -11,6 +12,11 @@
                 ? createModuleState('ml_model', { currentData: initialData })
                 : null;
             var fallbackCurrentData = initialData;
+            var mlTableChecklist = typeof createTableChecklist === 'function'
+                ? createTableChecklist({
+                    menuId: 'mlTableFilterMenu'
+                })
+                : null;
 
             function setCurrentData(data) {
                 if (!state) {
@@ -25,13 +31,14 @@
             }
 
             function collectSelectedFilters() {
+                var selectedTableNames = mlTableChecklist && typeof mlTableChecklist.getSelectedValues === 'function'
+                    ? mlTableChecklist.getSelectedValues()
+                    : [];
                 return {
-                    table_name: byId('mlTableFilter') ? byId('mlTableFilter').value : 'all',
+                    table_name: selectedTableNames.length === 1 ? selectedTableNames[0] : 'all',
+                    table_names: selectedTableNames,
                     cause: byId('mlCauseFilter') ? byId('mlCauseFilter').value : 'all',
-                    object_category: byId('mlObjectCategoryFilter') ? byId('mlObjectCategoryFilter').value : 'all',
-                    temperature: byId('mlTemperatureInput') ? byId('mlTemperatureInput').value : '',
-                    forecast_days: byId('mlForecastDaysFilter') ? byId('mlForecastDaysFilter').value : '14',
-                    history_window: byId('mlHistoryWindowFilter') ? byId('mlHistoryWindowFilter').value : 'all'
+                    object_category: byId('mlObjectCategoryFilter') ? byId('mlObjectCategoryFilter').value : 'all'
                 };
             }
 
@@ -43,4 +50,3 @@
         }
     };
 }(window));
-

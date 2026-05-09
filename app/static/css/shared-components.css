@@ -362,7 +362,7 @@
     background: var(--surface-panel);
 }
 
-.filter-field :is(select, input) {
+.filter-field :is(select, input:not([type="checkbox"]):not([type="radio"])) {
     width: 100%;
     min-height: 48px;
     padding: 11px 14px;
@@ -383,16 +383,16 @@
     padding-right: var(--space-token-30);
 }
 
-.filter-field input {
+.filter-field input:not([type="checkbox"]):not([type="radio"]) {
     cursor: text;
 }
 
-.filter-field :is(select, input):hover {
+.filter-field :is(select, input:not([type="checkbox"]):not([type="radio"])):hover {
     background: var(--control-bg-hover);
     border-color: var(--color-token-32);
 }
 
-.filter-field :is(select, input):disabled {
+.filter-field :is(select, input:not([type="checkbox"]):not([type="radio"])):disabled {
     color: var(--muted);
     cursor: not-allowed;
     background: var(--color-token-28);
@@ -849,4 +849,3 @@ td {
     padding-left: var(--space-token-32);
     line-height: 1.6;
 }
-

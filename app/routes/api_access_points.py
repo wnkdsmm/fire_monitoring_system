@@ -16,6 +16,7 @@ def get_access_points_data(**kwargs):
 @router.get("/api/access-points-data")
 def access_points_data_endpoint(
     table_name: str = "all",
+    table_names: list[str] | None = Query(None),
     district: str = "all",
     year: str = "all",
     limit: str = "25",
@@ -24,6 +25,7 @@ def access_points_data_endpoint(
     return run_analytics_request(
         lambda: get_access_points_data(
             table_name=table_name,
+            table_names=table_names or [],
             district=district,
             year=year,
             limit=limit,
