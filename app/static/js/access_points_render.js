@@ -441,8 +441,6 @@ function showLoading(message) {
         renderScoreDistribution(data);
         renderReasonBreakdown(data);
         renderIncomplete(data);
-        renderListItems('accessPointsUncertaintyNotes', data.uncertainty_notes, 'Здесь появятся пояснения по штрафу за неопределённость и малой выборке.');
-        renderListItems('accessPointsNotes', data.notes, 'Здесь появятся короткие пояснения по качеству данных и смыслу рейтинга.');
         hideLoading();
         if (shared.revealPageContent) { shared.revealPageContent(); }
     }
