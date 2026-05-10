@@ -164,7 +164,9 @@ def _new_point_bucket(identity: PointIdentity) -> PointBucket:
 
 def _update_point_bucket_from_record(bucket: PointBucket, record: AccessPointInput) -> None:
     bucket["incident_count"] += 1
-    bucket["years"][int(record.get("year") or record["date"].year)] += 1
+    year = record.get("year")
+    if year is not None:
+        bucket["years"][int(year)] += 1
 
     district = _clean_text(record.get("district"))
     territory_label = _clean_text(record.get("territory_label"))
