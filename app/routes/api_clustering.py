@@ -54,7 +54,6 @@ def clustering_data_endpoint(
     table_name: str = "",
     table_names: list[str] | None = None,
     cluster_count: str = "4",
-    sampling_strategy: str = "stratified",
     feature_columns: list[str] | None = None,
 ):
     return run_analytics_request(
@@ -62,7 +61,6 @@ def clustering_data_endpoint(
             table_name=table_name,
             table_names=table_names or [],
             cluster_count=cluster_count,
-            sampling_strategy=sampling_strategy,
             feature_columns=feature_columns or [],
             cluster_count_is_explicit="cluster_count" in request.query_params,
         ),
@@ -81,7 +79,6 @@ def start_clustering_job_endpoint(request: Request, payload: dict = Body(...)):
             table_name=str(payload.get("table_name") or ""),
             table_names=coerce_string_list(payload.get("table_names")),
             cluster_count=str(payload.get("cluster_count") or "4"),
-            sampling_strategy=str(payload.get("sampling_strategy") or "stratified"),
             feature_columns=coerce_string_list(payload.get("feature_columns")),
             cluster_count_is_explicit="cluster_count" in payload,
         ),

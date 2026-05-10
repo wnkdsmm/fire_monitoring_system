@@ -50,7 +50,6 @@ def _load_clustering_stage(
     base: ClusteringBaseState,
     selected_table: str,
     selected_table_names: Sequence[str] | None,
-    selected_sampling_strategy: str,
     normalized_feature_columns: Sequence[str] | None,
     requested_cluster_count: int,
     perf: Any,
@@ -60,7 +59,6 @@ def _load_clustering_stage(
         dataset = _load_clustering_dataset_for_request(
             selected_table=selected_table,
             selected_table_names=selected_table_names,
-            selected_sampling_strategy=selected_sampling_strategy,
             perf=perf,
             progress_callback=progress_callback,
         )
@@ -72,7 +70,6 @@ def _load_clustering_stage(
         base=base,
         dataset=dataset,
         normalized_feature_columns=normalized_feature_columns,
-        selected_sampling_strategy=selected_sampling_strategy,
         requested_cluster_count=requested_cluster_count,
         perf=perf,
         progress_callback=progress_callback,
@@ -243,7 +240,6 @@ def get_clustering_data(
     table_name: str = "",
     table_names: Sequence[str] | None = None,
     cluster_count: str = "4",
-    sampling_strategy: str = "stratified",
     feature_columns: Sequence[str] | None = None,
     cluster_count_is_explicit: bool = False,
     progress_callback: Callable[[str, str], None] | None = None,
@@ -253,7 +249,6 @@ def get_clustering_data(
         table_name=table_name,
         table_names=table_names,
         cluster_count=cluster_count,
-        sampling_strategy=sampling_strategy,
         feature_columns=feature_columns,
         cluster_count_is_explicit=cluster_count_is_explicit,
     )
@@ -261,7 +256,6 @@ def get_clustering_data(
     selected_table = request_state["selected_table"]
     selected_table_names = request_state["selected_table_names"]
     requested_cluster_count = request_state["cluster_count"]
-    selected_sampling_strategy = request_state["sampling_strategy"]
     normalized_feature_columns = request_state["feature_columns"]
     cluster_count_is_explicit = request_state["cluster_count_is_explicit"]
     cache_key = request_state["cache_key"]
@@ -272,7 +266,6 @@ def get_clustering_data(
             selected_table=selected_table,
             selected_table_names=selected_table_names,
             cluster_count=requested_cluster_count,
-            sampling_strategy=selected_sampling_strategy,
         )
     cached_payload = _CLUSTERING_CACHE.get(cache_key)
     if cached_payload is not None:
@@ -292,7 +285,6 @@ def get_clustering_data(
         selected_table=selected_table,
         selected_table_names=selected_table_names,
         cluster_count=requested_cluster_count,
-        sampling_strategy=selected_sampling_strategy,
     )
     if not selected_table:
         base["notes"].append("Выберите таблицу, чтобы сгруппировать территории по их пожарному профилю и типу риска.")
@@ -307,7 +299,6 @@ def get_clustering_data(
         base=base,
         selected_table=selected_table,
         selected_table_names=selected_table_names,
-        selected_sampling_strategy=selected_sampling_strategy,
         normalized_feature_columns=normalized_feature_columns,
         requested_cluster_count=requested_cluster_count,
         perf=perf,

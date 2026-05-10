@@ -28,7 +28,6 @@ def start_clustering_job(
     table_name: str = "",
     table_names: list[str] | None = None,
     cluster_count: str = "4",
-    sampling_strategy: str = "stratified",
     feature_columns: list[str] | None = None,
     cluster_count_is_explicit: bool = False,
 ) -> dict[str, Any]:  # one-off
@@ -36,7 +35,6 @@ def start_clustering_job(
         table_name=table_name,
         table_names=table_names,
         cluster_count=cluster_count,
-        sampling_strategy=sampling_strategy,
         feature_columns=feature_columns,
         cluster_count_is_explicit=cluster_count_is_explicit,
     )
@@ -45,7 +43,6 @@ def start_clustering_job(
         table_name=table_name,
         table_names=table_names,
         cluster_count=cluster_count,
-        sampling_strategy=sampling_strategy,
         feature_columns=feature_columns,
         cluster_count_is_explicit=cluster_count_is_explicit,
     )
@@ -112,7 +109,6 @@ def _run_clustering_job(
             table_name=str(params_payload["table_name"]),
             table_names=list(params_payload.get("table_names") or []),
             cluster_count=str(params_payload["cluster_count"]),
-            sampling_strategy=str(params_payload["sampling_strategy"]),
             feature_columns=list(params_payload.get("feature_columns") or []),
             cluster_count_is_explicit=bool(params_payload.get("cluster_count_is_explicit")),
             progress_callback=reporter.handle_progress,
@@ -250,7 +246,6 @@ def _build_params_payload(
     table_name: str,
     table_names: list[str] | None,
     cluster_count: str,
-    sampling_strategy: str,
     feature_columns: list[str] | None,
     cluster_count_is_explicit: bool,
 ) -> dict[str, Any]:  # one-off
@@ -258,7 +253,6 @@ def _build_params_payload(
         "table_name": str(table_name or ""),
         "table_names": [str(item).strip() for item in (table_names or []) if str(item).strip()],
         "cluster_count": str(cluster_count or "4"),
-        "sampling_strategy": str(sampling_strategy or "stratified"),
         "feature_columns": [str(item).strip() for item in (feature_columns or []) if str(item).strip()],
         "cluster_count_is_explicit": bool(cluster_count_is_explicit),
     }

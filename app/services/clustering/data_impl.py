@@ -11,7 +11,6 @@ from app.labels import (
     CLUSTERING_AUTO_DEFAULT_EXCLUDED_FEATURES,
     CLUSTERING_DEFAULT_CLUSTER_FEATURES,
     CLUSTERING_FEATURE_METADATA,
-    CLUSTERING_SAMPLING_STRATEGY_LABELS,
 )
 from app.statistics_constants import EXCLUDED_TABLE_PREFIXES as TABLE_EXCLUDED_PREFIXES
 from config.constants import (
@@ -20,7 +19,6 @@ from config.constants import (
     MAX_FEATURE_OPTIONS,
     MEAN_SMOOTHING_PRIOR_STRENGTH,
     RATE_SMOOTHING_PRIOR_STRENGTH,
-    SAMPLING_STRATEGY_VALUES,
 )
 from app.table_catalog import get_user_table_names, get_user_table_options, resolve_selected_table_value
 
@@ -41,11 +39,6 @@ from .utils import _format_number, _format_percent
 AUTO_DEFAULT_EXCLUDED_FEATURES = set(CLUSTERING_AUTO_DEFAULT_EXCLUDED_FEATURES)
 DEFAULT_CLUSTER_FEATURES = list(CLUSTERING_DEFAULT_CLUSTER_FEATURES)
 FEATURE_METADATA = CLUSTERING_FEATURE_METADATA
-SAMPLING_STRATEGY_OPTIONS = [
-    {"value": value, "label": CLUSTERING_SAMPLING_STRATEGY_LABELS.get(value, value)}
-    for value in SAMPLING_STRATEGY_VALUES
-]
-
 INCIDENT_COUNT_COLUMN = "Число пожаров"
 AREA_SUPPORT_COLUMN = "__area_count"
 RESPONSE_SUPPORT_COLUMN = "__response_count"
@@ -123,12 +116,6 @@ def _parse_cluster_count(value: str) -> int:
     return min(CLUSTER_COUNT_OPTIONS, key=lambda item: abs(item - parsed))
 
 
-def _parse_sampling_strategy(value: str) -> str:
-    allowed = {item["value"] for item in SAMPLING_STRATEGY_OPTIONS}
-    normalized = str(value or "").strip().lower()
-    return normalized if normalized in allowed else SAMPLING_STRATEGY_OPTIONS[0]["value"]
-
-
 def _resolve_source_tables(table_name: str, table_names: Sequence[str] | None = None) -> list[str]:
     if table_names:
         available_tables = {
@@ -160,7 +147,6 @@ def _resolve_source_tables(table_name: str, table_names: Sequence[str] | None = 
 
 def _load_territory_dataset(
     table_name: str,
-    sampling_strategy: str,
     table_names: Sequence[str] | None = None,
 ) -> ClusteringDatasetBundle:
     source_tables = _resolve_source_tables(table_name, table_names=table_names)

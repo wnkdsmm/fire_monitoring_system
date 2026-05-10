@@ -42,7 +42,6 @@ def _prepare_clustering_feature_selection(
     base: ClusteringBaseState,
     dataset: ClusteringDatasetBundle,
     normalized_feature_columns: Sequence[str],
-    selected_sampling_strategy: str,
     requested_cluster_count: int,
 ) -> ClusteringFeatureSelectionContext:
     summary = base["summary"]
@@ -101,7 +100,6 @@ def _load_clustering_dataset_for_request(
     *,
     selected_table: str,
     selected_table_names: Sequence[str] | None,
-    selected_sampling_strategy: str,
     perf: Any,
     progress_callback: Callable[[str, str], None] | None,
 ) -> ClusteringDatasetBundle:
@@ -112,7 +110,7 @@ def _load_clustering_dataset_for_request(
     )
     aggregation_context = perf.span("aggregation") if perf is not None else nullcontext()
     with aggregation_context:
-        dataset = _load_territory_dataset(selected_table, selected_sampling_strategy, table_names=selected_table_names)
+        dataset = _load_territory_dataset(selected_table, table_names=selected_table_names)
         if perf is not None:
             perf.update(
                 input_rows=dataset["total_incidents"],
@@ -127,7 +125,6 @@ def _build_clustering_feature_context(
     base: ClusteringBaseState,
     dataset: ClusteringDatasetBundle,
     normalized_feature_columns: Sequence[str] | None,
-    selected_sampling_strategy: str,
     requested_cluster_count: int,
     perf: Any,
     progress_callback: Callable[[str, str], None] | None,
@@ -143,7 +140,6 @@ def _build_clustering_feature_context(
             base=base,
             dataset=dataset,
             normalized_feature_columns=normalized_feature_columns,
-            selected_sampling_strategy=selected_sampling_strategy,
             requested_cluster_count=requested_cluster_count,
         )
         if perf is not None:

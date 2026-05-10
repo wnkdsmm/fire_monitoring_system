@@ -22,16 +22,12 @@ class ClusteringDataLoader(DataLoader):
     def parse_cluster_count(self, value: str) -> int:
         return _impl._parse_cluster_count(value)
 
-    def parse_sampling_strategy(self, value: str) -> str:
-        return _impl._parse_sampling_strategy(value)
-
     def load_territory_dataset(
         self,
         table_name: str,
-        sampling_strategy: str,
         table_names: Sequence[str] | None = None,
     ) -> dict[str, Any]:
-        return _impl._load_territory_dataset(table_name, sampling_strategy, table_names=table_names)
+        return _impl._load_territory_dataset(table_name, table_names=table_names)
 
     def resolve_selected_features(
         self,
@@ -75,16 +71,11 @@ def _parse_cluster_count(value: str) -> int:
     return _LOADER.parse_cluster_count(value)
 
 
-def _parse_sampling_strategy(value: str) -> str:
-    return _LOADER.parse_sampling_strategy(value)
-
-
 def _load_territory_dataset(
     table_name: str,
-    sampling_strategy: str,
     table_names: Sequence[str] | None = None,
 ) -> dict[str, Any]:
-    return _LOADER.load_territory_dataset(table_name, sampling_strategy, table_names=table_names)
+    return _LOADER.load_territory_dataset(table_name, table_names=table_names)
 
 
 def _resolve_selected_features(
@@ -132,7 +123,6 @@ __all__ = [
     "_build_table_options",
     "_resolve_selected_table",
     "_parse_cluster_count",
-    "_parse_sampling_strategy",
     "_load_territory_dataset",
     "_resolve_selected_features",
     "_build_feature_options",

@@ -182,7 +182,6 @@ class ClusteringFilters(TypedDict):
     table_name: NotRequired[str]
     table_names: NotRequired[list[str]]
     cluster_count: NotRequired[str]
-    sampling_strategy: NotRequired[str]
     feature_columns: NotRequired[list[str]]
     available_tables: NotRequired[list[dict[str, str]]]
     available_cluster_counts: NotRequired[list[dict[str, str]]]

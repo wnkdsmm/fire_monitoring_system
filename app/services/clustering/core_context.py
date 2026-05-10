@@ -11,7 +11,6 @@ from config.constants import CLUSTER_COUNT_OPTIONS
 from .data import (
     _build_table_options,
     _parse_cluster_count,
-    _parse_sampling_strategy,
     _resolve_selected_table,
 )
 from .quality_silhouette import _empty_clustering_quality_assessment
@@ -33,7 +32,6 @@ def _build_clustering_cache_key(
     selected_table: str,
     selected_table_names: Sequence[str] | None,
     cluster_count: int,
-    sampling_strategy: str,
     feature_columns: Sequence[str] | None,
     cluster_count_is_explicit: bool,
 ) -> tuple[str, ...]:
@@ -46,7 +44,6 @@ def _build_clustering_cache_key(
             if str(item).strip()
         ),
         str(cluster_count),
-        _normalize_clustering_cache_value(sampling_strategy),
         "manual_k" if cluster_count_is_explicit else "auto_k",
         *tuple(str(item).strip() for item in (feature_columns or []) if str(item).strip()),
     )
@@ -76,7 +73,6 @@ def _build_clustering_request_state(
     table_name: str = "",
     table_names: Sequence[str] | None = None,
     cluster_count: str = "4",
-    sampling_strategy: str = "stratified",
     feature_columns: Sequence[str] | None = None,
     cluster_count_is_explicit: bool = False,
 ) -> dict[str, Any]:
@@ -91,13 +87,11 @@ def _build_clustering_request_state(
         if selected_table and selected_table != "all":
             selected_table_names = [selected_table]
     requested_cluster_count = _parse_cluster_count(cluster_count)
-    selected_sampling_strategy = _parse_sampling_strategy(sampling_strategy)
     normalized_feature_columns = _normalize_feature_columns(feature_columns)
     cache_key = _build_clustering_cache_key(
         selected_table=selected_table,
         selected_table_names=selected_table_names,
         cluster_count=requested_cluster_count,
-        sampling_strategy=selected_sampling_strategy,
         feature_columns=normalized_feature_columns,
         cluster_count_is_explicit=cluster_count_is_explicit,
     )
@@ -106,7 +100,6 @@ def _build_clustering_request_state(
         "selected_table": selected_table,
         "selected_table_names": selected_table_names,
         "cluster_count": requested_cluster_count,
-        "sampling_strategy": selected_sampling_strategy,
         "feature_columns": normalized_feature_columns,
         "cluster_count_is_explicit": bool(cluster_count_is_explicit),
         "cache_key": cache_key,
@@ -117,7 +110,6 @@ def get_clustering_page_context(
     table_name: str = "",
     table_names: Sequence[str] | None = None,
     cluster_count: str = "4",
-    sampling_strategy: str = "stratified",
     feature_columns: Sequence[str] | None = None,
     cluster_count_is_explicit: bool = False,
 ) -> dict[str, Any]:
@@ -127,7 +119,6 @@ def get_clustering_page_context(
         table_name=table_name,
         table_names=table_names,
         cluster_count=cluster_count,
-        sampling_strategy=sampling_strategy,
         feature_columns=feature_columns,
         cluster_count_is_explicit=cluster_count_is_explicit,
     )
@@ -143,7 +134,6 @@ def get_clustering_shell_context(
     table_name: str = "",
     table_names: Sequence[str] | None = None,
     cluster_count: str = "4",
-    sampling_strategy: str = "stratified",
     feature_columns: Sequence[str] | None = None,
     cluster_count_is_explicit: bool = False,
 ) -> dict[str, Any]:
@@ -151,7 +141,6 @@ def get_clustering_shell_context(
         table_name=table_name,
         table_names=table_names,
         cluster_count=cluster_count,
-        sampling_strategy=sampling_strategy,
         feature_columns=feature_columns,
         cluster_count_is_explicit=cluster_count_is_explicit,
     )
@@ -159,13 +148,11 @@ def get_clustering_shell_context(
     selected_table = request_state["selected_table"]
     selected_table_names = request_state["selected_table_names"]
     requested_cluster_count = request_state["cluster_count"]
-    selected_sampling_strategy = request_state["sampling_strategy"]
     initial_data = _empty_clustering_data(
         table_options=table_options,
         selected_table=selected_table,
         selected_table_names=selected_table_names,
         cluster_count=requested_cluster_count,
-        sampling_strategy=selected_sampling_strategy,
     )
     initial_data["bootstrap_mode"] = "deferred"
     if feature_columns:
@@ -183,7 +170,6 @@ def _empty_clustering_data(
     selected_table: str,
     selected_table_names: Sequence[str] | None,
     cluster_count: int,
-    sampling_strategy: str,
 ) -> dict[str, Any]:
     normalized_table_names = [str(item).strip() for item in (selected_table_names or []) if str(item).strip()]
     selected_table_label = next(
@@ -250,7 +236,6 @@ def _empty_clustering_data(
             "table_name": selected_table,
             "table_names": normalized_table_names,
             "cluster_count": str(cluster_count),
-            "sampling_strategy": sampling_strategy,
             "feature_columns": [],
             "available_tables": table_options,
             "available_cluster_counts": [

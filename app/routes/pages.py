@@ -205,14 +205,12 @@ def clustering_page(
     table_name: str = "",
     table_names: list[str] | None = Query(None),
     cluster_count: str = "4",
-    sampling_strategy: str = "stratified",
     feature_columns: list[str] | None = Query(None),
 ):
     clustering = get_clustering_shell_context(
         table_name=table_name,
         table_names=table_names or [],
         cluster_count=cluster_count,
-        sampling_strategy=sampling_strategy,
         feature_columns=feature_columns or [],
         cluster_count_is_explicit="cluster_count" in request.query_params,
     )
