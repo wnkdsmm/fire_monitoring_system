@@ -170,7 +170,6 @@ def _build_clustering_model_stage_context(
             excluded_entities=excluded_entities,
             actual_cluster_count=model_bundle["actual_cluster_count"],
             actual_method_key=model_bundle["actual_method_key"],
-            method_comparison_reused=bool(model_bundle.get("method_comparison_reused")),
         )
     return {
         "model_inputs": model_inputs,
@@ -214,7 +213,7 @@ def _render_clustering_payload_stage(
             diagnostics=model_bundle["diagnostics"],
             runtime_feature_context=model_bundle["runtime_feature_context"],
             clustering=model_bundle["clustering"],
-            method_comparison=model_bundle["method_comparison"],
+            method_comparison=[],
             actual_cluster_count=model_bundle["actual_cluster_count"],
             profiles=model_bundle["profiles"],
             centroid_columns=model_bundle["centroid_columns"],

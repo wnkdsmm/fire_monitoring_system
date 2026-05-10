@@ -48,7 +48,8 @@ def _build_stability_note(clustering: ClusterMetrics, resample_share_label: str)
         return (
             f"На одних и тех же данных разбиение почти не меняется ({_format_number(initialization_ari, 3)}), "
             f"но на повторных {resample_share_label}-подвыборках устойчивость заметно ниже "
-            f"({_format_number(stability_ari, 3)}), поэтому результат чувствителен к составу выборки."
+            f"({_format_number(stability_ari, 3)}), поэтому результат чувствителен к составу выборки. "
+            "Рекомендуется проверять выводы по центрам кластеров, а не по конкретным территориям на границах."
         )
     return (
         f"На повторных {resample_share_label}-подвыборках устойчивость составляет "
@@ -69,26 +70,28 @@ def _build_cluster_shape_note(clustering: ClusterMetrics) -> str:
     if clustering.get("has_microclusters"):
         return (
             f"Есть микрокластеры: самый маленький кластер содержит {_format_integer(smallest_cluster_size)} территорий при пороге предупреждения {_format_integer(microcluster_threshold)}, "
-            "поэтому часть сегментации может держаться на очень малой группе наблюдений."
+            "поэтому часть сегментации может держаться на очень малой группе наблюдений. "
+            "Рекомендуется уменьшить число кластеров или проверить, не образовался ли этот кластер из-за одного нетипичного населённого пункта."
         )
     if balance_ratio < CLUSTER_BALANCE_RATIO_CRITICAL_THRESHOLD:
         return (
             f"Кластеры заметно несбалансированы: min/max = {_format_integer(smallest_cluster_size)} / {_format_integer(largest_cluster_size)} "
-            f"({ _format_percent(balance_ratio) }), поэтому результат стоит трактовать осторожнее."
+            f"({_format_percent(balance_ratio)}), поэтому результат стоит трактовать осторожнее. "
+            "При интерпретации ориентируйтесь на удельные показатели (доли), а не на абсолютный размер групп."
         )
     if balance_ratio < CLUSTER_SHAPE_BALANCE_WARNING_THRESHOLD:
         return (
             f"Кластеры умеренно несбалансированы: min/max = {_format_integer(smallest_cluster_size)} / {_format_integer(largest_cluster_size)} "
-            f"({ _format_percent(balance_ratio) })."
+            f"({_format_percent(balance_ratio)})."
         )
     return ""
 
-__all__ = [
-    '_summarize_segmentation_strength',
-    '_build_stability_note',
-    '_resolve_method_algorithm_key',
-    '_build_cluster_shape_note',
-    'compute_method_algorithm_key',
-    'compute_segmentation_strength',
-]
 
+__all__ = [
+    "_summarize_segmentation_strength",
+    "_build_stability_note",
+    "_resolve_method_algorithm_key",
+    "_build_cluster_shape_note",
+    "compute_method_algorithm_key",
+    "compute_segmentation_strength",
+]

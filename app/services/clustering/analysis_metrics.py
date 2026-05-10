@@ -20,7 +20,6 @@ from config.constants import (
 )
 
 from .analysis_stats import (
-    _build_sample_weights,
     _cluster_quality_score,
     _cluster_shape_diagnostics,
     _compute_cluster_inertia,
@@ -39,7 +38,6 @@ from .analysis_stats import (
 from .quality_assessment import compute_diagnostics_row_sort_key
 from .types import (
     ClusteringDiagnosticsResult,
-    ClusteringMethodCandidate,
     ClusteringMethodRow,
     ClusteringRunResult,
     FeatureSelectionReport,
@@ -50,21 +48,6 @@ FEATURE_METADATA = CLUSTERING_FEATURE_METADATA
 MAX_K_DIAGNOSTICS = max(CLUSTER_COUNT_OPTIONS)
 
 
-def _primary_method_key(weighting_strategy: str) -> str:
-    return f"kmeans_{weighting_strategy}"
-
-
-def _build_method_candidates(weighting_strategy: str) -> list[ClusteringMethodCandidate]:
-    return [
-        {
-            "method_key": _primary_method_key(weighting_strategy),
-            "algorithm_key": "kmeans",
-            "method_label": "KMeans",
-            "weighting_strategy": weighting_strategy,
-        }
-    ]
-
-
 def _run_clustering(
     cluster_frame: pd.DataFrame,
     entity_frame: pd.DataFrame,
@@ -72,6 +55,7 @@ def _run_clustering(
     weighting_strategy: str = WEIGHTING_STRATEGY_INCIDENT_LOG,
     method_key: str | None = None,
     prepared_model_inputs: tuple[pd.DataFrame, np.ndarray, Any, set[str], np.ndarray] | None = None,
+    precomputed_labels: np.ndarray | None = None,
 ) -> ClusteringRunResult:
     if prepared_model_inputs is None:
         _, scaled_points, scaler, transformed_columns, sample_weights = _prepare_model_inputs(
@@ -81,12 +65,34 @@ def _run_clustering(
         )
     else:
         _, scaled_points, scaler, transformed_columns, sample_weights = prepared_model_inputs
-    model = _fit_weighted_kmeans(scaled_points, sample_weights, cluster_count, random_state=CLUSTERING_RANDOM_STATE, n_init=MODEL_N_INIT)
-    labels = model.labels_
-    scaled_centers = model.cluster_centers_
-    transformed_centers = scaler.inverse_transform(model.cluster_centers_)
-    raw_centers = _restore_raw_centers(transformed_centers, cluster_frame.columns, transformed_columns)
-    inertia = float(model.inertia_)
+    if precomputed_labels is None:
+        model = _fit_weighted_kmeans(
+            scaled_points,
+            sample_weights,
+            cluster_count,
+            random_state=CLUSTERING_RANDOM_STATE,
+            n_init=MODEL_N_INIT,
+        )
+        labels = model.labels_
+        scaled_centers = model.cluster_centers_
+        transformed_centers = scaler.inverse_transform(model.cluster_centers_)
+        raw_centers = _restore_raw_centers(transformed_centers, cluster_frame.columns, transformed_columns)
+        inertia = float(model.inertia_)
+    else:
+        labels = np.asarray(precomputed_labels, dtype=np.int32)
+        if labels.ndim != 1 or labels.shape[0] != scaled_points.shape[0]:
+            raise ValueError("precomputed_labels has invalid shape for current dataset.")
+        raw_centers, scaled_centers = _derive_cluster_centers(
+            cluster_frame,
+            scaled_points,
+            labels,
+            cluster_count,
+        )
+        inertia = _compute_cluster_inertia(
+            scaled_points,
+            labels,
+            scaled_centers=scaled_centers,
+        )
     initialization_ari = _estimate_kmeans_initialization_stability(scaled_points, cluster_count, sample_weights)
     n_pca_components = min(2, scaled_points.shape[1])
     pca = PCA(n_components=n_pca_components)
@@ -135,7 +141,7 @@ def _run_clustering(
         "pca_projection": pca_projection_result,
         "explained_variance": float(sum(pca_projection_result["explained_variance"])),
         "algorithm_key": "kmeans",
-        "method_key": method_key or _primary_method_key(weighting_strategy),
+        "method_key": method_key or f"kmeans_{weighting_strategy}",
         "weighting_strategy": weighting_strategy,
     }
 
@@ -220,76 +226,54 @@ def _compare_clustering_methods(
     prepared_model_inputs: tuple[pd.DataFrame, np.ndarray, Any, set[str], np.ndarray] | None = None,
 ) -> list[ClusteringMethodRow]:
     if prepared_model_inputs is None:
-        _, scaled_points, _, _, _ = _prepare_model_inputs(
+        _, scaled_points, _, _, sample_weights = _prepare_model_inputs(
             cluster_frame,
             entity_frame,
             weighting_strategy=weighting_strategy,
         )
     else:
-        _, scaled_points, _, _, _ = prepared_model_inputs
-    rows: list[ClusteringMethodRow] = []
+        _, scaled_points, _, _, sample_weights = prepared_model_inputs
     row_count = len(cluster_frame)
-    metrics_cache: dict[
-        tuple[int, bytes],
-        tuple[dict[str, float | int | None], dict[str, float | bool], float, float],
-    ] = {}
-
-    def _labels_cache_key(labels: np.ndarray) -> tuple[int, bytes]:
-        normalized = np.asarray(labels, dtype=np.int32)
-        return (int(normalized.size), normalized.tobytes())
-
-    def _append_method_row(candidate: ClusteringMethodCandidate) -> None:
-        try:
-            row_weighting_strategy = str(candidate["weighting_strategy"])
-            sample_weights = _build_sample_weights(entity_frame, weighting_strategy=row_weighting_strategy)
-            labels = _fit_clustering_labels(
-                scaled_points,
-                cluster_count,
-                sample_weights=sample_weights,
-                random_state=CLUSTERING_RANDOM_STATE,
-                n_init=MODEL_N_INIT,
-            )
-        except Exception:
-            return
-        key = _labels_cache_key(labels)
-        cached = metrics_cache.get(key)
-        if cached is None:
-            metrics = compute_clustering_metrics(scaled_points, labels)
-            shape_diagnostics = _cluster_shape_diagnostics(metrics, row_count)
-            quality_score = _cluster_quality_score(metrics, row_count, shape_diagnostics=shape_diagnostics)
-            cluster_count_local = int(np.max(labels)) + 1
-            scaled_centers_local = np.vstack(
-                [np.mean(scaled_points[labels == cluster_id], axis=0) for cluster_id in range(cluster_count_local)]
-            )
-            inertia = _compute_cluster_inertia(scaled_points, labels, scaled_centers=scaled_centers_local)
-            metrics_cache[key] = (metrics, shape_diagnostics, quality_score, inertia)
-        else:
-            metrics, shape_diagnostics, quality_score, inertia = cached
-        rows.append(
-            {
-                "method_key": candidate["method_key"],
-                "algorithm_key": candidate["algorithm_key"],
-                "method_label": candidate["method_label"],
-                "is_selected": True,
-                "is_recommended": True,
-                "weighting_strategy": row_weighting_strategy,
-                "inertia": inertia,
-                "silhouette": metrics.get("silhouette"),
-                "davies_bouldin": metrics.get("davies_bouldin"),
-                "calinski_harabasz": metrics.get("calinski_harabasz"),
-                "cluster_balance_ratio": metrics.get("cluster_balance_ratio"),
-                "smallest_cluster_size": metrics.get("smallest_cluster_size"),
-                "largest_cluster_size": metrics.get("largest_cluster_size"),
-                "quality_score": quality_score,
-                "shape_penalty": shape_diagnostics["shape_penalty"],
-                "has_microclusters": shape_diagnostics["has_microclusters"],
-                "has_balance_warning": shape_diagnostics["has_balance_warning"],
-            }
+    try:
+        labels = _fit_clustering_labels(
+            scaled_points,
+            cluster_count,
+            sample_weights=sample_weights,
+            random_state=CLUSTERING_RANDOM_STATE,
+            n_init=MODEL_N_INIT,
         )
-
-    for candidate in _build_method_candidates(weighting_strategy):
-        _append_method_row(candidate)
-    return rows
+    except Exception:
+        return []
+    metrics = compute_clustering_metrics(scaled_points, labels)
+    shape_diagnostics = _cluster_shape_diagnostics(metrics, row_count)
+    quality_score = _cluster_quality_score(metrics, row_count, shape_diagnostics=shape_diagnostics)
+    cluster_count_local = int(np.max(labels)) + 1
+    scaled_centers_local = np.vstack(
+        [np.mean(scaled_points[labels == cluster_id], axis=0) for cluster_id in range(cluster_count_local)]
+    )
+    inertia = _compute_cluster_inertia(scaled_points, labels, scaled_centers=scaled_centers_local)
+    return [
+        {
+            "method_key": f"kmeans_{weighting_strategy}",
+            "algorithm_key": "kmeans",
+            "method_label": "KMeans",
+            "is_selected": True,
+            "is_recommended": True,
+            "weighting_strategy": weighting_strategy,
+            "inertia": inertia,
+            "silhouette": metrics.get("silhouette"),
+            "davies_bouldin": metrics.get("davies_bouldin"),
+            "calinski_harabasz": metrics.get("calinski_harabasz"),
+            "cluster_balance_ratio": metrics.get("cluster_balance_ratio"),
+            "smallest_cluster_size": metrics.get("smallest_cluster_size"),
+            "largest_cluster_size": metrics.get("largest_cluster_size"),
+            "quality_score": quality_score,
+            "shape_penalty": shape_diagnostics["shape_penalty"],
+            "has_microclusters": shape_diagnostics["has_microclusters"],
+            "has_balance_warning": shape_diagnostics["has_balance_warning"],
+            "labels": np.asarray(labels, dtype=np.int32).copy(),
+        }
+    ]
 
 
 def _build_cluster_profiles(

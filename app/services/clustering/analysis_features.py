@@ -4,6 +4,7 @@ import math
 from itertools import combinations
 from typing import Any, Sequence
 
+import numpy as np
 import pandas as pd
 
 from app.services.model_quality import compute_clustering_metrics
@@ -556,20 +557,54 @@ def _evaluate_feature_subset(
         subset_entities,
         weighting_strategy=weighting_strategy,
     )
-    model = _fit_weighted_kmeans(
-        scaled_points,
-        sample_weights,
-        actual_cluster_count,
-        random_state=CLUSTERING_RANDOM_STATE,
-        n_init=FEATURE_SELECTION_N_INIT,
-    )
-    metrics = compute_clustering_metrics(scaled_points, model.labels_)
+    seed_values = [
+        CLUSTERING_RANDOM_STATE,
+        CLUSTERING_RANDOM_STATE + 1,
+        CLUSTERING_RANDOM_STATE + 2,
+    ]
+    metrics_per_seed: list[dict[str, float]] = []
+    for seed in seed_values:
+        try:
+            model = _fit_weighted_kmeans(
+                scaled_points,
+                sample_weights,
+                actual_cluster_count,
+                random_state=seed,
+                n_init=FEATURE_SELECTION_N_INIT,
+            )
+            metrics = compute_clustering_metrics(scaled_points, model.labels_)
+        except Exception:
+            continue
+        metrics_per_seed.append(
+            {
+                "silhouette": float(metrics.get("silhouette") or float("-inf")),
+                "davies_bouldin": float(metrics.get("davies_bouldin") or float("inf")),
+                "calinski_harabasz": float(metrics.get("calinski_harabasz") or float("-inf")),
+                "cluster_balance_ratio": float(metrics.get("cluster_balance_ratio") or 0.0),
+            }
+        )
+
+    if not metrics_per_seed:
+        return {
+            "score": float("-inf"),
+            "silhouette": float("-inf"),
+            "davies_bouldin": float("inf"),
+            "calinski_harabasz": float("-inf"),
+            "cluster_balance_ratio": 0.0,
+        }
+
+    averaged_metrics = {
+        "silhouette": float(np.mean([item["silhouette"] for item in metrics_per_seed])),
+        "davies_bouldin": float(np.mean([item["davies_bouldin"] for item in metrics_per_seed])),
+        "calinski_harabasz": float(np.mean([item["calinski_harabasz"] for item in metrics_per_seed])),
+        "cluster_balance_ratio": float(np.mean([item["cluster_balance_ratio"] for item in metrics_per_seed])),
+    }
     return {
-        "score": _cluster_quality_score(metrics, len(subset_frame)),
-        "silhouette": float(metrics.get("silhouette") or float("-inf")),
-        "davies_bouldin": float(metrics.get("davies_bouldin") or float("inf")),
-        "calinski_harabasz": float(metrics.get("calinski_harabasz") or float("-inf")),
-        "cluster_balance_ratio": float(metrics.get("cluster_balance_ratio") or 0.0),
+        "score": _cluster_quality_score(averaged_metrics, len(subset_frame)),
+        "silhouette": averaged_metrics["silhouette"],
+        "davies_bouldin": averaged_metrics["davies_bouldin"],
+        "calinski_harabasz": averaged_metrics["calinski_harabasz"],
+        "cluster_balance_ratio": averaged_metrics["cluster_balance_ratio"],
     }
 
 

@@ -450,6 +450,7 @@ class ClusteringMethodRow(TypedDict):
     shape_penalty: float
     has_microclusters: bool
     has_balance_warning: bool
+    labels: NotRequired[Any]
     best_quality_k: NotRequired[int | None]
     best_silhouette_k: NotRequired[int | None]
 
@@ -510,7 +511,6 @@ class ClusteringRuntimeBundle(TypedDict):
     runtime_feature_context: NotRequired[FeatureSelectionReport]
     clustering: NotRequired[ClusteringRunResult]
     pca_projection: NotRequired[dict[str, Any]]
-    method_comparison: NotRequired[list[ClusteringMethodRow]]
     labels: NotRequired[Any]
     cluster_labels: NotRequired[list[str]]
     profiles: NotRequired[list[dict[str, Any]]]

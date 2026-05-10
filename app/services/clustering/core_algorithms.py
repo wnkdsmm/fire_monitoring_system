@@ -3,6 +3,8 @@ from __future__ import annotations
 from contextlib import nullcontext
 from typing import Any
 
+import numpy as np
+
 from .analysis_features import _build_runtime_clustering_context
 from .analysis_metrics import (
     _build_centroid_table,
@@ -31,9 +33,9 @@ def _select_render_configuration(
     diagnostics = diagnostics or {}
     actual_cluster_count = int(requested_cluster_count)
     if not cluster_count_is_explicit:
-        best_configuration = diagnostics.get("best_configuration")
-        if best_configuration:
-            actual_cluster_count = int(best_configuration.get("cluster_count") or actual_cluster_count)
+        best_quality_k = diagnostics.get("best_quality_k")
+        if best_quality_k:
+            actual_cluster_count = int(best_quality_k)
 
     return {
         "cluster_count": actual_cluster_count,
@@ -55,6 +57,7 @@ def _run_clustering_model_bundle(
     actual_algorithm_key: str,
     actual_weighting_strategy: str,
     prepared_model_inputs: tuple[Any, Any, Any, Any, Any] | None = None,
+    precomputed_labels: np.ndarray | None = None,
 ) -> ClusteringRuntimeBundle:
     runtime_feature_context = _build_runtime_clustering_context(
         feature_selection_report,
@@ -69,6 +72,7 @@ def _run_clustering_model_bundle(
         weighting_strategy=actual_weighting_strategy,
         method_key=actual_method_key,
         prepared_model_inputs=prepared_model_inputs,
+        precomputed_labels=precomputed_labels,
     )
     labels = clustering["labels"]
     cluster_labels = _cluster_labels(actual_cluster_count)
@@ -99,7 +103,6 @@ def _run_clustering_model_bundle(
         "runtime_feature_context": runtime_feature_context,
         "clustering": clustering,
         "pca_projection": clustering["pca_projection"],
-        "method_comparison": [],
         "labels": labels,
         "cluster_labels": cluster_labels,
         "profiles": profiles,
@@ -135,6 +138,12 @@ def _run_clustering_diagnostics_bundle(
     actual_method_key = str(render_configuration.get("method_key") or f"kmeans_{weighting_strategy}")
     actual_algorithm_key = str(render_configuration.get("algorithm_key") or "kmeans")
     actual_weighting_strategy = str(render_configuration.get("weighting_strategy") or weighting_strategy)
+    cached_rows = diagnostics.get("method_rows_by_cluster_count", {}).get(actual_cluster_count)
+    precomputed_labels: np.ndarray | None = None
+    if cached_rows:
+        cached_labels = cached_rows[0].get("labels")
+        if cached_labels is not None:
+            precomputed_labels = np.asarray(cached_labels, dtype=np.int32)
     model_bundle = _run_clustering_model_bundle(
         cluster_frame=cluster_frame,
         entity_frame=entity_frame,
@@ -145,6 +154,7 @@ def _run_clustering_diagnostics_bundle(
         actual_algorithm_key=actual_algorithm_key,
         actual_weighting_strategy=actual_weighting_strategy,
         prepared_model_inputs=prepared_model_inputs,
+        precomputed_labels=precomputed_labels,
     )
     return {
         **model_bundle,
