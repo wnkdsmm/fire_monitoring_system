@@ -238,11 +238,7 @@ function renderManagementCards(items) {
         return path + (query ? '?' + query : '') + (hash || '');
     }
 
-    function updateDashboardScreenLinks(filters) {
-        const safeFilters = filters || {};
-        setHref('dashboardMlLink', buildDashboardScreenHref('/ml-model', safeFilters, ''));
-        setHref('dashboardDecisionLink', buildDashboardScreenHref('/ml-model', safeFilters, ''));
-    }
+    function updateDashboardScreenLinks() {}
 
     function buildDashboardPageHref(filters, mode) {
         const params = new URLSearchParams();

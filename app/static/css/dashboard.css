@@ -33,7 +33,7 @@
 }
 
 .dashboard-overview-stack .dashboard-stats {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 
 .dashboard-overview-stack .stat-card-wide {
