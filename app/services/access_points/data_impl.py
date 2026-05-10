@@ -192,7 +192,7 @@ def _build_source_sql(
     where_clauses: list[str] = []
     normalized_district = str(district or "").strip()
     if normalized_district and normalized_district.lower() != "all":
-        where_clauses.append(f"LOWER({district_expr}) = :district_lower")
+        where_clauses.append("LOWER(district) = :district_lower")
     if selected_year is not None:
         where_clauses.append("EXTRACT(YEAR FROM event_date) = :selected_year")
     where_sql = f" WHERE {' AND '.join(where_clauses)}" if where_clauses else ""

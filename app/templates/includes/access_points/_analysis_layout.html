@@ -1,4 +1,4 @@
-﻿<section class="access-points-layout">
+<section class="access-points-layout">
     <div class="access-points-primary">
         <article class="panel chart-panel chart-panel-large">
             <div class="panel-head">
@@ -117,5 +117,36 @@
             </div>
         </article>
 
+        <article class="panel">
+            <div class="panel-head">
+                <h2>РќРµРѕРїСЂРµРґРµР»РµРЅРЅРѕСЃС‚СЊ РѕС†РµРЅРєРё</h2>
+                <span class="panel-meta">РџРѕСЏСЃРЅРµРЅРёСЏ РІР»РёСЏРЅРёСЏ РѕРіСЂР°РЅРёС‡РµРЅРЅРѕР№ РїРѕРґРґРµСЂР¶РєРё РЅР°Р±Р»СЋРґРµРЅРёР№ Рё РїСЂРѕРїСѓСЃРєРѕРІ РЅР° РёС‚РѕРіРѕРІС‹Р№ Р±Р°Р»Р».</span>
+            </div>
+            <ul class="notice-list" id="accessPointsUncertaintyNotes">
+                {% if data.uncertainty_notes %}
+                    {% for note in data.uncertainty_notes %}
+                    <li>{{ note }}</li>
+                    {% endfor %}
+                {% else %}
+                <li>РџРѕСЃР»Рµ РІС‹РїРѕР»РЅРµРЅРёСЏ СЂР°СЃС‡РµС‚Р° Р·РґРµСЃСЊ Р±СѓРґСѓС‚ РїСЂРµРґСЃС‚Р°РІР»РµРЅС‹ РїРѕСЏСЃРЅРµРЅРёСЏ РїРѕ С€С‚СЂР°С„Сѓ РЅРµРѕРїСЂРµРґРµР»РµРЅРЅРѕСЃС‚Рё Рё РѕРіСЂР°РЅРёС‡РµРЅРЅРѕР№ РїРѕРґРґРµСЂР¶РєРµ РЅР°Р±Р»СЋРґРµРЅРёР№.</li>
+                {% endif %}
+            </ul>
+        </article>
+
+        <article class="panel">
+            <div class="panel-head">
+                <h2>РљР»СЋС‡РµРІС‹Рµ Р·Р°РјРµС‡Р°РЅРёСЏ РїРѕ РёРЅС‚РµСЂРїСЂРµС‚Р°С†РёРё</h2>
+                <span class="panel-meta">РџРѕСЏСЃРЅРµРЅРёСЏ РїРѕ СЂРµР·РµСЂРІРЅРѕР№ Р»РѕРіРёРєРµ, РїРѕР»РЅРѕС‚Рµ РґР°РЅРЅС‹С… Рё РєРѕСЂСЂРµРєС‚РЅРѕР№ РёРЅС‚РµСЂРїСЂРµС‚Р°С†РёРё СЂРµР№С‚РёРЅРіР°.</span>
+            </div>
+            <ul class="notice-list" id="accessPointsNotes">
+                {% if data.notes %}
+                    {% for note in data.notes %}
+                    <li>{{ note }}</li>
+                    {% endfor %}
+                {% else %}
+                <li>РџРѕСЃР»Рµ РІС‹РїРѕР»РЅРµРЅРёСЏ СЂР°СЃС‡РµС‚Р° Р·РґРµСЃСЊ Р±СѓРґСѓС‚ РїСЂРµРґСЃС‚Р°РІР»РµРЅС‹ РєРѕРјРјРµРЅС‚Р°СЂРёРё РїРѕ РєР°С‡РµСЃС‚РІСѓ РґР°РЅРЅС‹С… Рё РёРЅС‚РµСЂРїСЂРµС‚Р°С†РёРё СЂРµР№С‚РёРЅРіР°.</li>
+                {% endif %}
+            </ul>
+        </article>
     </aside>
 </section>

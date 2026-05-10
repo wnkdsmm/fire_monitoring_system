@@ -1,4 +1,4 @@
-﻿<section class="access-points-followup">
+<section class="access-points-followup">
         <div class="access-points-inline-panels">
             <article class="panel access-points-drivers-panel">
                 <div class="panel-head">
@@ -22,6 +22,26 @@
                 </div>
             </article>
 
+            <article class="panel panel-warning">
+                <div class="panel-head">
+                    <h2>Р”Р°РЅРЅС‹Рµ РЅРµРїРѕР»РЅС‹Рµ</h2>
+                    <span class="panel-meta">РўРѕС‡РєРё, РІ РєРѕС‚РѕСЂС‹С… РїСЂРёРѕСЂРёС‚РµС‚ РїСЂРѕРІРµСЂРєРё РїРѕРІС‹С€Р°РµС‚СЃСЏ РїСЂРµРёРјСѓС‰РµСЃС‚РІРµРЅРЅРѕ РІСЃР»РµРґСЃС‚РІРёРµ РїСЂРѕРїСѓСЃРєРѕРІ РїРѕ РІРѕРґРѕСЃРЅР°Р±Р¶РµРЅРёСЋ, РІСЂРµРјРµРЅРё РїСЂРёР±С‹С‚РёСЏ РёР»Рё СѓРґР°Р»РµРЅРЅРѕСЃС‚Рё.</span>
+                </div>
+                <div id="accessPointsIncompleteShell" class="incomplete-list">
+                    {% if data.incomplete_points %}
+                        {% for point in data.incomplete_points %}
+                        <article class="incomplete-card">
+                            <strong>{{ point.label }}</strong>
+                            <span>{{ point.incomplete_note }}</span>
+                            <span>Р‘Р°Р»Р» РїСЂРѕРІРµСЂРєРё: {{ point.investigation_score_display }} | РџРѕР»РЅРѕС‚Р°: {{ point.completeness_display }}</span>
+                            <span>{{ point.explanation }}</span>
+                        </article>
+                        {% endfor %}
+                    {% else %}
+                    <div class="mini-empty">РћС‚РґРµР»СЊРЅС‹Рµ С‚РѕС‡РєРё СЃ РїСЂРёРѕСЂРёС‚РµС‚РѕРј, РѕР±СѓСЃР»РѕРІР»РµРЅРЅС‹Рј РїСЂРѕРїСѓСЃРєР°РјРё РґР°РЅРЅС‹С…, РЅР° С‚РµРєСѓС‰РµРј СЌС‚Р°РїРµ РЅРµ РІС‹РґРµР»РµРЅС‹.</div>
+                    {% endif %}
+                </div>
+            </article>
         </div>
 
         <article class="panel data-table-panel access-points-ranking-panel">
