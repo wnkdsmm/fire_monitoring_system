@@ -75,8 +75,12 @@ def _run_clustering(
         )
         labels = model.labels_
         scaled_centers = model.cluster_centers_
-        transformed_centers = scaler.inverse_transform(model.cluster_centers_)
-        raw_centers = _restore_raw_centers(transformed_centers, cluster_frame.columns, transformed_columns)
+        raw_centers, _ = _derive_cluster_centers(
+            cluster_frame,
+            scaled_points,
+            labels,
+            cluster_count,
+        )
         inertia = float(model.inertia_)
     else:
         labels = np.asarray(precomputed_labels, dtype=np.int32)
@@ -158,7 +162,6 @@ def _evaluate_cluster_counts(
             "best_silhouette_k": None,
             "best_quality_k": None,
             "best_gap_k": None,
-            "best_configuration": None,
             "elbow_k": None,
         }
     available_ks = [
@@ -182,7 +185,7 @@ def _evaluate_cluster_counts(
     rows: list[ClusteringMethodRow] = []
     method_rows_by_cluster_count: dict[int, list[ClusteringMethodRow]] = {}
     for cluster_count in available_ks:
-        method_rows = _compare_clustering_methods(
+        method_rows = _evaluate_single_kmeans(
             cluster_frame,
             entity_frame,
             cluster_count,
@@ -209,7 +212,6 @@ def _evaluate_cluster_counts(
         "best_silhouette_k": best_silhouette_row["cluster_count"] if best_silhouette_row else None,
         "best_quality_k": best_quality_row["cluster_count"] if best_quality_row else None,
         "best_gap_k": _estimate_best_k_gap(gap_scores),
-        "best_configuration": dict(best_quality_row) if best_quality_row else None,
         "elbow_k": _estimate_elbow_k(rows),
     }
 
@@ -218,7 +220,7 @@ def _diagnostics_row_sort_key(result: ClusteringMethodRow) -> tuple[float, float
     return compute_diagnostics_row_sort_key(result)
 
 
-def _compare_clustering_methods(
+def _evaluate_single_kmeans(
     cluster_frame: pd.DataFrame,
     entity_frame: pd.DataFrame,
     cluster_count: int,
@@ -234,24 +236,72 @@ def _compare_clustering_methods(
     else:
         _, scaled_points, _, _, sample_weights = prepared_model_inputs
     row_count = len(cluster_frame)
-    try:
-        labels = _fit_clustering_labels(
-            scaled_points,
-            cluster_count,
-            sample_weights=sample_weights,
-            random_state=CLUSTERING_RANDOM_STATE,
-            n_init=MODEL_N_INIT,
+    seed_values = [
+        CLUSTERING_RANDOM_STATE,
+        CLUSTERING_RANDOM_STATE + 1,
+        CLUSTERING_RANDOM_STATE + 2,
+    ]
+    run_rows: list[dict[str, Any]] = []
+    labels_first_seed: np.ndarray | None = None
+    success_count = 0
+
+    for seed in seed_values:
+        try:
+            labels = _fit_clustering_labels(
+                scaled_points,
+                cluster_count,
+                sample_weights=sample_weights,
+                random_state=seed,
+                n_init=MODEL_N_INIT,
+            )
+            metrics = compute_clustering_metrics(scaled_points, labels)
+            shape_diagnostics = _cluster_shape_diagnostics(metrics, row_count)
+            quality_score = _cluster_quality_score(metrics, row_count, shape_diagnostics=shape_diagnostics)
+            cluster_count_local = int(np.max(labels)) + 1
+            scaled_centers_local = np.vstack(
+                [np.mean(scaled_points[labels == cluster_id], axis=0) for cluster_id in range(cluster_count_local)]
+            )
+            inertia = _compute_cluster_inertia(scaled_points, labels, scaled_centers=scaled_centers_local)
+        except Exception:
+            continue
+
+        success_count += 1
+        if seed == CLUSTERING_RANDOM_STATE and labels_first_seed is None:
+            labels_first_seed = np.asarray(labels, dtype=np.int32).copy()
+        run_rows.append(
+            {
+                "silhouette": float(metrics.get("silhouette") or float("-inf")),
+                "davies_bouldin": float(metrics.get("davies_bouldin") or float("inf")),
+                "calinski_harabasz": float(metrics.get("calinski_harabasz") or float("-inf")),
+                "cluster_balance_ratio": float(metrics.get("cluster_balance_ratio") or 0.0),
+                "smallest_cluster_size": float(metrics.get("smallest_cluster_size") or 0.0),
+                "largest_cluster_size": float(metrics.get("largest_cluster_size") or 0.0),
+                "quality_score": float(quality_score),
+                "shape_penalty": float(shape_diagnostics["shape_penalty"]),
+                "has_microclusters": bool(shape_diagnostics["has_microclusters"]),
+                "has_balance_warning": bool(shape_diagnostics["has_balance_warning"]),
+                "inertia": float(inertia),
+                "labels": np.asarray(labels, dtype=np.int32).copy(),
+            }
         )
-    except Exception:
+
+    if success_count < 2 or not run_rows:
         return []
-    metrics = compute_clustering_metrics(scaled_points, labels)
-    shape_diagnostics = _cluster_shape_diagnostics(metrics, row_count)
-    quality_score = _cluster_quality_score(metrics, row_count, shape_diagnostics=shape_diagnostics)
-    cluster_count_local = int(np.max(labels)) + 1
-    scaled_centers_local = np.vstack(
-        [np.mean(scaled_points[labels == cluster_id], axis=0) for cluster_id in range(cluster_count_local)]
-    )
-    inertia = _compute_cluster_inertia(scaled_points, labels, scaled_centers=scaled_centers_local)
+    if labels_first_seed is None:
+        labels_first_seed = np.asarray(run_rows[0]["labels"], dtype=np.int32).copy()
+
+    silhouette = float(np.mean([item["silhouette"] for item in run_rows]))
+    davies_bouldin = float(np.mean([item["davies_bouldin"] for item in run_rows]))
+    calinski_harabasz = float(np.mean([item["calinski_harabasz"] for item in run_rows]))
+    cluster_balance_ratio = float(np.mean([item["cluster_balance_ratio"] for item in run_rows]))
+    smallest_cluster_size = float(np.mean([item["smallest_cluster_size"] for item in run_rows]))
+    largest_cluster_size = float(np.mean([item["largest_cluster_size"] for item in run_rows]))
+    quality_score = float(np.mean([item["quality_score"] for item in run_rows]))
+    shape_penalty = float(np.mean([item["shape_penalty"] for item in run_rows]))
+    has_microclusters = any(bool(item["has_microclusters"]) for item in run_rows)
+    has_balance_warning = any(bool(item["has_balance_warning"]) for item in run_rows)
+    inertia = float(np.mean([item["inertia"] for item in run_rows]))
+
     return [
         {
             "method_key": f"kmeans_{weighting_strategy}",
@@ -261,17 +311,17 @@ def _compare_clustering_methods(
             "is_recommended": True,
             "weighting_strategy": weighting_strategy,
             "inertia": inertia,
-            "silhouette": metrics.get("silhouette"),
-            "davies_bouldin": metrics.get("davies_bouldin"),
-            "calinski_harabasz": metrics.get("calinski_harabasz"),
-            "cluster_balance_ratio": metrics.get("cluster_balance_ratio"),
-            "smallest_cluster_size": metrics.get("smallest_cluster_size"),
-            "largest_cluster_size": metrics.get("largest_cluster_size"),
+            "silhouette": silhouette,
+            "davies_bouldin": davies_bouldin,
+            "calinski_harabasz": calinski_harabasz,
+            "cluster_balance_ratio": cluster_balance_ratio,
+            "smallest_cluster_size": smallest_cluster_size,
+            "largest_cluster_size": largest_cluster_size,
             "quality_score": quality_score,
-            "shape_penalty": shape_diagnostics["shape_penalty"],
-            "has_microclusters": shape_diagnostics["has_microclusters"],
-            "has_balance_warning": shape_diagnostics["has_balance_warning"],
-            "labels": np.asarray(labels, dtype=np.int32).copy(),
+            "shape_penalty": shape_penalty,
+            "has_microclusters": has_microclusters,
+            "has_balance_warning": has_balance_warning,
+            "labels": labels_first_seed,
         }
     ]
 

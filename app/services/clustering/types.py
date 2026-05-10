@@ -472,7 +472,6 @@ class ClusteringDiagnosticsResult(TypedDict):
     best_silhouette_k: int | None
     best_quality_k: int | None
     best_gap_k: int | None
-    best_configuration: NotRequired[ClusteringMethodRow | None]
     elbow_k: int | None
 
 

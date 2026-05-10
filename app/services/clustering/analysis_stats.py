@@ -499,11 +499,14 @@ def _estimate_best_k_gap(gap_scores: dict[int, tuple[float, float]]) -> int | No
     gap_values = np.asarray([float(gap_scores[k][0]) for k in ordered_ks], dtype=float)
     if gap_values.size < 2:
         return None
+    if float(np.max(gap_values)) <= 0.0:
+        return None
 
     for index in range(len(ordered_ks) - 1):
         current_gap = float(gap_scores[ordered_ks[index]][0])
         next_gap, se_of_next_k = gap_scores[ordered_ks[index + 1]]
-        if current_gap >= (float(next_gap) - float(se_of_next_k)):
+        se_value = float(se_of_next_k) if math.isfinite(float(se_of_next_k)) else 0.0
+        if current_gap >= (float(next_gap) - se_value):
             return ordered_ks[index]
     return ordered_ks[int(np.argmax(gap_values))]
 
