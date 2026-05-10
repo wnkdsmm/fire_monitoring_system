@@ -14,7 +14,6 @@ from .data import (
     _parse_sampling_strategy,
     _resolve_selected_table,
 )
-from .data_impl import SAMPLING_STRATEGY_OPTIONS
 from .quality_silhouette import _empty_clustering_quality_assessment
 from .utils import _format_datetime, _format_integer
 
@@ -216,10 +215,6 @@ def _empty_clustering_data(
             "silhouette_display": "—",
             "pca_variance_display": "0%",
             "inertia_display": "0",
-            "sampling_strategy_label": next(
-                (item["label"] for item in SAMPLING_STRATEGY_OPTIONS if item["value"] == sampling_strategy),
-                SAMPLING_STRATEGY_OPTIONS[0]["label"],
-            ),
         },
         "quality_assessment": _empty_clustering_quality_assessment(),
         "cluster_profiles": [],
@@ -262,7 +257,6 @@ def _empty_clustering_data(
                 {"value": str(item), "label": f"{item} кластера" if item < 5 else f"{item} кластеров"}
                 for item in CLUSTER_COUNT_OPTIONS
             ],
-            "available_sampling_strategies": SAMPLING_STRATEGY_OPTIONS,
             "available_features": [],
         },
     }

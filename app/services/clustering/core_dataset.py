@@ -16,7 +16,6 @@ from .data import (
     _prepare_cluster_frame,
     _resolve_selected_features,
 )
-from .data_impl import SAMPLING_STRATEGY_OPTIONS
 from .types import (
     ClusterCountGuidance,
     ClusteringBaseState,
@@ -46,15 +45,10 @@ def _prepare_clustering_feature_selection(
     selected_sampling_strategy: str,
     requested_cluster_count: int,
 ) -> ClusteringFeatureSelectionContext:
-    sampling_strategy_label = next(
-        (item["label"] for item in SAMPLING_STRATEGY_OPTIONS if item["value"] == selected_sampling_strategy),
-        SAMPLING_STRATEGY_OPTIONS[0]["label"],
-    )
     summary = base["summary"]
     summary["total_incidents_display"] = _format_integer(dataset["total_incidents"])
     summary["total_entities_display"] = _format_integer(dataset["total_entities"])
     summary["sampled_entities_display"] = _format_integer(dataset["sampled_entities"])
-    summary["sampling_strategy_label"] = sampling_strategy_label
 
     candidate_features = dataset["candidate_features"]
     feature_names = [item["name"] for item in candidate_features]

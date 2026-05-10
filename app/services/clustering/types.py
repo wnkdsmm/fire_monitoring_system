@@ -186,7 +186,6 @@ class ClusteringFilters(TypedDict):
     feature_columns: NotRequired[list[str]]
     available_tables: NotRequired[list[dict[str, str]]]
     available_cluster_counts: NotRequired[list[dict[str, str]]]
-    available_sampling_strategies: NotRequired[list[dict[str, str]]]
     available_features: NotRequired[list[dict[str, Any]]]
 
 
@@ -211,7 +210,6 @@ class ClusteringSummary(TypedDict):
     silhouette_display: NotRequired[str]
     pca_variance_display: NotRequired[str]
     inertia_display: NotRequired[str]
-    sampling_strategy_label: NotRequired[str]
 
 
 class DiagnosticsRow(TypedDict):
