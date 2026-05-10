@@ -22,25 +22,25 @@ def _selection_label(options: Sequence[OptionItem], selected_value: str, fallbac
 
 def _build_filter_description(selected_table_label: str, selected_district_label: str, selected_year_label: str) -> str:
     del selected_year_label
-    parts = [f"С‚Р°Р±Р»РёС†Р°: {selected_table_label}"]
-    if selected_district_label and selected_district_label != "Р’СЃРµ СЂР°Р№РѕРЅС‹":
-        parts.append(f"СЂР°Р№РѕРЅ: {selected_district_label}")
+    parts = [f"РЎвЂљР В°Р В±Р В»Р С‘РЎвЂ Р В°: {selected_table_label}"]
+    if selected_district_label and selected_district_label != "Р вЂ™РЎРѓР Вµ РЎР‚Р В°Р в„–Р С•Р Р…РЎвЂ№":
+        parts.append(f"РЎР‚Р В°Р в„–Р С•Р Р…: {selected_district_label}")
     return " | ".join(parts)
 
 
 def _build_top_point_lead(top_point: PointData | None) -> str:
     if not top_point:
-        return "РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РґР°РЅРЅС‹С…, С‡С‚РѕР±С‹ РІС‹РґРµР»РёС‚СЊ РїСЂРѕР±Р»РµРјРЅСѓСЋ С‚РѕС‡РєСѓ."
+        return "Р СњР ВµР Т‘Р С•РЎРѓРЎвЂљР В°РЎвЂљР С•РЎвЂЎР Р…Р С• Р Т‘Р В°Р Р…Р Р…РЎвЂ№РЎвЂ¦, РЎвЂЎРЎвЂљР С•Р В±РЎвЂ№ Р Р†РЎвЂ№Р Т‘Р ВµР В»Р С‘РЎвЂљРЎРЉ Р С—РЎР‚Р С•Р В±Р В»Р ВµР СР Р…РЎС“РЎР‹ РЎвЂљР С•РЎвЂЎР С”РЎС“."
 
     explanation = _clean_text(top_point.get("human_readable_explanation") or top_point.get("explanation"))
     if explanation:
         return explanation
 
-    label = _clean_text(top_point.get("label")) or "РўРѕС‡РєР°"
-    severity_band = _clean_text(top_point.get("severity_band")) or "СЃСЂРµРґРЅРёР№"
+    label = _clean_text(top_point.get("label")) or "Р СћР С•РЎвЂЎР С”Р В°"
+    severity_band = _clean_text(top_point.get("severity_band")) or "РЎРѓРЎР‚Р ВµР Т‘Р Р…Р С‘Р в„–"
     score_display = str(top_point.get("total_score_display") or top_point.get("score_display") or "0")
-    typology_label = _clean_text(top_point.get("typology_label")) or "РїСЂРёРѕСЂРёС‚РµС‚РЅР°СЏ С‚РѕС‡РєР°"
-    return f"{label} РїРѕР»СѓС‡Р°РµС‚ {severity_band} СЂРёСЃРє СЃРѕ score {score_display} РёР· 100 Рё РїРѕРїР°РґР°РµС‚ РІ РІРµСЂС… СЂРµР№С‚РёРЅРіР° РєР°Рє {typology_label}."
+    typology_label = _clean_text(top_point.get("typology_label")) or "Р С—РЎР‚Р С‘Р С•РЎР‚Р С‘РЎвЂљР ВµРЎвЂљР Р…Р В°РЎРЏ РЎвЂљР С•РЎвЂЎР С”Р В°"
+    return f"{label} Р С—Р С•Р В»РЎС“РЎвЂЎР В°Р ВµРЎвЂљ {severity_band} РЎР‚Р С‘РЎРѓР С” РЎРѓР С• score {score_display} Р С‘Р В· 100 Р С‘ Р С—Р С•Р С—Р В°Р Т‘Р В°Р ВµРЎвЂљ Р Р† Р Р†Р ВµРЎР‚РЎвЂ¦ РЎР‚Р ВµР в„–РЎвЂљР С‘Р Р…Р С–Р В° Р С”Р В°Р С” {typology_label}."
 
 # intentionally separate from forecasting/presentation.py::_build_summary and
 # ml_model/training/presentation_training.py::_build_summary:
@@ -77,8 +77,8 @@ def _build_summary(
         "uncertainty_points_display": _format_integer(uncertainty_count),
         "top_point_label": str((top_point or {}).get("label") or "-"),
         "top_point_score_display": str((top_point or {}).get("total_score_display") or (top_point or {}).get("score_display") or "0"),
-        "top_point_severity_band": str((top_point or {}).get("severity_band") or "РЅРµС‚ РѕС†РµРЅРєРё"),
-        "top_point_priority_label": str((top_point or {}).get("priority_label") or "РќРµС‚ РѕС†РµРЅРєРё"),
+        "top_point_severity_band": str((top_point or {}).get("severity_band") or "Р Р…Р ВµРЎвЂљ Р С•РЎвЂ Р ВµР Р…Р С”Р С‘"),
+        "top_point_priority_label": str((top_point or {}).get("priority_label") or "Р СњР ВµРЎвЂљ Р С•РЎвЂ Р ВµР Р…Р С”Р С‘"),
         "filter_description": _build_filter_description(
             selected_table_label=selected_table_label,
             selected_district_label=selected_district_label,
@@ -104,27 +104,27 @@ def _build_summary_cards(
     return build_summary_cards(
         [
             {
-                "label": "РЈРЅРёРєР°Р»СЊРЅС‹Рµ С‚РѕС‡РєРё",
+                "label": "Р Р€Р Р…Р С‘Р С”Р В°Р В»РЎРЉР Р…РЎвЂ№Р Вµ РЎвЂљР С•РЎвЂЎР С”Р С‘",
                 "value": _format_integer(len(rows)),
-                "meta": f"РРЅС†РёРґРµРЅС‚РѕРІ РїРѕСЃР»Рµ С„РёР»СЊС‚СЂРѕРІ: {_format_integer(total_incidents)}",
+                "meta": f"Р ВР Р…РЎвЂ Р С‘Р Т‘Р ВµР Р…РЎвЂљР С•Р Р† Р С—Р С•РЎРѓР В»Р Вµ РЎвЂћР С‘Р В»РЎРЉРЎвЂљРЎР‚Р С•Р Р†: {_format_integer(total_incidents)}",
                 "tone": "normal",
             },
             {
-                "label": "Р’С‹СЃРѕРєРёР№ СЂРёСЃРє",
+                "label": "Р вЂ™РЎвЂ№РЎРѓР С•Р С”Р С‘Р в„– РЎР‚Р С‘РЎРѓР С”",
                 "value": _format_integer(high_or_above_count),
-                "meta": f"РљСЂРёС‚РёС‡РµСЃРєРёС…: {_format_integer(critical_count)}",
+                "meta": f"Р С™РЎР‚Р С‘РЎвЂљР С‘РЎвЂЎР ВµРЎРѓР С”Р С‘РЎвЂ¦: {_format_integer(critical_count)}",
                 "tone": "critical" if critical_count else ("warning" if high_or_above_count else "normal"),
             },
             {
-                "label": "РўРѕС‡РєР° РІвЂћвЂ“1",
+                "label": "Р СћР С•РЎвЂЎР С”Р В° Р Р†РІР‚С›РІР‚вЂњ1",
                 "value": str((top_point or {}).get("total_score_display") or (top_point or {}).get("score_display") or "0"),
-                "meta": str((top_point or {}).get("label") or "Р РµР№С‚РёРЅРі РїРѕСЏРІРёС‚СЃСЏ РїРѕСЃР»Рµ СЂР°СЃС‡С‘С‚Р°"),
+                "meta": str((top_point or {}).get("label") or "Р В Р ВµР в„–РЎвЂљР С‘Р Р…Р С– Р С—Р С•РЎРЏР Р†Р С‘РЎвЂљРЎРѓРЎРЏ Р С—Р С•РЎРѓР В»Р Вµ РЎР‚Р В°РЎРѓРЎвЂЎРЎвЂРЎвЂљР В°"),
                 "tone": str((top_point or {}).get("tone") or "normal"),
             },
             {
-                "label": "РќСѓР¶РЅР° РІРµСЂРёС„РёРєР°С†РёСЏ",
+                "label": "Р СњРЎС“Р В¶Р Р…Р В° Р Р†Р ВµРЎР‚Р С‘РЎвЂћР С‘Р С”Р В°РЎвЂ Р С‘РЎРЏ",
                 "value": _format_integer(max(len(incomplete_points), uncertainty_count)),
-                "meta": "РўРѕС‡РєРё, РіРґРµ risk score С‚СЂРµР±СѓРµС‚ РїСЂРѕРІРµСЂРєРё РїРѕР»РЅРѕС‚С‹ РґР°РЅРЅС‹С…",
+                "meta": "Р СћР С•РЎвЂЎР С”Р С‘, Р С–Р Т‘Р Вµ risk score РЎвЂљРЎР‚Р ВµР В±РЎС“Р ВµРЎвЂљ Р С—РЎР‚Р С•Р Р†Р ВµРЎР‚Р С”Р С‘ Р С—Р С•Р В»Р Р…Р С•РЎвЂљРЎвЂ№ Р Т‘Р В°Р Р…Р Р…РЎвЂ№РЎвЂ¦",
                 "tone": "watch" if incomplete_points or uncertainty_count else "normal",
             },
         ]
@@ -142,28 +142,28 @@ def _build_notes(
         broad_points = sum(1 for row in rows if str(row.get("entity_code") or "") in {"territory", "district", "unknown"})
         if broad_points:
             notes.append(
-                f"Р”Р»СЏ {_format_integer(broad_points)} С‚РѕС‡РµРє СЂРµР№С‚РёРЅРі РїРѕСЃС‚СЂРѕРµРЅ РЅР° fallback-СЃСѓС‰РЅРѕСЃС‚Рё СѓСЂРѕРІРЅСЏ РЅР°СЃРµР»С‘РЅРЅРѕРіРѕ РїСѓРЅРєС‚Р°, С‚РµСЂСЂРёС‚РѕСЂРёРё РёР»Рё СЂР°Р№РѕРЅР°, РїРѕС‚РѕРјСѓ С‡С‚Рѕ Р±РѕР»РµРµ С‚РѕС‡РЅС‹Р№ Р°РґСЂРµСЃ/РѕР±СЉРµРєС‚ РЅРµ РЅР°Р№РґРµРЅ."
+                f"Р вЂќР В»РЎРЏ {_format_integer(broad_points)} РЎвЂљР С•РЎвЂЎР ВµР С” РЎР‚Р ВµР в„–РЎвЂљР С‘Р Р…Р С– Р С—Р С•РЎРѓРЎвЂљРЎР‚Р С•Р ВµР Р… Р Р…Р В° fallback-РЎРѓРЎС“РЎвЂ°Р Р…Р С•РЎРѓРЎвЂљР С‘ РЎС“РЎР‚Р С•Р Р†Р Р…РЎРЏ Р Р…Р В°РЎРѓР ВµР В»РЎвЂР Р…Р Р…Р С•Р С–Р С• Р С—РЎС“Р Р…Р С”РЎвЂљР В°, РЎвЂљР ВµРЎР‚РЎР‚Р С‘РЎвЂљР С•РЎР‚Р С‘Р С‘ Р С‘Р В»Р С‘ РЎР‚Р В°Р в„–Р С•Р Р…Р В°, Р С—Р С•РЎвЂљР С•Р СРЎС“ РЎвЂЎРЎвЂљР С• Р В±Р С•Р В»Р ВµР Вµ РЎвЂљР С•РЎвЂЎР Р…РЎвЂ№Р в„– Р В°Р Т‘РЎР‚Р ВµРЎРѓ/Р С•Р В±РЎР‰Р ВµР С”РЎвЂљ Р Р…Р Вµ Р Р…Р В°Р в„–Р Т‘Р ВµР Р…."
             )
         if len(rows) < TOP_POINT_CARD_COUNT:
             notes.append(
-                "РџРѕСЃР»Рµ РІС‹Р±СЂР°РЅРЅС‹С… С„РёР»СЊС‚СЂРѕРІ РѕСЃС‚Р°Р»РѕСЃСЊ РјР°Р»Рѕ СѓРЅРёРєР°Р»СЊРЅС‹С… С‚РѕС‡РµРє, РїРѕСЌС‚РѕРјСѓ ranking СЃС‚РѕРёС‚ С‚СЂР°РєС‚РѕРІР°С‚СЊ РєР°Рє РѕСЂРёРµРЅС‚РёСЂ РґР»СЏ РїСЂРѕСЃРјРѕС‚СЂР°, Р° РЅРµ РєР°Рє СѓСЃС‚РѕР№С‡РёРІСѓСЋ С‚РёРїРѕР»РѕРіРёСЋ."
+                "Р СџР С•РЎРѓР В»Р Вµ Р Р†РЎвЂ№Р В±РЎР‚Р В°Р Р…Р Р…РЎвЂ№РЎвЂ¦ РЎвЂћР С‘Р В»РЎРЉРЎвЂљРЎР‚Р С•Р Р† Р С•РЎРѓРЎвЂљР В°Р В»Р С•РЎРѓРЎРЉ Р СР В°Р В»Р С• РЎС“Р Р…Р С‘Р С”Р В°Р В»РЎРЉР Р…РЎвЂ№РЎвЂ¦ РЎвЂљР С•РЎвЂЎР ВµР С”, Р С—Р С•РЎРЊРЎвЂљР С•Р СРЎС“ ranking РЎРѓРЎвЂљР С•Р С‘РЎвЂљ РЎвЂљРЎР‚Р В°Р С”РЎвЂљР С•Р Р†Р В°РЎвЂљРЎРЉ Р С”Р В°Р С” Р С•РЎР‚Р С‘Р ВµР Р…РЎвЂљР С‘РЎР‚ Р Т‘Р В»РЎРЏ Р С—РЎР‚Р С•РЎРѓР СР С•РЎвЂљРЎР‚Р В°, Р В° Р Р…Р Вµ Р С”Р В°Р С” РЎС“РЎРѓРЎвЂљР С•Р в„–РЎвЂЎР С‘Р Р†РЎС“РЎР‹ РЎвЂљР С‘Р С—Р С•Р В»Р С•Р С–Р С‘РЎР‹."
             )
         max_score = max(float(row.get("total_score") or row.get("score") or 0.0) for row in rows)
         if max_score < WATCH_RISK_THRESHOLD:
             notes.append(
-                "Р”Р°Р¶Рµ РІРµСЂС…РЅСЏСЏ С‡Р°СЃС‚СЊ СЂРµР№С‚РёРЅРіР° СЃРµР№С‡Р°СЃ СЃРєРѕСЂРµРµ РїСЂРѕ РЅР°Р±Р»СЋРґРµРЅРёРµ, С‡РµРј РїСЂРѕ РєСЂРёС‚РёС‡РµСЃРєРѕРµ РїРµСЂРµСЂР°СЃРїСЂРµРґРµР»РµРЅРёРµ СЃРёР»: СЏРІРЅС‹С… РІС‹Р±СЂРѕСЃРѕРІ РїРѕ score РЅРµ РІРёРґРЅРѕ."
+                "Р вЂќР В°Р В¶Р Вµ Р Р†Р ВµРЎР‚РЎвЂ¦Р Р…РЎРЏРЎРЏ РЎвЂЎР В°РЎРѓРЎвЂљРЎРЉ РЎР‚Р ВµР в„–РЎвЂљР С‘Р Р…Р С–Р В° РЎРѓР ВµР в„–РЎвЂЎР В°РЎРѓ РЎРѓР С”Р С•РЎР‚Р ВµР Вµ Р С—РЎР‚Р С• Р Р…Р В°Р В±Р В»РЎР‹Р Т‘Р ВµР Р…Р С‘Р Вµ, РЎвЂЎР ВµР С Р С—РЎР‚Р С• Р С”РЎР‚Р С‘РЎвЂљР С‘РЎвЂЎР ВµРЎРѓР С”Р С•Р Вµ Р С—Р ВµРЎР‚Р ВµРЎР‚Р В°РЎРѓР С—РЎР‚Р ВµР Т‘Р ВµР В»Р ВµР Р…Р С‘Р Вµ РЎРѓР С‘Р В»: РЎРЏР Р†Р Р…РЎвЂ№РЎвЂ¦ Р Р†РЎвЂ№Р В±РЎР‚Р С•РЎРѓР С•Р Р† Р С—Р С• score Р Р…Р Вµ Р Р†Р С‘Р Т‘Р Р…Р С•."
             )
     else:
-        notes.append("РџРѕ РІС‹Р±СЂР°РЅРЅРѕРјСѓ СЃСЂРµР·Сѓ РЅРµ РЅР°С€Р»РѕСЃСЊ РёРЅС†РёРґРµРЅС‚РѕРІ РґР»СЏ РїРѕСЃС‚СЂРѕРµРЅРёСЏ СЂРµР№С‚РёРЅРіР° РїСЂРѕР±Р»РµРјРЅС‹С… С‚РѕС‡РµРє.")
+        notes.append("Р СџР С• Р Р†РЎвЂ№Р В±РЎР‚Р В°Р Р…Р Р…Р С•Р СРЎС“ РЎРѓРЎР‚Р ВµР В·РЎС“ Р Р…Р Вµ Р Р…Р В°РЎв‚¬Р В»Р С•РЎРѓРЎРЉ Р С‘Р Р…РЎвЂ Р С‘Р Т‘Р ВµР Р…РЎвЂљР С•Р Р† Р Т‘Р В»РЎРЏ Р С—Р С•РЎРѓРЎвЂљРЎР‚Р С•Р ВµР Р…Р С‘РЎРЏ РЎР‚Р ВµР в„–РЎвЂљР С‘Р Р…Р С–Р В° Р С—РЎР‚Р С•Р В±Р В»Р ВµР СР Р…РЎвЂ№РЎвЂ¦ РЎвЂљР С•РЎвЂЎР ВµР С”.")
 
     for item in list(metadata_notes)[:3]:
         text = _clean_text(item)
         if text:
-            notes.append(f"РњРµС‚Р°РґР°РЅРЅС‹Рµ: {text}")
+            notes.append(f"Р СљР ВµРЎвЂљР В°Р Т‘Р В°Р Р…Р Р…РЎвЂ№Р Вµ: {text}")
     for item in list(input_notes)[:3]:
         text = _clean_text(item)
         if text:
-            notes.append(f"Р—Р°РіСЂСѓР·РєР° РґР°РЅРЅС‹С…: {text}")
+            notes.append(f"Р вЂ”Р В°Р С–РЎР‚РЎС“Р В·Р С”Р В° Р Т‘Р В°Р Р…Р Р…РЎвЂ№РЎвЂ¦: {text}")
     return _unique_non_empty(notes)[:MAX_NOTES]
 
 
@@ -175,7 +175,7 @@ def _empty_access_points_data(
     bootstrap_mode: str = "resolved",
 ) -> AccessPointPresentation:
     resolved_notes = _unique_non_empty(
-        list(notes or []) or ["РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РґР°РЅРЅС‹С… РґР»СЏ РїРѕСЃС‚СЂРѕРµРЅРёСЏ СЂРµР№С‚РёРЅРіР° РїСЂРѕР±Р»РµРјРЅС‹С… С‚РѕС‡РµРє."]
+        list(notes or []) or ["Р СњР ВµР Т‘Р С•РЎРѓРЎвЂљР В°РЎвЂљР С•РЎвЂЎР Р…Р С• Р Т‘Р В°Р Р…Р Р…РЎвЂ№РЎвЂ¦ Р Т‘Р В»РЎРЏ Р С—Р С•РЎРѓРЎвЂљРЎР‚Р С•Р ВµР Р…Р С‘РЎРЏ РЎР‚Р ВµР в„–РЎвЂљР С‘Р Р…Р С–Р В° Р С—РЎР‚Р С•Р В±Р В»Р ВµР СР Р…РЎвЂ№РЎвЂ¦ РЎвЂљР С•РЎвЂЎР ВµР С”."]
     )[:MAX_NOTES]
     return {
         "bootstrap_mode": bootstrap_mode,
@@ -187,7 +187,7 @@ def _empty_access_points_data(
         "summary": summary,
         "summary_cards": _build_summary_cards([], total_incidents=0, incomplete_points=[]),
         "top_point_label": "-",
-        "top_point_explanation": "РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РґР°РЅРЅС‹С… РґР»СЏ РІС‹РґРµР»РµРЅРёСЏ РїСЂРёРѕСЂРёС‚РµС‚РЅС‹С… С‚РѕС‡РµРє.",
+        "top_point_explanation": "Р СњР ВµР Т‘Р С•РЎРѓРЎвЂљР В°РЎвЂљР С•РЎвЂЎР Р…Р С• Р Т‘Р В°Р Р…Р Р…РЎвЂ№РЎвЂ¦ Р Т‘Р В»РЎРЏ Р Р†РЎвЂ№Р Т‘Р ВµР В»Р ВµР Р…Р С‘РЎРЏ Р С—РЎР‚Р С‘Р С•РЎР‚Р С‘РЎвЂљР ВµРЎвЂљР Р…РЎвЂ№РЎвЂ¦ РЎвЂљР С•РЎвЂЎР ВµР С”.",
         "points": [],
         "top_points": [],
         "score_distribution": {
