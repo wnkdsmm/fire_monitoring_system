@@ -47,7 +47,6 @@ def build_column_search_payload(table_name: str = "", query: str = "") -> dict[s
         "query": query_text,
         "count": 0,
         "columns": [],
-        "all_columns": [],
         "groups": [],
         "preview_columns": [],
         "preview_rows": [],
@@ -73,7 +72,6 @@ def build_column_search_payload(table_name: str = "", query: str = "") -> dict[s
 
     payload["count"] = len(matches)
     payload["columns"] = matches
-    payload["all_columns"] = columns
     payload["groups"] = groups
 
     if matches:
@@ -143,7 +141,6 @@ def build_create_modify_table_payload(
     query: str = "",
     selected_columns: Sequence[str] | None = None,
     selected_groups: Sequence[str] | None = None,
-    all_columns: list[str] | None = None,
 ) -> dict[str, Any]:
     normalized_table_name = str(table_name or "").strip()
     query_text = str(query or "").strip()
@@ -154,20 +151,19 @@ def build_create_modify_table_payload(
         return {"status": "error", "message": "Не выбрана исходная таблица."}
 
     try:
-        resolved_all_columns = list(all_columns) if all_columns is not None else get_table_columns(normalized_table_name)
-
+        all_columns = get_table_columns(normalized_table_name)
         final_selected = set(normalized_columns)
         if normalized_columns and not normalized_groups:
-            ordered_columns = [column for column in resolved_all_columns if column in final_selected]
+            ordered_columns = [column for column in all_columns if column in final_selected]
         else:
             matcher = get_column_matcher()
-            group_matches = matcher.find_columns_by_categories(resolved_all_columns, normalized_groups)
+            group_matches = matcher.find_columns_by_categories(all_columns, normalized_groups)
             final_selected.update(item["name"] for item in group_matches)
             if not final_selected and query_text:
-                query_matches = matcher.find_columns_by_query(resolved_all_columns, query_text)
+                query_matches = matcher.find_columns_by_query(all_columns, query_text)
                 final_selected.update(item["name"] for item in query_matches)
 
-            ordered_columns = [column for column in resolved_all_columns if column in final_selected]
+            ordered_columns = [column for column in all_columns if column in final_selected]
         created = create_modified_table(normalized_table_name, ordered_columns)
         preview_columns, preview_rows = get_table_preview(
             created["table_name"],
@@ -197,3 +193,5 @@ __all__ = [
     "build_table_page_api_payload",
     "build_table_page_bundle",
 ]
+
+

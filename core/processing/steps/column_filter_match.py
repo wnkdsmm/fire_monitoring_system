@@ -469,12 +469,6 @@ class NatashaColumnMatcher:
     def _important_label_from_payload(self, column_payload: ColumnTermPayload) -> str | None:
         return _feature_label_from_match(self._match_column_payload_metadata(column_payload))
 
-    def classify_column(self, col_name: str) -> str | None:
-        return self._classify_column_payload(self._column_terms(col_name))
-
-    def _classify_column_payload(self, column_payload: ColumnTermPayload) -> str | None:
-        return self._important_label_from_payload(column_payload)
-
     def _query_terms(self, query_text: str) -> list[dict[str, set[str]]]:
         def build_query_term(token: str) -> dict[str, set[str]]:
             return _build_query_term_payload(

@@ -465,7 +465,6 @@
         const selectedColumns = Array.from(getSelectedColumnsUnion());
         const selectedGroups = Array.from(state.selectedGroups);
         const finalSelectedCount = selectedColumns.length;
-        const allKnownColumns = (state.payload && state.payload.all_columns) || [];
 
         if (!finalSelectedCount) {
             setStatus('Нужно выбрать хотя бы одну колонку или одну тематическую группу.', true);
@@ -487,8 +486,7 @@
                     table_name: tableSelect.value || '',
                     query: queryInput ? queryInput.value || '' : '',
                     selected_columns: selectedColumns,
-                    selected_groups: selectedGroups,
-                    all_columns: allKnownColumns.length ? allKnownColumns : undefined
+                    selected_groups: selectedGroups
                 })
             }, 'Не удалось создать таблицу с префиксом modify_.');
             const payload = result.payload;
@@ -563,4 +561,3 @@
         }
     });
 })();
-
