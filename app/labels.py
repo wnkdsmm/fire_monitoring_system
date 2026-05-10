@@ -71,7 +71,6 @@ FORECASTING_NOTE_INTERPRETATION = (
 
 CLUSTERING_SAMPLING_STRATEGY_LABELS = {
     "stratified": "Стратифицированная",
-    "random": "Случайная",
 }
 
 CLUSTERING_DEFAULT_CLUSTER_FEATURES = [

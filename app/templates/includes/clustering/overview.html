@@ -71,14 +71,7 @@
                     {% endfor %}
                 </select>
             </label>
-            <label class="filter-field">
-                <span>Стратегия выборки</span>
-                <select id="clusterSamplingStrategyFilter" name="sampling_strategy">
-                    {% for option in filters.available_sampling_strategies %}
-                    <option value="{{ option.value }}" {% if option.value == filters.sampling_strategy %}selected{% endif %}>{{ option.label }}</option>
-                    {% endfor %}
-                </select>
-            </label>
+            <input type="hidden" name="sampling_strategy" value="stratified">
             <div class="filter-field filter-actions">
                 <span>Действие</span>
                 <button id="clusterRefreshButton" class="primary-action" type="submit">Пересчитать кластеры</button>
@@ -104,7 +97,7 @@
                 <span class="cluster-feature-help">Базовый набор ориентирован на территориальный риск: частота, площадь, ночные пожары, параметры прибытия и тяжесть последствий.</span>
             </div>
         </form>
-        <div class="filter-summary" id="clusteringFilterSummary">Пожаров в истории: {{ summary.total_incidents_display }} | Территорий после агрегации: {{ summary.total_entities_display }} | Территорий в выборке: {{ summary.sampled_entities_display }} | Стратегия: {{ summary.sampling_strategy_label }}</div>
+        <div class="filter-summary" id="clusteringFilterSummary">Пожаров в истории: {{ summary.total_incidents_display }} | Территорий после агрегации: {{ summary.total_entities_display }} | Территорий в выборке: {{ summary.sampled_entities_display }}</div>
     </section>
 
     <div id="clusteringAsyncState" class="analysis-async is-hidden">

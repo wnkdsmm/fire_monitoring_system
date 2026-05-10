@@ -459,16 +459,6 @@ def _build_notes(
                 f"До кластеризации были собраны агрегаты по {_format_integer(total_entities)} территориям, "
                 "а затем отобрана подвыборка с пропорциональной стратификацией."
             )
-        elif sampling_strategy == "random":
-            sampling_note = (
-                f"До кластеризации были собраны агрегаты по {_format_integer(total_entities)} территориям, "
-                "а затем отобрана равномерная случайная подвыборка."
-            )
-        elif sampling_strategy == "systematic":
-            sampling_note = (
-                f"До кластеризации были собраны агрегаты по {_format_integer(total_entities)} территориям, "
-                "а затем выполнен систематический отбор подвыборки."
-            )
         else:
             sampling_note = (
                 f"До кластеризации были собраны агрегаты по {_format_integer(total_entities)} территориям, "

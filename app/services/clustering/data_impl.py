@@ -177,7 +177,6 @@ def _load_territory_dataset(
     sampled_frame, sampling_note = _sample_territory_frame(
         territory_frame,
         DEFAULT_TERRITORY_SAMPLE_LIMIT,
-        sampling_strategy,
     )
     sampled_frame = sampled_frame.reset_index(drop=True)
 
@@ -489,17 +488,9 @@ def _aggregate_territory_frame(records: Sequence[TerritoryRecord]) -> pd.DataFra
     return frame.sort_values(["Число пожаров", "Территория"], ascending=[False, True]).reset_index(drop=True)
 
 
-def _sample_territory_frame(frame: pd.DataFrame, sample_limit: int, sampling_strategy: str) -> tuple[pd.DataFrame, str]:
+def _sample_territory_frame(frame: pd.DataFrame, sample_limit: int) -> tuple[pd.DataFrame, str]:
     if frame.empty or len(frame) <= sample_limit:
         return frame.copy(), ""
-
-    if sampling_strategy == "random":
-        sampled = frame.sample(n=sample_limit, random_state=CLUSTERING_RANDOM_STATE).sort_values("Территория").reset_index(drop=True)
-        note = (
-            f"Из {len(frame)} территорий для кластеризации выбрана случайная выборка из {len(sampled)} территорий. "
-            "Агрегаты по каждой территории при этом посчитаны по всей истории инцидентов, поэтому смещения из-за первых строк больше нет."
-        )
-        return sampled, note
 
     work = frame.copy()
     quantiles = max(1, min(4, int(work["Число пожаров"].nunique()), len(work)))

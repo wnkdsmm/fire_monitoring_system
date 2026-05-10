@@ -156,7 +156,6 @@ function syncClusteringAsyncContainer() {
         container.textContent = 'Пожаров в истории: ' + (summary.total_incidents_display || '0')
             + ' | Территорий после агрегации: ' + (summary.total_entities_display || '0')
             + ' | В выборке: ' + (summary.sampled_entities_display || '0')
-            + ' | Стратегия: ' + (summary.sampling_strategy_label || 'Не выбрана');
     }
 
     function renderSummaryCards(summary) {
@@ -337,7 +336,6 @@ function applyClusteringData(data) {
         renderTableChecklist(filters.available_tables, selectedTableNames);
         setTableChecklistOpen(false);
         setSelectOptions('clusterCountFilter', filters.available_cluster_counts, filters.cluster_count, '4 кластера');
-        setSelectOptions('clusterSamplingStrategyFilter', filters.available_sampling_strategies, filters.sampling_strategy, 'Стратифицированная');
         renderFeaturePicker(filters);
         renderFilterSummary(summary);
         renderSummaryCards(summary);
