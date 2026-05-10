@@ -575,12 +575,16 @@ def _evaluate_feature_subset(
             metrics = compute_clustering_metrics(scaled_points, model.labels_)
         except Exception:
             continue
+        sil_val = metrics.get("silhouette")
+        db_val = metrics.get("davies_bouldin")
+        ch_val = metrics.get("calinski_harabasz")
+        br_val = metrics.get("cluster_balance_ratio")
         metrics_per_seed.append(
             {
-                "silhouette": float(metrics.get("silhouette") or float("-inf")),
-                "davies_bouldin": float(metrics.get("davies_bouldin") or float("inf")),
-                "calinski_harabasz": float(metrics.get("calinski_harabasz") or float("-inf")),
-                "cluster_balance_ratio": float(metrics.get("cluster_balance_ratio") or 0.0),
+                "silhouette": float(sil_val) if sil_val is not None else float("-inf"),
+                "davies_bouldin": float(db_val) if db_val is not None else float("inf"),
+                "calinski_harabasz": float(ch_val) if ch_val is not None else float("-inf"),
+                "cluster_balance_ratio": float(br_val) if br_val is not None else 0.0,
             }
         )
 

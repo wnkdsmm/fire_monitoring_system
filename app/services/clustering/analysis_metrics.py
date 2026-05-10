@@ -242,6 +242,7 @@ def _evaluate_single_kmeans(
     ]
     run_rows: list[dict[str, Any]] = []
     labels_first_seed: np.ndarray | None = None
+    labels_fallback: np.ndarray | None = None
     first_seed_row: dict[str, Any] | None = None
     success_count = 0
 
@@ -266,13 +267,19 @@ def _evaluate_single_kmeans(
             continue
 
         success_count += 1
+        if labels_fallback is None:
+            labels_fallback = np.asarray(labels, dtype=np.int32).copy()
         if seed == CLUSTERING_RANDOM_STATE and labels_first_seed is None:
             labels_first_seed = np.asarray(labels, dtype=np.int32).copy()
+        sil_val = metrics.get("silhouette")
+        db_val = metrics.get("davies_bouldin")
+        ch_val = metrics.get("calinski_harabasz")
+        br_val = metrics.get("cluster_balance_ratio")
         run_row = {
-            "silhouette": float(metrics.get("silhouette") or float("-inf")),
-            "davies_bouldin": float(metrics.get("davies_bouldin") or float("inf")),
-            "calinski_harabasz": float(metrics.get("calinski_harabasz") or float("-inf")),
-            "cluster_balance_ratio": float(metrics.get("cluster_balance_ratio") or 0.0),
+            "silhouette": float(sil_val) if sil_val is not None else float("-inf"),
+            "davies_bouldin": float(db_val) if db_val is not None else float("inf"),
+            "calinski_harabasz": float(ch_val) if ch_val is not None else float("-inf"),
+            "cluster_balance_ratio": float(br_val) if br_val is not None else 0.0,
             "smallest_cluster_size": float(metrics.get("smallest_cluster_size") or 0.0),
             "largest_cluster_size": float(metrics.get("largest_cluster_size") or 0.0),
             "quality_score": float(quality_score),
@@ -281,13 +288,17 @@ def _evaluate_single_kmeans(
             "has_balance_warning": bool(shape_diagnostics["has_balance_warning"]),
             "inertia": float(inertia),
         }
+        if first_seed_row is None:
+            first_seed_row = dict(run_row)
         if seed == CLUSTERING_RANDOM_STATE:
             first_seed_row = dict(run_row)
         run_rows.append(run_row)
 
     if success_count < 2 or not run_rows:
         return []
-    if labels_first_seed is None or first_seed_row is None:
+    if labels_first_seed is None:
+        labels_first_seed = labels_fallback
+    if labels_first_seed is None or first_seed_row is None or not run_rows:
         return []
 
     silhouette = float(np.mean([item["silhouette"] for item in run_rows]))
