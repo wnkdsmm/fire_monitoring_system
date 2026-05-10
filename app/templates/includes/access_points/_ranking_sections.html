@@ -1,9 +1,9 @@
-<section class="access-points-followup">
+﻿<section class="access-points-followup">
         <div class="access-points-inline-panels">
             <article class="panel access-points-drivers-panel">
                 <div class="panel-head">
-                    <h2>Главные драйверы риска</h2>
-                    <span class="panel-meta">Факторы, наиболее часто увеличивающие итоговый балл и повышающие позицию точки в рейтинге.</span>
+                    <h2>Р“Р»Р°РІРЅС‹Рµ РґСЂР°Р№РІРµСЂС‹ СЂРёСЃРєР°</h2>
+                    <span class="panel-meta">Р¤Р°РєС‚РѕСЂС‹, РЅР°РёР±РѕР»РµРµ С‡Р°СЃС‚Рѕ СѓРІРµР»РёС‡РёРІР°СЋС‰РёРµ РёС‚РѕРіРѕРІС‹Р№ Р±Р°Р»Р» Рё РїРѕРІС‹С€Р°СЋС‰РёРµ РїРѕР·РёС†РёСЋ С‚РѕС‡РєРё РІ СЂРµР№С‚РёРЅРіРµ.</span>
                 </div>
                 <div id="accessPointsReasonBreakdownShell" class="reason-breakdown-grid">
                     {% if data.reason_breakdown %}
@@ -11,43 +11,23 @@
                         <article class="reason-breakdown-card">
                             <span class="reason-breakdown-label">{{ item.label }}</span>
                             <strong class="reason-breakdown-value">{{ item.count_display }}</strong>
-                            <span class="reason-breakdown-meta">{{ item.share_display }} точек попадают под этот фактор</span>
-                            <span class="reason-breakdown-meta">В среднем добавляет {{ item.average_contribution_display }} балла</span>
-                            <span class="reason-breakdown-foot">Характерный пример: {{ item.lead_label }}</span>
+                            <span class="reason-breakdown-meta">{{ item.share_display }} С‚РѕС‡РµРє РїРѕРїР°РґР°СЋС‚ РїРѕРґ СЌС‚РѕС‚ С„Р°РєС‚РѕСЂ</span>
+                            <span class="reason-breakdown-meta">Р’ СЃСЂРµРґРЅРµРј РґРѕР±Р°РІР»СЏРµС‚ {{ item.average_contribution_display }} Р±Р°Р»Р»Р°</span>
+                            <span class="reason-breakdown-foot">РҐР°СЂР°РєС‚РµСЂРЅС‹Р№ РїСЂРёРјРµСЂ: {{ item.lead_label }}</span>
                         </article>
                         {% endfor %}
                     {% else %}
-                    <div class="mini-empty">Сводка по драйверам будет представлена после выполнения расчета рейтинга.</div>
+                    <div class="mini-empty">РЎРІРѕРґРєР° РїРѕ РґСЂР°Р№РІРµСЂР°Рј Р±СѓРґРµС‚ РїСЂРµРґСЃС‚Р°РІР»РµРЅР° РїРѕСЃР»Рµ РІС‹РїРѕР»РЅРµРЅРёСЏ СЂР°СЃС‡РµС‚Р° СЂРµР№С‚РёРЅРіР°.</div>
                     {% endif %}
                 </div>
             </article>
 
-            <article class="panel panel-warning">
-                <div class="panel-head">
-                    <h2>Данные неполные</h2>
-                    <span class="panel-meta">Точки, в которых приоритет проверки повышается преимущественно вследствие пропусков по водоснабжению, времени прибытия или удаленности.</span>
-                </div>
-                <div id="accessPointsIncompleteShell" class="incomplete-list">
-                    {% if data.incomplete_points %}
-                        {% for point in data.incomplete_points %}
-                        <article class="incomplete-card">
-                            <strong>{{ point.label }}</strong>
-                            <span>{{ point.incomplete_note }}</span>
-                            <span>Балл проверки: {{ point.investigation_score_display }} | Полнота: {{ point.completeness_display }}</span>
-                            <span>{{ point.explanation }}</span>
-                        </article>
-                        {% endfor %}
-                    {% else %}
-                    <div class="mini-empty">Отдельные точки с приоритетом, обусловленным пропусками данных, на текущем этапе не выделены.</div>
-                    {% endif %}
-                </div>
-            </article>
         </div>
 
         <article class="panel data-table-panel access-points-ranking-panel">
             <div class="panel-head">
-                <h2>Рейтинг и интерпретация факторов</h2>
-                <span class="panel-meta">Сводная таблица по баллу риска, типологии, доступности, водоснабжению, последствиям и полноте данных.</span>
+                <h2>Р РµР№С‚РёРЅРі Рё РёРЅС‚РµСЂРїСЂРµС‚Р°С†РёСЏ С„Р°РєС‚РѕСЂРѕРІ</h2>
+                <span class="panel-meta">РЎРІРѕРґРЅР°СЏ С‚Р°Р±Р»РёС†Р° РїРѕ Р±Р°Р»Р»Сѓ СЂРёСЃРєР°, С‚РёРїРѕР»РѕРіРёРё, РґРѕСЃС‚СѓРїРЅРѕСЃС‚Рё, РІРѕРґРѕСЃРЅР°Р±Р¶РµРЅРёСЋ, РїРѕСЃР»РµРґСЃС‚РІРёСЏРј Рё РїРѕР»РЅРѕС‚Рµ РґР°РЅРЅС‹С….</span>
             </div>
             <div class="data-table-shell" id="accessPointsRankingTableShell">
                 {% if data.points %}
@@ -55,19 +35,19 @@
                     <thead>
                         <tr>
                             <th>#</th>
-                            <th>Точка</th>
-                            <th>Тип</th>
-                            <th>Район</th>
-                            <th>Балл</th>
-                            <th>Уровень</th>
-                            <th>Типология</th>
-                            <th>Пожары</th>
-                            <th>Удалённость</th>
-                            <th>Прибытие</th>
-                            <th>Вода</th>
-                            <th>Полнота</th>
-                            <th>Драйверы</th>
-                            <th>Почему в топе</th>
+                            <th>РўРѕС‡РєР°</th>
+                            <th>РўРёРї</th>
+                            <th>Р Р°Р№РѕРЅ</th>
+                            <th>Р‘Р°Р»Р»</th>
+                            <th>РЈСЂРѕРІРµРЅСЊ</th>
+                            <th>РўРёРїРѕР»РѕРіРёСЏ</th>
+                            <th>РџРѕР¶Р°СЂС‹</th>
+                            <th>РЈРґР°Р»С‘РЅРЅРѕСЃС‚СЊ</th>
+                            <th>РџСЂРёР±С‹С‚РёРµ</th>
+                            <th>Р’РѕРґР°</th>
+                            <th>РџРѕР»РЅРѕС‚Р°</th>
+                            <th>Р”СЂР°Р№РІРµСЂС‹</th>
+                            <th>РџРѕС‡РµРјСѓ РІ С‚РѕРїРµ</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -81,14 +61,14 @@
                                 {% endif %}
                             </td>
                             <td>{{ point.entity_type }}</td>
-                            <td>{{ point.district or '—' }}</td>
+                            <td>{{ point.district or 'вЂ”' }}</td>
                             <td><span class="score-pill tone-{{ point.tone }}">{{ point.total_score_display or point.score_display }}</span></td>
                             <td>{{ point.severity_band }}</td>
                             <td>{{ point.typology_label }}</td>
                             <td>{{ point.incident_count_display }}</td>
                             <td>{{ point.average_distance_display }}</td>
                             <td>{{ point.average_response_display }}</td>
-                            <td>нет воды: {{ point.no_water_share_display }}<br>пропуски: {{ point.water_unknown_share_display }}</td>
+                            <td>РЅРµС‚ РІРѕРґС‹: {{ point.no_water_share_display }}<br>РїСЂРѕРїСѓСЃРєРё: {{ point.water_unknown_share_display }}</td>
                             <td>{{ point.completeness_display }}</td>
                             <td>{{ point.reason_chips[:3] | join(', ') or point.top_reason_codes | join(', ') }}</td>
                             <td>{{ point.human_readable_explanation or point.explanation }}</td>
@@ -97,7 +77,7 @@
                 </tbody>
                 </table>
                 {% else %}
-                <div class="mini-empty">После выполнения расчета здесь будет представлен рейтинг отдельных проблемных точек.</div>
+                <div class="mini-empty">РџРѕСЃР»Рµ РІС‹РїРѕР»РЅРµРЅРёСЏ СЂР°СЃС‡РµС‚Р° Р·РґРµСЃСЊ Р±СѓРґРµС‚ РїСЂРµРґСЃС‚Р°РІР»РµРЅ СЂРµР№С‚РёРЅРі РѕС‚РґРµР»СЊРЅС‹С… РїСЂРѕР±Р»РµРјРЅС‹С… С‚РѕС‡РµРє.</div>
                 {% endif %}
             </div>
         </article>

@@ -132,6 +132,7 @@ def _load_table_metadata(table_name: str) -> AccessPointMetadata:
         "destroyed_area": _resolve_column_name(columns, DESTROYED_AREA_COLUMN_CANDIDATES),
         "destroyed_buildings": _resolve_column_name(columns, DESTROYED_BUILDINGS_COLUMN_CANDIDATES),
         "registered_damage": _resolve_column_name(columns, REGISTERED_DAMAGE_COLUMN_CANDIDATES),
+        "event_date": _resolve_column_name(columns, [DATE_COLUMN]),
     }
     return {"table_name": table_name, "columns": columns, "resolved_columns": resolved_columns}
 
@@ -152,7 +153,13 @@ def _optional_numeric_expression(column_name: str | None, fallback: str = "NULL"
     )
 
 
-def _build_source_sql(table_name: str, resolved_columns: ResolvedColumns) -> str:
+def _build_source_sql(
+    table_name: str,
+    resolved_columns: ResolvedColumns,
+    *,
+    district: str = "all",
+    selected_year: int | None = None,
+) -> str:
     district_expr = _optional_text_expression(resolved_columns["district"], fallback="''")
     settlement_expr = _optional_text_expression(resolved_columns["settlement"], fallback="''")
     settlement_type_expr = _optional_text_expression(resolved_columns["settlement_type"], fallback="''")
@@ -176,9 +183,22 @@ def _build_source_sql(table_name: str, resolved_columns: ResolvedColumns) -> str
     destroyed_area_expr = _optional_numeric_expression(resolved_columns["destroyed_area"], fallback="NULL")
     destroyed_buildings_expr = _optional_numeric_expression(resolved_columns["destroyed_buildings"], fallback="NULL")
     registered_damage_expr = _optional_numeric_expression(resolved_columns["registered_damage"], fallback="NULL")
-    date_expr = _date_expression(DATE_COLUMN)
+    date_expr = select_expression_or_fallback(
+        resolved_columns.get("event_date"),
+        _date_expression,
+        fallback="NULL",
+    )
+
+    where_clauses: list[str] = []
+    normalized_district = str(district or "").strip()
+    if normalized_district and normalized_district.lower() != "all":
+        where_clauses.append(f"LOWER({district_expr}) = :district_lower")
+    if selected_year is not None:
+        where_clauses.append("EXTRACT(YEAR FROM event_date) = :selected_year")
+    where_sql = f" WHERE {' AND '.join(where_clauses)}" if where_clauses else ""
 
     return f"""
+        SELECT * FROM (
         SELECT
             {district_expr} AS district,
             {territory_expr} AS territory_label,
@@ -205,6 +225,7 @@ def _build_source_sql(table_name: str, resolved_columns: ResolvedColumns) -> str
             {registered_damage_expr} AS registered_damage,
             {date_expr} AS event_date
         FROM {quote_identifier(table_name)}
+        ) src{where_sql}
     """
 
 
@@ -265,11 +286,29 @@ def _normalize_record(row: RawPointRow) -> PointRecord | None:
     }
 
 
-def _collect_source_records(table_name: str) -> list[PointRecord]:
+def _collect_source_records(
+    table_name: str,
+    *,
+    district: str = "all",
+    selected_year: int | None = None,
+) -> list[PointRecord]:
     metadata = _load_table_metadata(table_name)
-    query = text(_build_source_sql(metadata["table_name"], metadata["resolved_columns"]))
+    query = text(
+        _build_source_sql(
+            metadata["table_name"],
+            metadata["resolved_columns"],
+            district=district,
+            selected_year=selected_year,
+        )
+    )
+    params: dict[str, Any] = {}
+    normalized_district = str(district or "").strip()
+    if normalized_district and normalized_district.lower() != "all":
+        params["district_lower"] = normalized_district.lower()
+    if selected_year is not None:
+        params["selected_year"] = int(selected_year)
     with engine.connect() as conn:
-        rows = [dict(row._mapping) for row in conn.execute(query)]
+        rows = [dict(row._mapping) for row in conn.execute(query, params)]
 
     normalized = []
     for row in rows:

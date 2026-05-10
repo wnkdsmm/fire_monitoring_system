@@ -56,21 +56,20 @@ class AccessPointsDataLoader(DataLoader):
         del metadata_items
         table_payloads, notes = self.collect_with_notes(
             source_tables,
-            lambda table_name: (table_name, _impl._collect_source_records(table_name)),
+            lambda table_name: (
+                table_name,
+                _impl._collect_source_records(
+                    table_name,
+                    district=district,
+                    selected_year=selected_year,
+                ),
+            ),
         )
         records: list[dict[str, Any]] = []
         for table_name, raw_records in table_payloads:
             for record in raw_records:
                 records.append(_impl._record_to_access_point_input(record, source_table=table_name))
 
-        normalized_district = self.normalize_value(district, default="all").lower()
-        if normalized_district != "all":
-            records = self.filter_records(
-                records,
-                lambda record: _impl._clean_text(record.get("district")).lower() == normalized_district,
-            )
-        if selected_year is not None:
-            records = self.filter_records(records, lambda record: record.get("year") == int(selected_year))
         return records, notes
 
     def build_option_catalog(
