@@ -33,7 +33,6 @@ from .analysis_stats import (
     _fit_clustering_labels,
     _fit_weighted_kmeans,
     _prepare_model_inputs,
-    _restore_raw_centers,
 )
 from .quality_assessment import compute_diagnostics_row_sort_key
 from .types import (
@@ -58,13 +57,13 @@ def _run_clustering(
     precomputed_labels: np.ndarray | None = None,
 ) -> ClusteringRunResult:
     if prepared_model_inputs is None:
-        _, scaled_points, scaler, transformed_columns, sample_weights = _prepare_model_inputs(
+        _, scaled_points, _, _, sample_weights = _prepare_model_inputs(
             cluster_frame,
             entity_frame,
             weighting_strategy=weighting_strategy,
         )
     else:
-        _, scaled_points, scaler, transformed_columns, sample_weights = prepared_model_inputs
+        _, scaled_points, _, _, sample_weights = prepared_model_inputs
     if precomputed_labels is None:
         model = _fit_weighted_kmeans(
             scaled_points,
@@ -243,6 +242,7 @@ def _evaluate_single_kmeans(
     ]
     run_rows: list[dict[str, Any]] = []
     labels_first_seed: np.ndarray | None = None
+    first_seed_row: dict[str, Any] | None = None
     success_count = 0
 
     for seed in seed_values:
@@ -268,38 +268,38 @@ def _evaluate_single_kmeans(
         success_count += 1
         if seed == CLUSTERING_RANDOM_STATE and labels_first_seed is None:
             labels_first_seed = np.asarray(labels, dtype=np.int32).copy()
-        run_rows.append(
-            {
-                "silhouette": float(metrics.get("silhouette") or float("-inf")),
-                "davies_bouldin": float(metrics.get("davies_bouldin") or float("inf")),
-                "calinski_harabasz": float(metrics.get("calinski_harabasz") or float("-inf")),
-                "cluster_balance_ratio": float(metrics.get("cluster_balance_ratio") or 0.0),
-                "smallest_cluster_size": float(metrics.get("smallest_cluster_size") or 0.0),
-                "largest_cluster_size": float(metrics.get("largest_cluster_size") or 0.0),
-                "quality_score": float(quality_score),
-                "shape_penalty": float(shape_diagnostics["shape_penalty"]),
-                "has_microclusters": bool(shape_diagnostics["has_microclusters"]),
-                "has_balance_warning": bool(shape_diagnostics["has_balance_warning"]),
-                "inertia": float(inertia),
-                "labels": np.asarray(labels, dtype=np.int32).copy(),
-            }
-        )
+        run_row = {
+            "silhouette": float(metrics.get("silhouette") or float("-inf")),
+            "davies_bouldin": float(metrics.get("davies_bouldin") or float("inf")),
+            "calinski_harabasz": float(metrics.get("calinski_harabasz") or float("-inf")),
+            "cluster_balance_ratio": float(metrics.get("cluster_balance_ratio") or 0.0),
+            "smallest_cluster_size": float(metrics.get("smallest_cluster_size") or 0.0),
+            "largest_cluster_size": float(metrics.get("largest_cluster_size") or 0.0),
+            "quality_score": float(quality_score),
+            "shape_penalty": float(shape_diagnostics["shape_penalty"]),
+            "has_microclusters": bool(shape_diagnostics["has_microclusters"]),
+            "has_balance_warning": bool(shape_diagnostics["has_balance_warning"]),
+            "inertia": float(inertia),
+        }
+        if seed == CLUSTERING_RANDOM_STATE:
+            first_seed_row = dict(run_row)
+        run_rows.append(run_row)
 
     if success_count < 2 or not run_rows:
         return []
-    if labels_first_seed is None:
-        labels_first_seed = np.asarray(run_rows[0]["labels"], dtype=np.int32).copy()
+    if labels_first_seed is None or first_seed_row is None:
+        return []
 
     silhouette = float(np.mean([item["silhouette"] for item in run_rows]))
     davies_bouldin = float(np.mean([item["davies_bouldin"] for item in run_rows]))
     calinski_harabasz = float(np.mean([item["calinski_harabasz"] for item in run_rows]))
     cluster_balance_ratio = float(np.mean([item["cluster_balance_ratio"] for item in run_rows]))
-    smallest_cluster_size = float(np.mean([item["smallest_cluster_size"] for item in run_rows]))
-    largest_cluster_size = float(np.mean([item["largest_cluster_size"] for item in run_rows]))
+    smallest_cluster_size = float(first_seed_row["smallest_cluster_size"])
+    largest_cluster_size = float(first_seed_row["largest_cluster_size"])
     quality_score = float(np.mean([item["quality_score"] for item in run_rows]))
-    shape_penalty = float(np.mean([item["shape_penalty"] for item in run_rows]))
-    has_microclusters = any(bool(item["has_microclusters"]) for item in run_rows)
-    has_balance_warning = any(bool(item["has_balance_warning"]) for item in run_rows)
+    shape_penalty = float(first_seed_row["shape_penalty"])
+    has_microclusters = bool(first_seed_row["has_microclusters"])
+    has_balance_warning = bool(first_seed_row["has_balance_warning"])
     inertia = float(np.mean([item["inertia"] for item in run_rows]))
 
     return [
