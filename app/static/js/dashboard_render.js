@@ -217,27 +217,6 @@ function renderManagementCards(items) {
         );
     }
 
-    function buildDashboardScreenHref(path, filters, hash) {
-        const params = new URLSearchParams();
-        const safeFilters = filters || {};
-        const selectedTables = Array.isArray(safeFilters.table_names) ? safeFilters.table_names : [];
-        if (selectedTables.length) {
-            selectedTables.forEach(function (tableName) {
-                var normalized = String(tableName || '').trim();
-                if (normalized) {
-                    params.append('table_names', normalized);
-                }
-            });
-            if (selectedTables.length === 1) {
-                params.set('table_name', selectedTables[0]);
-            }
-        } else if (safeFilters.table_name && safeFilters.table_name !== 'all') {
-            params.set('table_name', safeFilters.table_name);
-        }
-        const query = params.toString();
-        return path + (query ? '?' + query : '') + (hash || '');
-    }
-
     function updateDashboardScreenLinks() {}
 
     function buildDashboardPageHref(filters, mode) {

@@ -1,11 +1,10 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from datetime import datetime
 from typing import Any
 
 from app.perf import ensure_sqlalchemy_timing, perf_trace
 from app.plotly_bundle import PLOTLY_AVAILABLE, get_plotly_bundle
-from app.services.executive_brief import compose_executive_brief_text
 from config.constants import PRIORITY_HORIZON_DAYS
 from config.db import engine
 
@@ -49,11 +48,11 @@ def _build_dashboard_error_context(error_message: str, *, plotly_js: str = "") -
     return {
         "generated_at": _format_datetime(datetime.now()),
         "filters": {
-            "tables": [{"value": "all", "label": "Все таблицы"}],
+            "tables": [{"value": "all", "label": "Р’СЃРµ С‚Р°Р±Р»РёС†С‹"}],
             "years": [],
             "group_columns": [],
         },
-        "initial_data": get_dashboard_data(),
+        "initial_data": _empty_dashboard_data(),
         "errors": [error_message],
         "has_data": False,
         "plotly_js": plotly_js,
@@ -72,62 +71,22 @@ def _build_dashboard_aggregation(
     horizon_days: int = PRIORITY_HORIZON_DAYS,
     selected_table_label: str = "",
 ) -> DashboardAggregation:
-    # Compatibility: allow legacy monkeypatches on app.dashboard.service.*
-    # to affect the split implementation transparently.
-    from . import service as _service_module
-
-    summary_builder = getattr(_service_module, "_build_dashboard_summary_series", _build_dashboard_summary_series)
-    grouped_counts_collector = getattr(
-        _service_module,
-        "_collect_dashboard_grouped_counts",
-        _collect_dashboard_grouped_counts,
-    )
-    damage_count_columns_builder = getattr(_service_module, "_damage_count_columns", _damage_count_columns)
-    cause_chart_builder = getattr(_service_module, "_build_cause_chart", _build_cause_chart)
-    dashboard_widgets_builder = getattr(_service_module, "_build_dashboard_widgets", _build_dashboard_widgets)
-    management_snapshot_builder = getattr(_service_module, "_build_management_snapshot", _build_management_snapshot)
-    dashboard_scope_builder = getattr(_service_module, "_build_scope", _build_dashboard_scope)
-    trend_builder = getattr(_service_module, "_build_trend", None)
-    rankings_builder = getattr(_service_module, "_build_rankings", None)
-    highlights_builder = getattr(_service_module, "_build_highlights", None)
-    summary_bundle_collector = getattr(_service_module, "_collect_dashboard_summary_bundle", None)
-    summary_builder_fn = getattr(_service_module, "_build_summary", None)
-    yearly_chart_builder = getattr(_service_module, "_build_yearly_chart", None)
-    table_breakdown_builder = getattr(_service_module, "_build_table_breakdown_chart", None)
-
-    if summary_bundle_collector and summary_builder_fn and yearly_chart_builder and table_breakdown_builder:
-        summary_bundle = summary_bundle_collector(selected_tables, selected_year)
-        summary_rows = summary_bundle["summary_rows"]
-        summary = summary_builder_fn(selected_tables, selected_year, summary_rows=summary_rows)
-        yearly_fires_series = yearly_chart_builder(
-            selected_tables,
-            metric="count",
-            yearly_grouped=summary_bundle["yearly_grouped"],
-            include_plotly=False,
-        )
-        table_breakdown_series = table_breakdown_builder(
-            selected_tables,
-            selected_year,
-            summary_rows=summary_rows,
-            include_plotly=False,
-        )
-    else:
-        summary_series = summary_builder(selected_tables, selected_year)
-        summary = summary_series["summary"]
-        yearly_fires_series = summary_series["yearly_fires_series"]
-        table_breakdown_series = summary_series["table_breakdown_series"]
+    summary_series = _build_dashboard_summary_series(selected_tables, selected_year)
+    summary = summary_series["summary"]
+    yearly_fires_series = summary_series["yearly_fires_series"]
+    table_breakdown_series = summary_series["table_breakdown_series"]
     is_damage_group = _is_damage_group_selection(selected_group_column)
     if is_damage_group:
-        grouped_counts_bundle = grouped_counts_collector(
+        grouped_counts_bundle = _collect_dashboard_grouped_counts(
             selected_tables,
             selected_year,
             selected_group_column,
             include_area_buckets=False,
             include_impact_timeline=False,
-            positive_count_columns=damage_count_columns_builder(),
+            positive_count_columns=_damage_count_columns(),
         )
     else:
-        grouped_counts_bundle = grouped_counts_collector(
+        grouped_counts_bundle = _collect_dashboard_grouped_counts(
             selected_tables,
             selected_year,
             selected_group_column,
@@ -135,7 +94,7 @@ def _build_dashboard_aggregation(
             include_impact_timeline=True,
         )
     cause_counts = grouped_counts_bundle["cause_counts"]
-    cause_overview = cause_chart_builder(selected_tables, selected_year, cause_counts=cause_counts)
+    cause_overview = _build_cause_chart(selected_tables, selected_year, cause_counts=cause_counts)
     dashboard_charts = (
         _build_damage_dashboard_charts(
             selected_tables,
@@ -156,23 +115,18 @@ def _build_dashboard_aggregation(
     monthly_heatmap = dashboard_charts["monthly_heatmap"]
     area_buckets = dashboard_charts["area_buckets"]
     cumulative_area = dashboard_charts["cumulative_area"]
-    if trend_builder and rankings_builder and highlights_builder:
-        trend = trend_builder(yearly_fires_series)
-        rankings = rankings_builder(distribution, table_breakdown_series, yearly_fires_series)
-        highlights = highlights_builder(summary, yearly_fires_series, cause_overview)
-    else:
-        summary_metrics = _build_dashboard_summary_metrics(
-            summary=summary,
-            yearly_fires_series=yearly_fires_series,
-            table_breakdown_series=table_breakdown_series,
-            distribution=distribution,
-            cause_overview=cause_overview,
-        )
-        trend = summary_metrics["trend"]
-        rankings = summary_metrics["rankings"]
-        highlights = summary_metrics["highlights"]
-    widgets = dashboard_widgets_builder(selected_tables, selected_year, grouped_counts_bundle)
-    management = management_snapshot_builder(
+    summary_metrics = _build_dashboard_summary_metrics(
+        summary=summary,
+        yearly_fires_series=yearly_fires_series,
+        table_breakdown_series=table_breakdown_series,
+        distribution=distribution,
+        cause_overview=cause_overview,
+    )
+    trend = summary_metrics["trend"]
+    rankings = summary_metrics["rankings"]
+    highlights = summary_metrics["highlights"]
+    widgets = _build_dashboard_widgets(selected_tables, selected_year, grouped_counts_bundle)
+    management = _build_management_snapshot(
         selected_tables=selected_tables,
         selected_year=selected_year,
         summary=summary,
@@ -181,28 +135,16 @@ def _build_dashboard_aggregation(
         district_widget=widgets["districts"],
         planning_horizon_days=horizon_days,
     )
-    try:
-        scope = dashboard_scope_builder(
-            summary=summary,
-            metadata=metadata,
-            selected_table_name=selected_table_name,
-            selected_group_column=selected_group_column,
-            available_group_columns=available_group_columns,
-            available_years=available_years,
-        )
-        if selected_table_label:
-            scope["table_label"] = selected_table_label
-    except TypeError:
-        scope = _build_dashboard_scope(
-            summary=summary,
-            metadata=metadata,
-            selected_table_name=selected_table_name,
-            selected_group_column=selected_group_column,
-            available_group_columns=available_group_columns,
-            available_years=available_years,
-        )
-        if selected_table_label:
-            scope["table_label"] = selected_table_label
+    scope = _build_dashboard_scope(
+        summary=summary,
+        metadata=metadata,
+        selected_table_name=selected_table_name,
+        selected_group_column=selected_group_column,
+        available_group_columns=available_group_columns,
+        available_years=available_years,
+    )
+    if selected_table_label:
+        scope["table_label"] = selected_table_label
 
     return {
         "summary": summary,
@@ -246,23 +188,13 @@ def _build_dashboard_payload(
     monthly_profile = aggregation["monthly_profile"]
     monthly_heatmap = aggregation["monthly_heatmap"]
     area_buckets = aggregation["area_buckets"]
-    cumulative_area = aggregation["cumulative_area"]
-    scope_label = f"Таблица: {scope['table_label']} | Год: {scope['year_label']} | Разрез: {scope['group_label']}"
-
-    export_text = compose_executive_brief_text(
-        management.get("brief"),
-        scope_label=scope_label,
-        generated_at=_format_datetime(datetime.now()),
-    )
-    management["export_text"] = export_text
-    if isinstance(management.get("brief"), dict):
-        management["brief"]["export_text"] = export_text
+    cumulative_area = aggregation["cumulative_area"]`r`n    management["export_text"] = ""`r`n    if isinstance(management.get("brief"), dict):`r`n        management["brief"]["export_text"] = ""
 
     notes = list(metadata["errors"][:5])
     if not PLOTLY_AVAILABLE:
-        notes.append("Библиотека Plotly не найдена в окружении. Интерактивные графики не будут показаны.")
+        notes.append("Р‘РёР±Р»РёРѕС‚РµРєР° Plotly РЅРµ РЅР°Р№РґРµРЅР° РІ РѕРєСЂСѓР¶РµРЅРёРё. РРЅС‚РµСЂР°РєС‚РёРІРЅС‹Рµ РіСЂР°С„РёРєРё РЅРµ Р±СѓРґСѓС‚ РїРѕРєР°Р·Р°РЅС‹.")
     data_overlap_disclaimer = (
-        "Показатели суммированы по выбранным таблицам без проверки пересечений."
+        "РџРѕРєР°Р·Р°С‚РµР»Рё СЃСѓРјРјРёСЂРѕРІР°РЅС‹ РїРѕ РІС‹Р±СЂР°РЅРЅС‹Рј С‚Р°Р±Р»РёС†Р°Рј Р±РµР· РїСЂРѕРІРµСЂРєРё РїРµСЂРµСЃРµС‡РµРЅРёР№."
         if int(summary.get("tables_used") or 0) > 1
         else None
     )
@@ -327,8 +259,8 @@ def _empty_dashboard_data(
             "area_fill_rate_display": "0%",
             "years_covered": 0,
             "years_covered_display": "0",
-            "period_label": "Нет данных",
-            "year_label": "Все годы",
+            "period_label": "РќРµС‚ РґР°РЅРЅС‹С…",
+            "year_label": "Р’СЃРµ РіРѕРґС‹",
             "deaths": 0,
             "deaths_display": "0",
             "injuries": 0,
@@ -349,25 +281,25 @@ def _empty_dashboard_data(
             "children_total_display": "0",
         },
         "scope": {
-            "table_label": "Все таблицы",
-            "year_label": "Все годы",
-            "group_label": "Нет данных",
+            "table_label": "Р’СЃРµ С‚Р°Р±Р»РёС†С‹",
+            "year_label": "Р’СЃРµ РіРѕРґС‹",
+            "group_label": "РќРµС‚ РґР°РЅРЅС‹С…",
             "table_count": 0,
             "table_count_display": "0",
             "database_tables_count": 0,
             "database_tables_count_display": "0",
             "available_years_count": 0,
             "available_years_count_display": "0",
-            "period_label": "Нет данных",
+            "period_label": "РќРµС‚ РґР°РЅРЅС‹С…",
         },
         "trend": {
-            "title": "Динамика последнего года",
+            "title": "Р”РёРЅР°РјРёРєР° РїРѕСЃР»РµРґРЅРµРіРѕ РіРѕРґР°",
             "current_year": "-",
             "current_value_display": "0",
             "previous_year": "",
-            "delta_display": "Нет базы сравнения",
+            "delta_display": "РќРµС‚ Р±Р°Р·С‹ СЃСЂР°РІРЅРµРЅРёСЏ",
             "direction": "flat",
-            "description": "Недостаточно данных для сравнения по годам.",
+            "description": "РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РґР°РЅРЅС‹С… РґР»СЏ СЃСЂР°РІРЅРµРЅРёСЏ РїРѕ РіРѕРґР°Рј.",
         },
         "management": _empty_management_snapshot(priority_horizon_days=horizon_days),
         "highlights": [],
@@ -377,20 +309,20 @@ def _empty_dashboard_data(
             "recent_years": [],
         },
         "widgets": {
-            "causes": _finalize_chart("SQL-виджет: причины", [], "Нет данных по причинам возгорания."),
-            "districts": _finalize_chart("SQL-виджет: районы", [], "В выбранных таблицах не найдено колонок района."),
-            "seasons": _finalize_chart("SQL-виджет: сезоны", [], "Нет данных для сезонного SQL-виджета."),
+            "causes": _finalize_chart("SQL-РІРёРґР¶РµС‚: РїСЂРёС‡РёРЅС‹", [], "РќРµС‚ РґР°РЅРЅС‹С… РїРѕ РїСЂРёС‡РёРЅР°Рј РІРѕР·РіРѕСЂР°РЅРёСЏ."),
+            "districts": _finalize_chart("SQL-РІРёРґР¶РµС‚: СЂР°Р№РѕРЅС‹", [], "Р’ РІС‹Р±СЂР°РЅРЅС‹С… С‚Р°Р±Р»РёС†Р°С… РЅРµ РЅР°Р№РґРµРЅРѕ РєРѕР»РѕРЅРѕРє СЂР°Р№РѕРЅР°."),
+            "seasons": _finalize_chart("SQL-РІРёРґР¶РµС‚: СЃРµР·РѕРЅС‹", [], "РќРµС‚ РґР°РЅРЅС‹С… РґР»СЏ СЃРµР·РѕРЅРЅРѕРіРѕ SQL-РІРёРґР¶РµС‚Р°."),
         },
         "charts": {
-            "yearly_fires": _finalize_chart("Причины возгораний", [], "Нет данных по причинам возгорания."),
-            "yearly_area": _finalize_chart("Последствия, эвакуация и дети", [], "Нет данных по погибшим, травмам и эвакуации."),
-            "distribution": _finalize_chart("Распределение по колонке", [], "Нет данных для графика."),
+            "yearly_fires": _finalize_chart("РџСЂРёС‡РёРЅС‹ РІРѕР·РіРѕСЂР°РЅРёР№", [], "РќРµС‚ РґР°РЅРЅС‹С… РїРѕ РїСЂРёС‡РёРЅР°Рј РІРѕР·РіРѕСЂР°РЅРёСЏ."),
+            "yearly_area": _finalize_chart("РџРѕСЃР»РµРґСЃС‚РІРёСЏ, СЌРІР°РєСѓР°С†РёСЏ Рё РґРµС‚Рё", [], "РќРµС‚ РґР°РЅРЅС‹С… РїРѕ РїРѕРіРёР±С€РёРј, С‚СЂР°РІРјР°Рј Рё СЌРІР°РєСѓР°С†РёРё."),
+            "distribution": _finalize_chart("Р Р°СЃРїСЂРµРґРµР»РµРЅРёРµ РїРѕ РєРѕР»РѕРЅРєРµ", [], "РќРµС‚ РґР°РЅРЅС‹С… РґР»СЏ РіСЂР°С„РёРєР°."),
 
-            "monthly_heatmap": _finalize_chart("Сезонность по месяцам и годам", [], "Недостаточно данных для тепловой карты сезонности."),
-            "monthly_profile": _finalize_chart("Сезонность по месяцам", [], "Нет данных для сезонного профиля."),
-            "area_buckets": _finalize_chart("Структура по площади пожара", [], "Нет данных по площади пожара."),
+            "monthly_heatmap": _finalize_chart("РЎРµР·РѕРЅРЅРѕСЃС‚СЊ РїРѕ РјРµСЃСЏС†Р°Рј Рё РіРѕРґР°Рј", [], "РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РґР°РЅРЅС‹С… РґР»СЏ С‚РµРїР»РѕРІРѕР№ РєР°СЂС‚С‹ СЃРµР·РѕРЅРЅРѕСЃС‚Рё."),
+            "monthly_profile": _finalize_chart("РЎРµР·РѕРЅРЅРѕСЃС‚СЊ РїРѕ РјРµСЃСЏС†Р°Рј", [], "РќРµС‚ РґР°РЅРЅС‹С… РґР»СЏ СЃРµР·РѕРЅРЅРѕРіРѕ РїСЂРѕС„РёР»СЏ."),
+            "area_buckets": _finalize_chart("РЎС‚СЂСѓРєС‚СѓСЂР° РїРѕ РїР»РѕС‰Р°РґРё РїРѕР¶Р°СЂР°", [], "РќРµС‚ РґР°РЅРЅС‹С… РїРѕ РїР»РѕС‰Р°РґРё РїРѕР¶Р°СЂР°."),
 
-            "cumulative_area": _finalize_chart("Накопленная площадь по дням года", [], "Недостаточно данных для накопленного графика площади."),
+            "cumulative_area": _finalize_chart("РќР°РєРѕРїР»РµРЅРЅР°СЏ РїР»РѕС‰Р°РґСЊ РїРѕ РґРЅСЏРј РіРѕРґР°", [], "РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РґР°РЅРЅС‹С… РґР»СЏ РЅР°РєРѕРїР»РµРЅРЅРѕРіРѕ РіСЂР°С„РёРєР° РїР»РѕС‰Р°РґРё."),
         },
         "filters": {
             "table_name": "all",
@@ -398,7 +330,7 @@ def _empty_dashboard_data(
             "year": "",
             "group_column": "",
             "horizon_days": str(horizon_days),
-            "available_tables": [{"value": "all", "label": "Все таблицы"}],
+            "available_tables": [{"value": "all", "label": "Р’СЃРµ С‚Р°Р±Р»РёС†С‹"}],
             "available_years": [],
             "available_group_columns": [],
             "available_horizon_days": build_horizon_day_options(),

@@ -18,7 +18,6 @@ from .charts import (
 )
 from .data_access import (
     _area_expression,
-    _fetch_table_years,
     _build_year_filter_clause,
     _metric_expression,
     _month_expression,
@@ -79,7 +78,7 @@ def _build_cause_chart(
     *,
     cause_counts: dict[str, int | None] = None,
 ) -> DistributionResult:
-    grouped = cause_counts if cause_counts is not None else _collect_cause_counts(selected_tables, selected_year)
+    grouped = cause_counts or {}
     items = [
         {"label": label, "value": value, "value_display": _format_number(value, integer=True)}
         for label, value in sorted(grouped.items(), key=lambda item: item[1], reverse=True)[:12]
@@ -500,6 +499,7 @@ def _build_monthly_profile_chart(
 
 
 def _build_area_buckets_chart(selected_tables: list[DashboardTableRef], selected_year: int | None) -> DistributionResult:
+    # DEPRECATED: prefer _build_area_buckets_chart_from_counts using pre-aggregated grouped counts.
     grouped: dict[str, int] = defaultdict(int)
     bucket_order = ["До 1 га", "1-5 га", "5-20 га", "20-100 га", "100+ га", "Не указано"]
 
@@ -559,15 +559,12 @@ def _resolve_cumulative_area_year(
         return selected_year
 
     candidate_years: set[int] = set()
-    with engine.connect() as conn:
-        for table in selected_tables:
-            if DATE_COLUMN in table["column_set"]:
-                table_years = table.get("years") or _fetch_table_years(conn, table["name"], table["column_set"])
-                for year_value in table_years:
-                    if year_value is not None:
-                        candidate_years.add(int(year_value))
-            elif table.get("table_year") is not None:
-                candidate_years.add(int(table["table_year"]))
+    for table in selected_tables:
+        for year_value in (table.get("years") or []):
+            if year_value is not None:
+                candidate_years.add(int(year_value))
+        if not candidate_years and table.get("table_year") is not None:
+            candidate_years.add(int(table["table_year"]))
 
     return max(candidate_years) if candidate_years else None
 

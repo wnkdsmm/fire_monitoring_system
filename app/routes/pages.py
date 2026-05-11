@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib
 import logging
+from datetime import datetime
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query, Request
@@ -9,6 +10,7 @@ from fastapi.responses import HTMLResponse, Response
 
 from app.db_views import DEFAULT_TABLE_PAGE_SIZE, TABLE_PAGE_SIZE_OPTIONS
 from app.domain.column_matching import get_mandatory_feature_catalog
+from app.services.executive_brief import compose_executive_brief_text
 from app.table_catalog import (
     get_user_table_options,
     resolve_selected_table_value,
@@ -118,7 +120,22 @@ def dashboard_brief_download(
         group_column=group_column,
         horizon_days=horizon_days,
     )["initial_data"]
-    return _download_brief_response(data, "dashboard-brief.txt", "management", "export_text")
+    management = data.get("management", {})
+    scope = data.get("scope", {})
+    scope_label = (
+        f"Таблица: {scope.get('table_label', '?')} | "
+        f"Год: {scope.get('year_label', '?')} | "
+        f"Разрез: {scope.get('group_label', '?')}"
+    )
+    export_text = compose_executive_brief_text(
+        management.get("brief"),
+        scope_label=scope_label,
+        generated_at=datetime.now().strftime("%d.%m.%Y %H:%M"),
+    )
+    return download_text_response(
+        export_text or "Управленческий бриф пока недоступен.",
+        "dashboard-brief.txt",
+    )
 
 
 @router.get("/", response_class=HTMLResponse)

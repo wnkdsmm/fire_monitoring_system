@@ -361,34 +361,6 @@ def get_dashboard_data(
     metadata: DashboardMetadata | None = None,
     allow_fallback: bool = True,
 ) -> DashboardPayload:
-    from . import service as _service_module
-
-    collect_dashboard_metadata = getattr(
-        _service_module,
-        "_collect_dashboard_metadata_cached",
-        _collect_dashboard_metadata_cached,
-    )
-    build_dashboard_cache_key = getattr(_service_module, "_build_dashboard_cache_key", _build_dashboard_cache_key)
-    build_dashboard_request_state = getattr(
-        _service_module,
-        "_build_dashboard_request_state",
-        _build_dashboard_request_state,
-    )
-    get_dashboard_cache = getattr(_service_module, "_get_dashboard_cache", _get_dashboard_cache)
-    update_dashboard_filter_metrics = getattr(
-        _service_module,
-        "_update_dashboard_filter_metrics",
-        _update_dashboard_filter_metrics,
-    )
-    build_dashboard_aggregation = getattr(
-        _service_module,
-        "_build_dashboard_aggregation",
-        _build_dashboard_aggregation,
-    )
-    build_dashboard_payload = getattr(_service_module, "_build_dashboard_payload", _build_dashboard_payload)
-    set_dashboard_cache = getattr(_service_module, "_set_dashboard_cache", _set_dashboard_cache)
-    empty_dashboard_data = getattr(_service_module, "_empty_dashboard_data", _empty_dashboard_data)
-
     ensure_sqlalchemy_timing(engine)
     with perf_trace(
         "dashboard",
@@ -402,9 +374,9 @@ def get_dashboard_data(
         try:
             with perf.span("filter_prep"):
                 normalized_horizon_days = _normalize_horizon_days(horizon_days)
-                metadata = metadata or collect_dashboard_metadata()
+                metadata = metadata or _collect_dashboard_metadata_cached()
                 normalized_group_column = group_column or metadata["default_group_column"]
-                cache_key = build_dashboard_cache_key(
+                cache_key = _build_dashboard_cache_key(
                     metadata,
                     table_name,
                     table_names,
@@ -412,7 +384,7 @@ def get_dashboard_data(
                     normalized_group_column,
                     normalized_horizon_days,
                 )
-                cached = get_dashboard_cache(cache_key)
+                cached = _get_dashboard_cache(cache_key)
                 if cached is not None:
                     perf.update(
                         cache_hit=True,
@@ -422,7 +394,7 @@ def get_dashboard_data(
                     )
                     return cached
 
-                request_state = build_dashboard_request_state(
+                request_state = _build_dashboard_request_state(
                     metadata,
                     table_name=table_name,
                     table_names=table_names,
@@ -432,9 +404,9 @@ def get_dashboard_data(
                 )
                 request_state["cache_key"] = cache_key
                 resolved_cache_key = request_state["resolved_cache_key"]
-                cached = get_dashboard_cache(resolved_cache_key)
+                cached = _get_dashboard_cache(resolved_cache_key)
                 if cached is not None:
-                    update_dashboard_filter_metrics(
+                    _update_dashboard_filter_metrics(
                         perf,
                         metadata=metadata,
                         request_state=request_state,
@@ -442,7 +414,7 @@ def get_dashboard_data(
                         cache_hit=True,
                     )
                     return cached
-                update_dashboard_filter_metrics(
+                _update_dashboard_filter_metrics(
                     perf,
                     metadata=metadata,
                     request_state=request_state,
@@ -451,7 +423,7 @@ def get_dashboard_data(
                 )
 
             with perf.span("aggregation"):
-                aggregation = build_dashboard_aggregation(
+                aggregation = _build_dashboard_aggregation(
                     metadata=metadata,
                     selected_tables=request_state["selected_tables"],
                     selected_year=request_state["selected_year"],
@@ -466,7 +438,7 @@ def get_dashboard_data(
                 perf.update(input_rows=summary.get("fires_count"))
 
             with perf.span("payload_render"):
-                data = build_dashboard_payload(
+                data = _build_dashboard_payload(
                     metadata=metadata,
                     aggregation=aggregation,
                     selected_tables=request_state["selected_tables"],
@@ -483,13 +455,13 @@ def get_dashboard_data(
                     payload_notes=len(data.get("notes") or []),
                 )
 
-            set_dashboard_cache(request_state["resolved_cache_key"], data)
+            _set_dashboard_cache(request_state["resolved_cache_key"], data)
             return data
         except Exception as exc:
             if not allow_fallback:
                 raise
             perf.fail(exc, status="fallback")
-            return empty_dashboard_data(str(exc), horizon_days=_normalize_horizon_days(horizon_days))
+            return _empty_dashboard_data(str(exc), horizon_days=_normalize_horizon_days(horizon_days))
 
 __all__ = [
     '_build_dashboard_cache_key',
