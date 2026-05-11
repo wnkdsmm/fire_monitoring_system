@@ -20,6 +20,11 @@ from __future__ import annotations
 # - POST /import_data -> app.services.pipeline_service.import_uploaded_data -> app.routes.api_common, app.state
 # - POST /run_profiling -> app.services.pipeline_service.run_profiling_for_table -> app.routes.api_common, app.state
 # - GET /logs -> app.routes.api_ops.build_logs_payload -> app.routes.api_common, app.state
+# - POST /statistics19922020/decode -> app.statistics19922020.service.decode_uploaded_stat_file -> app.routes.api_common, app.state
+# - POST /statistics19922020/decode-and-import -> app.statistics19922020.service.decode_and_import_uploaded_stat_file -> app.routes.api_common, app.state
+# - POST /statistics19922020/decode_import (alias) -> app.statistics19922020.service.decode_and_import_uploaded_stat_file -> app.routes.api_common, app.state
+# - POST /statistics19922020/run_rename_headers -> app.statistics19922020.service.run_rename_headers_script -> app.routes.api_common, app.state
+# - POST /statistics19922020/run_split_xlsx_by_year -> app.statistics19922020.service.run_split_xlsx_by_year_script -> app.routes.api_common, app.state
 #
 # Page endpoints (defined in app.routes.pages)
 # - /, /ml-model, /backtesting, /clustering, /access-points, /column-search,

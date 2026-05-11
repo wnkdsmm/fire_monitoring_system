@@ -11,7 +11,13 @@ from typing import Any
 
 from app.services.pipeline_service import add_log, import_uploaded_data
 from app.state import JobState, job_store
-from scripts.decode_stat_table import (
+from app.statistics19922020.config import (
+    SETTINGS,
+    resolve_fallback_input_xlsx,
+    resolve_reference_dir,
+    resolve_script_path,
+)
+from app.statistics19922020.decode_engine import (
     build_dictionaries,
     decode_dataframe,
     default_output_path,
@@ -19,11 +25,6 @@ from scripts.decode_stat_table import (
     load_field_info,
     read_excel_robust,
 )
-
-STAT_REFERENCE_DIR = Path(r"F:\filesFires\edittables\Statistica")
-RENAME_HEADERS_SCRIPT_PATH = Path(r"F:\filesFires\edittables\rename_headers_2019_2023.py")
-SPLIT_XLSX_SCRIPT_PATH = Path(r"F:\filesFires\edittables\split_xlsx_by_year.py")
-FALLBACK_INPUT_XLSX = Path(r"F:\filesFires\edittables\2019-2023.xlsx")
 
 
 def _decode_error_payload(message: str, job_id: str | None = None) -> dict[str, Any]:
@@ -46,11 +47,7 @@ def _resolve_import_job(session_id: str, job_id: str | None) -> JobState | None:
 
 
 def _resolve_reference_dir(base_dir: str | None) -> Path:
-    raw_path = Path(base_dir).expanduser() if (base_dir or "").strip() else STAT_REFERENCE_DIR
-    resolved = raw_path.resolve()
-    if not resolved.exists() or not resolved.is_dir():
-        raise FileNotFoundError(f"Папка справочников не найдена: {resolved}")
-    return resolved
+    return resolve_reference_dir(base_dir)
 
 
 def decode_uploaded_stat_file(
@@ -197,19 +194,18 @@ def run_rename_headers_script(
     session_id: str,
     job_id: str | None,
 ) -> dict[str, Any]:
-    if not RENAME_HEADERS_SCRIPT_PATH.exists():
-        return _decode_error_payload(f"Скрипт не найден: {RENAME_HEADERS_SCRIPT_PATH}", job_id)
-
     job = _resolve_or_create_import_job(session_id=session_id, job_id=job_id)
     resolved_job_id = job.job_id
-    input_path = _resolve_script_input_file(job, FALLBACK_INPUT_XLSX)
 
     job_store.mark_job_status(session_id, resolved_job_id, "running")
     final_status = "failed"
 
     try:
+        script_path = resolve_script_path(SETTINGS.rename_headers_script_path, "rename_headers_2019_2023.py")
+        input_path = _resolve_script_input_file(job, resolve_fallback_input_xlsx())
+
         add_log(session_id, resolved_job_id, f"[statistics19922020] Запуск rename_headers для файла: {input_path}")
-        module = _load_module_from_path(RENAME_HEADERS_SCRIPT_PATH, "rename_headers_2019_2023")
+        module = _load_module_from_path(script_path, "rename_headers_2019_2023")
         if hasattr(module, "FILE_PATH"):
             module.FILE_PATH = input_path
         buffer = io.StringIO()
@@ -223,7 +219,7 @@ def run_rename_headers_script(
         return {
             "status": "ok",
             "job_id": resolved_job_id,
-            "script": str(RENAME_HEADERS_SCRIPT_PATH),
+            "script": str(script_path),
             "input_file": str(input_path),
         }
     except Exception as exc:
@@ -240,29 +236,28 @@ def run_split_xlsx_by_year_script(
     job_id: str | None,
     output_dir: str | None = None,
 ) -> dict[str, Any]:
-    if not SPLIT_XLSX_SCRIPT_PATH.exists():
-        return _decode_error_payload(f"Скрипт не найден: {SPLIT_XLSX_SCRIPT_PATH}", job_id)
-
     job = _resolve_or_create_import_job(session_id=session_id, job_id=job_id)
     resolved_job_id = job.job_id
-    input_path = _resolve_script_input_file(job, FALLBACK_INPUT_XLSX)
-    target_output_dir = (
-        Path(output_dir).expanduser().resolve()
-        if (output_dir or "").strip()
-        else (input_path.parent / "by_year").resolve()
-    )
-    target_output_dir.mkdir(parents=True, exist_ok=True)
 
     job_store.mark_job_status(session_id, resolved_job_id, "running")
     final_status = "failed"
 
     try:
+        script_path = resolve_script_path(SETTINGS.split_xlsx_script_path, "split_xlsx_by_year.py")
+        input_path = _resolve_script_input_file(job, resolve_fallback_input_xlsx())
+        target_output_dir = (
+            Path(output_dir).expanduser().resolve()
+            if (output_dir or "").strip()
+            else (input_path.parent / "by_year").resolve()
+        )
+        target_output_dir.mkdir(parents=True, exist_ok=True)
+
         add_log(session_id, resolved_job_id, f"[statistics19922020] Запуск split_xlsx_by_year для файла: {input_path}")
         add_log(session_id, resolved_job_id, f"[statistics19922020] Папка вывода: {target_output_dir}")
 
         command = [
             sys.executable,
-            str(SPLIT_XLSX_SCRIPT_PATH),
+            str(script_path),
             "--input",
             str(input_path),
             "--output-dir",
@@ -288,7 +283,7 @@ def run_split_xlsx_by_year_script(
         return {
             "status": "ok",
             "job_id": resolved_job_id,
-            "script": str(SPLIT_XLSX_SCRIPT_PATH),
+            "script": str(script_path),
             "input_file": str(input_path),
             "output_dir": str(target_output_dir),
             "exported_files": [str(path) for path in exported],

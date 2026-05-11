@@ -17,6 +17,43 @@ page_router = APIRouter()
 api_router = APIRouter()
 
 
+def _normalize_decode_response(payload: dict, *, include_import: bool) -> dict:
+    decoded_payload = payload if payload.get("decode") is None else payload.get("decode") or {}
+    import_payload = payload.get("import")
+
+    decode_status = str(decoded_payload.get("status") or "")
+    root_status = str(payload.get("status") or "")
+    is_error = root_status == "error" or decode_status == "error"
+
+    files = {
+        "input_file": str(decoded_payload.get("input_file") or ""),
+        "decoded_file": str(decoded_payload.get("decoded_file") or ""),
+        "report_file": str(decoded_payload.get("report_file") or ""),
+    }
+    if import_payload and isinstance(import_payload, dict):
+        files["import_output_folder"] = str(import_payload.get("output_folder") or "")
+
+    message = str(payload.get("message") or "")
+    if not message:
+        if is_error:
+            message = str(decoded_payload.get("message") or "Ошибка обработки.")
+        elif include_import:
+            message = "Расшифровка и импорт завершены."
+        else:
+            message = "Расшифровка завершена."
+
+    response = {
+        "status": "error" if is_error else ("decoded_imported" if include_import else "decoded"),
+        "job_id": str(payload.get("job_id") or decoded_payload.get("job_id") or ""),
+        "message": message,
+        "decode": decoded_payload if decoded_payload else payload,
+        "files": files,
+    }
+    if include_import:
+        response["import"] = import_payload if isinstance(import_payload, dict) else None
+    return response
+
+
 @page_router.get("/statistics-1992-2020", response_class=HTMLResponse)
 def statistics19922020_page(request: Request):
     return render_template_page(
@@ -37,16 +74,31 @@ def statistics19922020_decode_endpoint(
 ):
     return run_session_json_action(
         request,
-        lambda session_id: decode_uploaded_stat_file(
-            session_id=session_id,
-            job_id=job_id,
-            base_dir=base_dir,
+        lambda session_id: _normalize_decode_response(
+            decode_uploaded_stat_file(
+                session_id=session_id,
+                job_id=job_id,
+                base_dir=base_dir,
+            ),
+            include_import=False,
         ),
     )
 
 
-@api_router.post("/statistics19922020/decode_import")
-def statistics19922020_decode_import_endpoint(
+def _decode_and_import_action(session_id: str, job_id: str | None, base_dir: str | None, output_folder: str | None) -> dict:
+    return _normalize_decode_response(
+        decode_and_import_uploaded_stat_file(
+            session_id=session_id,
+            job_id=job_id,
+            base_dir=base_dir,
+            output_folder=output_folder,
+        ),
+        include_import=True,
+    )
+
+
+@api_router.post("/statistics19922020/decode-and-import")
+def statistics19922020_decode_and_import_endpoint(
     request: Request,
     job_id: str | None = Form(None),
     base_dir: str | None = Form(None),
@@ -54,12 +106,20 @@ def statistics19922020_decode_import_endpoint(
 ):
     return run_session_json_action(
         request,
-        lambda session_id: decode_and_import_uploaded_stat_file(
-            session_id=session_id,
-            job_id=job_id,
-            base_dir=base_dir,
-            output_folder=output_folder,
-        ),
+        lambda session_id: _decode_and_import_action(session_id, job_id, base_dir, output_folder),
+    )
+
+
+@api_router.post("/statistics19922020/decode_import")
+def statistics19922020_decode_import_alias_endpoint(
+    request: Request,
+    job_id: str | None = Form(None),
+    base_dir: str | None = Form(None),
+    output_folder: str | None = Form(None),
+):
+    return run_session_json_action(
+        request,
+        lambda session_id: _decode_and_import_action(session_id, job_id, base_dir, output_folder),
     )
 
 
