@@ -111,7 +111,7 @@ End If
 
 startCommand = _
     "cmd /c cd /d " & Quote(projectRoot) & _
-    " && " & Quote(venvPython) & " -m uvicorn app.main:app --host " & appHost & " --port " & resolvedPort & " --reload --env-file .env"
+    " && " & Quote(venvPython) & " -m uvicorn app.main:app --host " & appHost & " --port " & resolvedPort & " --env-file .env"
 
 LogMessage "Starting server command."
 shell.Run startCommand & " >> " & Quote(logFilePath) & " 2>>&1", 0, False

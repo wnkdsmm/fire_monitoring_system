@@ -172,6 +172,7 @@ def get_ml_model_data(
     cause: str = 'all',
     object_category: str = 'all',
     current_user_date: str = '',
+    _prebuilt_cache_key: tuple[Any, ...] | None = None,
     progress_callback: MlProgressCallback | None = None,
     caches: MLModelCaches | None = None,
 ) -> MlPayload:
@@ -193,7 +194,7 @@ def get_ml_model_data(
     days_ahead = request_state['days_ahead']
     selected_history_window = request_state['selected_history_window']
     scenario_temperature = request_state['scenario_temperature']
-    cache_key = request_state['cache_key']
+    cache_key = _prebuilt_cache_key if _prebuilt_cache_key is not None else request_state['cache_key']
     if perf is not None:
         perf.update(
             requested_table=table_name,
