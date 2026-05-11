@@ -1,4 +1,4 @@
-.ml-layout {
+﻿.ml-layout {
     display: grid;
     grid-template-columns: minmax(0, 1.55fr) minmax(320px, 0.9fr);
     gap: 20px;
@@ -155,43 +155,6 @@
     min-height: 148px;
 }
 
-.ml-risk-pill {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 120px;
-    padding: var(--space-token-24);
-    border-radius: var(--radius-pill);
-    font-size: var(--font-size-token-07);
-    font-weight: 700;
-    letter-spacing: 0.01em;
-}
-
-.ml-risk-critical {
-    background: rgba(var(--color-red-rgb), 0.14);
-    color: var(--color-risk-critical-text);
-}
-
-.ml-risk-high {
-    background: rgba(249, 115, 22, 0.16);
-    color: var(--color-risk-high-text);
-}
-
-.ml-risk-medium {
-    background: rgba(245, 158, 11, 0.14);
-    color: var(--color-risk-medium-text);
-}
-
-.ml-risk-low {
-    background: var(--surface-accent-tint);
-    color: var(--accent-deep);
-}
-
-.ml-risk-minimal {
-    background: var(--color-token-21);
-    color: var(--teal-deep);
-}
-
 .ml-async-state {
     display: grid;
     gap: 12px;
@@ -200,46 +163,6 @@
 
 .ml-async-state.is-hidden {
     display: none;
-}
-
-.ml-job-runtime {
-    gap: 10px;
-}
-
-.ml-job-runtime.is-hidden {
-    display: none;
-}
-
-.ml-job-runtime-head {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    gap: 8px;
-}
-
-.ml-job-runtime-head strong {
-    color: var(--ink-strong);
-    font-size: var(--font-size-token-08);
-}
-
-.ml-job-runtime-head span,
-.ml-job-backtest-meta {
-    color: var(--color-token-06);
-    font-size: var(--font-size-token-07);
-}
-
-.ml-job-log-output {
-    margin: 0;
-    max-height: 220px;
-    overflow-y: auto;
-    padding: var(--space-token-12);
-    border-radius: var(--radius-control);
-    background: var(--ink-strong);
-    color: var(--color-token-11);
-    font-size: var(--font-size-token-07);
-    line-height: 1.5;
-    white-space: pre-wrap;
-    word-break: break-word;
 }
 
 .ml-skeleton-card,
@@ -254,14 +177,6 @@
 .ml-skeleton-card,
 .ml-skeleton-feature {
     pointer-events: none;
-}
-
-.ml-skeleton-card::after,
-.ml-chart-placeholder::after,
-.ml-skeleton-table-row::after,
-.ml-skeleton-feature::after,
-.ml-skeleton-line::after {
-    display: none;
 }
 
 .ml-skeleton-line {
@@ -322,12 +237,6 @@
 .ml-skeleton-feature {
     display: grid;
     gap: 12px;
-}
-
-@keyframes ml-skeleton-shimmer {
-    100% {
-        transform: translateX(100%);
-    }
 }
 
 .ml-quality-panel .stats-grid {
@@ -568,16 +477,11 @@
     white-space: nowrap;
 }
 
-.ml-forecast-horizon #mlForecastDaysDisplay {
-    width: 86px;
-    min-height: 32px;
+.ml-forecast-days-value {
     padding: 6px 10px;
-    border: 1px solid var(--control-border);
-    border-radius: 10px;
-    background: var(--control-bg);
     color: var(--ink);
     font-weight: 700;
-    text-align: center;
+    font-size: var(--font-size-token-08);
 }
 
 .ml-primary,
@@ -614,3 +518,5 @@
         grid-template-columns: 1fr;
     }
 }
+
+
