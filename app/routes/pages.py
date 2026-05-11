@@ -38,14 +38,6 @@ from .page_common import (
 )
 
 
-def get_column_search_table_options():
-    return get_user_table_options()
-
-
-def get_fire_map_table_options():
-    return get_user_table_options()
-
-
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
@@ -256,7 +248,7 @@ def access_points_page(
 
 @router.get("/column-search", response_class=HTMLResponse)
 def column_search_page(request: Request, table_name: str = "", query: str = ""):
-    table_options = get_column_search_table_options()
+    table_options = get_user_table_options()
     selected_table = resolve_selected_table_value(table_options, table_name)
     return render_template_page(
         request,
@@ -295,7 +287,7 @@ def fire_map_page(request: Request, table_name: str = ""):
 
 @router.get("/fire-map/embed", response_class=HTMLResponse)
 def fire_map_embed(request: Request, table_name: str = ""):
-    table_options = get_fire_map_table_options()
+    table_options = get_user_table_options()
     selected_table = resolve_selected_table_value(table_options, table_name)
 
     if not table_name or table_name != selected_table:

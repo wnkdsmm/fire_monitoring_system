@@ -302,7 +302,7 @@ function renderManagementCards(items) {
         setText('managementHeroConfidenceMeta', brief.confidence_summary || management.confidence_summary || 'После загрузки данных здесь появится пояснение, насколько надежен территориальный приоритет.');
         applyToneClass(byId('dashboardPriorityCard'), brief.priority_tone || management.priority_tone || 'sky');
         applyToneClass(byId('dashboardConfidenceCard'), brief.confidence_tone || management.confidence_tone || 'fire');
-        renderManagementCards(brief.cards || management.brief_cards || []);
+        renderManagementCards((management.brief && management.brief.cards) || []);
         renderManagementTerritories(management.territories || []);
         renderManagementActions(management.actions || []);
         updateDashboardBriefExport({

@@ -32,7 +32,6 @@ def _build_management_snapshot_payload(
         "confidence_summary": brief["confidence_summary"],
         "recommended_action_label": brief["action_label"],
         "recommended_action_detail": brief["action_detail"],
-        "brief_cards": list(brief["cards"]),
         "brief": brief,
         "territories": list(territories or []),
         "actions": list(actions or []),
@@ -169,8 +168,6 @@ def _build_management_snapshot(
     brief["export_excerpt"] = (
         f"{brief['export_excerpt']} Приоритет и действия рассчитаны на ближайшие {planning_horizon_days} дней."
     )
-    brief["export_text"] = ""
-
     return _build_management_snapshot_payload(
         brief,
         territories=territories,
