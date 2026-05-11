@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% set selected_file_empty = "Исходный файл не выбран" %}
 {% set ui = {
     "sidebar_title": "Статистика 1992-2020",
     "sidebar_description": "Импорт XLSX, расшифровка кодов и загрузка в PostgreSQL для статистики 1992-2020.",
@@ -24,7 +25,7 @@
     "split_button": "Разбить файл по годам (доп. операция)",
     "split_hint": "Разбивка по годам. Результат: созданы отдельные файлы по каждому году. Необязательно для базового сценария.",
     "selected_file_label": "Выбранный файл:",
-    "selected_file_empty": "Исходный файл не выбран",
+    "selected_file_empty": selected_file_empty,
     "logs_title": "Журнал выполнения",
     "logs_meta": "Журнал обновляется автоматически для текущего job_id.",
     "js": {
@@ -34,6 +35,7 @@
             "logsHint": "Подробности в блоке «Журнал выполнения».",
             "readyToRun": "Файл выбран. Можно запускать операцию.",
             "defaultDone": "Операция завершена.",
+            "noFileSelected": selected_file_empty,
             "logsInitial": "Журнал выполнения появится после запуска операции."
         },
         "errors": {
@@ -67,9 +69,6 @@
         }
     }
 } %}
-{% set _ = ui.js.status.update({
-        "noFileSelected": ui.selected_file_empty,
-    }) %}
 {% set sidebar_title = ui.sidebar_title %}
 {% set sidebar_active = "statistics19922020" %}
 {% set sidebar_description %}{{ ui.sidebar_description }}{% endset %}
