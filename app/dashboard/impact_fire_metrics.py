@@ -390,8 +390,6 @@ def _build_dashboard_grouped_counts_query(
             ) AS grouped_source
             GROUP BY GROUPING SETS ({dimension_sql['grouping_sets']})
             HAVING {dimension_sql['having_clause']}
-            ORDER BY fire_count DESC
-            LIMIT 25
         ) AS grouped_counts_bundle_{query_index}
     """
     uses_selected_year_param = selected_year is not None and context["has_date_column"]

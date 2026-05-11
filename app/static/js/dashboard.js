@@ -116,6 +116,14 @@ async function fetchDashboardData() {
                     renderApi.applyDashboardData(fullData);
                 }
             }).catch(function () {
+                renderApi.showChartsLoading && (function() {
+                    var ids = ['yearlyFiresChart','distributionChart','yearlyAreaChart',
+                        'cumulativeAreaChart','monthlyHeatmapChart','monthlyProfileChart','areaBucketsChart'];
+                    ids.forEach(function(id) {
+                        var el = document.getElementById(id);
+                        if (el) el.innerHTML = '<div class="chart-loading chart-loading--error">Не удалось загрузить графики. Обновите страницу.</div>';
+                    });
+                })();
             });
             window.history.replaceState({}, '', renderApi.buildDashboardPageHref(state.collectSelectedFilters()));
         } catch (error) {
