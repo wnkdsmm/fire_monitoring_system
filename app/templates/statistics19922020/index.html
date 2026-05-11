@@ -1,9 +1,38 @@
 {% extends "base.html" %}
-{% set sidebar_title = "Статистика 1992-2020" %}
+{% set ui = {
+    "sidebar_title": "Статистика 1992-2020",
+    "sidebar_description": "Импорт XLSX, расшифровка кодов и загрузка в PostgreSQL для статистики 1992-2020.",
+    "eyebrow": "Сценарий импорта статистики",
+    "page_title": "Статистика 1992-2020",
+    "subtitle": "Выберите исходный файл XLSX, выполните расшифровку и при необходимости загрузите данные в PostgreSQL.",
+    "reference_label": "Справочные данные",
+    "reference_note": "Для расшифровки используются справочники из этой папки и вложенных каталогов.",
+    "actions_title": "Действия",
+    "actions_meta": "Основной сценарий выделен первым. Служебные операции вынесены отдельно.",
+    "primary_group_title": "Основные действия",
+    "secondary_group_title": "Дополнительные (служебные) действия",
+    "primary_role": "Основная операция",
+    "secondary_role": "Дополнительная операция",
+    "pick_button": "Выбрать исходный файл (.xlsx)",
+    "pick_hint": "Выбор файла для обработки. Результат: выбранный файл отображается в карточке.",
+    "decode_button": "Проверить и расшифровать данные",
+    "decode_hint": "Проверка и расшифровка данных. Результат: расшифрованный файл и отчет.",
+    "decode_import_button": "Расшифровать и загрузить в PostgreSQL",
+    "decode_import_hint": "Расшифровка и загрузка данных. Результат: данные записаны в PostgreSQL.",
+    "rename_button": "Подготовить заголовки (доп. операция)",
+    "rename_hint": "Подготовка заголовков. Результат: заголовки приведены к рабочему формату. Необязательно для базового сценария.",
+    "split_button": "Разбить файл по годам (доп. операция)",
+    "split_hint": "Разбивка по годам. Результат: созданы отдельные файлы по каждому году. Необязательно для базового сценария.",
+    "selected_file_label": "Выбранный файл:",
+    "selected_file_empty": "Исходный файл не выбран",
+    "logs_title": "Журнал выполнения",
+    "logs_meta": "Журнал обновляется автоматически для текущего job_id."
+} %}
+{% set sidebar_title = ui.sidebar_title %}
 {% set sidebar_active = "statistics19922020" %}
-{% set sidebar_description %}Импорт XLSX, расшифровка кодов и загрузка в PostgreSQL для статистики 1992-2020.{% endset %}
+{% set sidebar_description %}{{ ui.sidebar_description }}{% endset %}
 
-{% block title %}Статистика 1992-2020{% endblock %}
+{% block title %}{{ ui.page_title }}{% endblock %}
 
 {% block page_styles %}
 <link rel="stylesheet" href="/static/css/statistics19922020/statistics19922020.css?v={{ statistics19922020_css_version }}">
@@ -13,15 +42,15 @@
 <div class="dashboard-main simple-page-main statistics19922020-page">
     <section class="hero-panel simple-page-intro">
         <div class="hero-copy">
-            <span class="eyebrow">Сценарий импорта статистики</span>
-            <h1>Статистика 1992-2020</h1>
-            <p class="subtitle">Выберите исходный файл XLSX, выполните расшифровку и при необходимости загрузите данные в PostgreSQL.</p>
+            <span class="eyebrow">{{ ui.eyebrow }}</span>
+            <h1>{{ ui.page_title }}</h1>
+            <p class="subtitle">{{ ui.subtitle }}</p>
         </div>
         <div class="hero-side">
             <article class="hero-stat-card hero-stat-card-soft">
-                <span class="hero-stat-label">Справочные данные</span>
+                <span class="hero-stat-label">{{ ui.reference_label }}</span>
                 <strong class="hero-stat-value"><small>F:\filesFires\edittables\Statistica</small></strong>
-                <span class="hero-stat-foot">Для расшифровки используются справочники из этой папки и вложенных каталогов.</span>
+                <span class="hero-stat-foot">{{ ui.reference_note }}</span>
             </article>
         </div>
     </section>
@@ -29,50 +58,50 @@
     <section class="panel">
         <div class="panel-head">
             <div>
-                <h2>Действия</h2>
-                <span class="panel-meta">Основной сценарий выделен первым. Служебные операции вынесены отдельно.</span>
+                <h2>{{ ui.actions_title }}</h2>
+                <span class="panel-meta">{{ ui.actions_meta }}</span>
             </div>
         </div>
         <div class="statistics19922020-action-groups">
             <section class="statistics19922020-action-group statistics19922020-action-group-primary">
-                <h3 class="statistics19922020-action-group-title">Основные действия</h3>
+                <h3 class="statistics19922020-action-group-title">{{ ui.primary_group_title }}</h3>
                 <div class="statistics19922020-actions-grid">
                     <div class="statistics19922020-action-item">
-                        <span class="statistics19922020-role-label">Основная операция</span>
-                        <button id="statistics19922020PickFileButton" type="button" class="primary-action" aria-label="Выбрать исходный файл" aria-describedby="statistics19922020PickFileHint">Выбрать исходный файл (.xlsx)</button>
-                        <p id="statistics19922020PickFileHint" class="statistics19922020-action-hint">Выбор файла для обработки. Результат: выбранный файл отображается в карточке.</p>
+                        <span class="statistics19922020-role-label">{{ ui.primary_role }}</span>
+                        <button id="statistics19922020PickFileButton" type="button" class="primary-action" aria-label="{{ ui.pick_button }}" aria-describedby="statistics19922020PickFileHint">{{ ui.pick_button }}</button>
+                        <p id="statistics19922020PickFileHint" class="statistics19922020-action-hint">{{ ui.pick_hint }}</p>
                     </div>
                     <div class="statistics19922020-action-item">
-                        <span class="statistics19922020-role-label">Основная операция</span>
-                        <button id="statistics19922020DecodeButton" type="button" class="primary-action" data-stat-action aria-label="Проверить и расшифровать данные" aria-describedby="statistics19922020DecodeHint">Проверить и расшифровать данные</button>
-                        <p id="statistics19922020DecodeHint" class="statistics19922020-action-hint">Проверка и расшифровка данных. Результат: расшифрованный файл и отчет.</p>
+                        <span class="statistics19922020-role-label">{{ ui.primary_role }}</span>
+                        <button id="statistics19922020DecodeButton" type="button" class="primary-action" data-stat-action aria-label="{{ ui.decode_button }}" aria-describedby="statistics19922020DecodeHint">{{ ui.decode_button }}</button>
+                        <p id="statistics19922020DecodeHint" class="statistics19922020-action-hint">{{ ui.decode_hint }}</p>
                     </div>
                     <div class="statistics19922020-action-item">
-                        <span class="statistics19922020-role-label">Основная операция</span>
-                        <button id="statistics19922020DecodeImportButton" type="button" class="primary-action" data-stat-action aria-label="Расшифровать и загрузить в PostgreSQL" aria-describedby="statistics19922020DecodeImportHint">Расшифровать и загрузить в PostgreSQL</button>
-                        <p id="statistics19922020DecodeImportHint" class="statistics19922020-action-hint">Расшифровка и загрузка данных. Результат: данные записаны в PostgreSQL.</p>
+                        <span class="statistics19922020-role-label">{{ ui.primary_role }}</span>
+                        <button id="statistics19922020DecodeImportButton" type="button" class="primary-action" data-stat-action aria-label="{{ ui.decode_import_button }}" aria-describedby="statistics19922020DecodeImportHint">{{ ui.decode_import_button }}</button>
+                        <p id="statistics19922020DecodeImportHint" class="statistics19922020-action-hint">{{ ui.decode_import_hint }}</p>
                     </div>
                 </div>
             </section>
             <section class="statistics19922020-action-group statistics19922020-action-group-secondary">
-                <h3 class="statistics19922020-action-group-title">Дополнительные (служебные) действия</h3>
+                <h3 class="statistics19922020-action-group-title">{{ ui.secondary_group_title }}</h3>
                 <div class="statistics19922020-actions-grid">
                     <div class="statistics19922020-action-item">
-                        <span class="statistics19922020-role-label statistics19922020-role-label-secondary">Дополнительная операция</span>
-                        <button id="statistics19922020RenameHeadersButton" type="button" class="table-selection-button" data-stat-action aria-label="Подготовить заголовки, дополнительная операция" aria-describedby="statistics19922020RenameHeadersHint">Подготовить заголовки (доп. операция)</button>
-                        <p id="statistics19922020RenameHeadersHint" class="statistics19922020-action-hint">Подготовка заголовков. Результат: заголовки приведены к рабочему формату. Необязательно для базового сценария.</p>
+                        <span class="statistics19922020-role-label statistics19922020-role-label-secondary">{{ ui.secondary_role }}</span>
+                        <button id="statistics19922020RenameHeadersButton" type="button" class="table-selection-button" data-stat-action aria-label="{{ ui.rename_button }}" aria-describedby="statistics19922020RenameHeadersHint">{{ ui.rename_button }}</button>
+                        <p id="statistics19922020RenameHeadersHint" class="statistics19922020-action-hint">{{ ui.rename_hint }}</p>
                     </div>
                     <div class="statistics19922020-action-item">
-                        <span class="statistics19922020-role-label statistics19922020-role-label-secondary">Дополнительная операция</span>
-                        <button id="statistics19922020SplitByYearButton" type="button" class="table-selection-button" data-stat-action aria-label="Разбить файл по годам, дополнительная операция" aria-describedby="statistics19922020SplitByYearHint">Разбить файл по годам (доп. операция)</button>
-                        <p id="statistics19922020SplitByYearHint" class="statistics19922020-action-hint">Разбивка по годам. Результат: созданы отдельные файлы по каждому году. Необязательно для базового сценария.</p>
+                        <span class="statistics19922020-role-label statistics19922020-role-label-secondary">{{ ui.secondary_role }}</span>
+                        <button id="statistics19922020SplitByYearButton" type="button" class="table-selection-button" data-stat-action aria-label="{{ ui.split_button }}" aria-describedby="statistics19922020SplitByYearHint">{{ ui.split_button }}</button>
+                        <p id="statistics19922020SplitByYearHint" class="statistics19922020-action-hint">{{ ui.split_hint }}</p>
                     </div>
                 </div>
             </section>
         </div>
         <div class="statistics19922020-file-state">
-            <span class="statistics19922020-file-label">Выбранный файл:</span>
-            <strong id="statistics19922020SelectedFile">Исходный файл не выбран</strong>
+            <span class="statistics19922020-file-label">{{ ui.selected_file_label }}</span>
+            <strong id="statistics19922020SelectedFile">{{ ui.selected_file_empty }}</strong>
         </div>
         <div id="statistics19922020Status" class="statistics19922020-status" data-tone="info" aria-live="polite" aria-busy="false" hidden></div>
     </section>
@@ -80,8 +109,8 @@
     <section class="panel">
         <div class="panel-head">
             <div>
-                <h2>Журнал выполнения</h2>
-                <span class="panel-meta">Журнал обновляется автоматически для текущего job_id.</span>
+                <h2>{{ ui.logs_title }}</h2>
+                <span class="panel-meta">{{ ui.logs_meta }}</span>
             </div>
         </div>
         <div id="statistics19922020Logs" class="statistics19922020-log-box" aria-live="polite" aria-busy="false"></div>
@@ -97,6 +126,7 @@
 <script src="/static/js/shared/ui_helpers.js?v={{ analytics_shared_js_version }}"></script>
 <script src="/static/js/shared/plotly_helpers.js?v={{ analytics_shared_js_version }}"></script>
 <script src="/static/js/analytics_shared.js?v={{ analytics_shared_js_version }}"></script>
+<script src="/static/js/statistics19922020/texts.js?v={{ statistics19922020_js_version }}"></script>
 <script src="/static/js/statistics19922020/statistics19922020.js?v={{ statistics19922020_js_version }}"></script>
 {{ super() }}
 {% endblock %}
