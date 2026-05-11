@@ -46,9 +46,6 @@ def get_fire_map_table_options():
     return get_user_table_options()
 
 
-def resolve_selected_table(table_options, table_name: str) -> str:
-    return resolve_selected_table_value(table_options, table_name)
-
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
@@ -162,7 +159,6 @@ def home(
     )
 
 
-@router.get("/backtesting", response_class=HTMLResponse)
 @router.get("/ml-model", response_class=HTMLResponse)
 def ml_model_page(
     request: Request,
@@ -261,7 +257,7 @@ def access_points_page(
 @router.get("/column-search", response_class=HTMLResponse)
 def column_search_page(request: Request, table_name: str = "", query: str = ""):
     table_options = get_column_search_table_options()
-    selected_table = resolve_selected_table(table_options, table_name)
+    selected_table = resolve_selected_table_value(table_options, table_name)
     return render_template_page(
         request,
         "column_search.html",
@@ -300,7 +296,7 @@ def fire_map_page(request: Request, table_name: str = ""):
 @router.get("/fire-map/embed", response_class=HTMLResponse)
 def fire_map_embed(request: Request, table_name: str = ""):
     table_options = get_fire_map_table_options()
-    selected_table = resolve_selected_table(table_options, table_name)
+    selected_table = resolve_selected_table_value(table_options, table_name)
 
     if not table_name or table_name != selected_table:
         return render_template_page(
