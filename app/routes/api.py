@@ -53,7 +53,6 @@ from .api_common import (
 )
 from .api_dashboard import dashboard_data_endpoint, router as dashboard_router
 from .api_ml_model import (
-    ml_model_data_endpoint,
     ml_model_job_status_endpoint,
     router as ml_model_router,
     start_ml_model_job_endpoint,
@@ -95,7 +94,6 @@ __all__ = [
     "ensure_session_id",
     "import_data_endpoint",
     "logs",
-    "ml_model_data_endpoint",
     "ml_model_job_status_endpoint",
     "router",
     "run_profiling_endpoint",
