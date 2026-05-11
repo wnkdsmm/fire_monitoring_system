@@ -329,7 +329,6 @@ def run_benchmark(row_count: int, keep_table: bool = False) -> list[BenchmarkRes
                     table_name=table_name,
                     cluster_count="4",
                     sample_limit="1000",
-                    sampling_strategy="stratified",
                 ),
             ),
             _run_case(
