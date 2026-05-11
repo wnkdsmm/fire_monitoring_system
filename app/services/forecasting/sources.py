@@ -174,7 +174,7 @@ def _load_table_metadata(table_name: str) -> ForecastingTableMetadata:
         "columns": columns,
         "resolved_columns": resolved_columns,
         "column_quality": {
-            "temperature": _load_temperature_quality(table_name, resolved_columns),
+            "temperature": None,
         },
     }
 
