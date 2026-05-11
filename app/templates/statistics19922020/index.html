@@ -39,18 +39,18 @@
                 <div class="statistics19922020-actions-grid">
                     <div class="statistics19922020-action-item">
                         <span class="statistics19922020-role-label">Основная операция</span>
-                        <button id="statistics19922020PickFileButton" type="button" class="primary-action">Выбрать исходный файл (.xlsx)</button>
-                        <p class="statistics19922020-action-hint">Выбор файла для обработки. Результат: выбранный файл отображается в карточке.</p>
+                        <button id="statistics19922020PickFileButton" type="button" class="primary-action" aria-label="Выбрать исходный файл" aria-describedby="statistics19922020PickFileHint">Выбрать исходный файл (.xlsx)</button>
+                        <p id="statistics19922020PickFileHint" class="statistics19922020-action-hint">Выбор файла для обработки. Результат: выбранный файл отображается в карточке.</p>
                     </div>
                     <div class="statistics19922020-action-item">
                         <span class="statistics19922020-role-label">Основная операция</span>
-                        <button id="statistics19922020DecodeButton" type="button" class="primary-action" data-stat-action>Проверить и расшифровать данные</button>
-                        <p class="statistics19922020-action-hint">Проверка и расшифровка данных. Результат: расшифрованный файл и отчет.</p>
+                        <button id="statistics19922020DecodeButton" type="button" class="primary-action" data-stat-action aria-label="Проверить и расшифровать данные" aria-describedby="statistics19922020DecodeHint">Проверить и расшифровать данные</button>
+                        <p id="statistics19922020DecodeHint" class="statistics19922020-action-hint">Проверка и расшифровка данных. Результат: расшифрованный файл и отчет.</p>
                     </div>
                     <div class="statistics19922020-action-item">
                         <span class="statistics19922020-role-label">Основная операция</span>
-                        <button id="statistics19922020DecodeImportButton" type="button" class="primary-action" data-stat-action>Расшифровать и загрузить в PostgreSQL</button>
-                        <p class="statistics19922020-action-hint">Расшифровка и загрузка данных. Результат: данные записаны в PostgreSQL.</p>
+                        <button id="statistics19922020DecodeImportButton" type="button" class="primary-action" data-stat-action aria-label="Расшифровать и загрузить в PostgreSQL" aria-describedby="statistics19922020DecodeImportHint">Расшифровать и загрузить в PostgreSQL</button>
+                        <p id="statistics19922020DecodeImportHint" class="statistics19922020-action-hint">Расшифровка и загрузка данных. Результат: данные записаны в PostgreSQL.</p>
                     </div>
                 </div>
             </section>
@@ -59,13 +59,13 @@
                 <div class="statistics19922020-actions-grid">
                     <div class="statistics19922020-action-item">
                         <span class="statistics19922020-role-label statistics19922020-role-label-secondary">Дополнительная операция</span>
-                        <button id="statistics19922020RenameHeadersButton" type="button" class="table-selection-button" data-stat-action>Подготовить заголовки (доп. операция)</button>
-                        <p class="statistics19922020-action-hint">Подготовка заголовков. Результат: заголовки приведены к рабочему формату. Необязательно для базового сценария.</p>
+                        <button id="statistics19922020RenameHeadersButton" type="button" class="table-selection-button" data-stat-action aria-label="Подготовить заголовки, дополнительная операция" aria-describedby="statistics19922020RenameHeadersHint">Подготовить заголовки (доп. операция)</button>
+                        <p id="statistics19922020RenameHeadersHint" class="statistics19922020-action-hint">Подготовка заголовков. Результат: заголовки приведены к рабочему формату. Необязательно для базового сценария.</p>
                     </div>
                     <div class="statistics19922020-action-item">
                         <span class="statistics19922020-role-label statistics19922020-role-label-secondary">Дополнительная операция</span>
-                        <button id="statistics19922020SplitByYearButton" type="button" class="table-selection-button" data-stat-action>Разбить файл по годам (доп. операция)</button>
-                        <p class="statistics19922020-action-hint">Разбивка по годам. Результат: созданы отдельные файлы по каждому году. Необязательно для базового сценария.</p>
+                        <button id="statistics19922020SplitByYearButton" type="button" class="table-selection-button" data-stat-action aria-label="Разбить файл по годам, дополнительная операция" aria-describedby="statistics19922020SplitByYearHint">Разбить файл по годам (доп. операция)</button>
+                        <p id="statistics19922020SplitByYearHint" class="statistics19922020-action-hint">Разбивка по годам. Результат: созданы отдельные файлы по каждому году. Необязательно для базового сценария.</p>
                     </div>
                 </div>
             </section>
@@ -74,7 +74,7 @@
             <span class="statistics19922020-file-label">Выбранный файл:</span>
             <strong id="statistics19922020SelectedFile">Исходный файл не выбран</strong>
         </div>
-        <div id="statistics19922020Status" class="statistics19922020-status" data-tone="info" hidden></div>
+        <div id="statistics19922020Status" class="statistics19922020-status" data-tone="info" aria-live="polite" aria-busy="false" hidden></div>
     </section>
 
     <section class="panel">
@@ -84,7 +84,7 @@
                 <span class="panel-meta">Журнал обновляется автоматически для текущего job_id.</span>
             </div>
         </div>
-        <div id="statistics19922020Logs" class="statistics19922020-log-box" aria-live="polite"></div>
+        <div id="statistics19922020Logs" class="statistics19922020-log-box" aria-live="polite" aria-busy="false"></div>
     </section>
 
     <input type="file" id="statistics19922020FileInput" class="hidden-file-input" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">

@@ -3,6 +3,9 @@
 
     var LOG_REFRESH_INTERVAL_MS = 2000;
     var JOB_STORAGE_KEY = "fire-monitor-statistics19922020-job-id";
+    var STATUS_SUCCESS_PREFIX = "Операция выполнена:";
+    var STATUS_ERROR_PREFIX = "Операция не выполнена:";
+    var STATUS_LOGS_HINT = "Подробности в блоке «Логи выполнения».";
     var shared = global.FireUi || {};
     var fetchJson = typeof shared.fetchJson === "function" ? shared.fetchJson : fallbackFetchJson;
     var getApiErrorMessage = typeof shared.getApiErrorMessage === "function"
@@ -106,6 +109,18 @@
         var label = byId("statistics19922020SelectedFile");
         if (label) {
             label.textContent = fileName || "Исходный файл не выбран";
+        }
+    }
+
+    function setBusyState(isBusy) {
+        var busyValue = isBusy ? "true" : "false";
+        var statusNode = byId("statistics19922020Status");
+        var logsNode = byId("statistics19922020Logs");
+        if (statusNode) {
+            statusNode.setAttribute("aria-busy", busyValue);
+        }
+        if (logsNode) {
+            logsNode.setAttribute("aria-busy", busyValue);
         }
     }
 
@@ -248,36 +263,43 @@
         return status === "error" || status === "failed";
     }
 
+    function joinMessageParts(parts) {
+        return parts.filter(Boolean).join(" ");
+    }
+
+    function buildCompletedMessage(mainText, details) {
+        return joinMessageParts([STATUS_SUCCESS_PREFIX, mainText, details, STATUS_LOGS_HINT]);
+    }
+
     function buildSuccessMessage(settings, payload) {
         var endpoint = String(settings.endpoint || "");
         var files = payload && payload.files ? payload.files : {};
-        var logsHint = "Подробности в блоке «Логи выполнения».";
 
         if (endpoint === "/statistics19922020/decode") {
-            var decoded = files.decoded_file ? (" Расшифрованный файл: " + files.decoded_file + ".") : "";
-            var report = files.report_file ? (" Отчет: " + files.report_file + ".") : "";
-            return "Операция выполнена: данные расшифрованы." + decoded + report + " " + logsHint;
+            var decoded = files.decoded_file ? ("Расшифрованный файл: " + files.decoded_file + ".") : "";
+            var report = files.report_file ? ("Отчет: " + files.report_file + ".") : "";
+            return buildCompletedMessage("данные расшифрованы.", joinMessageParts([decoded, report]));
         }
 
         if (endpoint === "/statistics19922020/decode-and-import" || endpoint === "/statistics19922020/decode_import") {
             var importData = payload && payload.import ? payload.import : {};
-            var outputFolder = importData.output_folder ? (" Папка результата: " + importData.output_folder + ".") : "";
-            return "Операция выполнена: данные расшифрованы и загружены в PostgreSQL." + outputFolder + " " + logsHint;
+            var outputFolder = importData.output_folder ? ("Папка результата: " + importData.output_folder + ".") : "";
+            return buildCompletedMessage("данные расшифрованы и загружены в PostgreSQL.", outputFolder);
         }
 
         if (endpoint === "/statistics19922020/run_rename_headers") {
-            return "Операция выполнена: заголовки подготовлены. " + logsHint;
+            return buildCompletedMessage("заголовки подготовлены.");
         }
 
         if (endpoint === "/statistics19922020/run_split_xlsx_by_year") {
             var exported = payload && payload.exported_files && payload.exported_files.length
-                ? (" Создано файлов: " + payload.exported_files.length + ".")
+                ? ("Создано файлов: " + payload.exported_files.length + ".")
                 : "";
-            var targetDir = payload && payload.output_dir ? (" Папка результата: " + payload.output_dir + ".") : "";
-            return "Операция выполнена: файл разбит по годам." + exported + targetDir + " " + logsHint;
+            var targetDir = payload && payload.output_dir ? ("Папка результата: " + payload.output_dir + ".") : "";
+            return buildCompletedMessage("файл разбит по годам.", joinMessageParts([exported, targetDir]));
         }
 
-        return String(payload && payload.message ? payload.message : "Операция завершена.") + " " + logsHint;
+        return joinMessageParts([String(payload && payload.message ? payload.message : "Операция завершена."), STATUS_LOGS_HINT]);
     }
 
     async function runAction(options) {
@@ -288,6 +310,7 @@
         }
 
         setActionButtonsDisabled(true);
+        setBusyState(true);
         clearStatus();
 
         try {
@@ -327,7 +350,7 @@
             }
 
             if (isErrorStatus(payload)) {
-                setStatus("Операция не выполнена: " + (payload.message || settings.errorMessage || "Не удалось выполнить операцию.") + " Подробности в блоке «Логи выполнения».", "error");
+                setStatus(joinMessageParts([STATUS_ERROR_PREFIX, (payload.message || settings.errorMessage || "Не удалось выполнить операцию."), STATUS_LOGS_HINT]), "error");
                 return;
             }
 
@@ -336,9 +359,10 @@
             var fallback = settings.errorMessage || "Не удалось выполнить операцию.";
             var message = getApiErrorMessage(error && error.payload, error && error.message ? error.message : fallback);
             appendLogLine(message);
-            setStatus("Операция не выполнена: " + message + " Подробности в блоке «Логи выполнения».", "error");
+            setStatus(joinMessageParts([STATUS_ERROR_PREFIX, message, STATUS_LOGS_HINT]), "error");
         } finally {
             setActionButtonsDisabled(false);
+            setBusyState(false);
         }
     }
 
@@ -365,7 +389,7 @@
                 setCurrentJobId(null);
                 setSelectedFileLabel(selectedFile.name);
                 replaceLogLines(["Выбран исходный файл: " + selectedFile.name]);
-                setStatus("Операция готова к запуску: файл выбран. Подробности в блоке «Логи выполнения».", "info");
+                setStatus(joinMessageParts(["Операция готова к запуску: файл выбран.", STATUS_LOGS_HINT]), "info");
             });
         }
 

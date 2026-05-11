@@ -98,6 +98,12 @@
     background: var(--tone-select-hover);
 }
 
+.statistics19922020-actions-grid .primary-action:focus-visible,
+.statistics19922020-actions-grid .table-selection-button:focus-visible {
+    outline: 2px solid rgba(var(--color-accent-blue-rgb), 0.85);
+    outline-offset: 2px;
+}
+
 .statistics19922020-actions-grid .primary-action:disabled,
 .statistics19922020-actions-grid .table-selection-button:disabled {
     opacity: 0.58;
