@@ -167,9 +167,8 @@
 <script src="/static/js/shared/ui_helpers.js?v={{ analytics_shared_js_version }}"></script>
 <script src="/static/js/shared/plotly_helpers.js?v={{ analytics_shared_js_version }}"></script>
 <script src="/static/js/analytics_shared.js?v={{ analytics_shared_js_version }}"></script>
-<script>
-window.Statistics19922020Texts = {{ ui.js | tojson }};
-</script>
+<script id="statistics19922020TextsData" type="application/json">{{ ui.js | tojson }}</script>
+<script src="/static/js/statistics19922020/texts_init.js?v={{ statistics19922020_js_version }}"></script>
 <script src="/static/js/statistics19922020/statistics19922020.js?v={{ statistics19922020_js_version }}"></script>
 {{ super() }}
 {% endblock %}
