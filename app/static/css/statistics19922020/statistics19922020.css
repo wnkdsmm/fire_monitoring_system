@@ -27,8 +27,14 @@
 }
 
 .statistics19922020-action-group-primary {
-    border-color: rgba(var(--color-accent-blue-rgb), 0.22);
-    background: var(--surface-panel-accent);
+    border-color: rgba(var(--color-accent-blue-rgb), 0.34);
+    background: color-mix(in srgb, var(--surface-panel-accent) 88%, white 12%);
+    box-shadow: 0 1px 0 rgba(var(--color-accent-blue-rgb), 0.12);
+}
+
+.statistics19922020-action-group-secondary {
+    border-color: var(--line);
+    background: var(--surface-soft);
 }
 
 .statistics19922020-action-item {
@@ -42,6 +48,7 @@
     color: var(--muted);
     font-size: var(--font-size-token-02);
     line-height: 1.45;
+    overflow-wrap: anywhere;
 }
 
 .statistics19922020-actions-grid .table-selection-button {
@@ -60,6 +67,14 @@
     transform: translateY(-1px);
     border-color: var(--color-token-32);
     background: var(--tone-select-hover);
+}
+
+.statistics19922020-actions-grid .primary-action:disabled,
+.statistics19922020-actions-grid .table-selection-button:disabled {
+    opacity: 0.58;
+    cursor: not-allowed;
+    transform: none;
+    filter: saturate(0.75);
 }
 
 .statistics19922020-file-state {
@@ -113,4 +128,11 @@
 
 .statistics19922020-log-box > div + div {
     margin-top: 6px;
+}
+
+@media (max-width: 640px) {
+    .statistics19922020-action-hint {
+        font-size: var(--font-size-token-01);
+        line-height: 1.5;
+    }
 }
