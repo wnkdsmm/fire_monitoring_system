@@ -10,6 +10,7 @@ from fastapi.responses import HTMLResponse, Response
 
 from app.db_views import DEFAULT_TABLE_PAGE_SIZE, TABLE_PAGE_SIZE_OPTIONS
 from app.domain.column_matching import get_mandatory_feature_catalog
+from app.statistics19922020 import page_router as statistics19922020_page_router
 from app.services.executive_brief import compose_executive_brief_text
 from app.table_catalog import (
     get_user_table_options,
@@ -41,6 +42,7 @@ from .page_common import (
 
 
 router = APIRouter()
+router.include_router(statistics19922020_page_router)
 logger = logging.getLogger(__name__)
 
 

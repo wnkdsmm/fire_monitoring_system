@@ -31,6 +31,8 @@ from __future__ import annotations
 
 from fastapi import APIRouter
 
+from app.statistics19922020 import api_router as statistics19922020_api_router
+
 from .api_access_points import access_points_data_endpoint, router as access_points_router
 from .api_clustering import (
     clustering_data_endpoint,
@@ -75,6 +77,7 @@ for child_router in (
     tables_router,
     column_search_router,
     ops_router,
+    statistics19922020_api_router,
 ):
     router.include_router(child_router)
 

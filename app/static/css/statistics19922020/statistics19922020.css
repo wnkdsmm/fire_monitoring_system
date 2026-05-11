@@ -1,0 +1,80 @@
+.statistics19922020-page .panel {
+    margin-bottom: var(--space-token-21);
+}
+
+.statistics19922020-actions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(18rem, 100%), 1fr));
+    gap: 12px;
+}
+
+.statistics19922020-actions-grid .table-selection-button {
+    min-height: 48px;
+    justify-content: center;
+    border: 1px solid rgba(var(--color-accent-blue-rgb), 0.12);
+    border-radius: var(--radius-sm);
+    color: var(--accent-deep);
+    font-weight: 700;
+    cursor: pointer;
+    background: var(--surface-panel-accent);
+    transition: transform 0.18s ease, border-color 0.18s ease, background-color 0.18s ease;
+}
+
+.statistics19922020-actions-grid .table-selection-button:hover {
+    transform: translateY(-1px);
+    border-color: var(--color-token-32);
+    background: var(--tone-select-hover);
+}
+
+.statistics19922020-file-state {
+    margin-top: var(--space-token-12);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 8px;
+    color: var(--muted);
+}
+
+.statistics19922020-file-label {
+    font-weight: 700;
+}
+
+.statistics19922020-status {
+    margin-top: var(--space-token-12);
+    padding: var(--space-token-12);
+    border-radius: var(--radius-control);
+    border: 1px solid var(--line);
+    background: var(--surface-panel-accent);
+    color: var(--ink);
+    line-height: 1.55;
+}
+
+.statistics19922020-status[data-tone="success"] {
+    border-color: rgba(41, 120, 92, 0.2);
+    background: var(--tone-forest-soft);
+}
+
+.statistics19922020-status[data-tone="error"] {
+    border-color: rgba(150, 51, 37, 0.22);
+    background: var(--tone-danger-surface);
+}
+
+.statistics19922020-log-box {
+    min-height: 16rem;
+    max-height: 24rem;
+    overflow: auto;
+    padding: var(--space-token-12);
+    border-radius: var(--radius-card);
+    border: 1px solid var(--line);
+    background: var(--paper-strong);
+    color: var(--ink);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    font-size: var(--font-size-token-02);
+    line-height: 1.45;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.statistics19922020-log-box > div + div {
+    margin-top: 6px;
+}

@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% set sidebar_title = "Статистика 1992-2020" %}
+{% set sidebar_active = "statistics19922020" %}
+{% set sidebar_description %}Загрузка XLSX, расшифровка кодов и импорт в PostgreSQL для набора статистики 1992-2020.{% endset %}
+
+{% block title %}Статистика 1992-2020{% endblock %}
+
+{% block page_styles %}
+<link rel="stylesheet" href="/static/css/statistics19922020/statistics19922020.css?v={{ statistics19922020_css_version }}">
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-main simple-page-main statistics19922020-page">
+    <section class="hero-panel simple-page-intro">
+        <div class="hero-copy">
+            <span class="eyebrow">Спецраздел импорта</span>
+            <h1>Статистика 1992-2020</h1>
+            <p class="subtitle">Выберите XLSX файл, запустите расшифровку кодов и при необходимости сразу импортируйте расшифрованные данные в PostgreSQL.</p>
+        </div>
+        <div class="hero-side">
+            <article class="hero-stat-card hero-stat-card-soft">
+                <span class="hero-stat-label">Справочники</span>
+                <strong class="hero-stat-value"><small>F:\filesFires\edittables\Statistica</small></strong>
+                <span class="hero-stat-foot">Используются файлы расшифровки из папки статистики и ее подпапок.</span>
+            </article>
+        </div>
+    </section>
+
+    <section class="panel">
+        <div class="panel-head">
+            <div>
+                <h2>Операции</h2>
+                <span class="panel-meta">Кнопки запускают загрузку, расшифровку, импорт и прикрепленные служебные скрипты.</span>
+            </div>
+        </div>
+        <div class="statistics19922020-actions-grid">
+            <button id="statistics19922020PickFileButton" type="button" class="primary-action">Выбрать XLSX</button>
+            <button id="statistics19922020DecodeButton" type="button" class="primary-action" data-stat-action>Расшифровать коды</button>
+            <button id="statistics19922020DecodeImportButton" type="button" class="primary-action" data-stat-action>Расшифровать + импорт в PostgreSQL</button>
+            <button id="statistics19922020RenameHeadersButton" type="button" class="table-selection-button" data-stat-action>Скрипт: rename_headers_2019_2023.py</button>
+            <button id="statistics19922020SplitByYearButton" type="button" class="table-selection-button" data-stat-action>Скрипт: split_xlsx_by_year.py</button>
+        </div>
+        <div class="statistics19922020-file-state">
+            <span class="statistics19922020-file-label">Выбранный файл:</span>
+            <strong id="statistics19922020SelectedFile">Файл не выбран</strong>
+        </div>
+        <div id="statistics19922020Status" class="statistics19922020-status" data-tone="info" hidden></div>
+    </section>
+
+    <section class="panel">
+        <div class="panel-head">
+            <div>
+                <h2>Логи выполнения</h2>
+                <span class="panel-meta">Логи обновляются автоматически с использованием текущего job_id.</span>
+            </div>
+        </div>
+        <div id="statistics19922020Logs" class="statistics19922020-log-box" aria-live="polite"></div>
+    </section>
+
+    <input type="file" id="statistics19922020FileInput" class="hidden-file-input" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/shared/state_factory.js?v={{ analytics_shared_js_version }}"></script>
+<script src="/static/js/shared/api_client.js?v={{ analytics_shared_js_version }}"></script>
+<script src="/static/js/shared/ui_helpers.js?v={{ analytics_shared_js_version }}"></script>
+<script src="/static/js/shared/plotly_helpers.js?v={{ analytics_shared_js_version }}"></script>
+<script src="/static/js/analytics_shared.js?v={{ analytics_shared_js_version }}"></script>
+<script src="/static/js/statistics19922020/statistics19922020.js?v={{ statistics19922020_js_version }}"></script>
+{{ super() }}
+{% endblock %}
