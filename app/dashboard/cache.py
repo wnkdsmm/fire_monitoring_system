@@ -6,23 +6,22 @@ This module keeps dashboard-specific cache keys and invalidation logic on top of
 generic primitives from ``app.cache``.
 """
 
+import json
 from typing import Any
 
 from app.db_metadata import get_table_signature_cached, invalidate_db_metadata_cache
-from app.cache import CopyingTtlCache, clone_mutable_payload, freeze_mutable_payload
+from app.cache import CopyingTtlCache
 from app.table_catalog import select_user_table_names
 
 from .metadata import _collect_dashboard_metadata
 
-_DASHBOARD_METADATA_CACHE = CopyingTtlCache[tuple[str, ...], dict[str, Any]](
+_DASHBOARD_METADATA_CACHE = CopyingTtlCache[tuple[str, ...], str](
     ttl_seconds=None,
-    storer=freeze_mutable_payload,
-    loader=clone_mutable_payload,
+    skip_freeze=True,
 )
-_DASHBOARD_CACHE = CopyingTtlCache[tuple[Any, ...], dict[str, Any]](
+_DASHBOARD_CACHE = CopyingTtlCache[tuple[Any, ...], str](
     ttl_seconds=None,
-    storer=freeze_mutable_payload,
-    loader=clone_mutable_payload,
+    skip_freeze=True,
 )
 
 
@@ -48,22 +47,30 @@ def _invalidate_dashboard_caches() -> None:
 def _collect_dashboard_metadata_cached() -> dict[str, Any]:
     current_table_names = _current_dashboard_table_names()
     cached_value = _DASHBOARD_METADATA_CACHE.get(current_table_names)
-    if cached_value is not None and _metadata_table_names(cached_value) == current_table_names:
-        return cached_value
+    if cached_value is not None:
+        cached_metadata = json.loads(cached_value)
+        if _metadata_table_names(cached_metadata) == current_table_names:
+            return cached_metadata
 
     metadata = _collect_dashboard_metadata(current_table_names)
     _DASHBOARD_METADATA_CACHE.clear()
     _DASHBOARD_CACHE.clear()
-    _DASHBOARD_METADATA_CACHE.set(current_table_names, metadata)
+    _DASHBOARD_METADATA_CACHE.set(
+        current_table_names,
+        json.dumps(metadata, ensure_ascii=False, default=str),
+    )
     return metadata
 
 
 def _get_dashboard_cache(cache_key: tuple[Any, ...]) -> dict[str, Any] | None:
-    return _DASHBOARD_CACHE.get(cache_key)
+    cached_value = _DASHBOARD_CACHE.get(cache_key)
+    if cached_value is None:
+        return None
+    return json.loads(cached_value)
 
 
 def _set_dashboard_cache(cache_key: tuple[Any, ...], value: dict[str, Any]) -> None:
-    _DASHBOARD_CACHE.set(cache_key, value)
+    _DASHBOARD_CACHE.set(cache_key, json.dumps(value, ensure_ascii=False, default=str))
 
 __all__ = [
     "_collect_dashboard_metadata_cached",

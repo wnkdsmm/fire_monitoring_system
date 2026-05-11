@@ -49,9 +49,13 @@ def _lazy(module_path: str, attr: str):
     ``importlib.import_module`` is cached by ``sys.modules``, so the actual
     import only happens once.
     """
+    resolved = None
 
     def _invoke(*args, **kwargs):
-        return getattr(importlib.import_module(module_path), attr)(*args, **kwargs)
+        nonlocal resolved
+        if resolved is None:
+            resolved = getattr(importlib.import_module(module_path), attr)
+        return resolved(*args, **kwargs)
 
     _invoke.__name__ = attr
     _invoke.__qualname__ = attr

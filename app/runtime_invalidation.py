@@ -1,5 +1,6 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from importlib import import_module
 from typing import Callable
 
@@ -8,37 +9,37 @@ _INVALIDATORS: tuple[tuple[str, str, str, str], ...] = (
         "db_metadata",
         "app.db_metadata",
         "invalidate_db_metadata_cache",
-        "Предупреждение при обновлении кэша метаданных БД: {exc}",
+        "РџСЂРµРґСѓРїСЂРµР¶РґРµРЅРёРµ РїСЂРё РѕР±РЅРѕРІР»РµРЅРёРё РєСЌС€Р° РјРµС‚Р°РґР°РЅРЅС‹С… Р‘Р”: {exc}",
     ),
     (
         "dashboard",
         "app.dashboard.cache",
         "_invalidate_dashboard_caches",
-        "Предупреждение при обновлении кэша панели: {exc}",
+        "РџСЂРµРґСѓРїСЂРµР¶РґРµРЅРёРµ РїСЂРё РѕР±РЅРѕРІР»РµРЅРёРё РєСЌС€Р° РїР°РЅРµР»Рё: {exc}",
     ),
     (
         "ml_model",
         "app.services.ml_model.core",
         "clear_ml_model_cache",
-        "Предупреждение при обновлении кэша ML-блока: {exc}",
+        "РџСЂРµРґСѓРїСЂРµР¶РґРµРЅРёРµ РїСЂРё РѕР±РЅРѕРІР»РµРЅРёРё РєСЌС€Р° ML-Р±Р»РѕРєР°: {exc}",
     ),
     (
         "clustering",
         "app.services.clustering.core",
         "clear_clustering_cache",
-        "Предупреждение при обновлении кэша кластеризации: {exc}",
+        "РџСЂРµРґСѓРїСЂРµР¶РґРµРЅРёРµ РїСЂРё РѕР±РЅРѕРІР»РµРЅРёРё РєСЌС€Р° РєР»Р°СЃС‚РµСЂРёР·Р°С†РёРё: {exc}",
     ),
     (
         "access_points",
         "app.services.access_points.core",
         "clear_access_points_cache",
-        "Предупреждение при обновлении кэша проблемных точек: {exc}",
+        "РџСЂРµРґСѓРїСЂРµР¶РґРµРЅРёРµ РїСЂРё РѕР±РЅРѕРІР»РµРЅРёРё РєСЌС€Р° РїСЂРѕР±Р»РµРјРЅС‹С… С‚РѕС‡РµРє: {exc}",
     ),
     (
         "fire_map",
         "app.services.fire_map_service",
         "clear_fire_map_cache",
-        "Предупреждение при обновлении кэша карты пожаров: {exc}",
+        "РџСЂРµРґСѓРїСЂРµР¶РґРµРЅРёРµ РїСЂРё РѕР±РЅРѕРІР»РµРЅРёРё РєСЌС€Р° РєР°СЂС‚С‹ РїРѕР¶Р°СЂРѕРІ: {exc}",
     ),
 )
 
@@ -89,16 +90,24 @@ def warmup_runtime_caches(on_warning: Callable[[str], None] | None = None) -> No
     try:
         db_metadata = import_module("app.db_metadata")
         table_names: list[str] = db_metadata.get_table_names_cached()
-        for table_name in table_names:
-            try:
-                db_metadata.get_table_columns_cached(table_name)
-            except Exception as exc:
-                warn(f"Предупреждение при прогреве колонок таблицы '{table_name}': {exc}")
+        if table_names:
+            with ThreadPoolExecutor(max_workers=min(8, len(table_names))) as executor:
+                futures = {
+                    executor.submit(db_metadata.get_table_columns_cached, table_name): table_name
+                    for table_name in table_names
+                }
+                for future in as_completed(futures):
+                    table_name = futures[future]
+                    try:
+                        future.result()
+                    except Exception as exc:
+                        warn(f"РџСЂРµРґСѓРїСЂРµР¶РґРµРЅРёРµ РїСЂРё РїСЂРѕРіСЂРµРІРµ РєРѕР»РѕРЅРѕРє С‚Р°Р±Р»РёС†С‹ '{table_name}': {exc}")
     except Exception as exc:
-        warn(f"Предупреждение при прогреве кэша метаданных БД: {exc}")
+        warn(f"РџСЂРµРґСѓРїСЂРµР¶РґРµРЅРёРµ РїСЂРё РїСЂРѕРіСЂРµРІРµ РєСЌС€Р° РјРµС‚Р°РґР°РЅРЅС‹С… Р‘Р”: {exc}")
 
     try:
         dashboard_cache = import_module("app.dashboard.cache")
         dashboard_cache._collect_dashboard_metadata_cached()
     except Exception as exc:
-        warn(f"Предупреждение при прогреве кэша дашборда: {exc}")
+        warn(f"РџСЂРµРґСѓРїСЂРµР¶РґРµРЅРёРµ РїСЂРё РїСЂРѕРіСЂРµРІРµ РєСЌС€Р° РґР°С€Р±РѕСЂРґР°: {exc}")
+

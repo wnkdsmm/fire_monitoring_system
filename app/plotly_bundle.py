@@ -53,7 +53,10 @@ def serialize_plotly_figure(figure: Any) -> dict[str, Any]:
     if not PLOTLY_AVAILABLE or PlotlyJSONEncoder is None:
         return empty_plotly_payload()
 
-    payload = json.loads(json.dumps(figure, cls=PlotlyJSONEncoder))
+    if go is not None and isinstance(figure, go.Figure):
+        payload = figure.to_dict()
+    else:
+        payload = json.loads(json.dumps(figure, cls=PlotlyJSONEncoder))
     if isinstance(payload.get("layout"), dict):
         payload["layout"].pop("template", None)
     payload["config"] = dict(DEFAULT_PLOTLY_CONFIG)

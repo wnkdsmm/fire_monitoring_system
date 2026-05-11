@@ -9,6 +9,7 @@ from config.db import engine
 
 _TABLE_NAMES_CACHE_KEY = "__table_names__"
 _TABLE_NAMES_CACHE = CopyingTtlCache[str, tuple[str, ...]](ttl_seconds=None)
+_TABLE_NAME_SET_CACHE = CopyingTtlCache[str, frozenset[str]](ttl_seconds=None)
 _TABLE_COLUMNS_CACHE = CopyingTtlCache[str, tuple[str, ...]](ttl_seconds=None)
 _TABLE_ORDER_CACHE_INVALIDATORS: list[Callable[[], None]] = []
 
@@ -29,6 +30,7 @@ def invalidate_table_order_caches() -> None:
 
 def invalidate_db_metadata_cache(table_name: str | None = None) -> None:
     _TABLE_NAMES_CACHE.delete(_TABLE_NAMES_CACHE_KEY)
+    _TABLE_NAME_SET_CACHE.delete(_TABLE_NAMES_CACHE_KEY)
     if table_name is None:
         _TABLE_COLUMNS_CACHE.clear()
     else:
@@ -49,8 +51,19 @@ def get_table_names_cached(force_refresh: bool = False) -> list[str]:
     return list(table_names)
 
 
+def get_table_name_set_cached(force_refresh: bool = False) -> frozenset[str]:
+    if not force_refresh:
+        cached = _TABLE_NAME_SET_CACHE.get(_TABLE_NAMES_CACHE_KEY)
+        if cached is not None:
+            return cached
+
+    table_names = frozenset(get_table_names_cached(force_refresh=force_refresh))
+    _TABLE_NAME_SET_CACHE.set(_TABLE_NAMES_CACHE_KEY, table_names)
+    return table_names
+
+
 def table_exists_cached(table_name: str) -> bool:
-    return str(table_name) in set(get_table_names_cached())
+    return str(table_name) in get_table_name_set_cached()
 
 
 def get_table_columns_cached(table_name: str, force_refresh: bool = False) -> list[str]:
@@ -83,6 +96,7 @@ def get_table_signature_cached() -> tuple[str, ...]:
 __all__ = [
     "get_table_column_set_cached",
     "get_table_columns_cached",
+    "get_table_name_set_cached",
     "get_table_names_cached",
     "get_table_signature_cached",
     "invalidate_db_metadata_cache",

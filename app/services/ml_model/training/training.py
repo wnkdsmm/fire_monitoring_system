@@ -17,7 +17,6 @@ from . import training_result as _result
 from . import training_temperature as _temperature
 from ..caches import MLModelCaches, create_default_caches
 from ..ml_model_config_types import COUNT_MODEL_KEYS, COUNT_MODEL_LABELS, EXPLAINABLE_COUNT_MODEL_KEY, MlProgressCallback, MAX_HISTORY_POINTS, MIN_DAILY_HISTORY, MIN_FEATURE_ROWS, _emit_progress
-from config.constants import ML_TRAINING_ARTIFACT_CACHE_LIMIT
 from ..ml_model_result_types import BacktestSuccess, coerce_backtest_result
 from .types import (
     TrainingFeatureImportanceRow,
@@ -117,10 +116,7 @@ def _training_artifact_cache_get(
     cache_key: tuple[int, tuple[tuple[Any, ...], ...]],
     caches: MLModelCaches,
 ) -> _TrainingArtifacts | None:
-    artifacts = caches.artifact_cache.get(cache_key)
-    if artifacts is not None:
-        caches.artifact_cache.move_to_end(cache_key)
-    return artifacts
+    return caches.artifact_cache.get(cache_key)
 
 
 def _training_artifact_cache_store(
@@ -128,11 +124,7 @@ def _training_artifact_cache_store(
     artifacts: _TrainingArtifacts,
     caches: MLModelCaches,
 ) -> _TrainingArtifacts:
-    caches.artifact_cache[cache_key] = artifacts
-    caches.artifact_cache.move_to_end(cache_key)
-    while len(caches.artifact_cache) > ML_TRAINING_ARTIFACT_CACHE_LIMIT:
-        caches.artifact_cache.popitem(last=False)
-    return artifacts
+    return caches.artifact_cache.set(cache_key, artifacts)
 
 
 def _forecast_rows_from_training_artifacts(
