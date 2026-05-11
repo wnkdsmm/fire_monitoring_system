@@ -256,17 +256,17 @@
         if (endpoint === "/statistics19922020/decode") {
             var decoded = files.decoded_file ? (" Расшифрованный файл: " + files.decoded_file + ".") : "";
             var report = files.report_file ? (" Отчет: " + files.report_file + ".") : "";
-            return "Расшифровка завершена." + decoded + report + " " + logsHint;
+            return "Операция выполнена: данные расшифрованы." + decoded + report + " " + logsHint;
         }
 
         if (endpoint === "/statistics19922020/decode-and-import" || endpoint === "/statistics19922020/decode_import") {
             var importData = payload && payload.import ? payload.import : {};
             var outputFolder = importData.output_folder ? (" Папка результата: " + importData.output_folder + ".") : "";
-            return "Расшифровка завершена, данные загружены в PostgreSQL." + outputFolder + " " + logsHint;
+            return "Операция выполнена: данные расшифрованы и загружены в PostgreSQL." + outputFolder + " " + logsHint;
         }
 
         if (endpoint === "/statistics19922020/run_rename_headers") {
-            return "Подготовка заголовков завершена. " + logsHint;
+            return "Операция выполнена: заголовки подготовлены. " + logsHint;
         }
 
         if (endpoint === "/statistics19922020/run_split_xlsx_by_year") {
@@ -274,7 +274,7 @@
                 ? (" Создано файлов: " + payload.exported_files.length + ".")
                 : "";
             var targetDir = payload && payload.output_dir ? (" Папка результата: " + payload.output_dir + ".") : "";
-            return "Разбивка по годам завершена." + exported + targetDir + " " + logsHint;
+            return "Операция выполнена: файл разбит по годам." + exported + targetDir + " " + logsHint;
         }
 
         return String(payload && payload.message ? payload.message : "Операция завершена.") + " " + logsHint;
@@ -327,7 +327,7 @@
             }
 
             if (isErrorStatus(payload)) {
-                setStatus((payload.message || settings.errorMessage || "Не удалось выполнить операцию.") + " Подробности в блоке «Логи выполнения».", "error");
+                setStatus("Операция не выполнена: " + (payload.message || settings.errorMessage || "Не удалось выполнить операцию.") + " Подробности в блоке «Логи выполнения».", "error");
                 return;
             }
 
@@ -336,7 +336,7 @@
             var fallback = settings.errorMessage || "Не удалось выполнить операцию.";
             var message = getApiErrorMessage(error && error.payload, error && error.message ? error.message : fallback);
             appendLogLine(message);
-            setStatus(message + " Подробности в блоке «Логи выполнения».", "error");
+            setStatus("Операция не выполнена: " + message + " Подробности в блоке «Логи выполнения».", "error");
         } finally {
             setActionButtonsDisabled(false);
         }
@@ -365,7 +365,7 @@
                 setCurrentJobId(null);
                 setSelectedFileLabel(selectedFile.name);
                 replaceLogLines(["Выбран исходный файл: " + selectedFile.name]);
-                setStatus("Файл выбран. Запустите нужную операцию. Ход выполнения появится в журнале.", "info");
+                setStatus("Операция готова к запуску: файл выбран. Подробности в блоке «Логи выполнения».", "info");
             });
         }
 

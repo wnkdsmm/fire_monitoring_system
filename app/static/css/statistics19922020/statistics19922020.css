@@ -43,12 +43,41 @@
     align-content: start;
 }
 
+.statistics19922020-role-label {
+    display: inline-flex;
+    width: fit-content;
+    max-width: 100%;
+    padding: 2px 8px;
+    border-radius: 999px;
+    border: 1px solid rgba(var(--color-accent-blue-rgb), 0.24);
+    background: rgba(var(--color-accent-blue-rgb), 0.08);
+    color: var(--accent-deep);
+    font-size: var(--font-size-token-01);
+    font-weight: 700;
+    line-height: 1.3;
+}
+
+.statistics19922020-role-label-secondary {
+    border-color: var(--line);
+    background: var(--surface-soft);
+    color: var(--muted);
+}
+
 .statistics19922020-action-hint {
     margin: 0;
     color: var(--muted);
     font-size: var(--font-size-token-02);
     line-height: 1.45;
     overflow-wrap: anywhere;
+}
+
+#statistics19922020DecodeImportButton {
+    border: 1px solid rgba(var(--color-accent-blue-rgb), 0.38);
+    box-shadow: 0 0 0 2px rgba(var(--color-accent-blue-rgb), 0.12);
+}
+
+#statistics19922020DecodeImportButton:hover {
+    box-shadow: 0 0 0 3px rgba(var(--color-accent-blue-rgb), 0.18);
 }
 
 .statistics19922020-actions-grid .table-selection-button {
@@ -131,6 +160,10 @@
 }
 
 @media (max-width: 640px) {
+    .statistics19922020-role-label {
+        white-space: normal;
+    }
+
     .statistics19922020-action-hint {
         font-size: var(--font-size-token-01);
         line-height: 1.5;
