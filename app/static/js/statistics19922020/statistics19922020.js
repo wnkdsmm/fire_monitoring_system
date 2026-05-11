@@ -11,7 +11,7 @@
     var DETAIL_TEXTS = TEXTS.details || {};
     var STATUS_SUCCESS_PREFIX = STATUS_TEXTS.successPrefix || "Операция выполнена:";
     var STATUS_ERROR_PREFIX = STATUS_TEXTS.errorPrefix || "Операция не выполнена:";
-    var STATUS_LOGS_HINT = STATUS_TEXTS.logsHint || "Подробности в блоке «Логи выполнения».";
+    var STATUS_LOGS_HINT = STATUS_TEXTS.logsHint || "Подробности в блоке «Журнал выполнения».";
     var shared = global.FireUi || {};
     var fetchJson = typeof shared.fetchJson === "function" ? shared.fetchJson : fallbackFetchJson;
     var getApiErrorMessage = typeof shared.getApiErrorMessage === "function"
@@ -399,7 +399,7 @@
                 setCurrentJobId(null);
                 setSelectedFileLabel(selectedFile.name);
                 replaceLogLines([(LOG_TEXTS.sourceSelectedPrefix || "Выбран исходный файл: ") + selectedFile.name]);
-                setStatus(joinMessageParts([STATUS_TEXTS.readyToRun || "Операция готова к запуску: файл выбран.", STATUS_LOGS_HINT]), "info");
+                setStatus(joinMessageParts([STATUS_TEXTS.readyToRun || "Файл выбран. Можно запускать операцию.", STATUS_LOGS_HINT]), "info");
             });
         }
 

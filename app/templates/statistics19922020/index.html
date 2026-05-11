@@ -14,7 +14,7 @@
     "primary_role": "Основная операция",
     "secondary_role": "Дополнительная операция",
     "pick_button": "Выбрать исходный файл (.xlsx)",
-    "pick_hint": "Выбор файла для обработки. Результат: выбранный файл отображается в карточке.",
+    "pick_hint": "Выбор исходного файла. Результат: файл отображается в карточке.",
     "decode_button": "Проверить и расшифровать данные",
     "decode_hint": "Проверка и расшифровка данных. Результат: расшифрованный файл и отчет.",
     "decode_import_button": "Расшифровать и загрузить в PostgreSQL",
@@ -26,46 +26,73 @@
     "selected_file_label": "Выбранный файл:",
     "selected_file_empty": "Исходный файл не выбран",
     "logs_title": "Журнал выполнения",
-    "logs_meta": "Журнал обновляется автоматически для текущего job_id."
+    "logs_meta": "Журнал обновляется автоматически для текущего job_id.",
+    "status_success_prefix": "Операция выполнена:",
+    "status_error_prefix": "Операция не выполнена:",
+    "status_logs_hint": "Подробности в блоке «Журнал выполнения».",
+    "status_ready_to_run": "Файл выбран. Можно запускать операцию.",
+    "status_default_done": "Операция завершена.",
+    "status_logs_initial": "Журнал выполнения появится после запуска операции.",
+    "error_request_failed": "Не удалось выполнить запрос.",
+    "error_refresh_logs_failed": "Не удалось обновить журнал выполнения.",
+    "error_choose_source_file_first": "Сначала выберите исходный файл .xlsx.",
+    "error_upload_source_failed": "Не удалось загрузить исходный файл.",
+    "error_source_not_uploaded": "Исходный файл не был загружен.",
+    "error_operation_failed": "Не удалось выполнить операцию.",
+    "error_decode_failed": "Не удалось расшифровать выбранный файл.",
+    "error_decode_import_failed": "Не удалось выполнить расшифровку и загрузку в PostgreSQL.",
+    "error_rename_headers_failed": "Не удалось выполнить подготовку заголовков.",
+    "error_split_by_year_failed": "Не удалось разбить файл по годам.",
+    "log_uploading_source_prefix": "Загрузка исходного файла ",
+    "log_source_uploaded": "Исходный файл загружен.",
+    "log_source_selected_prefix": "Выбран исходный файл: ",
+    "success_decoded": "данные расшифрованы.",
+    "success_decoded_imported": "данные расшифрованы и загружены в PostgreSQL.",
+    "success_headers_prepared": "заголовки подготовлены.",
+    "success_split_by_year": "файл разбит по годам.",
+    "details_decoded_file_prefix": "Расшифрованный файл: ",
+    "details_report_file_prefix": "Отчет: ",
+    "details_output_folder_prefix": "Папка результата: ",
+    "details_exported_files_prefix": "Создано файлов: "
 } %}
 {% set js_texts = {
     "status": {
-        "successPrefix": "Операция выполнена:",
-        "errorPrefix": "Операция не выполнена:",
-        "logsHint": "Подробности в блоке «Логи выполнения».",
-        "readyToRun": "Операция готова к запуску: файл выбран.",
-        "defaultDone": "Операция завершена.",
+        "successPrefix": ui.status_success_prefix,
+        "errorPrefix": ui.status_error_prefix,
+        "logsHint": ui.status_logs_hint,
+        "readyToRun": ui.status_ready_to_run,
+        "defaultDone": ui.status_default_done,
         "noFileSelected": ui.selected_file_empty,
-        "logsInitial": "Журнал выполнения появится после запуска операции."
+        "logsInitial": ui.status_logs_initial
     },
     "errors": {
-        "requestFailed": "Не удалось выполнить запрос.",
-        "refreshLogsFailed": "Не удалось обновить журнал выполнения.",
-        "chooseSourceFileFirst": "Сначала выберите исходный файл .xlsx.",
-        "uploadSourceFailed": "Не удалось загрузить исходный файл.",
-        "sourceNotUploaded": "Исходный файл не был загружен.",
-        "operationFailed": "Не удалось выполнить операцию.",
-        "decodeFailed": "Не удалось расшифровать выбранный файл.",
-        "decodeImportFailed": "Не удалось выполнить расшифровку и загрузку в PostgreSQL.",
-        "renameHeadersFailed": "Не удалось выполнить подготовку заголовков.",
-        "splitByYearFailed": "Не удалось разбить файл по годам."
+        "requestFailed": ui.error_request_failed,
+        "refreshLogsFailed": ui.error_refresh_logs_failed,
+        "chooseSourceFileFirst": ui.error_choose_source_file_first,
+        "uploadSourceFailed": ui.error_upload_source_failed,
+        "sourceNotUploaded": ui.error_source_not_uploaded,
+        "operationFailed": ui.error_operation_failed,
+        "decodeFailed": ui.error_decode_failed,
+        "decodeImportFailed": ui.error_decode_import_failed,
+        "renameHeadersFailed": ui.error_rename_headers_failed,
+        "splitByYearFailed": ui.error_split_by_year_failed
     },
     "logs": {
-        "uploadingSourcePrefix": "Загрузка исходного файла ",
-        "sourceUploaded": "Исходный файл загружен.",
-        "sourceSelectedPrefix": "Выбран исходный файл: "
+        "uploadingSourcePrefix": ui.log_uploading_source_prefix,
+        "sourceUploaded": ui.log_source_uploaded,
+        "sourceSelectedPrefix": ui.log_source_selected_prefix
     },
     "success": {
-        "decoded": "данные расшифрованы.",
-        "decodedAndImported": "данные расшифрованы и загружены в PostgreSQL.",
-        "headersPrepared": "заголовки подготовлены.",
-        "splitByYear": "файл разбит по годам."
+        "decoded": ui.success_decoded,
+        "decodedAndImported": ui.success_decoded_imported,
+        "headersPrepared": ui.success_headers_prepared,
+        "splitByYear": ui.success_split_by_year
     },
     "details": {
-        "decodedFilePrefix": "Расшифрованный файл: ",
-        "reportFilePrefix": "Отчет: ",
-        "outputFolderPrefix": "Папка результата: ",
-        "exportedFilesPrefix": "Создано файлов: "
+        "decodedFilePrefix": ui.details_decoded_file_prefix,
+        "reportFilePrefix": ui.details_report_file_prefix,
+        "outputFolderPrefix": ui.details_output_folder_prefix,
+        "exportedFilesPrefix": ui.details_exported_files_prefix
     }
 } %}
 {% set sidebar_title = ui.sidebar_title %}
