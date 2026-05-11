@@ -2,10 +2,10 @@
     // Keep this entry file touched when dependent ML modules change,
     // because the template cache key is derived from ml_model.js mtime.
     function boot() {
-        if (!global.MlModelEvents || typeof global.MlModelEvents.bootstrap !== 'function') {
+        if (!global.MlModelRender || typeof global.MlModelRender.init !== 'function') {
             return;
         }
-        global.MlModelEvents.bootstrap();
+        global.MlModelRender.init();
     }
 
     if (document.readyState === 'loading') {

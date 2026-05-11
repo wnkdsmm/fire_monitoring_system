@@ -1,19 +1,13 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Body, Query, Request
+from fastapi import APIRouter, Body, Request
 
-from .api_common import job_status_response, run_analytics_request, run_session_json_action
+from .api_common import job_status_response, run_session_json_action
 
 router = APIRouter()
 
 _INVALID_ML_MODEL_MESSAGE = "Не удалось обработать параметры ML-анализа."
 _FAILED_ML_MODEL_MESSAGE = "Не удалось рассчитать ML-анализ. Попробуйте повторить запрос."
-
-
-def get_ml_model_data(**kwargs):
-    from app.services.ml_model.core import get_ml_model_data as _get_ml_model_data
-
-    return _get_ml_model_data(**kwargs)
 
 
 def start_ml_model_job(**kwargs):
@@ -26,34 +20,6 @@ def get_ml_job_status(**kwargs):
     from app.services.ml_model.jobs import get_ml_job_status as _get_ml_job_status
 
     return _get_ml_job_status(**kwargs)
-
-@router.get("/api/ml-model-data")
-def ml_model_data_endpoint(
-    table_name: str = "all",
-    table_names: list[str] | None = Query(None),
-    cause: str = "all",
-    object_category: str = "all",
-    temperature: str = "",
-    forecast_days: str = "7",
-    history_window: str = "all",
-    current_user_date: str = "",
-):
-    return run_analytics_request(
-        lambda: get_ml_model_data(
-            table_name=table_name,
-            table_names=table_names or [],
-            cause=cause,
-            object_category=object_category,
-            temperature=temperature,
-            forecast_days="7",
-            history_window="all",
-            current_user_date=current_user_date,
-        ),
-        invalid_code="ml_model_invalid_request",
-        invalid_message=_INVALID_ML_MODEL_MESSAGE,
-        failed_code="ml_model_failed",
-        failed_message=_FAILED_ML_MODEL_MESSAGE,
-    )
 
 @router.post("/api/ml-model-jobs")
 def start_ml_model_job_endpoint(request: Request, payload: dict = Body(...)):
@@ -71,9 +37,6 @@ def start_ml_model_job_endpoint(request: Request, payload: dict = Body(...)):
             table_names=table_names,
             cause=str(payload.get("cause") or "all"),
             object_category=str(payload.get("object_category") or "all"),
-            temperature=str(payload.get("temperature") or ""),
-            forecast_days="7",
-            history_window="all",
             current_user_date=str(payload.get("current_user_date") or ""),
         ),
     )

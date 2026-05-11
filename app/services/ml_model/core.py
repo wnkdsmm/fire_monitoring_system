@@ -20,9 +20,6 @@ from app.services.forecasting.data import (
 from app.services.forecasting.utils import (
     _format_datetime,
     _format_float_for_input,
-    _parse_float,
-    _parse_forecast_days,
-    _parse_history_window,
     _parse_optional_iso_date,
     _resolve_option_value,
 )
@@ -144,9 +141,6 @@ def get_ml_model_shell_context(
     table_names: Sequence[str] | None = None,
     cause: str = 'all',
     object_category: str = 'all',
-    temperature: str = '',
-    forecast_days: str = '7',
-    history_window: str = 'all',
     current_user_date: str = '',
     prefer_cached: bool = False,
     caches: MLModelCaches | None = None,
@@ -157,9 +151,6 @@ def get_ml_model_shell_context(
         table_names=table_names,
         cause=cause,
         object_category=object_category,
-        temperature="",
-        forecast_days=str(FIXED_FORECAST_DAYS),
-        history_window="all",
         current_user_date=current_user_date,
     )
     cached = _cache_get(request_state['cache_key'], cache_set) if prefer_cached else None
@@ -181,9 +172,6 @@ def get_ml_model_data(
     table_names: Sequence[str] | None = None,
     cause: str = 'all',
     object_category: str = 'all',
-    temperature: str = '',
-    forecast_days: str = '7',
-    history_window: str = 'all',
     current_user_date: str = '',
     progress_callback: MlProgressCallback | None = None,
     caches: MLModelCaches | None = None,
@@ -195,9 +183,6 @@ def get_ml_model_data(
         table_names=table_names,
         cause=cause,
         object_category=object_category,
-        temperature="",
-        forecast_days=str(FIXED_FORECAST_DAYS),
-        history_window="all",
         current_user_date=current_user_date,
     )
     table_options = request_state['table_options']
@@ -350,9 +335,6 @@ def _build_ml_request_state(
     table_names: Sequence[str] | None = None,
     cause: str = 'all',
     object_category: str = 'all',
-    temperature: str = '',
-    forecast_days: str = '7',
-    history_window: str = 'all',
     current_user_date: str = '',
 ) -> MlRequestState:
     parsed_current_user_date = _parse_optional_iso_date(current_user_date)
@@ -373,10 +355,6 @@ def _build_ml_request_state(
         selection_resolver=_resolve_forecasting_selection,
         source_tables_resolver=_selected_source_tables,
         source_notes_resolver=_selected_source_table_notes,
-        forecast_days_parser=_parse_forecast_days,
-        history_window_parser=_parse_history_window,
-        temperature_parser=_parse_float,
-        temperature_formatter=_format_float_for_input,
     )
     normalized_requested = [str(item or "").strip() for item in (table_names or []) if str(item or "").strip()]
     if normalized_requested and 'all' not in normalized_requested:

@@ -179,9 +179,6 @@ def ml_model_page(
     table_names: list[str] | None = Query(None),
     cause: str = "all",
     object_category: str = "all",
-    temperature: str = "",
-    forecast_days: str = "7",
-    history_window: str = "all",
     current_user_date: str = "",
 ):
     page_kwargs = {
@@ -189,9 +186,6 @@ def ml_model_page(
         "table_names": table_names or [],
         "cause": cause,
         "object_category": object_category,
-        "temperature": temperature,
-        "forecast_days": "7",
-        "history_window": "all",
         "current_user_date": current_user_date,
     }
     ml_model = get_ml_model_shell_context(**page_kwargs, prefer_cached=True)

@@ -19,7 +19,6 @@ from app.services.job_support import (
 from app.state import FINAL_JOB_STATUSES, job_store
 
 from .core import _build_ml_request_state, _cache_get, get_ml_model_data
-from .ml_model_config_types import FIXED_FORECAST_DAYS
 
 _ML_JOB_EXECUTOR = ThreadPoolExecutor(max_workers=2, thread_name_prefix="ml-model")
 _ML_JOB_LOCK = RLock()
@@ -38,9 +37,6 @@ def start_ml_model_job(
     table_names: list[str] | None = None,
     cause: str = "all",
     object_category: str = "all",
-    temperature: str = "",
-    forecast_days: str = "7",
-    history_window: str = "all",
     current_user_date: str = "",
 ) -> dict[str, Any]:
     request_state = _build_ml_request_state(
@@ -48,9 +44,6 @@ def start_ml_model_job(
         table_names=table_names,
         cause=cause,
         object_category=object_category,
-        temperature=temperature,
-        forecast_days=str(FIXED_FORECAST_DAYS),
-        history_window="all",
         current_user_date=current_user_date,
     )
     cache_key_token = _serialize_cache_key(request_state["cache_key"])
@@ -59,9 +52,6 @@ def start_ml_model_job(
         table_names=table_names,
         cause=cause,
         object_category=object_category,
-        temperature=temperature,
-        forecast_days=str(FIXED_FORECAST_DAYS),
-        history_window="all",
         current_user_date=current_user_date,
     )
     reuse_coordinator = JobReuseCoordinator(
@@ -138,9 +128,6 @@ def _run_ml_model_job(
             table_names=params_payload["table_names"],
             cause=params_payload["cause"],
             object_category=params_payload["object_category"],
-            temperature=params_payload["temperature"],
-            forecast_days=params_payload["forecast_days"],
-            history_window=params_payload["history_window"],
             current_user_date=params_payload["current_user_date"],
             progress_callback=reporter.handle_progress,
         ),
@@ -338,9 +325,6 @@ def _build_params_payload(
     table_names: list[str] | None,
     cause: str,
     object_category: str,
-    temperature: str,
-    forecast_days: str,
-    history_window: str,
     current_user_date: str,
 ) -> dict[str, Any]:
     normalized_table_names = [str(item or "").strip() for item in (table_names or []) if str(item or "").strip()]
@@ -349,9 +333,6 @@ def _build_params_payload(
         "table_names": normalized_table_names,
         "cause": str(cause or "all"),
         "object_category": str(object_category or "all"),
-        "temperature": str(temperature or ""),
-        "forecast_days": str(FIXED_FORECAST_DAYS),
-        "history_window": "all",
         "current_user_date": str(current_user_date or ""),
     }
 

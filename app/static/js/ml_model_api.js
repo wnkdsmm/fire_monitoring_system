@@ -140,7 +140,7 @@
                 }
             },
             {
-                intervalMs: 1200,
+                intervalMs: 800,
                 scheduleNext: function (fn, delay) {
                     jobPollTimer.set(fn, delay);
                 },
