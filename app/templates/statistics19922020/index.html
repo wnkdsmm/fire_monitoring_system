@@ -1,9 +1,9 @@
 {% extends "base.html" %}
-{% set sidebar_title = "Статистика 1992-2020" %}
+{% set sidebar_title = "&#1057;&#1090;&#1072;&#1090;&#1080;&#1089;&#1090;&#1080;&#1082;&#1072; 1992-2020" %}
 {% set sidebar_active = "statistics19922020" %}
-{% set sidebar_description %}Загрузка XLSX, расшифровка кодов и импорт в PostgreSQL для набора статистики 1992-2020.{% endset %}
+{% set sidebar_description %}XLSX import, code decoding and PostgreSQL load for 1992-2020 statistics.{% endset %}
 
-{% block title %}Статистика 1992-2020{% endblock %}
+{% block title %}&#1057;&#1090;&#1072;&#1090;&#1080;&#1089;&#1090;&#1080;&#1082;&#1072; 1992-2020{% endblock %}
 
 {% block page_styles %}
 <link rel="stylesheet" href="/static/css/statistics19922020/statistics19922020.css?v={{ statistics19922020_css_version }}">
@@ -13,15 +13,15 @@
 <div class="dashboard-main simple-page-main statistics19922020-page">
     <section class="hero-panel simple-page-intro">
         <div class="hero-copy">
-            <span class="eyebrow">Спецраздел импорта</span>
-            <h1>Статистика 1992-2020</h1>
-            <p class="subtitle">Выберите XLSX файл, запустите расшифровку кодов и при необходимости сразу импортируйте расшифрованные данные в PostgreSQL.</p>
+            <span class="eyebrow">Statistics import flow</span>
+            <h1>&#1057;&#1090;&#1072;&#1090;&#1080;&#1089;&#1090;&#1080;&#1082;&#1072; 1992-2020</h1>
+            <p class="subtitle">Choose an XLSX source file, decode values, and optionally load decoded data into PostgreSQL.</p>
         </div>
         <div class="hero-side">
             <article class="hero-stat-card hero-stat-card-soft">
-                <span class="hero-stat-label">Справочники</span>
+                <span class="hero-stat-label">Reference data</span>
                 <strong class="hero-stat-value"><small>F:\filesFires\edittables\Statistica</small></strong>
-                <span class="hero-stat-foot">Используются файлы расшифровки из папки статистики и ее подпапок.</span>
+                <span class="hero-stat-foot">Dictionary files from this folder and subfolders are used for decoding.</span>
             </article>
         </div>
     </section>
@@ -29,20 +29,45 @@
     <section class="panel">
         <div class="panel-head">
             <div>
-                <h2>Операции</h2>
-                <span class="panel-meta">Кнопки запускают загрузку, расшифровку, импорт и прикрепленные служебные скрипты.</span>
+                <h2>Actions</h2>
+                <span class="panel-meta">Main flow is highlighted first. Service operations are grouped separately.</span>
             </div>
         </div>
-        <div class="statistics19922020-actions-grid">
-            <button id="statistics19922020PickFileButton" type="button" class="primary-action">Выбрать XLSX</button>
-            <button id="statistics19922020DecodeButton" type="button" class="primary-action" data-stat-action>Расшифровать коды</button>
-            <button id="statistics19922020DecodeImportButton" type="button" class="primary-action" data-stat-action>Расшифровать + импорт в PostgreSQL</button>
-            <button id="statistics19922020RenameHeadersButton" type="button" class="table-selection-button" data-stat-action>Скрипт: rename_headers_2019_2023.py</button>
-            <button id="statistics19922020SplitByYearButton" type="button" class="table-selection-button" data-stat-action>Скрипт: split_xlsx_by_year.py</button>
+        <div class="statistics19922020-action-groups">
+            <section class="statistics19922020-action-group statistics19922020-action-group-primary">
+                <h3 class="statistics19922020-action-group-title">Main actions</h3>
+                <div class="statistics19922020-actions-grid">
+                    <div class="statistics19922020-action-item">
+                        <button id="statistics19922020PickFileButton" type="button" class="primary-action">&#1042;&#1099;&#1073;&#1088;&#1072;&#1090;&#1100; &#1080;&#1089;&#1093;&#1086;&#1076;&#1085;&#1099;&#1081; &#1092;&#1072;&#1081;&#1083; (.xlsx)</button>
+                        <p class="statistics19922020-action-hint">Source file for decode and optional database load.</p>
+                    </div>
+                    <div class="statistics19922020-action-item">
+                        <button id="statistics19922020DecodeButton" type="button" class="primary-action" data-stat-action>&#1056;&#1072;&#1089;&#1096;&#1080;&#1092;&#1088;&#1086;&#1074;&#1072;&#1090;&#1100; (&#1073;&#1077;&#1079; &#1079;&#1072;&#1075;&#1088;&#1091;&#1079;&#1082;&#1080; &#1074; &#1041;&#1044;)</button>
+                        <p class="statistics19922020-action-hint">Creates decoded XLSX and decode report without DB load.</p>
+                    </div>
+                    <div class="statistics19922020-action-item">
+                        <button id="statistics19922020DecodeImportButton" type="button" class="primary-action" data-stat-action>&#1056;&#1072;&#1089;&#1096;&#1080;&#1092;&#1088;&#1086;&#1074;&#1072;&#1090;&#1100; &#1080; &#1079;&#1072;&#1075;&#1088;&#1091;&#1079;&#1080;&#1090;&#1100; &#1074; PostgreSQL</button>
+                        <p class="statistics19922020-action-hint">Decodes values first, then loads decoded data into PostgreSQL.</p>
+                    </div>
+                </div>
+            </section>
+            <section class="statistics19922020-action-group statistics19922020-action-group-secondary">
+                <h3 class="statistics19922020-action-group-title">Additional service actions</h3>
+                <div class="statistics19922020-actions-grid">
+                    <div class="statistics19922020-action-item">
+                        <button id="statistics19922020RenameHeadersButton" type="button" class="table-selection-button" data-stat-action>&#1055;&#1086;&#1076;&#1075;&#1086;&#1090;&#1086;&#1074;&#1080;&#1090;&#1100; &#1079;&#1072;&#1075;&#1086;&#1083;&#1086;&#1074;&#1082;&#1080; (&#1089;&#1083;&#1091;&#1078;&#1077;&#1073;&#1085;&#1072;&#1103; &#1086;&#1087;&#1077;&#1088;&#1072;&#1094;&#1080;&#1103;)</button>
+                        <p class="statistics19922020-action-hint">Normalizes headers to expected format before processing.</p>
+                    </div>
+                    <div class="statistics19922020-action-item">
+                        <button id="statistics19922020SplitByYearButton" type="button" class="table-selection-button" data-stat-action>&#1056;&#1072;&#1079;&#1073;&#1080;&#1090;&#1100; &#1092;&#1072;&#1081;&#1083; &#1087;&#1086; &#1075;&#1086;&#1076;&#1072;&#1084; (&#1089;&#1083;&#1091;&#1078;&#1077;&#1073;&#1085;&#1072;&#1103; &#1086;&#1087;&#1077;&#1088;&#1072;&#1094;&#1080;&#1103;)</button>
+                        <p class="statistics19922020-action-hint">Creates separate yearly XLSX files from the source file.</p>
+                    </div>
+                </div>
+            </section>
         </div>
         <div class="statistics19922020-file-state">
-            <span class="statistics19922020-file-label">Выбранный файл:</span>
-            <strong id="statistics19922020SelectedFile">Файл не выбран</strong>
+            <span class="statistics19922020-file-label">Selected file:</span>
+            <strong id="statistics19922020SelectedFile">No source file selected</strong>
         </div>
         <div id="statistics19922020Status" class="statistics19922020-status" data-tone="info" hidden></div>
     </section>
@@ -50,8 +75,8 @@
     <section class="panel">
         <div class="panel-head">
             <div>
-                <h2>Логи выполнения</h2>
-                <span class="panel-meta">Логи обновляются автоматически с использованием текущего job_id.</span>
+                <h2>Execution logs</h2>
+                <span class="panel-meta">Logs update automatically for the current job_id.</span>
             </div>
         </div>
         <div id="statistics19922020Logs" class="statistics19922020-log-box" aria-live="polite"></div>

@@ -8,6 +8,42 @@
     gap: 12px;
 }
 
+.statistics19922020-action-groups {
+    display: grid;
+    gap: 14px;
+}
+
+.statistics19922020-action-group {
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+    background: var(--surface-soft);
+}
+
+.statistics19922020-action-group-title {
+    margin: 0 0 10px;
+    font-size: var(--font-size-token-03);
+    color: var(--ink);
+}
+
+.statistics19922020-action-group-primary {
+    border-color: rgba(var(--color-accent-blue-rgb), 0.22);
+    background: var(--surface-panel-accent);
+}
+
+.statistics19922020-action-item {
+    display: grid;
+    gap: 8px;
+    align-content: start;
+}
+
+.statistics19922020-action-hint {
+    margin: 0;
+    color: var(--muted);
+    font-size: var(--font-size-token-02);
+    line-height: 1.45;
+}
+
 .statistics19922020-actions-grid .table-selection-button {
     min-height: 48px;
     justify-content: center;

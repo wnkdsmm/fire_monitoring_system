@@ -7,7 +7,7 @@
     var fetchJson = typeof shared.fetchJson === "function" ? shared.fetchJson : fallbackFetchJson;
     var getApiErrorMessage = typeof shared.getApiErrorMessage === "function"
         ? shared.getApiErrorMessage
-        : function (_, fallback) { return fallback || "Ошибка запроса"; };
+        : function (_, fallback) { return fallback || "Request failed."; };
     var createJobId = typeof shared.createJobId === "function"
         ? shared.createJobId
         : function () { return String(Date.now()); };
@@ -44,7 +44,7 @@
             payload = {};
         }
         if (!response.ok) {
-            var message = (payload && payload.message) || fallback || "Ошибка запроса";
+            var message = (payload && payload.message) || fallback || "Request failed.";
             var error = new Error(message);
             error.payload = payload;
             throw error;
@@ -105,7 +105,7 @@
     function setSelectedFileLabel(fileName) {
         var label = byId("statistics19922020SelectedFile");
         if (label) {
-            label.textContent = fileName || "Файл не выбран";
+            label.textContent = fileName || "No source file selected";
         }
     }
 
@@ -157,7 +157,7 @@
             var result = await fetchJson(
                 "/logs?job_id=" + encodeURIComponent(resolvedJobId),
                 { headers: { "Accept": "application/json" } },
-                "Не удалось обновить логи."
+                "Could not refresh execution logs."
             );
             var payload = result.payload || {};
             var logs = Array.isArray(payload.logs) ? payload.logs : [];
@@ -190,12 +190,12 @@
         var fileInput = byId("statistics19922020FileInput");
         var selectedFile = getSelectedFile();
         if (!selectedFile) {
-            throw new Error("Сначала выберите XLSX файл.");
+            throw new Error("Select a source .xlsx file first.");
         }
 
         var nextJobId = createJobId();
         setCurrentJobId(nextJobId);
-        replaceLogLines(["Загрузка файла " + selectedFile.name + "..."]);
+        replaceLogLines(["Uploading source file " + selectedFile.name + "..."]);
 
         var uploadData = new FormData();
         uploadData.append("file", selectedFile);
@@ -204,20 +204,20 @@
         var uploadResult = await fetchJson(
             "/upload",
             { method: "POST", body: uploadData },
-            "Ошибка при загрузке файла."
+            "Could not upload the source file."
         );
         var payload = uploadResult.payload || {};
         var resolvedJobId = payload.job_id || nextJobId;
         setCurrentJobId(resolvedJobId);
         if (payload.status !== "uploaded") {
-            throw new Error(String(payload.message || "Файл не загружен."));
+            throw new Error(String(payload.message || "Source file was not uploaded."));
         }
 
         if (fileInput) {
             fileInput.value = "";
         }
         setSelectedFileLabel(payload.filename || selectedFile.name);
-        appendLogLine("Файл загружен.");
+        appendLogLine("Source file uploaded.");
         await refreshLogs(resolvedJobId);
         return resolvedJobId;
     }
@@ -230,7 +230,7 @@
         if (jobId) {
             return jobId;
         }
-        throw new Error("Сначала выберите XLSX файл.");
+        throw new Error("Select a source .xlsx file first.");
     }
 
     async function maybeUploadSelectedFile() {
@@ -246,6 +246,38 @@
         }
         var status = String(payload.status || "").trim().toLowerCase();
         return status === "error" || status === "failed";
+    }
+
+    function buildSuccessMessage(settings, payload) {
+        var endpoint = String(settings.endpoint || "");
+        var files = payload && payload.files ? payload.files : {};
+        var logsHint = "Details are available in the Execution logs panel.";
+
+        if (endpoint === "/statistics19922020/decode") {
+            var decoded = files.decoded_file ? (" Decoded file: " + files.decoded_file + ".") : "";
+            var report = files.report_file ? (" Report: " + files.report_file + ".") : "";
+            return "Decoding completed." + decoded + report + " " + logsHint;
+        }
+
+        if (endpoint === "/statistics19922020/decode-and-import" || endpoint === "/statistics19922020/decode_import") {
+            var importData = payload && payload.import ? payload.import : {};
+            var outputFolder = importData.output_folder ? (" Output folder: " + importData.output_folder + ".") : "";
+            return "Decoding and PostgreSQL load completed." + outputFolder + " " + logsHint;
+        }
+
+        if (endpoint === "/statistics19922020/run_rename_headers") {
+            return "Header preparation completed. " + logsHint;
+        }
+
+        if (endpoint === "/statistics19922020/run_split_xlsx_by_year") {
+            var exported = payload && payload.exported_files && payload.exported_files.length
+                ? (" Created files: " + payload.exported_files.length + ".")
+                : "";
+            var targetDir = payload && payload.output_dir ? (" Output folder: " + payload.output_dir + ".") : "";
+            return "Year split completed." + exported + targetDir + " " + logsHint;
+        }
+
+        return String(payload && payload.message ? payload.message : "Operation completed.") + " " + logsHint;
     }
 
     async function runAction(options) {
@@ -285,7 +317,7 @@
             var response = await fetchJson(
                 endpoint,
                 { method: "POST", body: formData },
-                settings.errorMessage || "Ошибка выполнения операции."
+                settings.errorMessage || "Operation failed."
             );
             var payload = response.payload || {};
             var resolvedJobId = payload.job_id || jobId || null;
@@ -295,16 +327,16 @@
             }
 
             if (isErrorStatus(payload)) {
-                setStatus(payload.message || settings.errorMessage || "Операция завершилась с ошибкой.", "error");
+                setStatus((payload.message || settings.errorMessage || "Operation failed.") + " Check the Execution logs panel.", "error");
                 return;
             }
 
-            setStatus(settings.successMessage || String(payload.status || "Операция выполнена."), "success");
+            setStatus(buildSuccessMessage(settings, payload), "success");
         } catch (error) {
-            var fallback = settings.errorMessage || "Ошибка выполнения операции.";
+            var fallback = settings.errorMessage || "Operation failed.";
             var message = getApiErrorMessage(error && error.payload, error && error.message ? error.message : fallback);
             appendLogLine(message);
-            setStatus(message, "error");
+            setStatus(message + " Check the Execution logs panel.", "error");
         } finally {
             setActionButtonsDisabled(false);
         }
@@ -332,8 +364,8 @@
                 }
                 setCurrentJobId(null);
                 setSelectedFileLabel(selectedFile.name);
-                replaceLogLines(["Файл выбран: " + selectedFile.name]);
-                setStatus("Файл выбран. Запустите нужную операцию.", "info");
+                replaceLogLines(["Source file selected: " + selectedFile.name]);
+                setStatus("Source file selected. Choose the required operation. Execution details will appear in logs.", "info");
             });
         }
 
@@ -342,8 +374,7 @@
                 runAction({
                     endpoint: "/statistics19922020/decode",
                     uploadMode: "required",
-                    errorMessage: "Ошибка при расшифровке файла.",
-                    successMessage: "Расшифровка завершена."
+                    errorMessage: "Could not decode the selected file."
                 });
             });
         }
@@ -351,10 +382,9 @@
         if (decodeImportButton) {
             decodeImportButton.addEventListener("click", function () {
                 runAction({
-                    endpoint: "/statistics19922020/decode_import",
+                    endpoint: "/statistics19922020/decode-and-import",
                     uploadMode: "required",
-                    errorMessage: "Ошибка при расшифровке и импорте.",
-                    successMessage: "Расшифровка и импорт завершены."
+                    errorMessage: "Could not decode and load data into PostgreSQL."
                 });
             });
         }
@@ -364,8 +394,7 @@
                 runAction({
                     endpoint: "/statistics19922020/run_rename_headers",
                     uploadMode: "if-selected",
-                    errorMessage: "Ошибка при выполнении rename_headers_2019_2023.py.",
-                    successMessage: "Скрипт rename_headers_2019_2023.py завершен."
+                    errorMessage: "Could not complete header preparation."
                 });
             });
         }
@@ -375,8 +404,7 @@
                 runAction({
                     endpoint: "/statistics19922020/run_split_xlsx_by_year",
                     uploadMode: "if-selected",
-                    errorMessage: "Ошибка при выполнении split_xlsx_by_year.py.",
-                    successMessage: "Скрипт split_xlsx_by_year.py завершен."
+                    errorMessage: "Could not split the file by year."
                 });
             });
         }
@@ -386,11 +414,11 @@
         if (!byId("statistics19922020Logs")) {
             return;
         }
-        setSelectedFileLabel("Файл не выбран");
+        setSelectedFileLabel("No source file selected");
         if (getCurrentJobId()) {
             refreshLogs();
         } else {
-            replaceLogLines(["Логи появятся после запуска операции."]);
+            replaceLogLines(["Execution logs will appear after you start an operation."]);
         }
         startLogsPolling();
         bindUiEvents();
