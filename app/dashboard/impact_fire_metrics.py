@@ -560,10 +560,12 @@ def _resolve_cumulative_area_year(
 
     candidate_years: set[int] = set()
     for table in selected_tables:
-        for year_value in (table.get("years") or []):
-            if year_value is not None:
-                candidate_years.add(int(year_value))
-        if not candidate_years and table.get("table_year") is not None:
+        table_years = table.get("years") or []
+        if table_years:
+            for year_value in table_years:
+                if year_value is not None:
+                    candidate_years.add(int(year_value))
+        elif table.get("table_year") is not None:
             candidate_years.add(int(table["table_year"]))
 
     return max(candidate_years) if candidate_years else None
