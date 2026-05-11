@@ -63,6 +63,24 @@
         renderPlotlyInContainer(safeCharts.area_buckets, 'areaBucketsChart');
     }
 
+    function showChartsLoading() {
+        var ids = [
+            'yearlyFiresChart',
+            'distributionChart',
+            'yearlyAreaChart',
+            'cumulativeAreaChart',
+            'monthlyHeatmapChart',
+            'monthlyProfileChart',
+            'areaBucketsChart'
+        ];
+        ids.forEach(function (id) {
+            var container = byId(id);
+            if (container) {
+                container.innerHTML = '<div class="chart-loading">Загрузка...</div>';
+            }
+        });
+    }
+
     function renderNotesPanel(notes) {
         const panel = byId('dashboardNotesPanel');
         const list = byId('dashboardNotesList');
@@ -334,7 +352,9 @@ function renderManagementCards(items) {
         setText('monthlyProfileMeta', charts.monthly_profile ? charts.monthly_profile.description : 'Что показывает блок: сезонный рисунок пожаров, если нужно планировать профилактику заранее.');
         setText('areaBucketsMeta', charts.area_buckets ? charts.area_buckets.description : 'Что показывает блок: преобладают ли небольшие или крупные пожары.');
 
-        renderDashboardCharts(charts);
+        if (charts && Object.keys(charts).length > 0) {
+            renderDashboardCharts(charts);
+        }
 
         renderRankingList('topDistributionList', rankings.top_distribution, 'Нет данных по распределению.', 'ranking-row-fire');
         renderRankingList('topTablesList', rankings.top_tables, 'Нет таблиц в текущем фильтре.', 'ranking-row-table');
@@ -348,6 +368,7 @@ function renderManagementCards(items) {
                 buildDashboardPageHref: buildDashboardPageHref,
                 hideDashboardError: hideDashboardError,
                 renderDashboardCharts: renderDashboardCharts,
+                showChartsLoading: showChartsLoading,
                 showDashboardError: showDashboardError,
                 updateDashboardBriefExport: updateDashboardBriefExport,
                 updateDashboardScreenLinks: updateDashboardScreenLinks

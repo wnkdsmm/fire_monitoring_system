@@ -17,6 +17,7 @@ def dashboard_data_endpoint(
     year: str = "all",
     group_column: str = "",
     horizon_days: int = PRIORITY_HORIZON_DAYS,
+    level: str = "full",
 ):
     return run_analytics_request(
         lambda: get_dashboard_data(
@@ -25,6 +26,7 @@ def dashboard_data_endpoint(
             year=year,
             group_column=group_column,
             horizon_days=horizon_days,
+            include_charts=str(level or "full").lower() != "summary",
             allow_fallback=False,
         ),
         invalid_code="dashboard_invalid_request",

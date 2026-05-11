@@ -14,10 +14,10 @@ from .types import DashboardSection, DashboardTableRef, DistributionResult, Summ
 
 def _normalize_context_label(value: Any) -> str:
     text = str(value or "").strip()
-    if text == "РЎРµР»СЊСЃРєР°СЏ С‚РµСЂСЂРёС‚РѕСЂРёСЏ":
-        return "Сельская территория"
-    if text == "РўРµСЂСЂРёС‚РѕСЂРёСЏ Р±РµР· РІС‹СЂР°Р¶РµРЅРЅРѕРіРѕ СЃРµР»СЊСЃРєРѕРіРѕ РїСЂРѕС„РёР»СЏ":
-        return "Территория без выраженного сельского профиля"
+    if text == "Р РЋР ВµР В»РЎРЉРЎРѓР С”Р В°РЎРЏ РЎвЂљР ВµРЎР‚РЎР‚Р С‘РЎвЂљР С•РЎР‚Р С‘РЎРЏ":
+        return "РЎРµР»СЊСЃРєР°СЏ С‚РµСЂСЂРёС‚РѕСЂРёСЏ"
+    if text == "Р СћР ВµРЎР‚РЎР‚Р С‘РЎвЂљР С•РЎР‚Р С‘РЎРЏ Р В±Р ВµР В· Р Р†РЎвЂ№РЎР‚Р В°Р В¶Р ВµР Р…Р Р…Р С•Р С–Р С• РЎРѓР ВµР В»РЎРЉРЎРѓР С”Р С•Р С–Р С• Р С—РЎР‚Р С•РЎвЂћР С‘Р В»РЎРЏ":
+        return "РўРµСЂСЂРёС‚РѕСЂРёСЏ Р±РµР· РІС‹СЂР°Р¶РµРЅРЅРѕРіРѕ СЃРµР»СЊСЃРєРѕРіРѕ РїСЂРѕС„РёР»СЏ"
     return text
 
 
@@ -67,28 +67,34 @@ def _build_management_snapshot(
     cause_overview: DistributionResult,
     district_widget: DistributionResult,
     planning_horizon_days: int = PRIORITY_HORIZON_DAYS,
+    precomputed_summary: SummaryResult | None = None,
+    precomputed_risk_payload: dict[str, Any] | None = None,
 ) -> dict[str, Any]:  # one-off
     if not selected_tables:
         return _empty_management_snapshot(priority_horizon_days=planning_horizon_days)
+    _ = precomputed_summary or summary
     tone_map = {"high": "fire", "medium": "sand", "low": "sky"}
-    try:
-        risk_payload = build_decision_support_payload(
-            source_tables=[table["name"] for table in selected_tables],
-            selected_district="all",
-            selected_cause="all",
-            selected_object_category="all",
-            history_window="all",
-            planning_horizon_days=planning_horizon_days,
-            selected_year=selected_year,
-            include_geo_prediction=False,
-            include_historical_validation=False,
-        )
-    except Exception as exc:
-        fallback = _empty_management_snapshot(priority_horizon_days=planning_horizon_days)
-        fallback["summary_line"] = "Краткий территориальный вывод временно недоступен; ниже остаются базовые показатели и графики по выбранному срезу."
-        fallback["notes"] = [f"Короткий вывод временно недоступен: {exc}"]
-        fallback["brief"]["notes"] = list(fallback["notes"])
-        return fallback
+    if precomputed_risk_payload is not None:
+        risk_payload = precomputed_risk_payload
+    else:
+        try:
+            risk_payload = build_decision_support_payload(
+                source_tables=[table["name"] for table in selected_tables],
+                selected_district="all",
+                selected_cause="all",
+                selected_object_category="all",
+                history_window="all",
+                planning_horizon_days=planning_horizon_days,
+                selected_year=selected_year,
+                include_geo_prediction=False,
+                include_historical_validation=False,
+            )
+        except Exception as exc:
+            fallback = _empty_management_snapshot(priority_horizon_days=planning_horizon_days)
+            fallback["summary_line"] = "РљСЂР°С‚РєРёР№ С‚РµСЂСЂРёС‚РѕСЂРёР°Р»СЊРЅС‹Р№ РІС‹РІРѕРґ РІСЂРµРјРµРЅРЅРѕ РЅРµРґРѕСЃС‚СѓРїРµРЅ; РЅРёР¶Рµ РѕСЃС‚Р°СЋС‚СЃСЏ Р±Р°Р·РѕРІС‹Рµ РїРѕРєР°Р·Р°С‚РµР»Рё Рё РіСЂР°С„РёРєРё РїРѕ РІС‹Р±СЂР°РЅРЅРѕРјСѓ СЃСЂРµР·Сѓ."
+            fallback["notes"] = [f"РљРѕСЂРѕС‚РєРёР№ РІС‹РІРѕРґ РІСЂРµРјРµРЅРЅРѕ РЅРµРґРѕСЃС‚СѓРїРµРЅ: {exc}"]
+            fallback["brief"]["notes"] = list(fallback["notes"])
+            return fallback
 
     passport = risk_payload.get("quality_passport") or {}
     risk_territories = risk_payload.get("territories") or []
@@ -102,17 +108,17 @@ def _build_management_snapshot(
         top_component = components[0] if components else {}
         territories.append(
             {
-                "label": item.get("label") or "Территория",
+                "label": item.get("label") or "РўРµСЂСЂРёС‚РѕСЂРёСЏ",
                 "risk_display": item.get("risk_display") or "0 / 100",
-                "risk_class_label": item.get("risk_class_label") or "Нет оценки",
-                "priority_label": item.get("priority_label") or "Плановое наблюдение",
+                "risk_class_label": item.get("risk_class_label") or "РќРµС‚ РѕС†РµРЅРєРё",
+                "priority_label": item.get("priority_label") or "РџР»Р°РЅРѕРІРѕРµ РЅР°Р±Р»СЋРґРµРЅРёРµ",
                 "risk_tone": tone_map.get(item.get("risk_tone"), "sky"),
-                "drivers_display": item.get("drivers_display") or "Недостаточно данных для объяснения приоритета.",
-                "action_label": item.get("action_label") or "Оставить территорию в плановом наблюдении",
-                "action_hint": item.get("action_hint") or "Сверьте приоритет с локальной оперативной обстановкой.",
-                "context_label": _normalize_context_label(item.get("settlement_context_label")) or "Контекст не указан",
+                "drivers_display": item.get("drivers_display") or "РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РґР°РЅРЅС‹С… РґР»СЏ РѕР±СЉСЏСЃРЅРµРЅРёСЏ РїСЂРёРѕСЂРёС‚РµС‚Р°.",
+                "action_label": item.get("action_label") or "РћСЃС‚Р°РІРёС‚СЊ С‚РµСЂСЂРёС‚РѕСЂРёСЋ РІ РїР»Р°РЅРѕРІРѕРј РЅР°Р±Р»СЋРґРµРЅРёРё",
+                "action_hint": item.get("action_hint") or "РЎРІРµСЂСЊС‚Рµ РїСЂРёРѕСЂРёС‚РµС‚ СЃ Р»РѕРєР°Р»СЊРЅРѕР№ РѕРїРµСЂР°С‚РёРІРЅРѕР№ РѕР±СЃС‚Р°РЅРѕРІРєРѕР№.",
+                "context_label": _normalize_context_label(item.get("settlement_context_label")) or "РљРѕРЅС‚РµРєСЃС‚ РЅРµ СѓРєР°Р·Р°РЅ",
                 "last_fire_display": item.get("last_fire_display") or "-",
-                "top_component_label": top_component.get("label") or "Нет доминирующего фактора",
+                "top_component_label": top_component.get("label") or "РќРµС‚ РґРѕРјРёРЅРёСЂСѓСЋС‰РµРіРѕ С„Р°РєС‚РѕСЂР°",
                 "top_component_score": top_component.get("score_display") or "0 / 100",
             }
         )
@@ -129,37 +135,37 @@ def _build_management_snapshot(
         if dominant_cause:
             actions.append(
                 {
-                    "label": "Сделать адресную профилактику по главной причине",
-                    "detail": f"В текущем срезе чаще всего фиксируется причина «{dominant_cause['label']}» ({dominant_cause['value_display']}).",
+                    "label": "РЎРґРµР»Р°С‚СЊ Р°РґСЂРµСЃРЅСѓСЋ РїСЂРѕС„РёР»Р°РєС‚РёРєСѓ РїРѕ РіР»Р°РІРЅРѕР№ РїСЂРёС‡РёРЅРµ",
+                    "detail": f"Р’ С‚РµРєСѓС‰РµРј СЃСЂРµР·Рµ С‡Р°С‰Рµ РІСЃРµРіРѕ С„РёРєСЃРёСЂСѓРµС‚СЃСЏ РїСЂРёС‡РёРЅР° В«{dominant_cause['label']}В» ({dominant_cause['value_display']}).",
                 }
             )
         if top_district:
             actions.append(
                 {
-                    "label": "Усилить контроль в лидирующей территории",
-                    "detail": f"{top_district['label']} остается лидером по числу пожаров: {top_district['value_display']}.",
+                    "label": "РЈСЃРёР»РёС‚СЊ РєРѕРЅС‚СЂРѕР»СЊ РІ Р»РёРґРёСЂСѓСЋС‰РµР№ С‚РµСЂСЂРёС‚РѕСЂРёРё",
+                    "detail": f"{top_district['label']} РѕСЃС‚Р°РµС‚СЃСЏ Р»РёРґРµСЂРѕРј РїРѕ С‡РёСЃР»Сѓ РїРѕР¶Р°СЂРѕРІ: {top_district['value_display']}.",
                 }
             )
         if trend.get("direction") == "up":
             actions.append(
                 {
-                    "label": "Проверить источники роста к прошлому году",
-                    "detail": f"{trend.get('description') or 'Динамика требует уточнения.'} Изменение: {trend.get('delta_display') or '0'}.",
+                    "label": "РџСЂРѕРІРµСЂРёС‚СЊ РёСЃС‚РѕС‡РЅРёРєРё СЂРѕСЃС‚Р° Рє РїСЂРѕС€Р»РѕРјСѓ РіРѕРґСѓ",
+                    "detail": f"{trend.get('description') or 'Р”РёРЅР°РјРёРєР° С‚СЂРµР±СѓРµС‚ СѓС‚РѕС‡РЅРµРЅРёСЏ.'} РР·РјРµРЅРµРЅРёРµ: {trend.get('delta_display') or '0'}.",
                 }
             )
 
     if not actions:
         actions.append(
             {
-                "label": "Сохранить плановое наблюдение",
-                "detail": "Резкого ухудшения по текущему срезу не видно, но приоритетные территории стоит держать в регулярном контроле.",
+                "label": "РЎРѕС…СЂР°РЅРёС‚СЊ РїР»Р°РЅРѕРІРѕРµ РЅР°Р±Р»СЋРґРµРЅРёРµ",
+                "detail": "Р РµР·РєРѕРіРѕ СѓС…СѓРґС€РµРЅРёСЏ РїРѕ С‚РµРєСѓС‰РµРјСѓ СЃСЂРµР·Сѓ РЅРµ РІРёРґРЅРѕ, РЅРѕ РїСЂРёРѕСЂРёС‚РµС‚РЅС‹Рµ С‚РµСЂСЂРёС‚РѕСЂРёРё СЃС‚РѕРёС‚ РґРµСЂР¶Р°С‚СЊ РІ СЂРµРіСѓР»СЏСЂРЅРѕРј РєРѕРЅС‚СЂРѕР»Рµ.",
             }
         )
 
-    confidence_summary = passport.get("validation_summary") or "После загрузки данных здесь появится уровень доверия к сводке."
+    confidence_summary = passport.get("validation_summary") or "РџРѕСЃР»Рµ Р·Р°РіСЂСѓР·РєРё РґР°РЅРЅС‹С… Р·РґРµСЃСЊ РїРѕСЏРІРёС‚СЃСЏ СѓСЂРѕРІРµРЅСЊ РґРѕРІРµСЂРёСЏ Рє СЃРІРѕРґРєРµ."
     horizon_note = (
-        f"Важно: это краткий территориальный приоритет на ближайшие {planning_horizon_days} дней, "
-        "а не календарь риска по датам и не прогноз ожидаемого числа пожаров."
+        f"Р’Р°Р¶РЅРѕ: СЌС‚Рѕ РєСЂР°С‚РєРёР№ С‚РµСЂСЂРёС‚РѕСЂРёР°Р»СЊРЅС‹Р№ РїСЂРёРѕСЂРёС‚РµС‚ РЅР° Р±Р»РёР¶Р°Р№С€РёРµ {planning_horizon_days} РґРЅРµР№, "
+        "Р° РЅРµ РєР°Р»РµРЅРґР°СЂСЊ СЂРёСЃРєР° РїРѕ РґР°С‚Р°Рј Рё РЅРµ РїСЂРѕРіРЅРѕР· РѕР¶РёРґР°РµРјРѕРіРѕ С‡РёСЃР»Р° РїРѕР¶Р°СЂРѕРІ."
     )
     notes: list[str] = []
     for note in (risk_payload.get("notes") or [])[:3]:
@@ -175,7 +181,7 @@ def _build_management_snapshot(
     if horizon_note not in brief["notes"]:
         brief["notes"] = [horizon_note, *list(brief["notes"] or [])][:3]
     brief["export_excerpt"] = (
-        f"{brief['export_excerpt']} Приоритет и действия рассчитаны на ближайшие {planning_horizon_days} дней."
+        f"{brief['export_excerpt']} РџСЂРёРѕСЂРёС‚РµС‚ Рё РґРµР№СЃС‚РІРёСЏ СЂР°СЃСЃС‡РёС‚Р°РЅС‹ РЅР° Р±Р»РёР¶Р°Р№С€РёРµ {planning_horizon_days} РґРЅРµР№."
     )
     return _build_management_snapshot_payload(
         brief,
@@ -184,5 +190,4 @@ def _build_management_snapshot(
         notes=list(brief["notes"] or notes),
         priority_horizon_days=planning_horizon_days,
     )
-
 __all__ = ["_empty_management_snapshot", "_build_management_snapshot"]

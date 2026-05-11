@@ -359,6 +359,7 @@ def get_dashboard_data(
     horizon_days: int = PRIORITY_HORIZON_DAYS,
     table_names: Sequence[str] | None = None,
     metadata: DashboardMetadata | None = None,
+    include_charts: bool = True,
     allow_fallback: bool = True,
 ) -> DashboardPayload:
     ensure_sqlalchemy_timing(engine)
@@ -386,6 +387,9 @@ def get_dashboard_data(
                 )
                 cached = _get_dashboard_cache(cache_key)
                 if cached is not None:
+                    if not include_charts:
+                        cached = dict(cached)
+                        cached["charts"] = {}
                     perf.update(
                         cache_hit=True,
                         available_tables=len(metadata["table_options"]),
@@ -406,6 +410,9 @@ def get_dashboard_data(
                 resolved_cache_key = request_state["resolved_cache_key"]
                 cached = _get_dashboard_cache(resolved_cache_key)
                 if cached is not None:
+                    if not include_charts:
+                        cached = dict(cached)
+                        cached["charts"] = {}
                     _update_dashboard_filter_metrics(
                         perf,
                         metadata=metadata,
@@ -450,6 +457,8 @@ def get_dashboard_data(
                     available_group_columns=request_state["available_group_columns"],
                     horizon_days=request_state["horizon_days"],
                 )
+                if not include_charts:
+                    data["charts"] = {}
                 perf.update(
                     payload_has_data=bool(data["has_data"]),
                     payload_notes=len(data.get("notes") or []),

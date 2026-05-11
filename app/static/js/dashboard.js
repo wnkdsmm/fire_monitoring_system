@@ -19,8 +19,8 @@ function buildDashboardApiError(response, payload) {
         const statusCode = Number(errorPayload.status_code || (response && response.status) || 0);
         const fallbackMessage = (
             statusCode >= 500
-                ? 'Не удалось обновить данные. Попробуйте повторить запрос.'
-                : 'Проверьте параметры фильтра и повторите запрос.'
+                ? 'РќРµ СѓРґР°Р»РѕСЃСЊ РѕР±РЅРѕРІРёС‚СЊ РґР°РЅРЅС‹Рµ. РџРѕРїСЂРѕР±СѓР№С‚Рµ РїРѕРІС‚РѕСЂРёС‚СЊ Р·Р°РїСЂРѕСЃ.'
+                : 'РџСЂРѕРІРµСЂСЊС‚Рµ РїР°СЂР°РјРµС‚СЂС‹ С„РёР»СЊС‚СЂР° Рё РїРѕРІС‚РѕСЂРёС‚Рµ Р·Р°РїСЂРѕСЃ.'
         );
         const message = getApiErrorMessage(payload, fallbackMessage);
         const error = new Error(message);
@@ -32,7 +32,7 @@ function buildDashboardApiError(response, payload) {
 
     function readDashboardPayload(payload) {
         if (!payload || typeof payload !== 'object') {
-            const contractError = new Error('Сервис не вернул данные. Проверьте соединение и попробуйте снова.');
+            const contractError = new Error('РЎРµСЂРІРёСЃ РЅРµ РІРµСЂРЅСѓР» РґР°РЅРЅС‹Рµ. РџСЂРѕРІРµСЂСЊС‚Рµ СЃРѕРµРґРёРЅРµРЅРёРµ Рё РїРѕРїСЂРѕР±СѓР№С‚Рµ СЃРЅРѕРІР°.');
             contractError.dashboardStatusCode = 502;
             throw contractError;
         }
@@ -49,12 +49,12 @@ function buildDashboardApiError(response, payload) {
             const result = await fetchJson(
                 url,
                 options,
-                'Не удалось обновить данные. Попробуйте повторить запрос.'
+                'РќРµ СѓРґР°Р»РѕСЃСЊ РѕР±РЅРѕРІРёС‚СЊ РґР°РЅРЅС‹Рµ. РџРѕРїСЂРѕР±СѓР№С‚Рµ РїРѕРІС‚РѕСЂРёС‚СЊ Р·Р°РїСЂРѕСЃ.'
             );
             return readDashboardPayload(result.payload);
         } catch (error) {
             if (error instanceof SyntaxError) {
-                const contractError = new Error('Сервис не вернул данные. Проверьте соединение и попробуйте снова.');
+                const contractError = new Error('РЎРµСЂРІРёСЃ РЅРµ РІРµСЂРЅСѓР» РґР°РЅРЅС‹Рµ. РџСЂРѕРІРµСЂСЊС‚Рµ СЃРѕРµРґРёРЅРµРЅРёРµ Рё РїРѕРїСЂРѕР±СѓР№С‚Рµ СЃРЅРѕРІР°.');
                 contractError.dashboardStatusCode = 502;
                 throw contractError;
             }
@@ -86,13 +86,13 @@ async function fetchDashboardData() {
 
         try {
             renderApi.hideDashboardError();
-            const data = await fetchDashboardPayload('/api/dashboard-data?' + query, {
+            const summaryData = await fetchDashboardPayload('/api/dashboard-data?' + query + '&level=summary', {
                 headers: {
                     'Accept': 'application/json'
                 }
             });
-            if (data && data.__deferred) {
-                const deferredMessage = new Error('Данные загружаются, обновите страницу через несколько секунд.');
+            if (summaryData && summaryData.__deferred) {
+                const deferredMessage = new Error('Р”Р°РЅРЅС‹Рµ Р·Р°РіСЂСѓР¶Р°СЋС‚СЃСЏ, РѕР±РЅРѕРІРёС‚Рµ СЃС‚СЂР°РЅРёС†Сѓ С‡РµСЂРµР· РЅРµСЃРєРѕР»СЊРєРѕ СЃРµРєСѓРЅРґ.');
                 deferredMessage.dashboardStatusCode = 0;
                 renderApi.showDashboardError(deferredMessage);
                 if (deferredRetryAttempts < 3) {
@@ -105,7 +105,18 @@ async function fetchDashboardData() {
                 return;
             }
             deferredRetryAttempts = 0;
-            renderApi.applyDashboardData(data);
+            renderApi.applyDashboardData(summaryData);
+            renderApi.showChartsLoading();
+            fetchDashboardPayload('/api/dashboard-data?' + query + '&level=full', {
+                headers: {
+                    'Accept': 'application/json'
+                }
+            }).then(function (fullData) {
+                if (fullData && !fullData.__deferred) {
+                    renderApi.applyDashboardData(fullData);
+                }
+            }).catch(function () {
+            });
             window.history.replaceState({}, '', renderApi.buildDashboardPageHref(state.collectSelectedFilters()));
         } catch (error) {
             renderApi.showDashboardError(error);

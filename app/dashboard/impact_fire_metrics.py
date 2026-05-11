@@ -63,6 +63,7 @@ def _collect_cause_counts(selected_tables: list[DashboardTableRef], selected_yea
                 WHERE {where_clause}
                 GROUP BY label
                 ORDER BY fire_count DESC
+                LIMIT 20
                 """
             )
             params = {"selected_year": selected_year} if selected_year is not None and DATE_COLUMN in table["column_set"] else {}
@@ -389,6 +390,8 @@ def _build_dashboard_grouped_counts_query(
             ) AS grouped_source
             GROUP BY GROUPING SETS ({dimension_sql['grouping_sets']})
             HAVING {dimension_sql['having_clause']}
+            ORDER BY fire_count DESC
+            LIMIT 25
         ) AS grouped_counts_bundle_{query_index}
     """
     uses_selected_year_param = selected_year is not None and context["has_date_column"]

@@ -7,6 +7,7 @@ generic primitives from ``app.cache``.
 """
 
 import copy
+import json
 from typing import Any
 
 from app.db_metadata import get_table_signature_cached, invalidate_db_metadata_cache
@@ -48,14 +49,20 @@ def _collect_dashboard_metadata_cached() -> dict[str, Any]:
     current_table_names = _current_dashboard_table_names()
     cached_value = _DASHBOARD_METADATA_CACHE.get(current_table_names)
     if cached_value is not None:
-        cached_metadata = copy.deepcopy(cached_value)
+        try:
+            cached_metadata = json.loads(json.dumps(cached_value))
+        except (TypeError, ValueError):
+            cached_metadata = copy.deepcopy(cached_value)
         if _metadata_table_names(cached_metadata) == current_table_names:
             return cached_metadata
 
     metadata = _collect_dashboard_metadata(current_table_names)
     _DASHBOARD_METADATA_CACHE.clear()
     _DASHBOARD_CACHE.clear()
-    _DASHBOARD_METADATA_CACHE.set(current_table_names, copy.deepcopy(metadata))
+    try:
+        _DASHBOARD_METADATA_CACHE.set(current_table_names, json.loads(json.dumps(metadata)))
+    except (TypeError, ValueError):
+        _DASHBOARD_METADATA_CACHE.set(current_table_names, copy.deepcopy(metadata))
     return metadata
 
 
@@ -63,11 +70,17 @@ def _get_dashboard_cache(cache_key: tuple[Any, ...]) -> dict[str, Any] | None:
     cached_value = _DASHBOARD_CACHE.get(cache_key)
     if cached_value is None:
         return None
-    return copy.deepcopy(cached_value)
+    try:
+        return json.loads(json.dumps(cached_value))
+    except (TypeError, ValueError):
+        return copy.deepcopy(cached_value)
 
 
 def _set_dashboard_cache(cache_key: tuple[Any, ...], value: dict[str, Any]) -> None:
-    _DASHBOARD_CACHE.set(cache_key, copy.deepcopy(value))
+    try:
+        _DASHBOARD_CACHE.set(cache_key, json.loads(json.dumps(value)))
+    except (TypeError, ValueError):
+        _DASHBOARD_CACHE.set(cache_key, copy.deepcopy(value))
 
 __all__ = [
     "_collect_dashboard_metadata_cached",

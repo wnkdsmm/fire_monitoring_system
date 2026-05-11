@@ -171,6 +171,7 @@ def _build_distribution_chart(
                     WHERE {where_clause}
                     GROUP BY label
                     ORDER BY fire_count DESC
+                    LIMIT 20
                     """
                 )
                 params = {"selected_year": selected_year} if selected_year is not None and DATE_COLUMN in table["column_set"] else {}

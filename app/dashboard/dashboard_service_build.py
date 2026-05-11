@@ -130,6 +130,7 @@ def _build_dashboard_aggregation(
         selected_tables=selected_tables,
         selected_year=selected_year,
         summary=summary,
+        precomputed_summary=summary,
         trend=trend,
         cause_overview=cause_overview,
         district_widget=widgets["districts"],
