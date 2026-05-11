@@ -3,8 +3,9 @@ from __future__ import annotations
 from typing import Any
 
 from app.cache import CopyingLruCache, build_immutable_payload_lru_cache
+from config.constants import ML_TRAINING_ARTIFACT_CACHE_LIMIT
 
-from .ml_model_config_types import ML_TRAINING_ARTIFACT_CACHE_LIMIT, _CACHE_LIMIT
+from .ml_model_config_types import _CACHE_LIMIT
 
 
 class MLModelCaches:

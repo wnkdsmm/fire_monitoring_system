@@ -9,7 +9,10 @@ from config.db import engine
 
 _TABLE_NAMES_CACHE_KEY = "__table_names__"
 _TABLE_NAMES_CACHE = CopyingTtlCache[str, tuple[str, ...]](ttl_seconds=None)
-_TABLE_NAME_SET_CACHE = CopyingTtlCache[str, frozenset[str]](ttl_seconds=None)
+_TABLE_NAME_SET_CACHE = CopyingTtlCache[str, frozenset[str]](
+    ttl_seconds=None,
+    skip_freeze=True,
+)
 _TABLE_COLUMNS_CACHE = CopyingTtlCache[str, tuple[str, ...]](ttl_seconds=None)
 _TABLE_ORDER_CACHE_INVALIDATORS: list[Callable[[], None]] = []
 

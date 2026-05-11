@@ -54,7 +54,7 @@ def serialize_plotly_figure(figure: Any) -> dict[str, Any]:
         return empty_plotly_payload()
 
     if go is not None and isinstance(figure, go.Figure):
-        payload = figure.to_dict()
+        payload = json.loads(figure.to_json())
     else:
         payload = json.loads(json.dumps(figure, cls=PlotlyJSONEncoder))
     if isinstance(payload.get("layout"), dict):
