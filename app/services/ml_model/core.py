@@ -19,7 +19,6 @@ from app.services.forecasting.data import (
 )
 from app.services.forecasting.utils import (
     _format_datetime,
-    _format_float_for_input,
     _parse_optional_iso_date,
     _resolve_option_value,
 )
@@ -380,7 +379,7 @@ def _build_ml_request_state(
         source_tables=state['source_tables'],
         cause=cause,
         object_category=object_category,
-        temperature=_format_float_for_input(state['scenario_temperature']) if state['scenario_temperature'] is not None else "",
+        temperature="",
         days_ahead=state['days_ahead'],
         history_window=state['selected_history_window'],
         current_user_date=normalized_current_user_date,

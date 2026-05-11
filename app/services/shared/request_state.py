@@ -157,11 +157,13 @@ def build_ml_request_state(
     selection_resolver: SelectionResolver,
     source_tables_resolver: SourceTablesResolver,
     source_notes_resolver: SourceNotesResolver,
-    forecast_days_parser: ForecastDaysParser,
-    history_window_parser: HistoryWindowParser,
-    temperature_parser: Callable[[str], float | None],
-    temperature_formatter: Callable[[float], str],
+    forecast_days_parser: ForecastDaysParser | None = None,
+    history_window_parser: HistoryWindowParser | None = None,
+    temperature_parser: Callable[[str], float | None] | None = None,
+    temperature_formatter: Callable[[float], str] | None = None,
 ) -> dict[str, Any]:
+    forecast_days_parser_fn = forecast_days_parser or (lambda s: int(s))
+    history_window_parser_fn = history_window_parser or (lambda s: s)
     state = _build_table_request_context(
         table_name=table_name,
         forecast_days=forecast_days,
@@ -170,8 +172,8 @@ def build_ml_request_state(
         selection_resolver=selection_resolver,
         source_tables_resolver=source_tables_resolver,
         source_notes_resolver=source_notes_resolver,
-        forecast_days_parser=forecast_days_parser,
-        history_window_parser=history_window_parser,
+        forecast_days_parser=forecast_days_parser_fn,
+        history_window_parser=history_window_parser_fn,
     )
     selected_tables = [str(item or "").strip() for item in (table_names or []) if str(item or "").strip()]
     if selected_tables:
@@ -186,7 +188,7 @@ def build_ml_request_state(
             state["selected_table"] = filtered[0] if len(filtered) == 1 else "all"
             state["source_table_notes"] = []
     resolved_history_window = state.pop("resolved_history_window")
-    scenario_temperature = temperature_parser(temperature)
+    scenario_temperature = temperature_parser(temperature) if temperature_parser is not None else None
     state["selected_history_window"] = resolved_history_window
     state["scenario_temperature"] = scenario_temperature
     state["current_user_date"] = normalize_cache_value(current_user_date)
@@ -196,7 +198,9 @@ def build_ml_request_state(
         source_tables=state["source_tables"],
         cause=cause,
         object_category=object_category,
-        temperature=temperature_formatter(scenario_temperature) if scenario_temperature is not None else "",
+        temperature=(
+            temperature_formatter(scenario_temperature) if temperature_formatter is not None else ""
+        ) if scenario_temperature is not None else "",
         days_ahead=state["days_ahead"],
         history_window=resolved_history_window,
         current_user_date=state["current_user_date"],
