@@ -2,11 +2,11 @@
 
 """Centralized UI labels and user-facing copy."""
 
-LABEL_NOT_SPECIFIED = "РќРµ СѓРєР°Р·Р°РЅРѕ"
-LABEL_RURAL_TERRITORY = "РЎРµР»СЊСЃРєР°СЏ С‚РµСЂСЂРёС‚РѕСЂРёСЏ"
-LABEL_NON_RURAL_TERRITORY = "РўРµСЂСЂРёС‚РѕСЂРёСЏ Р±РµР· РІС‹СЂР°Р¶РµРЅРЅРѕРіРѕ СЃРµР»СЊСЃРєРѕРіРѕ РїСЂРѕС„РёР»СЏ"
-LABEL_EXPERT_WEIGHTS = "Р­РєСЃРїРµСЂС‚РЅС‹Рµ РІРµСЃР°"
-LABEL_NO_DOMINANT_RISK_DRIVER = "РїСЂРѕС„РёР»СЊ СЂРёСЃРєР° РїРѕРєР° СѓРјРµСЂРµРЅРЅС‹Р№ Рё Р±РµР· СЏРІРЅРѕРіРѕ РґРѕРјРёРЅРёСЂСѓСЋС‰РµРіРѕ С„Р°РєС‚РѕСЂР°"
+LABEL_NOT_SPECIFIED = "Не указано"
+LABEL_RURAL_TERRITORY = "Сельская территория"
+LABEL_NON_RURAL_TERRITORY = "Территория без выраженного сельского профиля"
+LABEL_EXPERT_WEIGHTS = "Экспертные веса"
+LABEL_NO_DOMINANT_RISK_DRIVER = "профиль риска пока умеренный и без явного доминирующего фактора"
 
 # === Forecasting UI ===
 

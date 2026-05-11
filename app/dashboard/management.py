@@ -12,6 +12,15 @@ from config.constants import PRIORITY_HORIZON_DAYS
 from .types import DashboardSection, DashboardTableRef, DistributionResult, SummaryResult
 
 
+def _normalize_context_label(value: Any) -> str:
+    text = str(value or "").strip()
+    if text == "РЎРµР»СЊСЃРєР°СЏ С‚РµСЂСЂРёС‚РѕСЂРёСЏ":
+        return "Сельская территория"
+    if text == "РўРµСЂСЂРёС‚РѕСЂРёСЏ Р±РµР· РІС‹СЂР°Р¶РµРЅРЅРѕРіРѕ СЃРµР»СЊСЃРєРѕРіРѕ РїСЂРѕС„РёР»СЏ":
+        return "Территория без выраженного сельского профиля"
+    return text
+
+
 def _build_management_snapshot_payload(
     brief: dict[str, Any],  # one-off
     *,
@@ -101,7 +110,7 @@ def _build_management_snapshot(
                 "drivers_display": item.get("drivers_display") or "Недостаточно данных для объяснения приоритета.",
                 "action_label": item.get("action_label") or "Оставить территорию в плановом наблюдении",
                 "action_hint": item.get("action_hint") or "Сверьте приоритет с локальной оперативной обстановкой.",
-                "context_label": item.get("settlement_context_label") or "Контекст не указан",
+                "context_label": _normalize_context_label(item.get("settlement_context_label")) or "Контекст не указан",
                 "last_fire_display": item.get("last_fire_display") or "-",
                 "top_component_label": top_component.get("label") or "Нет доминирующего фактора",
                 "top_component_score": top_component.get("score_display") or "0 / 100",
