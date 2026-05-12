@@ -16,10 +16,20 @@ def test_compare_chart_render_hook_present() -> None:
     source = Path("app/static/js/ml_model_render.js").read_text(encoding="utf-8")
     assert "charts.renderCompareChart(compare, 'mlCompareChart'" in source
     assert "refreshCompareSeriesOnly" in source
-    assert "year_a: byId('mlYearAFilter')" in source
-    assert "year_b: byId('mlYearBFilter')" in source
+    assert "var yearA = byId('mlYearAFilter')" in source
+    assert "var yearB = byId('mlYearBFilter')" in source
     assert "filters.available_years" in source
     assert "['mlMonthFilter', 'mlYearAFilter', 'mlYearBFilter'" in source
+    assert "refreshCompareSeriesOnly();" in source
+
+
+def test_compare_request_uses_current_filters_not_hardcoded_all() -> None:
+    source = Path("app/static/js/ml_model_render.js").read_text(encoding="utf-8")
+    assert "var filters = (currentData && currentData.filters) || {};" in source
+    assert "table_name: tableName" in source
+    assert "table_names: tableNames" in source
+    assert "cause: cause" in source
+    assert "object_category: objectCategory" in source
 
 
 def test_compare_chart_function_exists() -> None:

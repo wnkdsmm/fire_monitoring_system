@@ -77,14 +77,24 @@
     }
 
     function collectFormFilters() {
+        var filters = (currentData && currentData.filters) || {};
+        var tableNames = Array.isArray(filters.table_names)
+            ? filters.table_names.map(function (value) { return String(value || '').trim(); }).filter(function (value) { return value.length > 0; })
+            : [];
+        var tableName = String(filters.table_name || '').trim() || 'all';
+        var cause = String(filters.cause || '').trim() || 'all';
+        var objectCategory = String(filters.object_category || '').trim() || 'all';
+        var month = byId('mlMonthFilter') ? String(byId('mlMonthFilter').value || '').trim() : '';
+        var yearA = byId('mlYearAFilter') ? String(byId('mlYearAFilter').value || '').trim() : '';
+        var yearB = byId('mlYearBFilter') ? String(byId('mlYearBFilter').value || '').trim() : '';
         return {
-            table_name: 'all',
-            table_names: [],
-            cause: 'all',
-            object_category: 'all',
-            month: byId('mlMonthFilter') ? String(byId('mlMonthFilter').value || '').trim() : '',
-            year_a: byId('mlYearAFilter') ? String(byId('mlYearAFilter').value || '').trim() : '',
-            year_b: byId('mlYearBFilter') ? String(byId('mlYearBFilter').value || '').trim() : ''
+            table_name: tableName,
+            table_names: tableNames,
+            cause: cause,
+            object_category: objectCategory,
+            month: month || String(new Date().getMonth() + 1),
+            year_a: yearA || '2024',
+            year_b: yearB || '2025'
         };
     }
 
@@ -234,6 +244,7 @@
     function init() {
         applyData(global.__FIRE_ML_INITIAL__ || {});
         wireEvents();
+        refreshCompareSeriesOnly();
     }
 
     global.MlModelRender = {
