@@ -242,7 +242,7 @@
             return row && row.appg_available && row.appg_value != null && !isNaN(Number(row.appg_value));
         }).length;
 
-        if (!rows.length || currentCount === 0) {
+        if (!rows.length) {
             renderFallback(chartNode, fallbackNode, 'Нет данных для APPG-сравнения за выбранный период.');
             if (noteNode) {
                 noteNode.textContent = '';

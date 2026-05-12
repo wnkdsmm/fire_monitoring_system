@@ -484,7 +484,12 @@
         }
         var defaultMonth = String((new Date().getMonth() + 1));
         var effectiveYear = filters.year == null || filters.year === '' ? (inferredLatestYear == null ? '' : String(inferredLatestYear)) : String(filters.year);
-        var effectiveMonth = filters.month == null || filters.month === '' ? defaultMonth : String(filters.month);
+        var effectiveMonth = '';
+        if (filters.month != null && filters.month !== '') {
+            effectiveMonth = String(filters.month);
+        } else if (!effectiveYear) {
+            effectiveMonth = defaultMonth;
+        }
         setSelectOptions('mlYearFilter', buildYearOptions(effectiveYear), effectiveYear, 'Текущий режим');
         setSelectOptions('mlMonthFilter', buildMonthOptions(), effectiveMonth, 'Все месяцы');
         setText('mlForecastDaysDisplay', (summary.forecast_days_display || '7') + ' дней');
@@ -737,7 +742,8 @@
             });
             form.addEventListener('change', function (event) {
                 syncScreenLinks();
-                if (event && event.target && event.target.name === 'table_names') {
+                var targetName = event && event.target ? event.target.name : '';
+                if (targetName === 'table_names') {
                     setTableChecklistOpen(false);
                     if (tableCheckboxDebounceTimer !== null) {
                         clearTimeout(tableCheckboxDebounceTimer);
@@ -746,6 +752,15 @@
                         tableCheckboxDebounceTimer = null;
                         startMlModelJob();
                     }, 400);
+                    return;
+                }
+                if (
+                    targetName === 'year'
+                    || targetName === 'month'
+                    || targetName === 'cause'
+                    || targetName === 'object_category'
+                ) {
+                    startMlModelJob();
                 }
             });
             form.addEventListener('input', function (event) {
