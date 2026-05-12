@@ -88,6 +88,7 @@ def _build_ml_payload(
         },
         'appg_series': appg_series,
         'appg_period_series': [],
+        'compare_series': {},
         'forecast_rows': ml_result.get('forecast_rows', []),
         'feature_importance': ml_result.get('feature_importance', []),
         'notes': _compact_ui_notes(
@@ -187,6 +188,7 @@ def _empty_ml_model_data(
         },
         'appg_series': [],
         'appg_period_series': [],
+        'compare_series': {},
         'forecast_rows': [],
         'feature_importance': [],
         'notes': [],

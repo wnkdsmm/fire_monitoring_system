@@ -92,6 +92,8 @@
             object_category: params.get('object_category') || 'all',
             year: params.get('year') || '',
             month: params.get('month') || '',
+            year_a: params.get('year_a') || '',
+            year_b: params.get('year_b') || '',
             forecast_days: FIXED_FORECAST_DAYS,
             current_user_date: params.get('current_user_date') || getCurrentUserDateIso()
         };

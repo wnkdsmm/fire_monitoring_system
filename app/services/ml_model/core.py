@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from copy import deepcopy
 from contextlib import nullcontext
-from datetime import datetime
+from calendar import monthrange
+from datetime import date, datetime, timedelta
 from typing import Any, Sequence
 
 from app.perf import current_perf_trace, profiled
@@ -39,6 +40,7 @@ from .training.data_access import (
 )
 from .training.types import MlAggregationInputs, MlContext, MlFilterBundle, MlPayload, MlRequestState
 from .training.appg import compute_appg_period_series
+from .training.compare_series import build_compare_series
 from .payloads import _build_ml_payload, _compact_ui_notes, _empty_ml_model_data
 from .training.training import _train_ml_model, clear_training_artifact_cache
 
@@ -178,6 +180,8 @@ def get_ml_model_data(
     current_user_date: str = '',
     year: int | None = None,
     month: int | None = None,
+    year_a: int | None = None,
+    year_b: int | None = None,
     _prebuilt_cache_key: tuple[Any, ...] | None = None,
     progress_callback: MlProgressCallback | None = None,
     caches: MLModelCaches | None = None,
@@ -192,6 +196,8 @@ def get_ml_model_data(
         current_user_date=current_user_date,
         year=year,
         month=month,
+        year_a=year_a,
+        year_b=year_b,
     )
     table_options = request_state['table_options']
     selected_table = request_state['selected_table']
@@ -216,7 +222,7 @@ def get_ml_model_data(
     cached = _cache_get(cache_key, cache_set)
     if cached is not None:
         period_daily_history: list[dict[str, Any]] = []
-        if request_state.get('selected_year') is not None and source_tables:
+        if (request_state.get('selected_year') is not None or request_state.get('selected_compare_month') is not None) and source_tables:
             try:
                 filter_bundle = _load_ml_filter_bundle(
                     source_tables=source_tables,
@@ -237,6 +243,16 @@ def get_ml_model_data(
             daily_history=period_daily_history,
             year=request_state.get('selected_year'),
             month=request_state.get('selected_month'),
+        )
+        filtered_cached = _attach_compare_series(
+            filtered_cached,
+            daily_history=period_daily_history,
+            scenario_temperature=request_state.get('scenario_temperature'),
+            current_user_day=request_state.get('current_user_day'),
+            compare_month=request_state.get('selected_compare_month'),
+            compare_year_a=request_state.get('selected_compare_year_a'),
+            compare_year_b=request_state.get('selected_compare_year_b'),
+            caches=cache_set,
         )
         if perf is not None:
             perf.update(cache_hit=True, payload_has_data=bool(filtered_cached.get('has_data')))
@@ -338,6 +354,16 @@ def get_ml_model_data(
             year=request_state.get('selected_year'),
             month=request_state.get('selected_month'),
         )
+        payload = _attach_compare_series(
+            payload,
+            daily_history=daily_history,
+            scenario_temperature=scenario_temperature,
+            current_user_day=request_state.get('current_user_day'),
+            compare_month=request_state.get('selected_compare_month'),
+            compare_year_a=request_state.get('selected_compare_year_a'),
+            compare_year_b=request_state.get('selected_compare_year_b'),
+            caches=cache_set,
+        )
         if perf is not None:
             perf.update(
                 payload_has_data=bool(payload['has_data']),
@@ -375,8 +401,17 @@ def _build_ml_request_state(
     current_user_date: str = '',
     year: int | None = None,
     month: int | None = None,
+    year_a: int | None = None,
+    year_b: int | None = None,
 ) -> MlRequestState:
-    selected_year, selected_month = _normalize_period_selection(year=year, month=month)
+    period_month = month if year is not None else None
+    selected_year, selected_month = _normalize_period_selection(year=year, month=period_month)
+    selected_compare_month, selected_compare_year_a, selected_compare_year_b = _normalize_compare_selection(
+        month=month,
+        year_a=year_a,
+        year_b=year_b,
+        current_user_date=current_user_date,
+    )
     parsed_current_user_date = _parse_optional_iso_date(current_user_date)
     normalized_current_user_date = (
         parsed_current_user_date.isoformat() if parsed_current_user_date is not None else ''
@@ -429,6 +464,9 @@ def _build_ml_request_state(
     state['current_user_day'] = parsed_current_user_date
     state['selected_year'] = selected_year
     state['selected_month'] = selected_month
+    state['selected_compare_month'] = selected_compare_month
+    state['selected_compare_year_a'] = selected_compare_year_a
+    state['selected_compare_year_b'] = selected_compare_year_b
     return state
 
 
@@ -446,6 +484,27 @@ def _normalize_period_selection(*, year: int | None, month: int | None) -> tuple
         if normalized_month < 1 or normalized_month > 12:
             raise ValueError('Параметр month должен быть в диапазоне 1..12.')
     return normalized_year, normalized_month
+
+
+def _normalize_compare_selection(
+    *,
+    month: int | None,
+    year_a: int | None,
+    year_b: int | None,
+    current_user_date: str,
+) -> tuple[int, int, int]:
+    parsed_current = _parse_optional_iso_date(current_user_date)
+    baseline = parsed_current or datetime.now().date()
+    normalized_month = int(month) if month is not None else int(baseline.month)
+    if normalized_month < 1 or normalized_month > 12:
+        raise ValueError('Параметр month должен быть в диапазоне 1..12.')
+    normalized_year_a = int(year_a) if year_a is not None else int(baseline.year)
+    normalized_year_b = int(year_b) if year_b is not None else int(normalized_year_a - 1)
+    if normalized_year_a < _MIN_SELECTABLE_YEAR or normalized_year_a > _MAX_SELECTABLE_YEAR:
+        raise ValueError(f'Параметр year_a должен быть в диапазоне {_MIN_SELECTABLE_YEAR}..{_MAX_SELECTABLE_YEAR}.')
+    if normalized_year_b < _MIN_SELECTABLE_YEAR or normalized_year_b > _MAX_SELECTABLE_YEAR:
+        raise ValueError(f'Параметр year_b должен быть в диапазоне {_MIN_SELECTABLE_YEAR}..{_MAX_SELECTABLE_YEAR}.')
+    return normalized_month, normalized_year_a, normalized_year_b
 
 
 def _date_matches_period(date_text: str, *, year: int | None, month: int | None) -> bool:
@@ -495,6 +554,66 @@ def _apply_period_filter(
     forecast_chart['series'] = series
     charts['forecast'] = forecast_chart
     payload['charts'] = charts
+    return payload
+
+
+def _attach_compare_series(
+    payload: MlPayload,
+    *,
+    daily_history: list[dict[str, Any]],
+    scenario_temperature: float | None,
+    current_user_day: date | None,
+    compare_month: int | None,
+    compare_year_a: int | None,
+    compare_year_b: int | None,
+    caches: MLModelCaches,
+) -> MlPayload:
+    del current_user_day
+    if compare_month is None or compare_year_a is None or compare_year_b is None:
+        payload['compare_series'] = {}
+        return payload
+
+    ml_rows_cache: dict[tuple[int, int], dict[int, float | None]] = {}
+
+    def _ml_month_provider(year_value: int, month_value: int) -> dict[int, float | None]:
+        cache_key = (int(year_value), int(month_value))
+        if cache_key in ml_rows_cache:
+            return ml_rows_cache[cache_key]
+        anchor_date = date(int(year_value), int(month_value), 1) - timedelta(days=1)
+        month_days = int(monthrange(int(year_value), int(month_value))[1])
+        ml_result = _train_ml_model(
+            daily_history,
+            month_days,
+            scenario_temperature,
+            current_user_date=anchor_date,
+            progress_callback=None,
+            caches=caches,
+        )
+        month_rows: dict[int, float | None] = {}
+        for row in ml_result.get('forecast_rows', []):
+            row_date = _parse_optional_iso_date(str(row.get('date') or ''))
+            if row_date is None:
+                continue
+            if row_date.year != int(year_value) or row_date.month != int(month_value):
+                continue
+            month_rows[int(row_date.day)] = float(row.get('forecast_value')) if row.get('forecast_value') is not None else None
+        ml_rows_cache[cache_key] = month_rows
+        return month_rows
+
+    payload['compare_series'] = build_compare_series(
+        month=int(compare_month),
+        year_a=int(compare_year_a),
+        year_b=int(compare_year_b),
+        daily_history=daily_history,
+        ml_month_provider=_ml_month_provider,
+        history_date_key='date',
+        history_value_key='count',
+    )
+    filters = payload.get('filters') or {}
+    filters['year_a'] = int(compare_year_a)
+    filters['year_b'] = int(compare_year_b)
+    filters['compare_month'] = int(compare_month)
+    payload['filters'] = filters
     return payload
 
 

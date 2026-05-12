@@ -42,6 +42,8 @@ def start_ml_model_job_endpoint(request: Request, payload: dict = Body(...)):
         )
         year = _parse_optional_int(payload, "year")
         month = _parse_optional_int(payload, "month")
+        year_a = _parse_optional_int(payload, "year_a")
+        year_b = _parse_optional_int(payload, "year_b")
         return run_session_json_action(
             request,
             lambda session_id: start_ml_model_job(
@@ -53,6 +55,8 @@ def start_ml_model_job_endpoint(request: Request, payload: dict = Body(...)):
                 current_user_date=str(payload.get("current_user_date") or ""),
                 year=year,
                 month=month,
+                year_a=year_a,
+                year_b=year_b,
             ),
         )
     except ValueError as exc:

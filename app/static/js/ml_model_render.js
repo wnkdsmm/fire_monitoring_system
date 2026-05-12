@@ -434,6 +434,7 @@
         renderClassBalanceWarning('mlQualityEventMetricCards', false);
         renderTableSkeleton('mlCountTableShell', 8, 4);
         charts.renderChartSkeleton('mlForecastChart', 'mlForecastChartFallback');
+        charts.renderChartSkeleton('mlCompareChart', 'mlCompareChartFallback');
         charts.renderChartSkeleton('mlAppgChart', 'mlAppgChartFallback');
         renderTableSkeleton('mlForecastTableShell', 4, 4);
         charts.renderChartSkeleton('mlImportanceChart', 'mlImportanceChartFallback');
@@ -491,7 +492,13 @@
             effectiveMonth = defaultMonth;
         }
         setSelectOptions('mlYearFilter', buildYearOptions(effectiveYear), effectiveYear, 'Текущий режим');
-        setSelectOptions('mlMonthFilter', buildMonthOptions(), effectiveMonth, 'Все месяцы');
+        var compareSeries = data.compare_series || {};
+        var compareYearA = compareSeries.year_a != null ? String(compareSeries.year_a) : (effectiveYear || String(new Date().getFullYear()));
+        var compareYearB = compareSeries.year_b != null ? String(compareSeries.year_b) : String(Math.max(1990, parseInt(compareYearA, 10) - 1));
+        var compareMonth = compareSeries.month != null ? String(compareSeries.month) : (effectiveMonth || defaultMonth);
+        setSelectOptions('mlMonthFilter', buildMonthOptions(), compareMonth, 'Все месяцы');
+        setSelectOptions('mlYearAFilter', buildYearOptions(compareYearA), compareYearA, 'Текущий режим');
+        setSelectOptions('mlYearBFilter', buildYearOptions(compareYearB), compareYearB, 'Текущий режим');
         setText('mlForecastDaysDisplay', (summary.forecast_days_display || '7') + ' дней');
 
         setText('mlQualityTitle', quality.title || 'Валидация качества ML-прогноза количества пожаров');
@@ -506,6 +513,7 @@
         renderCountTable(quality.count_table || {});
         setText('mlForecastTitle', 'Сколько пожаров ожидается по дням');
         charts.renderLineChart(chartData.forecast, 'mlForecastChart', 'mlForecastChartFallback');
+        charts.renderCompareChart(compareSeries, 'mlCompareChart', 'mlCompareChartFallback', 'mlCompareChartSummary');
         charts.renderAppgChart(appgGraphSeries || [], 'mlAppgChart', 'mlAppgChartFallback', 'mlAppgChartNote');
         if (Array.isArray(data.forecast_rows) && data.forecast_rows.length) {
             var forecastFallback = byId('mlForecastChartFallback');
@@ -635,6 +643,8 @@
         var tableNames = getSelectedTableNamesFromForm();
         var yearValue = byId('mlYearFilter') ? String(byId('mlYearFilter').value || '').trim() : '';
         var monthValue = byId('mlMonthFilter') ? String(byId('mlMonthFilter').value || '').trim() : '';
+        var yearAValue = byId('mlYearAFilter') ? String(byId('mlYearAFilter').value || '').trim() : '';
+        var yearBValue = byId('mlYearBFilter') ? String(byId('mlYearBFilter').value || '').trim() : '';
         return {
             table_name: tableNames.length === 1 ? tableNames[0] : 'all',
             table_names: tableNames,
@@ -642,6 +652,8 @@
             object_category: byId('mlObjectCategoryFilter') ? byId('mlObjectCategoryFilter').value : 'all',
             year: yearValue,
             month: monthValue,
+            year_a: yearAValue,
+            year_b: yearBValue,
         };
     }
 
@@ -757,6 +769,8 @@
                 if (
                     targetName === 'year'
                     || targetName === 'month'
+                    || targetName === 'year_a'
+                    || targetName === 'year_b'
                     || targetName === 'cause'
                     || targetName === 'object_category'
                 ) {

@@ -48,6 +48,29 @@ class MlPeriodApiIntegrationTests(unittest.TestCase):
         self.assertEqual(captured["year"], 2025)
         self.assertEqual(captured["month"], 5)
 
+    def test_endpoint_accepts_compare_years(self) -> None:
+        captured: dict[str, object] = {}
+
+        def _fake_start_ml_model_job(**kwargs):
+            captured.update(kwargs)
+            return {"status": "pending", "job_id": "job-2"}
+
+        def _fake_run_session_json_action(_request, action):
+            return action("session-2")
+
+        with (
+            patch("app.routes.api_ml_model.start_ml_model_job", side_effect=_fake_start_ml_model_job),
+            patch("app.routes.api_ml_model.run_session_json_action", side_effect=_fake_run_session_json_action),
+        ):
+            result = start_ml_model_job_endpoint(
+                _build_request(),
+                payload={"table_name": "fires", "month": 5, "year_a": 2025, "year_b": 2024},
+            )
+
+        self.assertEqual(result["status"], "pending")
+        self.assertEqual(captured["year_a"], 2025)
+        self.assertEqual(captured["year_b"], 2024)
+
     def test_endpoint_rejects_invalid_year_month(self) -> None:
         response = start_ml_model_job_endpoint(
             _build_request(),
