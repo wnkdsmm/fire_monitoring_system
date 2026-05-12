@@ -3,7 +3,7 @@ from __future__ import annotations
 from copy import deepcopy
 from contextlib import nullcontext
 from calendar import monthrange
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 from typing import Any, Sequence
 
 from app.perf import current_perf_trace, profiled
@@ -598,6 +598,63 @@ def _build_compare_series_payload(
     caches: MLModelCaches,
 ) -> dict[str, Any]:
     ml_rows_cache: dict[tuple[int, int], dict[int, float | None]] = {}
+    history_has_data = bool(daily_history)
+    facts_by_ymd: dict[tuple[int, int, int], float] = {}
+    month_values: dict[int, list[float]] = {}
+    month_weekday_values: dict[tuple[int, int], list[float]] = {}
+    month_day_values_by_year: dict[tuple[int, int], dict[int, float]] = {}
+
+    for row in daily_history:
+        row_date = _parse_optional_iso_date(str(row.get('date') or ''))
+        if row_date is None:
+            continue
+        raw_value = row.get('count')
+        if raw_value is None:
+            continue
+        try:
+            row_value = float(raw_value)
+        except (TypeError, ValueError):
+            continue
+        facts_by_ymd[(int(row_date.year), int(row_date.month), int(row_date.day))] = row_value
+        month_values.setdefault(int(row_date.month), []).append(row_value)
+        month_weekday_values.setdefault((int(row_date.month), int(row_date.weekday())), []).append(row_value)
+        year_month_key = (int(row_date.year), int(row_date.month))
+        if year_month_key not in month_day_values_by_year:
+            month_day_values_by_year[year_month_key] = {}
+        month_day_values_by_year[year_month_key][int(row_date.day)] = row_value
+
+    def _avg(values: list[float]) -> float:
+        return float(sum(values) / len(values)) if values else 0.0
+
+    def _retro_predict_missing_day(target_year: int, target_month: int, target_day: int) -> float:
+        # a) same day/month from nearest neighboring years
+        same_day_candidates: list[tuple[int, float]] = []
+        for (row_year, row_month, row_day), row_value in facts_by_ymd.items():
+            if row_month == target_month and row_day == target_day and row_year != target_year:
+                same_day_candidates.append((abs(row_year - target_year), row_value))
+        if same_day_candidates:
+            min_dist = min(item[0] for item in same_day_candidates)
+            nearest_values = [item[1] for item in same_day_candidates if item[0] == min_dist]
+            return _avg(nearest_values)
+
+        # b) monthly average for this weekday
+        try:
+            target_weekday = date(int(target_year), int(target_month), int(target_day)).weekday()
+        except ValueError:
+            target_weekday = None
+        if target_weekday is not None:
+            weekday_values = month_weekday_values.get((int(target_month), int(target_weekday)), [])
+            if weekday_values:
+                return _avg(weekday_values)
+
+        # c) monthly average
+        by_month = month_values.get(int(target_month), [])
+        if by_month:
+            return _avg(by_month)
+
+        # d) fallback zero
+        return 0.0
+
     facts_by_year_day: dict[tuple[int, int], set[int]] = {}
     for row in daily_history:
         row_date = _parse_optional_iso_date(str(row.get('date') or ''))
@@ -642,28 +699,17 @@ def _build_compare_series_payload(
         if not needed_days:
             ml_rows_cache[cache_key] = {}
             return ml_rows_cache[cache_key]
+        if not history_has_data:
+            ml_rows_cache[cache_key] = {}
+            return ml_rows_cache[cache_key]
         ml_invoked_by_year[int(year_value)] = True
-        anchor_date = date(int(year_value), int(month_value), 1) - timedelta(days=1)
-        month_days = max(needed_days)
-        ml_result = _train_ml_model(
-            daily_history,
-            month_days,
-            scenario_temperature,
-            current_user_date=anchor_date,
-            progress_callback=None,
-            caches=caches,
-        )
         month_rows: dict[int, float | None] = {}
-        for row in ml_result.get('forecast_rows', []):
-            row_date = _parse_optional_iso_date(str(row.get('date') or ''))
-            if row_date is None:
-                continue
-            if row_date.year != int(year_value) or row_date.month != int(month_value):
-                continue
-            row_day = int(row_date.day)
-            if row_day not in needed_days:
-                continue
-            month_rows[row_day] = float(row.get('forecast_value')) if row.get('forecast_value') is not None else None
+        for day in sorted(needed_days):
+            month_rows[int(day)] = _retro_predict_missing_day(
+                target_year=int(year_value),
+                target_month=int(month_value),
+                target_day=int(day),
+            )
         ml_rows_cache[cache_key] = month_rows
         return month_rows
 
@@ -692,6 +738,7 @@ def _build_compare_series_payload(
             'ml_invoked': bool(ml_invoked_by_year.get(int(year_b), False)),
         },
     }
+    compare_payload['history_has_data'] = history_has_data
     return compare_payload
 
 

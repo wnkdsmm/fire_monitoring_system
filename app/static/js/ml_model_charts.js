@@ -213,11 +213,12 @@
         }
         var data = compareSeries || {};
         var rows = Array.isArray(data.rows) ? data.rows : [];
+        var historyHasData = data.history_has_data === true;
         var aYear = data.year_a != null ? String(data.year_a) : 'A';
         var bYear = data.year_b != null ? String(data.year_b) : 'B';
         var aPoints = rows.filter(function (row) { return row && row.a_value != null && !isNaN(Number(row.a_value)); }).length;
         var bPoints = rows.filter(function (row) { return row && row.b_value != null && !isNaN(Number(row.b_value)); }).length;
-        if (!rows.length || (!aPoints && !bPoints)) {
+        if (!historyHasData) {
             renderFallback(chartNode, fallbackNode, 'Нет данных для сравнения выбранных лет за выбранный месяц.');
             if (summaryNode) {
                 summaryNode.textContent = '';

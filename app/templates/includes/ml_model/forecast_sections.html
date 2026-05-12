@@ -1,6 +1,6 @@
 ﻿<section id="mlForecastSection" class="ml-layout">
         <div class="ml-primary">
-            <article class="panel chart-panel{% if not data.compare_series or not data.compare_series.rows %} is-chart-empty{% endif %}">
+            <article class="panel chart-panel{% if not data.compare_series or not data.compare_series.history_has_data %} is-chart-empty{% endif %}">
                 <div class="panel-head">
                     <h2 id="mlCompareTitle">Сравнение 2 лет по выбранному месяцу</h2>
                     <span class="panel-meta">Две линии по дням месяца: для каждого года автоматически используется факт, а при нехватке данных — ML.</span>
@@ -19,8 +19,8 @@
                         <select id="mlYearBFilter" name="year_b" form="mlModelForm"></select>
                     </label>
                 </div>
-                <div id="mlCompareChart" class="plotly-chart ml-plot{% if not data.compare_series or not data.compare_series.rows %} is-empty{% endif %}"></div>
-                <div id="mlCompareChartFallback" class="chart-empty{% if data.compare_series and data.compare_series.rows %} is-hidden{% endif %}">Нет данных для сравнения выбранных лет за выбранный месяц.</div>
+                <div id="mlCompareChart" class="plotly-chart ml-plot{% if not data.compare_series or not data.compare_series.history_has_data %} is-empty{% endif %}"></div>
+                <div id="mlCompareChartFallback" class="chart-empty{% if data.compare_series and data.compare_series.history_has_data %} is-hidden{% endif %}">Нет данных для сравнения выбранных лет за выбранный месяц.</div>
                 <p id="mlCompareChartSummary" class="panel-meta"></p>
             </article>
             <article class="panel chart-panel{% if not data.appg_series %} is-chart-empty{% endif %}">

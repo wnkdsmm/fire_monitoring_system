@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from pathlib import Path
 
@@ -31,5 +31,6 @@ def test_compare_chart_render_hook_present() -> None:
 def test_compare_chart_function_exists() -> None:
     source = Path("app/static/js/ml_model_charts.js").read_text(encoding="utf-8")
     assert "function renderCompareChart(compareSeries, chartId, fallbackId, summaryId)" in source
-    assert "if (!rows.length || (!aPoints && !bPoints))" in source
+    assert "var historyHasData = data.history_has_data === true;" in source
+    assert "if (!historyHasData)" in source
     assert "renderFallback(chartNode, fallbackNode, 'Нет данных для сравнения выбранных лет за выбранный месяц.');" in source
