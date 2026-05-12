@@ -15,6 +15,7 @@ from .training.presentation_training import (
     _build_summary,
     _empty_light_chart,
 )
+from .training.appg import compute_appg_series
 from .training.training_result import _empty_ml_result
 
 
@@ -52,6 +53,14 @@ def _build_ml_payload(
     scenario_temperature: Any,
     temperature_quality: dict[str, Any],
 ) -> dict[str, Any]:
+    appg_series = compute_appg_series(
+        ml_result.get('forecast_rows', []),
+        daily_history,
+        current_date_key='date',
+        current_value_key='forecast_value',
+        history_date_key='date',
+        history_value_key='count',
+    )
     summary = _build_summary(
         selected_table=selected_table,
         selected_table_label=selected_table_label,
@@ -77,6 +86,7 @@ def _build_ml_payload(
                 note=str(ml_result.get('feature_importance_note') or '').strip(),
             ),
         },
+        'appg_series': appg_series,
         'forecast_rows': ml_result.get('forecast_rows', []),
         'feature_importance': ml_result.get('feature_importance', []),
         'notes': _compact_ui_notes(
@@ -174,6 +184,7 @@ def _empty_ml_model_data(
             'forecast': _empty_light_chart('ML-прогноз ожидаемого числа пожаров', 'Недостаточно данных для обучения модели.'),
             'importance': _build_importance_chart([], note=''),
         },
+        'appg_series': [],
         'forecast_rows': [],
         'feature_importance': [],
         'notes': [],
@@ -188,4 +199,3 @@ def _empty_ml_model_data(
             'available_object_categories': [{'value': 'all', 'label': 'Все категории'}],
         },
     }
-

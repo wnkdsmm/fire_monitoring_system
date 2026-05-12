@@ -90,6 +90,8 @@
             table_names: tableNames,
             cause: params.get('cause') || 'all',
             object_category: params.get('object_category') || 'all',
+            year: params.get('year') || '',
+            month: params.get('month') || '',
             forecast_days: FIXED_FORECAST_DAYS,
             current_user_date: params.get('current_user_date') || getCurrentUserDateIso()
         };

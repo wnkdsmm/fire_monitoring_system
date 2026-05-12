@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from contextlib import nullcontext
-from datetime import datetime
+from datetime import datetime, date
 from typing import Any, Sequence
 
 from app.perf import current_perf_trace, profiled
@@ -41,6 +41,8 @@ from .payloads import _build_ml_payload, _compact_ui_notes, _empty_ml_model_data
 from .training.training import _train_ml_model, clear_training_artifact_cache
 
 _DEFAULT_CACHES = create_default_caches()
+_MIN_SELECTABLE_YEAR = 1990
+_MAX_SELECTABLE_YEAR = 2100
 
 
 def _build_ml_context(initial_data: MlPayload) -> MlContext:
@@ -172,6 +174,8 @@ def get_ml_model_data(
     cause: str = 'all',
     object_category: str = 'all',
     current_user_date: str = '',
+    year: int | None = None,
+    month: int | None = None,
     _prebuilt_cache_key: tuple[Any, ...] | None = None,
     progress_callback: MlProgressCallback | None = None,
     caches: MLModelCaches | None = None,
@@ -184,6 +188,8 @@ def get_ml_model_data(
         cause=cause,
         object_category=object_category,
         current_user_date=current_user_date,
+        year=year,
+        month=month,
     )
     table_options = request_state['table_options']
     selected_table = request_state['selected_table']
@@ -301,6 +307,7 @@ def get_ml_model_data(
             scenario_temperature=scenario_temperature,
             temperature_quality=temperature_quality,
         )
+        payload = _apply_period_filter(payload, year=request_state.get('selected_year'), month=request_state.get('selected_month'))
         if perf is not None:
             perf.update(
                 payload_has_data=bool(payload['has_data']),
@@ -336,8 +343,16 @@ def _build_ml_request_state(
     cause: str = 'all',
     object_category: str = 'all',
     current_user_date: str = '',
+    year: int | None = None,
+    month: int | None = None,
 ) -> MlRequestState:
-    parsed_current_user_date = _parse_optional_iso_date(current_user_date)
+    selected_year, selected_month = _normalize_period_selection(year=year, month=month)
+    anchor_date = _resolve_period_anchor_date(
+        selected_year=selected_year,
+        selected_month=selected_month,
+        current_user_date=current_user_date,
+    )
+    parsed_current_user_date = _parse_optional_iso_date(anchor_date)
     normalized_current_user_date = (
         parsed_current_user_date.isoformat() if parsed_current_user_date is not None else ''
     )
@@ -387,7 +402,71 @@ def _build_ml_request_state(
     )
     state['current_user_date'] = normalized_current_user_date
     state['current_user_day'] = parsed_current_user_date
+    state['selected_year'] = selected_year
+    state['selected_month'] = selected_month
     return state
+
+
+def _normalize_period_selection(*, year: int | None, month: int | None) -> tuple[int | None, int | None]:
+    if year is None and month is None:
+        return None, None
+    if year is None:
+        raise ValueError('Параметр year обязателен, если указан month.')
+    normalized_year = int(year)
+    if normalized_year < _MIN_SELECTABLE_YEAR or normalized_year > _MAX_SELECTABLE_YEAR:
+        raise ValueError(f'Параметр year должен быть в диапазоне {_MIN_SELECTABLE_YEAR}..{_MAX_SELECTABLE_YEAR}.')
+    normalized_month: int | None = None
+    if month is not None:
+        normalized_month = int(month)
+        if normalized_month < 1 or normalized_month > 12:
+            raise ValueError('Параметр month должен быть в диапазоне 1..12.')
+    return normalized_year, normalized_month
+
+
+def _resolve_period_anchor_date(
+    *,
+    selected_year: int | None,
+    selected_month: int | None,
+    current_user_date: str,
+) -> str:
+    if selected_year is None:
+        return current_user_date
+    month_value = selected_month or 1
+    return date(selected_year, month_value, 1).isoformat()
+
+
+def _date_matches_period(date_text: str, *, year: int | None, month: int | None) -> bool:
+    parsed = _parse_optional_iso_date(str(date_text or ''))
+    if parsed is None:
+        return False
+    if year is not None and parsed.year != year:
+        return False
+    if month is not None and parsed.month != month:
+        return False
+    return True
+
+
+def _apply_period_filter(payload: MlPayload, *, year: int | None, month: int | None) -> MlPayload:
+    if year is None and month is None:
+        return payload
+    forecast_rows = [row for row in payload.get('forecast_rows', []) if _date_matches_period(row.get('date', ''), year=year, month=month)]
+    appg_series = [row for row in payload.get('appg_series', []) if _date_matches_period(row.get('current_date', ''), year=year, month=month)]
+    payload['forecast_rows'] = forecast_rows
+    payload['appg_series'] = appg_series
+    filters = payload.get('filters') or {}
+    filters['year'] = year
+    filters['month'] = month
+    payload['filters'] = filters
+    charts = payload.get('charts') or {}
+    forecast_chart = charts.get('forecast') or {}
+    series = forecast_chart.get('series') or {}
+    series['forecast'] = [point for point in series.get('forecast', []) if _date_matches_period(point.get('x', ''), year=year, month=month)]
+    series['forecast_band'] = [point for point in series.get('forecast_band', []) if _date_matches_period(point.get('x', ''), year=year, month=month)]
+    series['appg'] = [point for point in series.get('appg', []) if _date_matches_period(point.get('x', ''), year=year, month=month)]
+    forecast_chart['series'] = series
+    charts['forecast'] = forecast_chart
+    payload['charts'] = charts
+    return payload
 
 
 def clear_ml_model_cache(caches: MLModelCaches | None = None) -> None:

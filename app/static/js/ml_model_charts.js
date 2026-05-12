@@ -227,6 +227,120 @@
         applyChartDecorators(chartNode);
     }
 
+    function renderAppgChart(appgSeries, chartId, fallbackId) {
+        var chartNode = byId(chartId);
+        var fallbackNode = byId(fallbackId);
+        if (!chartNode || !fallbackNode) {
+            return;
+        }
+        var rows = Array.isArray(appgSeries) ? appgSeries : [];
+        if (!rows.length) {
+            renderFallback(chartNode, fallbackNode, 'Нет данных для APPG-сравнения за выбранный период.');
+            return;
+        }
+
+        setChartEmptyState(chartNode, false);
+        fallbackNode.classList.add('is-hidden');
+        fallbackNode.style.display = 'none';
+
+        var width = 920;
+        var height = 360;
+        var padding = { top: 20, right: 24, bottom: 54, left: 54 };
+        var innerWidth = width - padding.left - padding.right;
+        var innerHeight = height - padding.top - padding.bottom;
+        var denominator = Math.max(rows.length - 1, 1);
+
+        var values = [];
+        rows.forEach(function (row) {
+            if (row && row.current_value != null) { values.push(Number(row.current_value)); }
+            if (row && row.appg_value != null) { values.push(Number(row.appg_value)); }
+        });
+        var yMin = 0;
+        var yMax = Math.max.apply(null, values.concat([1]));
+        yMax = Math.max(1, Math.ceil((yMax + 0.5) * 2) / 2);
+        if (yMax <= yMin) { yMax = yMin + 1; }
+
+        function x(index) {
+            return padding.left + (index / denominator) * innerWidth;
+        }
+        function y(value) {
+            return padding.top + innerHeight - ((value - yMin) / (yMax - yMin)) * innerHeight;
+        }
+        function dateLabel(isoDate) {
+            var text = String(isoDate || '');
+            return text.length >= 10 ? (text.slice(8, 10) + '.' + text.slice(5, 7)) : text;
+        }
+        function buildSegmentPath(getValue) {
+            var segments = [];
+            var path = '';
+            for (var i = 0; i < rows.length; i += 1) {
+                var val = getValue(rows[i]);
+                if (val == null || isNaN(val)) {
+                    if (path) { segments.push(path); path = ''; }
+                    continue;
+                }
+                var cmd = path ? ' L ' : 'M ';
+                path += cmd + x(i).toFixed(2) + ' ' + y(Number(val)).toFixed(2);
+            }
+            if (path) { segments.push(path); }
+            return segments;
+        }
+
+        var gridLines = '';
+        var axisLabels = '';
+        for (var step = 0; step <= 4; step += 1) {
+            var value = yMin + ((yMax - yMin) * step / 4);
+            var py = y(value);
+            gridLines += '<line x1="' + padding.left + '" y1="' + py.toFixed(2) + '" x2="' + (width - padding.right) + '" y2="' + py.toFixed(2) + '" class="ml-grid-line"></line>';
+            axisLabels += '<text x="' + (padding.left - 10) + '" y="' + (py + 4).toFixed(2) + '" text-anchor="end" class="ml-axis-label">' + escapeHtml(String(Math.round(value * 10) / 10).replace('.', ',')) + '</text>';
+        }
+
+        var tickIndexes = [0, Math.floor((rows.length - 1) / 2), rows.length - 1]
+            .filter(function (value, index, arr) { return arr.indexOf(value) === index && value >= 0; });
+        tickIndexes.forEach(function (index) {
+            axisLabels += '<text x="' + x(index).toFixed(2) + '" y="' + (height - 16) + '" text-anchor="middle" class="ml-axis-label">' + escapeHtml(dateLabel(rows[index].current_date)) + '</text>';
+        });
+
+        var currentSegments = buildSegmentPath(function (row) { return row.current_value; });
+        var appgSegments = buildSegmentPath(function (row) { return row.appg_value; });
+
+        var svg = ''
+            + '<svg viewBox="0 0 ' + width + ' ' + height + '" class="ml-svg-chart" preserveAspectRatio="none">'
+            + gridLines
+            + '<line x1="' + padding.left + '" y1="' + (height - padding.bottom) + '" x2="' + (width - padding.right) + '" y2="' + (height - padding.bottom) + '" class="ml-axis-line"></line>'
+            + '<line x1="' + padding.left + '" y1="' + padding.top + '" x2="' + padding.left + '" y2="' + (height - padding.bottom) + '" class="ml-axis-line"></line>';
+
+        currentSegments.forEach(function (path) {
+            svg += '<path d="' + path + '" class="ml-line-forecast"></path>';
+        });
+        appgSegments.forEach(function (path) {
+            svg += '<path d="' + path + '" class="ml-line-appg"></path>';
+        });
+
+        rows.forEach(function (row, index) {
+            var currentValue = row && row.current_value != null ? Number(row.current_value) : null;
+            if (currentValue != null && !isNaN(currentValue)) {
+                svg += '<circle cx="' + x(index).toFixed(2) + '" cy="' + y(currentValue).toFixed(2) + '" r="3.5" class="ml-forecast-point"></circle>';
+            }
+            if (row && row.appg_available && row.appg_value != null) {
+                var appgValue = Number(row.appg_value);
+                if (!isNaN(appgValue)) {
+                    svg += '<circle cx="' + x(index).toFixed(2) + '" cy="' + y(appgValue).toFixed(2) + '" r="3" class="ml-appg-point"></circle>';
+                }
+            }
+        });
+
+        svg += axisLabels + '</svg>';
+
+        chartNode.innerHTML = ''
+            + '<div class="ml-chart-legend">'
+            + '<span class="ml-chart-legend-item"><i data-legend-color="#0F766E"></i>Текущий период</span>'
+            + '<span class="ml-chart-legend-item"><i data-legend-color="#B45309"></i>АППГ (D-1 год)</span>'
+            + '</div>'
+            + '<div class="ml-chart-shell">' + svg + '</div>';
+        applyChartDecorators(chartNode);
+    }
+
     function renderChartSkeleton(chartId, fallbackId) {
         var chartNode = byId(chartId);
         var fallbackNode = byId(fallbackId);
@@ -241,6 +355,7 @@
     }
 
     global.MlModelCharts = {
+        renderAppgChart: renderAppgChart,
         renderBarsChart: renderBarsChart,
         renderChartSkeleton: renderChartSkeleton,
         renderLineChart: renderLineChart

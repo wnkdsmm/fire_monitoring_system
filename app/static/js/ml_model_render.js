@@ -19,6 +19,7 @@
     var currentMlData = null;
     var tableCheckboxDebounceTimer = null;
     var progressTimers = createTimerGroup();
+    var appgDefaultInitialized = false;
     var mlTableChecklist = typeof createTableChecklist === 'function'
         ? createTableChecklist({
             rootId: 'mlTableFilter',
@@ -55,6 +56,40 @@
     function normalizeRangeDisplay(value) {
         var text = String(value || '').trim();
         return text.replace(/^\d+\s*%\s*:\s*/, '');
+    }
+
+    function buildYearOptions(selectedYear) {
+        var nowYear = new Date().getFullYear();
+        var maxYear = nowYear + 1;
+        var minYear = nowYear - 10;
+        var normalizedSelected = Number(selectedYear);
+        if (!isNaN(normalizedSelected)) {
+            minYear = Math.min(minYear, normalizedSelected);
+            maxYear = Math.max(maxYear, normalizedSelected);
+        }
+        var options = [{ value: '', label: 'Текущий режим' }];
+        for (var year = maxYear; year >= minYear; year -= 1) {
+            options.push({ value: String(year), label: String(year) });
+        }
+        return options;
+    }
+
+    function buildMonthOptions() {
+        return [
+            { value: '', label: 'Все месяцы' },
+            { value: '1', label: 'Январь' },
+            { value: '2', label: 'Февраль' },
+            { value: '3', label: 'Март' },
+            { value: '4', label: 'Апрель' },
+            { value: '5', label: 'Май' },
+            { value: '6', label: 'Июнь' },
+            { value: '7', label: 'Июль' },
+            { value: '8', label: 'Август' },
+            { value: '9', label: 'Сентябрь' },
+            { value: '10', label: 'Октябрь' },
+            { value: '11', label: 'Ноябрь' },
+            { value: '12', label: 'Декабрь' }
+        ];
     }
 
     function renderSidebarStatus(data) {
@@ -399,6 +434,7 @@
         renderClassBalanceWarning('mlQualityEventMetricCards', false);
         renderTableSkeleton('mlCountTableShell', 8, 4);
         charts.renderChartSkeleton('mlForecastChart', 'mlForecastChartFallback');
+        charts.renderChartSkeleton('mlAppgChart', 'mlAppgChartFallback');
         renderTableSkeleton('mlForecastTableShell', 4, 4);
         charts.renderChartSkeleton('mlImportanceChart', 'mlImportanceChartFallback');
         renderImportanceNote('');
@@ -433,6 +469,21 @@
         setTableChecklistOpen(false);
         setSelectOptions('mlCauseFilter', filters.available_causes, filters.cause, 'Все причины');
         setSelectOptions('mlObjectCategoryFilter', filters.available_object_categories, filters.object_category, 'Все категории');
+        var inferredLatestYear = null;
+        if (Array.isArray(data.appg_series) && data.appg_series.length) {
+            data.appg_series.forEach(function (item) {
+                var rawDate = String((item && item.current_date) || '');
+                var candidate = parseInt(rawDate.slice(0, 4), 10);
+                if (!isNaN(candidate) && (inferredLatestYear == null || candidate > inferredLatestYear)) {
+                    inferredLatestYear = candidate;
+                }
+            });
+        }
+        var defaultMonth = String((new Date().getMonth() + 1));
+        var effectiveYear = filters.year == null || filters.year === '' ? (inferredLatestYear == null ? '' : String(inferredLatestYear)) : String(filters.year);
+        var effectiveMonth = filters.month == null || filters.month === '' ? defaultMonth : String(filters.month);
+        setSelectOptions('mlYearFilter', buildYearOptions(effectiveYear), effectiveYear, 'Текущий режим');
+        setSelectOptions('mlMonthFilter', buildMonthOptions(), effectiveMonth, 'Все месяцы');
         setText('mlForecastDaysDisplay', (summary.forecast_days_display || '7') + ' дней');
 
         setText('mlQualityTitle', quality.title || 'Валидация качества ML-прогноза количества пожаров');
@@ -447,6 +498,7 @@
         renderCountTable(quality.count_table || {});
         setText('mlForecastTitle', 'Сколько пожаров ожидается по дням');
         charts.renderLineChart(chartData.forecast, 'mlForecastChart', 'mlForecastChartFallback');
+        charts.renderAppgChart(data.appg_series || [], 'mlAppgChart', 'mlAppgChartFallback');
         if (Array.isArray(data.forecast_rows) && data.forecast_rows.length) {
             var forecastFallback = byId('mlForecastChartFallback');
             if (forecastFallback) {
@@ -573,11 +625,15 @@
 
     function collectMlFiltersFromForm() {
         var tableNames = getSelectedTableNamesFromForm();
+        var yearValue = byId('mlYearFilter') ? String(byId('mlYearFilter').value || '').trim() : '';
+        var monthValue = byId('mlMonthFilter') ? String(byId('mlMonthFilter').value || '').trim() : '';
         return {
             table_name: tableNames.length === 1 ? tableNames[0] : 'all',
             table_names: tableNames,
             cause: byId('mlCauseFilter') ? byId('mlCauseFilter').value : 'all',
             object_category: byId('mlObjectCategoryFilter') ? byId('mlObjectCategoryFilter').value : 'all',
+            year: yearValue,
+            month: monthValue,
         };
     }
 
@@ -733,6 +789,10 @@
         syncScreenLinks();
         if (initialData && initialData.bootstrap_mode !== 'deferred') {
             applyMlModelData(initialData);
+            if (!appgDefaultInitialized) {
+                appgDefaultInitialized = true;
+                startMlModelJob();
+            }
         } else {
             applyMlModelData(initialData || {});
             updateProgressStep(0, {
@@ -749,5 +809,3 @@
         startMlModelJob: startMlModelJob
     };
 }(window));
-
-

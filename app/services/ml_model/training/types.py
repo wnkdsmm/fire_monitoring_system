@@ -278,6 +278,8 @@ class MlRequestState(TypedDict, total=False):
     scenario_temperature: float | None
     current_user_date: str
     current_user_day: date | None
+    selected_year: int | None
+    selected_month: int | None
     cache_key: tuple[Any, ...]
 
 
@@ -305,6 +307,7 @@ class MlPayload(TypedDict, total=False):
     notes: list[str]
     feature_importance: list[dict[str, Any]]
     forecast_rows: list[dict[str, Any]]
+    appg_series: list[dict[str, Any]]
     filters: dict[str, Any]
 
 

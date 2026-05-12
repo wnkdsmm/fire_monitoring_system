@@ -8,6 +8,14 @@
                 <div id="mlForecastChart" class="plotly-chart ml-plot{% if charts.forecast.empty_message %} is-empty{% endif %}"></div>
                 <div id="mlForecastChartFallback" class="chart-empty{% if charts.forecast.empty_message %}{% else %} is-hidden{% endif %}">{{ charts.forecast.empty_message }}</div>
             </article>
+            <article class="panel chart-panel{% if not data.appg_series %} is-chart-empty{% endif %}">
+                <div class="panel-head">
+                    <h2 id="mlAppgTitle">АППГ: текущий период vs прошлый год</h2>
+                    <span class="panel-meta">Сравнение выбранного периода с аналогичным периодом прошлого года (APPG) с дельтой в процентах.</span>
+                </div>
+                <div id="mlAppgChart" class="plotly-chart ml-plot{% if not data.appg_series %} is-empty{% endif %}"></div>
+                <div id="mlAppgChartFallback" class="chart-empty{% if data.appg_series %} is-hidden{% endif %}">Нет данных для APPG-сравнения за выбранный период.</div>
+            </article>
 
             <article class="panel ml-table-panel">
                 <div class="panel-head">

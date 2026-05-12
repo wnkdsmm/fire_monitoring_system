@@ -65,7 +65,8 @@
 .ml-line-history,
 .ml-line-backtest-actual,
 .ml-line-backtest,
-.ml-line-forecast {
+.ml-line-forecast,
+.ml-line-appg {
     fill: none;
     stroke-linecap: round;
     stroke-linejoin: round;
@@ -92,8 +93,18 @@
     stroke-width: 3;
 }
 
+.ml-line-appg {
+    stroke: #B45309;
+    stroke-width: 2.5;
+    stroke-dasharray: 5 5;
+}
+
 .ml-forecast-point {
     fill: var(--teal-deep);
+}
+
+.ml-appg-point {
+    fill: #B45309;
 }
 
 .ml-chart-legend {
@@ -518,5 +529,4 @@
         grid-template-columns: 1fr;
     }
 }
-
 

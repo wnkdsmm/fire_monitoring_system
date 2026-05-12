@@ -54,6 +54,14 @@
                     {% endfor %}
                 </select>
             </label>
+            <label class="filter-field">
+                <span>Год</span>
+                <select id="mlYearFilter" name="year"></select>
+            </label>
+            <label class="filter-field">
+                <span>Месяц</span>
+                <select id="mlMonthFilter" name="month"></select>
+            </label>
             <div class="filter-field filter-actions ml-actions">
                 <span>Действие</span>
                 <button id="mlRefreshButton" class="primary-action" type="submit">Пересчитать ML-прогноз</button>
@@ -145,5 +153,4 @@
             {% endfor %}
         </ul>
     </article>
-
 

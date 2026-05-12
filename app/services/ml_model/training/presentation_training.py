@@ -19,6 +19,7 @@ from .presentation_format import (
     _format_row_display,
 )
 from .presentation_meta import _event_probability_context
+from .appg import compute_appg_series
 
 
 def _empty_light_chart(title: str, empty_message: str, kind: str = 'line') -> dict[str, Any]:  # one-off
@@ -38,6 +39,7 @@ def _empty_light_chart(title: str, empty_message: str, kind: str = 'line') -> di
             'backtest_predicted': [],
             'forecast': [],
             'forecast_band': [],
+            'appg': [],
         }
     return payload
 
@@ -78,6 +80,19 @@ def _build_forecast_chart(daily_history: list[ForecastingDailyHistoryRow], ml_re
         }
         for item in ml_result.get('forecast_rows', [])
     ]
+    appg_rows = compute_appg_series(
+        ml_result.get('forecast_rows', []),
+        daily_history,
+        current_date_key='date',
+        current_value_key='forecast_value',
+        history_date_key='date',
+        history_value_key='count',
+    )
+    appg_points = [
+        {'x': item['current_date'], 'y': round(float(item['appg_value']), 3)}
+        for item in appg_rows
+        if item.get('appg_available') and item.get('appg_value') is not None
+    ]
 
     return {
         'title': title,
@@ -96,6 +111,7 @@ def _build_forecast_chart(daily_history: list[ForecastingDailyHistoryRow], ml_re
             'backtest_predicted': backtest_predicted,
             'forecast': forecast_points,
             'forecast_band': forecast_band,
+            'appg': appg_points,
         },
     }
 
