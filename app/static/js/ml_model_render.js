@@ -58,16 +58,87 @@
         return text.replace(/^\d+\s*%\s*:\s*/, '');
     }
 
-    function buildYearOptions(selectedYear) {
-        var nowYear = new Date().getFullYear();
-        var maxYear = nowYear + 1;
-        var minYear = nowYear - 10;
-        var normalizedSelected = Number(selectedYear);
-        if (!isNaN(normalizedSelected)) {
-            minYear = Math.min(minYear, normalizedSelected);
-            maxYear = Math.max(maxYear, normalizedSelected);
+    function parseYear(value) {
+        var normalized = String(value == null ? '' : value).trim();
+        if (!normalized) {
+            return null;
         }
+        var year = Number(normalized);
+        if (!Number.isFinite(year)) {
+            return null;
+        }
+        year = Math.trunc(year);
+        return year > 0 ? year : null;
+    }
+
+    function collectAvailableYears(filters) {
+        var years = [];
+        var seen = {};
+        var pushYear = function (value) {
+            var year = parseYear(value);
+            if (year == null || seen[year]) {
+                return;
+            }
+            seen[year] = true;
+            years.push(year);
+        };
+
+        var availableYears = Array.isArray(filters && filters.available_years) ? filters.available_years : [];
+        availableYears.forEach(function (item) {
+            if (item && typeof item === 'object') {
+                pushYear(item.value);
+                return;
+            }
+            pushYear(item);
+        });
+
+        return years;
+    }
+
+    function buildYearOptions(selectedYear, config) {
+        var settings = config || {};
+        var years = Array.isArray(settings.years) ? settings.years.slice() : [];
+        var includeEmptyOption = settings.includeEmptyOption !== false;
+        var nowYear = new Date().getFullYear();
+        var defaultMinYear = 1990;
+        var defaultMaxYear = nowYear + 1;
+
+        var normalizedYears = years
+            .map(parseYear)
+            .filter(function (value) { return value != null; });
+        var selected = parseYear(selectedYear);
+        if (selected != null) {
+            normalizedYears.push(selected);
+        }
+        if (Array.isArray(settings.extraYears)) {
+            settings.extraYears.forEach(function (value) {
+                var parsed = parseYear(value);
+                if (parsed != null) {
+                    normalizedYears.push(parsed);
+                }
+            });
+        }
+
+        var minYear = null;
+        var maxYear = null;
+        normalizedYears.forEach(function (year) {
+            if (minYear == null || year < minYear) {
+                minYear = year;
+            }
+            if (maxYear == null || year > maxYear) {
+                maxYear = year;
+            }
+        });
+
+        if (settings.expandToDefault || minYear == null || maxYear == null) {
+            minYear = (minYear == null) ? defaultMinYear : Math.min(minYear, defaultMinYear);
+            maxYear = (maxYear == null) ? defaultMaxYear : Math.max(maxYear, defaultMaxYear);
+        }
+
         var options = [{ value: '', label: 'Текущий режим' }];
+        if (!includeEmptyOption) {
+            options = [];
+        }
         for (var year = maxYear; year >= minYear; year -= 1) {
             options.push({ value: String(year), label: String(year) });
         }
@@ -491,14 +562,26 @@
         } else if (!effectiveYear) {
             effectiveMonth = defaultMonth;
         }
-        setSelectOptions('mlYearFilter', buildYearOptions(effectiveYear), effectiveYear, 'Текущий режим');
+        var historyYears = collectAvailableYears(filters);
         var compareSeries = data.compare_series || {};
         var compareYearA = compareSeries.year_a != null ? String(compareSeries.year_a) : (effectiveYear || String(new Date().getFullYear()));
         var compareYearB = compareSeries.year_b != null ? String(compareSeries.year_b) : String(Math.max(1990, parseInt(compareYearA, 10) - 1));
         var compareMonth = compareSeries.month != null ? String(compareSeries.month) : (effectiveMonth || defaultMonth);
+        var compareYearOptions = buildYearOptions(compareYearA, {
+            years: historyYears,
+            extraYears: [compareYearA, compareYearB, effectiveYear],
+            expandToDefault: historyYears.length < 2,
+            includeEmptyOption: false
+        });
+
+        setSelectOptions('mlYearFilter', buildYearOptions(effectiveYear, {
+            years: historyYears,
+            extraYears: [compareYearA, compareYearB, effectiveYear],
+            expandToDefault: historyYears.length < 2
+        }), effectiveYear, 'Текущий режим');
         setSelectOptions('mlMonthFilter', buildMonthOptions(), compareMonth, 'Все месяцы');
-        setSelectOptions('mlYearAFilter', buildYearOptions(compareYearA), compareYearA, 'Текущий режим');
-        setSelectOptions('mlYearBFilter', buildYearOptions(compareYearB), compareYearB, 'Текущий режим');
+        setSelectOptions('mlYearAFilter', compareYearOptions, compareYearA, 'Текущий режим');
+        setSelectOptions('mlYearBFilter', compareYearOptions, compareYearB, 'Текущий режим');
         setText('mlForecastDaysDisplay', (summary.forecast_days_display || '7') + ' дней');
 
         setText('mlQualityTitle', quality.title || 'Валидация качества ML-прогноза количества пожаров');

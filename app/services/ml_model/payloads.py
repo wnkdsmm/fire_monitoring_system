@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 from typing import Any
 
 from app.services.forecasting.presentation import _build_feature_cards_with_quality
@@ -29,6 +29,25 @@ def _compact_ui_notes(items: list[Any], limit: int = 2) -> list[str]:
         if len(notes) >= limit:
             break
     return notes
+
+
+def _extract_available_years(daily_history: list[dict[str, Any]]) -> list[dict[str, str]]:
+    years: set[int] = set()
+    for row in daily_history:
+        raw_date = row.get('date') if isinstance(row, dict) else None
+        if isinstance(raw_date, datetime):
+            years.add(int(raw_date.year))
+            continue
+        if isinstance(raw_date, date):
+            years.add(int(raw_date.year))
+            continue
+        text = str(raw_date or '').strip()
+        if len(text) >= 4 and text[:4].isdigit():
+            years.add(int(text[:4]))
+    return [
+        {'value': str(year), 'label': str(year)}
+        for year in sorted(years, reverse=True)
+    ]
 
 
 def _build_ml_payload(
@@ -110,6 +129,7 @@ def _build_ml_payload(
             'object_category': selected_object_category,
             'forecast_days': str(days_ahead),
             'available_tables': table_options,
+            'available_years': _extract_available_years(daily_history),
             'available_causes': option_catalog['causes'],
             'available_object_categories': option_catalog['object_categories'],
         },
@@ -199,6 +219,7 @@ def _empty_ml_model_data(
             'object_category': 'all',
             'forecast_days': str(forecast_days),
             'available_tables': table_options,
+            'available_years': [],
             'available_causes': [{'value': 'all', 'label': 'Все причины'}],
             'available_object_categories': [{'value': 'all', 'label': 'Все категории'}],
         },

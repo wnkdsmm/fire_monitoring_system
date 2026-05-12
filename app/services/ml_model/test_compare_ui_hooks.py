@@ -14,6 +14,8 @@ def test_compare_chart_render_hook_present() -> None:
     assert "charts.renderCompareChart(compareSeries, 'mlCompareChart'" in source
     assert "year_a: yearAValue" in source
     assert "year_b: yearBValue" in source
+    assert "filters.available_years" in source
+    assert "nowYear - 10" not in source
 
 
 def test_compare_chart_function_exists() -> None:
