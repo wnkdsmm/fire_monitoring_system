@@ -172,6 +172,34 @@ class MlPeriodApiIntegrationTests(unittest.TestCase):
         self.assertEqual(result["status"], "completed")
         self.assertIn("result", result)
 
+    def test_compare_endpoint_returns_history_has_data_true_when_points_exist(self) -> None:
+        def _fake_compare(**_kwargs):
+            return {
+                "compare_series": {
+                    "month": 5,
+                    "year_a": 2020,
+                    "year_b": 2018,
+                    "rows": [{"day": 1, "a_value": 2.0, "b_value": 1.0, "a_source": "fact", "b_source": "ml"}],
+                    "history_has_data": True,
+                },
+                "filters": {},
+            }
+
+        def _fake_run_session_json_action(_request, action):
+            return action("session-compare")
+
+        with (
+            patch("app.routes.api_ml_model.get_ml_compare_series_data", side_effect=_fake_compare),
+            patch("app.routes.api_ml_model.run_session_json_action", side_effect=_fake_run_session_json_action),
+        ):
+            result = ml_compare_series_endpoint(
+                _build_compare_request(),
+                payload={"table_name": "fires", "month": 5, "year_a": 2020, "year_b": 2018},
+            )
+
+        self.assertEqual(result["status"], "completed")
+        self.assertTrue(result["result"]["compare_series"]["history_has_data"])
+
     def test_ml_model_page_route_renders_without_exception(self) -> None:
         captured: dict[str, object] = {}
 

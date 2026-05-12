@@ -753,6 +753,34 @@ def get_ml_compare_series_data(
     year_b: int | None = None,
     caches: MLModelCaches | None = None,
 ) -> dict[str, Any]:
+    def _is_numeric_point(value: Any) -> bool:
+        if value is None:
+            return False
+        try:
+            numeric = float(value)
+        except (TypeError, ValueError):
+            return False
+        return not (numeric != numeric)
+
+    def _normalize_compare_payload(payload: dict[str, Any]) -> dict[str, Any]:
+        compare_series = payload.get('compare_series')
+        if not isinstance(compare_series, dict):
+            compare_series = {}
+            payload['compare_series'] = compare_series
+        rows = compare_series.get('rows')
+        if not isinstance(rows, list):
+            rows = []
+            compare_series['rows'] = rows
+        has_points = any(
+            isinstance(row, dict) and (
+                _is_numeric_point(row.get('a_value'))
+                or _is_numeric_point(row.get('b_value'))
+            )
+            for row in rows
+        )
+        compare_series['history_has_data'] = bool(compare_series.get('history_has_data') or has_points)
+        return payload
+
     cache_set = caches or _DEFAULT_CACHES
     request_state = _build_ml_request_state(
         table_name=table_name,
@@ -779,11 +807,13 @@ def get_ml_compare_series_data(
         current_user_date=str(request_state.get('current_user_date') or ''),
     )
     cached = cache_set.compare_cache.get(compare_cache_key)
-    if cached is not None:
-        return cached
-
     source_tables = list(request_state.get('source_tables') or [])
     scenario_temperature = request_state.get('scenario_temperature')
+    if cached is not None:
+        cached_compare_series = (cached or {}).get('compare_series') if isinstance(cached, dict) else None
+        if isinstance(cached_compare_series, dict) and ('history_has_data' in cached_compare_series):
+            return _normalize_compare_payload(cached)
+
     if not source_tables:
         result_payload = {
             'compare_series': {
@@ -793,6 +823,7 @@ def get_ml_compare_series_data(
                 'rows': [],
                 'a_summary': {'fact_days': 0, 'ml_days': 0},
                 'b_summary': {'fact_days': 0, 'ml_days': 0},
+                'history_has_data': False,
             },
             'filters': {
                 'table_name': request_state.get('selected_table', 'all'),
@@ -805,7 +836,7 @@ def get_ml_compare_series_data(
             },
         }
         cache_set.compare_cache.set(compare_cache_key, result_payload)
-        return result_payload
+        return _normalize_compare_payload(result_payload)
 
     filter_bundle = _load_ml_filter_bundle(
         source_tables=source_tables,
@@ -839,6 +870,7 @@ def get_ml_compare_series_data(
             'year_b': selected_compare_year_b,
         },
     }
+    result_payload = _normalize_compare_payload(result_payload)
     cache_set.compare_cache.set(compare_cache_key, result_payload)
     return result_payload
 

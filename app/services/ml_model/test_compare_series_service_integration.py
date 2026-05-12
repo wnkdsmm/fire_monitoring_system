@@ -267,3 +267,77 @@ def test_compare_service_july_2024_2023_history_first_hard_regression_f829337(mo
     assert by_day[1]["b_source"] == "ml"
     assert by_day[1]["a_value"] is not None
     assert by_day[1]["b_value"] is not None
+
+
+def test_compare_service_rebuilds_legacy_cached_payload_without_history_flag(monkeypatch) -> None:
+    caches = create_default_caches()
+    monkeypatch.setattr(ml_core, "_build_ml_request_state", lambda **kwargs: _fake_request_state(month=7, year_a=2024, year_b=2023))
+    monkeypatch.setattr(ml_core, "_load_ml_filter_bundle", lambda **_k: {"option_catalog": {}, "metadata_items": [], "preload_notes": [], "selected_cause": "all", "selected_object_category": "all"})
+    monkeypatch.setattr(
+        ml_core,
+        "_load_ml_aggregation_inputs",
+        lambda **_k: {
+            "daily_history": [
+                {"date": date(2026, 7, 5), "count": 9.0},
+                {"date": date(2025, 7, 20), "count": 6.0},
+            ],
+            "filtered_records_count": 2,
+        },
+    )
+
+    legacy_key = ml_core._build_ml_compare_cache_key(
+        cache_schema_version=ml_core.ML_CACHE_SCHEMA_VERSION,
+        selected_tables=("fires",),
+        cause="all",
+        object_category="all",
+        month=7,
+        year_a=2024,
+        year_b=2023,
+        current_user_date="2026-05-12",
+    )
+    caches.compare_cache.set(
+        legacy_key,
+        {
+            "compare_series": {
+                "month": 7,
+                "year_a": 2024,
+                "year_b": 2023,
+                "rows": [],
+                "a_summary": {"fact_days": 0, "ml_days": 0},
+                "b_summary": {"fact_days": 0, "ml_days": 0},
+            },
+            "filters": {"compare_month": 7, "year_a": 2024, "year_b": 2023},
+        },
+    )
+
+    payload = ml_core.get_ml_compare_series_data(month=7, year_a=2024, year_b=2023, caches=caches)
+    compare = payload["compare_series"]
+    rows = compare["rows"]
+    assert compare.get("history_has_data") is True
+    assert len(rows) == 31
+    assert any((row.get("a_value") is not None or row.get("b_value") is not None) for row in rows)
+
+
+def test_compare_service_may_2020_vs_2018_returns_history_has_data_true_when_points_exist(monkeypatch) -> None:
+    caches = create_default_caches()
+    monkeypatch.setattr(ml_core, "_build_ml_request_state", lambda **kwargs: _fake_request_state(month=5, year_a=2020, year_b=2018))
+    monkeypatch.setattr(ml_core, "_load_ml_filter_bundle", lambda **_k: {"option_catalog": {}, "metadata_items": [], "preload_notes": [], "selected_cause": "all", "selected_object_category": "all"})
+    monkeypatch.setattr(
+        ml_core,
+        "_load_ml_aggregation_inputs",
+        lambda **_k: {
+            "daily_history": [
+                {"date": date(2020, 5, 3), "count": 10.0},
+                {"date": date(2018, 5, 8), "count": 7.0},
+                {"date": date(2021, 5, 3), "count": 9.0},
+            ],
+            "filtered_records_count": 3,
+        },
+    )
+
+    payload = ml_core.get_ml_compare_series_data(month=5, year_a=2020, year_b=2018, caches=caches)
+    compare = payload["compare_series"]
+    rows = compare["rows"]
+    assert isinstance(rows, list)
+    assert any((row.get("a_value") is not None or row.get("b_value") is not None) for row in rows)
+    assert compare["history_has_data"] is True

@@ -218,7 +218,7 @@
         var bYear = data.year_b != null ? String(data.year_b) : 'B';
         var aPoints = rows.filter(function (row) { return row && row.a_value != null && !isNaN(Number(row.a_value)); }).length;
         var bPoints = rows.filter(function (row) { return row && row.b_value != null && !isNaN(Number(row.b_value)); }).length;
-        if (!historyHasData) {
+        if (!rows.length || (!aPoints && !bPoints)) {
             renderFallback(chartNode, fallbackNode, 'Нет данных для сравнения выбранных лет за выбранный месяц.');
             if (summaryNode) {
                 summaryNode.textContent = '';
@@ -298,7 +298,8 @@
             var aSummary = data.a_summary || {};
             var bSummary = data.b_summary || {};
             summaryNode.textContent = 'Год A (' + aYear + '): факт ' + String(aSummary.fact_days || 0) + ', ML ' + String(aSummary.ml_days || 0)
-                + ' | Год B (' + bYear + '): факт ' + String(bSummary.fact_days || 0) + ', ML ' + String(bSummary.ml_days || 0);
+                + ' | Год B (' + bYear + '): факт ' + String(bSummary.fact_days || 0) + ', ML ' + String(bSummary.ml_days || 0)
+                + (historyHasData ? '' : ' | diag: history_has_data=false');
         }
     }
 function renderChartSkeleton(chartId, fallbackId) {

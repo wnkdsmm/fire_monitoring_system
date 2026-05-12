@@ -32,7 +32,7 @@ def test_compare_chart_function_exists() -> None:
     source = Path("app/static/js/ml_model_charts.js").read_text(encoding="utf-8")
     assert "function renderCompareChart(compareSeries, chartId, fallbackId, summaryId)" in source
     assert "var historyHasData = data.history_has_data === true;" in source
-    assert "if (!historyHasData)" in source
+    assert "if (!rows.length || (!aPoints && !bPoints))" in source
     assert "renderFallback(chartNode, fallbackNode, 'Нет данных для сравнения выбранных лет за выбранный месяц.');" in source
 
 
@@ -41,3 +41,11 @@ def test_compare_chart_hides_fallback_when_history_available() -> None:
     assert "setChartEmptyState(chartNode, false);" in source
     assert "fallbackNode.classList.add('is-hidden');" in source
     assert "fallbackNode.style.display = 'none';" in source
+
+
+def test_compare_chart_can_render_without_history_flag_if_rows_have_points() -> None:
+    source = Path("app/static/js/ml_model_charts.js").read_text(encoding="utf-8")
+    assert "var rows = Array.isArray(data.rows) ? data.rows : [];" in source
+    assert "var aPoints = rows.filter(function (row) { return row && row.a_value != null && !isNaN(Number(row.a_value)); }).length;" in source
+    assert "var bPoints = rows.filter(function (row) { return row && row.b_value != null && !isNaN(Number(row.b_value)); }).length;" in source
+    assert "if (!rows.length || (!aPoints && !bPoints))" in source
