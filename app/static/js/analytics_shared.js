@@ -296,9 +296,6 @@
                 if (isDropdownOpen()) {
                     setDropdownOpen(false);
                 } else {
-                    if (checklist && typeof checklist.selectAll === 'function') {
-                        checklist.selectAll();
-                    }
                     setDropdownOpen(true);
                     if (typeof onOpen === 'function') {
                         onOpen();
@@ -316,7 +313,6 @@
                 if (checklist && typeof checklist.syncSummary === 'function') {
                     checklist.syncSummary();
                 }
-                setDropdownOpen(false);
                 if (typeof onChange === 'function') {
                     onChange();
                 }

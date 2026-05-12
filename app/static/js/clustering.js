@@ -176,18 +176,12 @@ async function fetchClusteringData() {
                 if (renderApi.syncTableChecklistSummary) {
                     renderApi.syncTableChecklistSummary();
                 }
-                if (renderApi.setTableChecklistOpen) {
-                    renderApi.setTableChecklistOpen(false);
-                }
                 fetchClusteringData();
             },
             onToggleTableFilter: function () {
                 var root = byId('clusterTableFilter');
                 var isOpen = root && root.classList.contains('is-open');
                 if (!isOpen) {
-                    if (renderApi.selectAllTableNames) {
-                        renderApi.selectAllTableNames();
-                    }
                     if (renderApi.setTableChecklistOpen) {
                         renderApi.setTableChecklistOpen(true);
                     }

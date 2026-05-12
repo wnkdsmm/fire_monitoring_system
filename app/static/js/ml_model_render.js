@@ -756,7 +756,6 @@
                 syncScreenLinks();
                 var targetName = event && event.target ? event.target.name : '';
                 if (targetName === 'table_names') {
-                    setTableChecklistOpen(false);
                     if (tableCheckboxDebounceTimer !== null) {
                         clearTimeout(tableCheckboxDebounceTimer);
                     }
@@ -791,9 +790,6 @@
                 if (isOpen) {
                     setTableChecklistOpen(false);
                 } else {
-                    if (mlTableChecklist && typeof mlTableChecklist.selectAll === 'function') {
-                        mlTableChecklist.selectAll();
-                    }
                     setTableChecklistOpen(true);
                 }
             });
