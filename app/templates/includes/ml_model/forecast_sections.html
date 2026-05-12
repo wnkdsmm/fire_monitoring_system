@@ -1,109 +1,13 @@
 ﻿<section id="mlForecastSection" class="ml-layout">
-        <div class="ml-primary">
-            <article class="panel chart-panel{% if not data.compare_series or not data.compare_series.history_has_data %} is-chart-empty{% endif %}">
-                <div class="panel-head">
-                    <h2 id="mlCompareTitle">Сравнение 2 лет по выбранному месяцу</h2>
-                    <span class="panel-meta">Две линии по дням месяца: для каждого года автоматически используется факт, а при нехватке данных — ML.</span>
-                </div>
-                <div class="ml-compare-controls">
-                    <label class="filter-field">
-                        <span>Месяц</span>
-                        <select id="mlMonthFilter" name="month" form="mlModelForm"></select>
-                    </label>
-                    <label class="filter-field">
-                        <span>Год A</span>
-                        <select id="mlYearAFilter" name="year_a" form="mlModelForm"></select>
-                    </label>
-                    <label class="filter-field">
-                        <span>Год B</span>
-                        <select id="mlYearBFilter" name="year_b" form="mlModelForm"></select>
-                    </label>
-                </div>
-                <div id="mlCompareChart" class="plotly-chart ml-plot{% if not data.compare_series or not data.compare_series.history_has_data %} is-empty{% endif %}"></div>
-                <div id="mlCompareChartFallback" class="chart-empty{% if data.compare_series and data.compare_series.history_has_data %} is-hidden{% endif %}">Нет данных для сравнения выбранных лет за выбранный месяц.</div>
-                <p id="mlCompareChartSummary" class="panel-meta"></p>
-            </article>
-            <article class="panel chart-panel{% if not data.appg_series %} is-chart-empty{% endif %}">
-                <div class="panel-head">
-                    <h2 id="mlAppgTitle">АППГ: текущий период vs прошлый год</h2>
-                    <span class="panel-meta">Сравнение выбранного периода с аналогичным периодом прошлого года (APPG) с дельтой в процентах.</span>
-                </div>
-                <div id="mlAppgChart" class="plotly-chart ml-plot{% if not data.appg_series %} is-empty{% endif %}"></div>
-                <div id="mlAppgChartFallback" class="chart-empty{% if data.appg_series %} is-hidden{% endif %}">Нет данных для APPG-сравнения за выбранный период.</div>
-                <p id="mlAppgChartNote" class="panel-meta ml-appg-note is-hidden"></p>
-            </article>
-
-            <article class="panel ml-table-panel">
-                <div class="panel-head">
-                    <h2>Прогноз по дням</h2>
-                    <span class="panel-meta">Ожидаемое число пожаров по каждой дате с указанием диапазона неопределенности.</span>
-                </div>
-                <div class="ml-table-shell" id="mlForecastTableShell">
-                    {% if data.forecast_rows %}
-                    <table class="forecast-table forecast-table-ml">
-                        <colgroup>
-                            <col style="width:22%">
-                            <col style="width:22%">
-                            <col style="width:56%">
-                        </colgroup>
-                        <thead>
-                            <tr>
-                                <th>Дата</th>
-                                <th>Ожидаемое число пожаров</th>
-                                <th>Диапазон</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for row in data.forecast_rows %}
-                            <tr>
-                                <td data-label="Дата">{{ row.date_display }}</td>
-                                <td data-label="Ожидаемое число пожаров">{{ row.forecast_value_display }}</td>
-                                <td data-label="Диапазон">{{ row.range_display.split(': ', 1)[1] if ': ' in row.range_display else row.range_display }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                    {% else %}
-                    <div class="mini-empty">После выполнения расчета здесь будет представлен прогноз по будущим датам.</div>
-                    {% endif %}
-                </div>
-            </article>
-        </div>
-
-        <aside class="dashboard-secondary ml-secondary">
-            <article class="panel chart-panel{% if charts.importance.empty_message %} is-chart-empty{% endif %}">
-                <div class="panel-head">
-                    <h2 id="mlImportanceTitle">{{ charts.importance.title }}</h2>
-                    <span class="panel-meta">Факторы, оказывающие наибольшее влияние на прогноз ожидаемого количества пожаров.</span>
-                </div>
-                <div id="mlImportanceChart" class="plotly-chart ml-plot ml-plot-small{% if charts.importance.empty_message %} is-empty{% endif %}"></div>
-                <div id="mlImportanceChartFallback" class="chart-empty{% if charts.importance.empty_message %}{% else %} is-hidden{% endif %}">{{ charts.importance.empty_message }}</div>
-                <p class="panel-meta ml-importance-note{% if not charts.importance.note %} is-hidden{% endif %}" id="mlImportanceChartNote">{{ charts.importance.note }}</p>
-            </article>
-
-            <article id="mlFeatureSection" class="panel insight-panel">
-                <div class="panel-head">
-                    <h2>Данные, использованные моделью в расчете</h2>
-                    <span class="panel-meta">Перечень признаков, фактически включенных в расчет прогнозного количества пожаров.</span>
-                </div>
-                <div class="forecast-feature-list" id="mlFeatureCards">
-                    {% if data.features %}
-                        {% for feature in data.features %}
-                        <article class="forecast-feature-card status-{{ feature.status }}">
-                            <div class="forecast-feature-head">
-                                <strong>{{ feature.label }}</strong>
-                                <span class="forecast-badge">{{ feature.status_label }}</span>
-                            </div>
-                            <p>{{ feature.description }}</p>
-                        </article>
-                        {% endfor %}
-                    {% else %}
-                    <div class="mini-empty">После выбора таблицы здесь будут представлены признаки модели.</div>
-                    {% endif %}
-                </div>
-            </article>
-
-        </aside>
-    </section>
-
-</main>
+    <div class="ml-primary">
+        <article class="panel chart-panel{% if not data.compare_series or not data.compare_series.history_has_data %} is-chart-empty{% endif %}">
+            <div class="panel-head">
+                <h2 id="mlCompareTitle">Сравнение 2 лет по выбранному месяцу</h2>
+                <span class="panel-meta">Две линии по дням месяца: факт, при отсутствии факта — ML.</span>
+            </div>
+            <div id="mlCompareChart" class="plotly-chart ml-plot{% if not data.compare_series or not data.compare_series.history_has_data %} is-empty{% endif %}"></div>
+            <div id="mlCompareChartFallback" class="chart-empty{% if data.compare_series and data.compare_series.history_has_data %} is-hidden{% endif %}">Нет данных для сравнения выбранных лет за выбранный месяц.</div>
+            <p id="mlCompareChartSummary" class="panel-meta"></p>
+        </article>
+    </div>
+</section>

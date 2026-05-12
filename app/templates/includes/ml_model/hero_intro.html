@@ -1,26 +1,14 @@
-    <section class="hero-panel">
-        <div class="hero-copy">
-            <span class="eyebrow">ML-прогноз | количественная оценка по дням</span>
-            <h1>Ожидаемое количество пожаров по календарным датам</h1>
-            <p class="subtitle">Раздел предназначен для оценки ожидаемого числа пожаров по дням и прогнозной нагрузки на систему пожарной безопасности.</p>
-            <p class="hero-live-summary" id="mlModelDescription">{{ summary.hero_summary or data.model_description or 'После загрузки будет представлено описание ожидаемого количества пожаров и уровня надежности расчета.' }}</p>
-            <p class="hero-context-note">Базовой единицей прогноза является ожидаемое количество пожаров на дату. Раздел не выполняет территориальную приоритизацию и не заменяет сценарный календарь вероятности пожара.</p>
-            <div class="hero-tags" id="mlHeroTags">
-                <span class="hero-tag">Таблица: <strong>{{ summary.selected_table_label }}</strong></span>
-                <span class="hero-tag">Главный фактор модели: <strong>{{ summary.top_feature_label }}</strong></span>
-                <span class="hero-tag">{% if summary.event_probability_enabled %}Средняя вероятность P(&gt;=1 пожара): <strong>{{ summary.average_event_probability_display }}</strong>{% else %}Событие пожара: <strong>не рассчитывается</strong>{% endif %}</span>
+﻿<section class="panel ml-hero-panel" id="mlHeroPanel">
+    <div class="ml-hero-grid">
+        <div class="ml-hero-main">
+            <span class="ml-hero-badge">ML-прогноз | количественная оценка по дням</span>
+            <h1 class="ml-hero-title">Ожидаемое количество пожаров по календарным датам</h1>
+            <p class="ml-hero-description" id="mlModelDescription">После загрузки здесь появится краткий вывод по ожидаемому числу пожаров и прогнозной нагрузке.</p>
+            <div class="ml-hero-notes">
+                <p>Две линии по дням месяца: факт, при отсутствии факта — ML.</p>
             </div>
+            <div class="ml-hero-tags" id="mlHeroTags"></div>
         </div>
-        <div class="hero-side" id="mlHeroStats">
-            <article class="hero-stat-card">
-                <span class="hero-stat-label">Среднее ожидаемое число в день</span>
-                <strong class="hero-stat-value">{{ summary.average_expected_count_display }}</strong>
-                <span class="hero-stat-foot">Средняя дневная интенсивность на выбранном горизонте прогноза.</span>
-            </article>
-            <article class="hero-stat-card hero-stat-card-soft">
-                <span class="hero-stat-label">Пик по горизонту</span>
-                <strong class="hero-stat-value">{{ summary.peak_expected_count_display }}</strong>
-                <span class="hero-stat-foot">Максимальное ожидаемое число пожаров на дату: {{ summary.peak_expected_count_day_display }}.</span>
-            </article>
-        </div>
-    </section>
+        <div class="ml-hero-stats" id="mlHeroStats"></div>
+    </div>
+</section>

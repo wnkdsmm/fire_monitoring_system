@@ -2,11 +2,9 @@
 {% set data = ml_model.initial_data %}
 {% set filters = data.filters %}
 {% set summary = data.summary %}
-{% set charts = data.charts %}
-{% set quality = data.quality_assessment %}
 {% set sidebar_title = "ML-прогноз" %}
 {% set sidebar_active = "ml_model" %}
-{% set sidebar_description %}ML-оценка ожидаемого количества пожаров по дням для анализа прогнозной нагрузки, дополняющая вероятностный сценарный прогноз.{% endset %}
+{% set sidebar_description %}Сравнение по дням выбранного месяца для двух лет: факт, а при отсутствии факта — ML-достройка только для нужного года.{% endset %}
 
 {% block title %}ML-прогноз ожидаемого количества пожаров по дням{% endblock %}
 
@@ -43,8 +41,8 @@
 <div class="dashboard-main ml-model-main">
 {% include 'includes/ml_model/hero_intro.html' %}
 {% include 'includes/ml_model/_controls_overview.html' %}
-{% include 'includes/ml_model/_quality_sections.html' %}
 {% include 'includes/ml_model/forecast_sections.html' %}
+{% include 'includes/ml_model/_quality_sections.html' %}
 </div>
 {% endblock %}
 

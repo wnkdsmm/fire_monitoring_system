@@ -93,8 +93,8 @@
             object_category: params.get('object_category') || 'all',
             year: params.get('year') || '',
             month: params.get('month') || defaultMonth,
-            year_a: params.get('year_a') || '2025',
-            year_b: params.get('year_b') || '2024',
+            year_a: params.get('year_a') || '2024',
+            year_b: params.get('year_b') || '2025',
             forecast_days: FIXED_FORECAST_DAYS,
             current_user_date: params.get('current_user_date') || getCurrentUserDateIso()
         };
@@ -215,7 +215,9 @@
     async function fetchMlCompareSeries(options) {
         var settings = options || {};
         var requestPayload = buildRequestPayload(settings);
-        var body = requestPayload.body || {};
+        var body = (typeof settings.buildPayload === 'function')
+            ? (settings.buildPayload(requestPayload.body || {}) || {})
+            : (requestPayload.body || {});
         var comparePayload = {
             table_name: body.table_name || 'all',
             table_names: Array.isArray(body.table_names) ? body.table_names : [],

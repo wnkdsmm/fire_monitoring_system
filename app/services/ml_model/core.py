@@ -48,8 +48,8 @@ from .training.training import _train_ml_model, clear_training_artifact_cache
 _DEFAULT_CACHES = create_default_caches()
 _MIN_SELECTABLE_YEAR = 1990
 _MAX_SELECTABLE_YEAR = 2100
-_DEFAULT_COMPARE_YEAR_A = 2025
-_DEFAULT_COMPARE_YEAR_B = 2024
+_DEFAULT_COMPARE_YEAR_A = 2024
+_DEFAULT_COMPARE_YEAR_B = 2025
 
 
 def _build_ml_context(initial_data: MlPayload) -> MlContext:
@@ -724,6 +724,28 @@ def _build_compare_series_payload(
     )
     a_summary = compare_payload.get('a_summary') or {}
     b_summary = compare_payload.get('b_summary') or {}
+    def _resolve_mode(summary: dict[str, Any]) -> str:
+        fact_days = int(summary.get('fact_days') or 0)
+        ml_days = int(summary.get('ml_days') or 0)
+        if fact_days > 0 and ml_days == 0:
+            return 'fact'
+        if fact_days == 0 and ml_days > 0:
+            return 'ml'
+        if fact_days > 0 and ml_days > 0:
+            return 'mixed'
+        return 'empty'
+
+    a_mode = _resolve_mode(a_summary)
+    b_mode = _resolve_mode(b_summary)
+    if a_mode == 'fact' and b_mode == 'fact':
+        overall_mode = 'fact_fact'
+    elif a_mode == 'ml' and b_mode == 'ml':
+        overall_mode = 'ml_ml'
+    elif a_mode == 'empty' and b_mode == 'empty':
+        overall_mode = 'empty'
+    else:
+        overall_mode = 'mixed'
+
     compare_payload['ml_usage'] = {
         'year_a': {
             'year': int(year_a),
@@ -737,6 +759,11 @@ def _build_compare_series_payload(
             'ml_points': int(b_summary.get('ml_days') or 0),
             'ml_invoked': bool(ml_invoked_by_year.get(int(year_b), False)),
         },
+    }
+    compare_payload['modes'] = {
+        'year_a': a_mode,
+        'year_b': b_mode,
+        'overall': overall_mode,
     }
     compare_payload['history_has_data'] = history_has_data
     return compare_payload
