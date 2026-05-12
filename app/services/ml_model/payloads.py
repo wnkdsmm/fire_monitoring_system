@@ -1,5 +1,6 @@
 ﻿from __future__ import annotations
 
+import re
 from datetime import date, datetime
 from typing import Any
 
@@ -16,6 +17,8 @@ from .training.presentation_training import (
 from .training.appg import compute_appg_series
 from .training.training_result import _empty_ml_result
 
+_YEAR_TOKEN_RE = re.compile(r"(19\d{2}|20\d{2}|2100)")
+
 
 def _compact_ui_notes(items: list[Any], limit: int = 2) -> list[str]:
     notes: list[str] = []
@@ -29,7 +32,23 @@ def _compact_ui_notes(items: list[Any], limit: int = 2) -> list[str]:
     return notes
 
 
-def _extract_available_years(daily_history: list[dict[str, Any]]) -> list[dict[str, str]]:
+def _extract_available_years_from_table_options(table_options: list[dict[str, str]]) -> list[dict[str, str]]:
+    years: set[int] = set()
+    for option in table_options:
+        value = str((option or {}).get('value') or '').strip()
+        if not value or value == 'all':
+            continue
+        for token in _YEAR_TOKEN_RE.findall(value):
+            year = int(token)
+            if 1900 <= year <= 2100:
+                years.add(year)
+    return [
+        {'value': str(year), 'label': str(year)}
+        for year in sorted(years, reverse=True)
+    ]
+
+
+def _extract_available_years_from_daily_history(daily_history: list[dict[str, Any]]) -> list[dict[str, str]]:
     years: set[int] = set()
     for row in daily_history:
         raw_date = row.get('date') if isinstance(row, dict) else None
@@ -46,6 +65,16 @@ def _extract_available_years(daily_history: list[dict[str, Any]]) -> list[dict[s
         {'value': str(year), 'label': str(year)}
         for year in sorted(years, reverse=True)
     ]
+
+
+def _extract_available_years(
+    table_options: list[dict[str, str]],
+    daily_history: list[dict[str, Any]],
+) -> list[dict[str, str]]:
+    from_tables = _extract_available_years_from_table_options(table_options)
+    if from_tables:
+        return from_tables
+    return _extract_available_years_from_daily_history(daily_history)
 
 
 def _build_ml_payload(
@@ -126,7 +155,7 @@ def _build_ml_payload(
             'object_category': selected_object_category,
             'forecast_days': str(days_ahead),
             'available_tables': table_options,
-            'available_years': _extract_available_years(daily_history),
+            'available_years': _extract_available_years(table_options, daily_history),
             'available_causes': option_catalog['causes'],
             'available_object_categories': option_catalog['object_categories'],
         },
@@ -215,9 +244,10 @@ def _empty_ml_model_data(
             'object_category': 'all',
             'forecast_days': str(forecast_days),
             'available_tables': table_options,
-            'available_years': [],
+            'available_years': _extract_available_years_from_table_options(table_options),
             'available_causes': [{'value': 'all', 'label': 'Все причины'}],
             'available_object_categories': [{'value': 'all', 'label': 'Все категории'}],
         },
     }
+
 

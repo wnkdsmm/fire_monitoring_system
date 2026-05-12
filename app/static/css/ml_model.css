@@ -88,6 +88,7 @@
 
 .ml-plot {
     min-height: var(--chart-height-ml-lg);
+    position: relative;
 }
 
 .ml-plot.is-empty {
@@ -126,6 +127,10 @@
     font-family: inherit;
 }
 
+.ml-axis-label-muted {
+    opacity: 0.65;
+}
+
 .ml-line-forecast,
 .ml-line-appg {
     fill: none;
@@ -142,6 +147,50 @@
     stroke: #B45309;
     stroke-width: 2.5;
     stroke-dasharray: 5 5;
+}
+
+.ml-forecast-point {
+    fill: var(--teal-deep);
+    stroke: #ffffff;
+    stroke-width: 1.2;
+    cursor: pointer;
+}
+
+.ml-appg-point {
+    fill: #B45309;
+    stroke: #ffffff;
+    stroke-width: 1.2;
+    cursor: pointer;
+}
+
+.ml-forecast-point:hover,
+.ml-appg-point:hover {
+    stroke-width: 2;
+}
+
+.ml-chart-tooltip {
+    position: absolute;
+    z-index: 8;
+    max-width: min(420px, 86%);
+    padding: 8px 10px;
+    border-radius: var(--radius-control);
+    border: 1px solid var(--line);
+    background: var(--surface-panel);
+    color: var(--ink);
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.14);
+    font-size: var(--font-size-token-02);
+    line-height: 1.35;
+    pointer-events: none;
+    white-space: normal;
+}
+
+.ml-chart-tooltip.is-hidden {
+    display: none;
+}
+
+#mlCompareChartFallback.is-hidden,
+#mlCompareError.is-hidden {
+    display: none !important;
 }
 
 .ml-chart-legend {
@@ -207,6 +256,14 @@
 .ml-controls-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
     align-items: end;
+}
+
+.ml-submit-field {
+    justify-content: end;
+}
+
+.ml-submit-field .primary-action {
+    width: 100%;
 }
 
 @media (max-width: 980px) {

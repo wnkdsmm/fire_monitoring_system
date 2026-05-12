@@ -26,11 +26,16 @@
         };
         var availableYears = Array.isArray(filters && filters.available_years) ? filters.available_years : [];
         availableYears.forEach(function (item) { push(item && typeof item === 'object' ? item.value : item); });
-        if (!result.length) {
-            for (var year = 2026; year >= 1990; year -= 1) {
-                result.push(year);
+        var availableTables = Array.isArray(filters && filters.available_tables) ? filters.available_tables : [];
+        availableTables.forEach(function (item) {
+            var value = String((item && item.value) || '').trim();
+            if (!value || value === 'all') {
+                return;
             }
-        } else {
+            var matches = value.match(/(19\d{2}|20\d{2}|2100)/g) || [];
+            matches.forEach(function (token) { push(token); });
+        });
+        if (result.length) {
             result.sort(function (a, b) { return b - a; });
         }
         return result;
@@ -47,6 +52,22 @@
 
     function buildYearOptions(years) {
         return years.map(function (year) { return { value: String(year), label: String(year) }; });
+    }
+
+    function resolveYearPair(years, rawYearA, rawYearB) {
+        var fallbackA = years.length ? String(years[0]) : '2024';
+        var fallbackB = years.length > 1 ? String(years[1]) : fallbackA;
+        var allowed = {};
+        years.forEach(function (year) { allowed[String(year)] = true; });
+        var yearA = String(rawYearA || '').trim();
+        var yearB = String(rawYearB || '').trim();
+        if (!allowed[yearA]) {
+            yearA = fallbackA;
+        }
+        if (!allowed[yearB]) {
+            yearB = fallbackB;
+        }
+        return { yearA: yearA, yearB: yearB };
     }
 
     function setBusy(isBusy) {
@@ -87,14 +108,16 @@
         var month = byId('mlMonthFilter') ? String(byId('mlMonthFilter').value || '').trim() : '';
         var yearA = byId('mlYearAFilter') ? String(byId('mlYearAFilter').value || '').trim() : '';
         var yearB = byId('mlYearBFilter') ? String(byId('mlYearBFilter').value || '').trim() : '';
+        var years = collectAvailableYears(filters);
+        var resolved = resolveYearPair(years, yearA, yearB);
         return {
             table_name: tableName,
             table_names: tableNames,
             cause: cause,
             object_category: objectCategory,
             month: month || String(new Date().getMonth() + 1),
-            year_a: yearA || '2024',
-            year_b: yearB || '2025'
+            year_a: resolved.yearA,
+            year_b: resolved.yearB
         };
     }
 
@@ -184,13 +207,27 @@
         var compare = data.compare_series || {};
 
         var years = collectAvailableYears(filters);
+        if (!years.length) {
+            var fallbackYears = [];
+            var yearFromCompareA = parseYear(compare.year_a);
+            var yearFromCompareB = parseYear(compare.year_b);
+            if (yearFromCompareA != null) {
+                fallbackYears.push(yearFromCompareA);
+            }
+            if (yearFromCompareB != null && fallbackYears.indexOf(yearFromCompareB) === -1) {
+                fallbackYears.push(yearFromCompareB);
+            }
+            fallbackYears.sort(function (a, b) { return b - a; });
+            years = fallbackYears;
+        }
         var month = String(compare.month || filters.compare_month || (new Date().getMonth() + 1));
-        var yearA = String(compare.year_a || filters.year_a || '2024');
-        var yearB = String(compare.year_b || filters.year_b || '2025');
+        var resolved = resolveYearPair(years, compare.year_a || filters.year_a, compare.year_b || filters.year_b);
+        var yearA = resolved.yearA;
+        var yearB = resolved.yearB;
 
         setSelectOptions('mlMonthFilter', buildMonthOptions(), month, 'Месяц');
-        setSelectOptions('mlYearAFilter', buildYearOptions(years), yearA, 'Год A');
-        setSelectOptions('mlYearBFilter', buildYearOptions(years), yearB, 'Год B');
+        setSelectOptions('mlYearAFilter', buildYearOptions(years), yearA, 'Год 1');
+        setSelectOptions('mlYearBFilter', buildYearOptions(years), yearB, 'Год 2');
 
         renderHero(data);
         renderQuality(data);

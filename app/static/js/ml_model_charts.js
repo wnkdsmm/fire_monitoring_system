@@ -32,6 +32,69 @@
         fallbackNode.style.display = '';
     }
 
+    function ensureChartTooltip(chartNode) {
+        if (!chartNode) {
+            return null;
+        }
+        var existing = chartNode.querySelector('.ml-chart-tooltip');
+        if (existing) {
+            return existing;
+        }
+        var tooltip = document.createElement('div');
+        tooltip.className = 'ml-chart-tooltip is-hidden';
+        chartNode.appendChild(tooltip);
+        return tooltip;
+    }
+
+    function wirePointTooltips(chartNode) {
+        if (!chartNode) {
+            return;
+        }
+        var tooltip = ensureChartTooltip(chartNode);
+        if (!tooltip) {
+            return;
+        }
+
+        function hideTooltip() {
+            tooltip.classList.add('is-hidden');
+            tooltip.textContent = '';
+        }
+
+        function showTooltip(event, text) {
+            if (!text) {
+                hideTooltip();
+                return;
+            }
+            tooltip.textContent = text;
+            tooltip.classList.remove('is-hidden');
+            var hostRect = chartNode.getBoundingClientRect();
+            var tipRect = tooltip.getBoundingClientRect();
+            var offsetX = 12;
+            var offsetY = 12;
+            var left = event.clientX - hostRect.left + offsetX;
+            var top = event.clientY - hostRect.top + offsetY;
+            if (left + tipRect.width > hostRect.width - 8) {
+                left = Math.max(8, event.clientX - hostRect.left - tipRect.width - 12);
+            }
+            if (top + tipRect.height > hostRect.height - 8) {
+                top = Math.max(8, event.clientY - hostRect.top - tipRect.height - 12);
+            }
+            tooltip.style.left = left.toFixed(0) + 'px';
+            tooltip.style.top = top.toFixed(0) + 'px';
+        }
+
+        Array.prototype.forEach.call(chartNode.querySelectorAll('.ml-point[data-tip]'), function (point) {
+            point.addEventListener('mouseenter', function (event) {
+                showTooltip(event, point.getAttribute('data-tip') || '');
+            });
+            point.addEventListener('mousemove', function (event) {
+                showTooltip(event, point.getAttribute('data-tip') || '');
+            });
+            point.addEventListener('mouseleave', hideTooltip);
+            point.addEventListener('blur', hideTooltip);
+        });
+    }
+
     function renderCompareChart(compareSeries, chartId, fallbackId, summaryId) {
         var chartNode = byId(chartId);
         var fallbackNode = byId(fallbackId);
@@ -94,6 +157,24 @@
             return segments;
         }
 
+        function buildPoints(key, pointClass, yearLabel, sourceKey) {
+            var points = '';
+            rows.forEach(function (row, i) {
+                var raw = row ? row[key] : null;
+                var val = raw == null ? null : Number(raw);
+                if (val == null || isNaN(val)) {
+                    return;
+                }
+                var dayText = row && row.day != null ? String(row.day) : '';
+                var source = row && row[sourceKey] ? String(row[sourceKey]) : '';
+                var sourceLabel = source === 'ml' ? 'ML' : 'факт';
+                var valueText = String(Math.round(val * 100) / 100).replace('.', ',');
+                var tip = 'Год: ' + yearLabel + ' | День: ' + dayText + ' | Значение: ' + valueText + ' | Источник: ' + sourceLabel;
+                points += '<circle cx="' + x(i).toFixed(2) + '" cy="' + y(val).toFixed(2) + '" r="4.2" class="ml-point ' + pointClass + '" tabindex="0" data-tip="' + escapeHtml(tip) + '"></circle>';
+            });
+            return points;
+        }
+
         var gridLines = '';
         var axisLabels = '';
         for (var step = 0; step <= 4; step += 1) {
@@ -103,9 +184,13 @@
             axisLabels += '<text x="' + (padding.left - 10) + '" y="' + (py + 4).toFixed(2) + '" text-anchor="end" class="ml-axis-label">' + escapeHtml(String(Math.round(value * 10) / 10).replace('.', ',')) + '</text>';
         }
 
-        var ticks = [0, Math.floor((rows.length - 1) / 2), rows.length - 1].filter(function (v, i, arr) { return arr.indexOf(v) === i && v >= 0; });
-        ticks.forEach(function (idx) {
-            axisLabels += '<text x="' + x(idx).toFixed(2) + '" y="' + (height - 16) + '" text-anchor="middle" class="ml-axis-label">' + escapeHtml(String(rows[idx].day || '')) + '</text>';
+        rows.forEach(function (row, idx) {
+            var day = row ? row.day : '';
+            if (day == null || day === '') {
+                return;
+            }
+            var textClass = (Number(day) % 2 === 0) ? 'ml-axis-label ml-axis-label-muted' : 'ml-axis-label';
+            axisLabels += '<text x="' + x(idx).toFixed(2) + '" y="' + (height - 16) + '" text-anchor="middle" class="' + textClass + '">' + escapeHtml(String(day)) + '</text>';
         });
 
         var svg = '<svg viewBox="0 0 ' + width + ' ' + height + '" class="ml-svg-chart" preserveAspectRatio="none">'
@@ -115,6 +200,8 @@
 
         buildSegments('a_value').forEach(function (path) { svg += '<path d="' + path + '" class="ml-line-forecast"></path>'; });
         buildSegments('b_value').forEach(function (path) { svg += '<path d="' + path + '" class="ml-line-appg"></path>'; });
+        svg += buildPoints('a_value', 'ml-forecast-point', aYear, 'a_source');
+        svg += buildPoints('b_value', 'ml-appg-point', bYear, 'b_source');
         svg += axisLabels + '</svg>';
 
         var modes = data.modes || {};
@@ -128,12 +215,13 @@
             + '</div>'
             + '<div class="ml-chart-shell">' + svg + '</div>';
         applyLegendDecorators(chartNode);
+        wirePointTooltips(chartNode);
 
         if (summaryNode) {
             var aSummary = data.a_summary || {};
             var bSummary = data.b_summary || {};
-            summaryNode.textContent = 'Год A (' + aYear + '): факт ' + String(aSummary.fact_days || 0) + ', ML ' + String(aSummary.ml_days || 0)
-                + ' | Год B (' + bYear + '): факт ' + String(bSummary.fact_days || 0) + ', ML ' + String(bSummary.ml_days || 0)
+            summaryNode.textContent = 'Год 1 (' + aYear + '): факт ' + String(aSummary.fact_days || 0) + ', ML ' + String(aSummary.ml_days || 0)
+                + ' | Год 2 (' + bYear + '): факт ' + String(bSummary.fact_days || 0) + ', ML ' + String(bSummary.ml_days || 0)
                 + (modes.overall === 'ml_ml' ? ' | обе линии построены ML' : '')
                 + (historyHasData ? '' : ' | нет входных данных');
         }

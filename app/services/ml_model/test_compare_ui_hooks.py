@@ -7,9 +7,9 @@ def test_compare_filters_sent_to_api() -> None:
     source = Path("app/static/js/ml_model_api.js").read_text(encoding="utf-8")
     assert "var defaultMonth = String(new Date().getMonth() + 1);" in source
     assert "month: params.get('month') || defaultMonth" in source
-    assert "year_a: params.get('year_a') || '2024'" in source
-    assert "year_b: params.get('year_b') || '2025'" in source
     assert "/api/ml-compare-series" in source
+    assert "fetchMlCompareSeriesViaJob" in source
+    assert "Number(error.status) === 404" in source
 
 
 def test_compare_chart_render_hook_present() -> None:
@@ -19,6 +19,11 @@ def test_compare_chart_render_hook_present() -> None:
     assert "var yearA = byId('mlYearAFilter')" in source
     assert "var yearB = byId('mlYearBFilter')" in source
     assert "filters.available_years" in source
+    assert "filters.available_tables" in source
+    assert "value.match(/(19\\d{2}|20\\d{2}|2100)/g)" in source
+    assert "yearFromCompareA = parseYear(compare.year_a)" in source
+    assert "yearFromCompareB = parseYear(compare.year_b)" in source
+    assert "resolveYearPair(years" in source
     assert "['mlMonthFilter', 'mlYearAFilter', 'mlYearBFilter'" in source
     assert "refreshCompareSeriesOnly();" in source
 
@@ -30,6 +35,13 @@ def test_compare_request_uses_current_filters_not_hardcoded_all() -> None:
     assert "table_names: tableNames" in source
     assert "cause: cause" in source
     assert "object_category: objectCategory" in source
+    assert "year_a: resolved.yearA" in source
+    assert "year_b: resolved.yearB" in source
+
+
+def test_year_options_do_not_use_synthetic_range() -> None:
+    source = Path("app/static/js/ml_model_render.js").read_text(encoding="utf-8")
+    assert "for (var year = 2026; year >= 1990; year -= 1)" not in source
 
 
 def test_compare_chart_function_exists() -> None:
