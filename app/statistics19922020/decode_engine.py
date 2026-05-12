@@ -401,7 +401,7 @@ def pcode_candidates(pcode: str, dictionaries: dict[str, DictionaryData]) -> lis
     return candidates
 
 
-def score_dictionary(values: pd.Series, dictionary: DictionaryData) -> tuple[int, int, int, float]:
+def score_dictionary(values: pd.Series, dictionary: DictionaryData) -> tuple[int, int, int, int, float]:
     non_null = 0
     non_default = 0
     matched = 0
@@ -423,7 +423,7 @@ def score_dictionary(values: pd.Series, dictionary: DictionaryData) -> tuple[int
         coverage = matched / non_null
     else:
         coverage = 0.0
-    return matched, non_null, non_default, coverage
+    return matched, matched_non_default, non_null, non_default, coverage
 
 
 def choose_dictionary(
@@ -434,15 +434,23 @@ def choose_dictionary(
     explicit = pcode_candidates(pcode, dictionaries)
     best_dict: DictionaryData | None = None
     best_matches = 0
+    best_non_default_matches = 0
     best_coverage = 0.0
 
     for dictionary in explicit:
-        matches, _, _, coverage = score_dictionary(values, dictionary)
-        if matches > best_matches or (matches == best_matches and coverage > best_coverage):
+        matches, non_default_matches, _, _, coverage = score_dictionary(values, dictionary)
+        if (
+            non_default_matches > best_non_default_matches
+            or (
+                non_default_matches == best_non_default_matches
+                and (coverage > best_coverage or (coverage == best_coverage and matches > best_matches))
+            )
+        ):
             best_dict = dictionary
             best_matches = matches
+            best_non_default_matches = non_default_matches
             best_coverage = coverage
-    if best_dict is not None and best_matches > 0:
+    if best_dict is not None and (best_non_default_matches > 0 or best_matches > 0):
         return best_dict, best_matches, best_coverage
     return None, 0, 0.0
 
