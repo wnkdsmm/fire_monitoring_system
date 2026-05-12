@@ -1,4 +1,4 @@
-(function (global) {
+﻿(function (global) {
     var shared = global.FireUi || {};
     var byId = shared.byId;
     var createSingleTimer = shared.createSingleTimer;
@@ -70,6 +70,7 @@
 
     function buildPayloadFromQuery(query) {
         var params = new URLSearchParams(query || '');
+        var defaultMonth = String(new Date().getMonth() + 1);
         var tableNames = params.getAll('table_names').map(function (value) {
             return String(value || '').trim();
         }).filter(function (value) {
@@ -91,9 +92,9 @@
             cause: params.get('cause') || 'all',
             object_category: params.get('object_category') || 'all',
             year: params.get('year') || '',
-            month: params.get('month') || '',
-            year_a: params.get('year_a') || '',
-            year_b: params.get('year_b') || '',
+            month: params.get('month') || defaultMonth,
+            year_a: params.get('year_a') || '2025',
+            year_b: params.get('year_b') || '2024',
             forecast_days: FIXED_FORECAST_DAYS,
             current_user_date: params.get('current_user_date') || getCurrentUserDateIso()
         };

@@ -58,34 +58,11 @@
     font-family: inherit;
 }
 
-.ml-band-path {
-    fill: rgba(var(--color-green-rgb), 0.14);
-}
-
-.ml-line-history,
-.ml-line-backtest-actual,
-.ml-line-backtest,
 .ml-line-forecast,
 .ml-line-appg {
     fill: none;
     stroke-linecap: round;
     stroke-linejoin: round;
-}
-
-.ml-line-history {
-    stroke: var(--color-accent-orange);
-    stroke-width: 2.5;
-}
-
-.ml-line-backtest-actual {
-    stroke: var(--color-stroke-muted);
-    stroke-width: 2;
-}
-
-.ml-line-backtest {
-    stroke: var(--color-token-07);
-    stroke-width: 2;
-    stroke-dasharray: 6 6;
 }
 
 .ml-line-forecast {
@@ -343,7 +320,27 @@
     line-height: 1.6;
 }
 
+.ml-compare-controls {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin: 0 0 12px;
+}
+
+.ml-compare-controls .filter-field {
+    margin: 0;
+}
+
+.ml-compare-controls .filter-field span {
+    display: block;
+    margin-bottom: 6px;
+}
+
 @media (max-width: 820px) {
+    .ml-compare-controls {
+        grid-template-columns: 1fr;
+    }
+
     .ml-chart-legend {
         gap: 8px 12px;
     }
@@ -529,4 +526,3 @@
         grid-template-columns: 1fr;
     }
 }
-

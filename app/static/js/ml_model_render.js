@@ -7,12 +7,10 @@
     var createTimerGroup = shared.createTimerGroup;
     var escapeHtml = shared.escapeHtml;
     var renderMetricCards = shared.renderMetricCards;
-    var setHref = shared.setHref;
     var setSectionHidden = shared.setSectionHidden;
     var setSelectOptions = shared.setSelectOptions;
     var setStepProgress = shared.setStepProgress;
     var setText = shared.setText;
-    var setValue = shared.setValue;
     var setHidden = shared.setHidden;
     var createTableChecklist = shared.createTableChecklist;
 
@@ -550,7 +548,6 @@
         renderOptionalMetricCards('mlQualityEventMetricsSection', 'mlQualityEventMetricCards', []);
         renderClassBalanceWarning('mlQualityEventMetricCards', false);
         renderTableSkeleton('mlCountTableShell', 8, 4);
-        charts.renderChartSkeleton('mlForecastChart', 'mlForecastChartFallback');
         charts.renderChartSkeleton('mlCompareChart', 'mlCompareChartFallback');
         charts.renderChartSkeleton('mlAppgChart', 'mlAppgChartFallback');
         renderTableSkeleton('mlForecastTableShell', 4, 4);
@@ -650,17 +647,8 @@
         );
         setText('mlCountTableTitle', (quality.count_table && quality.count_table.title) || 'Сравнение методов прогноза количества пожаров');
         renderCountTable(quality.count_table || {});
-        setText('mlForecastTitle', 'Сколько пожаров ожидается по дням');
-        charts.renderLineChart(chartData.forecast, 'mlForecastChart', 'mlForecastChartFallback');
         charts.renderCompareChart(compareSeries, 'mlCompareChart', 'mlCompareChartFallback', 'mlCompareChartSummary');
         charts.renderAppgChart(appgGraphSeries || [], 'mlAppgChart', 'mlAppgChartFallback', 'mlAppgChartNote');
-        if (Array.isArray(data.forecast_rows) && data.forecast_rows.length) {
-            var forecastFallback = byId('mlForecastChartFallback');
-            if (forecastFallback) {
-                forecastFallback.classList.add('is-hidden');
-                forecastFallback.style.display = 'none';
-            }
-        }
         renderForecastTable(data.forecast_rows || []);
 
         setText('mlImportanceTitle', 'Что сильнее всего влияет на прогноз');
@@ -987,6 +975,16 @@
                 }
             });
         }
+        ['mlMonthFilter', 'mlYearAFilter', 'mlYearBFilter'].forEach(function (id) {
+            var node = byId(id);
+            if (!node) {
+                return;
+            }
+            node.addEventListener('change', function () {
+                keepUserCompareSelection = true;
+                refreshCompareSeriesOnly();
+            });
+        });
         if (tableFilterToggle) {
             tableFilterToggle.addEventListener('click', function (event) {
                 event.preventDefault();

@@ -48,6 +48,8 @@ from .training.training import _train_ml_model, clear_training_artifact_cache
 _DEFAULT_CACHES = create_default_caches()
 _MIN_SELECTABLE_YEAR = 1990
 _MAX_SELECTABLE_YEAR = 2100
+_DEFAULT_COMPARE_YEAR_A = 2025
+_DEFAULT_COMPARE_YEAR_B = 2024
 
 
 def _build_ml_context(initial_data: MlPayload) -> MlContext:
@@ -504,8 +506,8 @@ def _normalize_compare_selection(
     normalized_month = int(month) if month is not None else int(baseline.month)
     if normalized_month < 1 or normalized_month > 12:
         raise ValueError('Параметр month должен быть в диапазоне 1..12.')
-    normalized_year_a = int(year_a) if year_a is not None else int(baseline.year)
-    normalized_year_b = int(year_b) if year_b is not None else int(normalized_year_a - 1)
+    normalized_year_a = int(year_a) if year_a is not None else _DEFAULT_COMPARE_YEAR_A
+    normalized_year_b = int(year_b) if year_b is not None else _DEFAULT_COMPARE_YEAR_B
     if normalized_year_a < _MIN_SELECTABLE_YEAR or normalized_year_a > _MAX_SELECTABLE_YEAR:
         raise ValueError(f'Параметр year_a должен быть в диапазоне {_MIN_SELECTABLE_YEAR}..{_MAX_SELECTABLE_YEAR}.')
     if normalized_year_b < _MIN_SELECTABLE_YEAR or normalized_year_b > _MAX_SELECTABLE_YEAR:
@@ -551,15 +553,6 @@ def _apply_period_filter(
     filters['year'] = year
     filters['month'] = month
     payload['filters'] = filters
-    charts = payload.get('charts') or {}
-    forecast_chart = charts.get('forecast') or {}
-    series = forecast_chart.get('series') or {}
-    series['forecast'] = [point for point in series.get('forecast', []) if _date_matches_period(point.get('x', ''), year=year, month=month)]
-    series['forecast_band'] = [point for point in series.get('forecast_band', []) if _date_matches_period(point.get('x', ''), year=year, month=month)]
-    series['appg'] = [point for point in series.get('appg', []) if _date_matches_period(point.get('x', ''), year=year, month=month)]
-    forecast_chart['series'] = series
-    charts['forecast'] = forecast_chart
-    payload['charts'] = charts
     return payload
 
 
@@ -605,13 +598,53 @@ def _build_compare_series_payload(
     caches: MLModelCaches,
 ) -> dict[str, Any]:
     ml_rows_cache: dict[tuple[int, int], dict[int, float | None]] = {}
+    facts_by_year_day: dict[tuple[int, int], set[int]] = {}
+    for row in daily_history:
+        row_date = _parse_optional_iso_date(str(row.get('date') or ''))
+        if row_date is None:
+            continue
+        if row_date.month != int(month):
+            continue
+        raw_value = row.get('count')
+        if raw_value is None:
+            continue
+        try:
+            float(raw_value)
+        except (TypeError, ValueError):
+            continue
+        key = (int(row_date.year), int(row_date.month))
+        if key not in facts_by_year_day:
+            facts_by_year_day[key] = set()
+        facts_by_year_day[key].add(int(row_date.day))
+
+    month_days_a = int(monthrange(int(year_a), int(month))[1])
+    month_days_b = int(monthrange(int(year_b), int(month))[1])
+    required_days_by_year: dict[int, set[int]] = {
+        int(year_a): {
+            day for day in range(1, month_days_a + 1)
+            if day not in facts_by_year_day.get((int(year_a), int(month)), set())
+        },
+        int(year_b): {
+            day for day in range(1, month_days_b + 1)
+            if day not in facts_by_year_day.get((int(year_b), int(month)), set())
+        },
+    }
+    ml_invoked_by_year: dict[int, bool] = {
+        int(year_a): False,
+        int(year_b): False,
+    }
 
     def _ml_month_provider(year_value: int, month_value: int) -> dict[int, float | None]:
         cache_key = (int(year_value), int(month_value))
         if cache_key in ml_rows_cache:
             return ml_rows_cache[cache_key]
+        needed_days = required_days_by_year.get(int(year_value), set())
+        if not needed_days:
+            ml_rows_cache[cache_key] = {}
+            return ml_rows_cache[cache_key]
+        ml_invoked_by_year[int(year_value)] = True
         anchor_date = date(int(year_value), int(month_value), 1) - timedelta(days=1)
-        month_days = int(monthrange(int(year_value), int(month_value))[1])
+        month_days = max(needed_days)
         ml_result = _train_ml_model(
             daily_history,
             month_days,
@@ -627,11 +660,14 @@ def _build_compare_series_payload(
                 continue
             if row_date.year != int(year_value) or row_date.month != int(month_value):
                 continue
-            month_rows[int(row_date.day)] = float(row.get('forecast_value')) if row.get('forecast_value') is not None else None
+            row_day = int(row_date.day)
+            if row_day not in needed_days:
+                continue
+            month_rows[row_day] = float(row.get('forecast_value')) if row.get('forecast_value') is not None else None
         ml_rows_cache[cache_key] = month_rows
         return month_rows
 
-    return build_compare_series(
+    compare_payload = build_compare_series(
         month=int(month),
         year_a=int(year_a),
         year_b=int(year_b),
@@ -640,6 +676,23 @@ def _build_compare_series_payload(
         history_date_key='date',
         history_value_key='count',
     )
+    a_summary = compare_payload.get('a_summary') or {}
+    b_summary = compare_payload.get('b_summary') or {}
+    compare_payload['ml_usage'] = {
+        'year_a': {
+            'year': int(year_a),
+            'fact_points': int(a_summary.get('fact_days') or 0),
+            'ml_points': int(a_summary.get('ml_days') or 0),
+            'ml_invoked': bool(ml_invoked_by_year.get(int(year_a), False)),
+        },
+        'year_b': {
+            'year': int(year_b),
+            'fact_points': int(b_summary.get('fact_days') or 0),
+            'ml_points': int(b_summary.get('ml_days') or 0),
+            'ml_invoked': bool(ml_invoked_by_year.get(int(year_b), False)),
+        },
+    }
+    return compare_payload
 
 
 def get_ml_compare_series_data(

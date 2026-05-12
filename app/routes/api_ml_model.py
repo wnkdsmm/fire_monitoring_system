@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from fastapi import APIRouter, Body, Request
 
@@ -37,6 +37,7 @@ def _parse_optional_int(payload: dict, key: str) -> int | None:
     except (TypeError, ValueError):
         raise ValueError(f"Параметр {key} должен быть целым числом.")
 
+
 @router.post("/api/ml-model-jobs")
 def start_ml_model_job_endpoint(request: Request, payload: dict = Body(...)):
     try:
@@ -69,6 +70,7 @@ def start_ml_model_job_endpoint(request: Request, payload: dict = Body(...)):
         return utf8_json({"status": "failed", "error_message": str(exc) or _INVALID_ML_MODEL_MESSAGE}, status_code=400)
     except Exception:
         return utf8_json({"status": "failed", "error_message": _FAILED_ML_MODEL_MESSAGE}, status_code=500)
+
 
 @router.get("/api/ml-model-jobs/{job_id}")
 def ml_model_job_status_endpoint(request: Request, job_id: str):

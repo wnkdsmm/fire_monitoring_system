@@ -5,8 +5,10 @@ from unittest.mock import patch
 
 from starlette.requests import Request
 
-from app.routes.api_ml_model import start_ml_model_job_endpoint
+from app.routes.api_ml_model import ml_compare_series_endpoint, start_ml_model_job_endpoint
 from app.services.ml_model import jobs as ml_jobs
+from app.routes import pages as pages_routes
+from fastapi.responses import HTMLResponse
 
 
 def _build_request() -> Request:
@@ -15,6 +17,28 @@ def _build_request() -> Request:
             "type": "http",
             "method": "POST",
             "path": "/api/ml-model-jobs",
+            "headers": [],
+            "query_string": b"",
+        }
+    )
+
+def _build_compare_request() -> Request:
+    return Request(
+        {
+            "type": "http",
+            "method": "POST",
+            "path": "/api/ml-compare-series",
+            "headers": [],
+            "query_string": b"",
+        }
+    )
+
+def _build_page_request() -> Request:
+    return Request(
+        {
+            "type": "http",
+            "method": "GET",
+            "path": "/ml-model",
             "headers": [],
             "query_string": b"",
         }
@@ -128,6 +152,43 @@ class MlPeriodApiIntegrationTests(unittest.TestCase):
         self.assertEqual(payload["status"], "completed")
         self.assertEqual(payload["result"]["summary"]["selected_table_label"], "fires")
         submit_mock.assert_not_called()
+
+    def test_compare_endpoint_accepts_valid_params(self) -> None:
+        def _fake_compare(**_kwargs):
+            return {"compare_series": {"month": 5, "year_a": 2025, "year_b": 2024, "rows": []}, "filters": {}}
+
+        def _fake_run_session_json_action(_request, action):
+            return action("session-compare")
+
+        with (
+            patch("app.routes.api_ml_model.get_ml_compare_series_data", side_effect=_fake_compare),
+            patch("app.routes.api_ml_model.run_session_json_action", side_effect=_fake_run_session_json_action),
+        ):
+            result = ml_compare_series_endpoint(
+                _build_compare_request(),
+                payload={"table_name": "fires", "month": 5, "year_a": 2025, "year_b": 2024},
+            )
+
+        self.assertEqual(result["status"], "completed")
+        self.assertIn("result", result)
+
+    def test_ml_model_page_route_renders_without_exception(self) -> None:
+        captured: dict[str, object] = {}
+
+        def _fake_render_context_page(request, template_name, **kwargs):
+            captured["template_name"] = template_name
+            captured["context_name"] = kwargs.get("context_name")
+            return HTMLResponse("<html><body>ok</body></html>", status_code=200)
+
+        with (
+            patch.object(pages_routes, "get_ml_model_shell_context", return_value={"initial_data": {}, "generated_at": "", "plotly_js": "", "has_data": True}),
+            patch.object(pages_routes, "render_context_page", side_effect=_fake_render_context_page),
+        ):
+            response = pages_routes.ml_model_page(_build_page_request())
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(captured.get("template_name"), "ml_model.html")
+        self.assertEqual(captured.get("context_name"), "ml_model")
 
 
 if __name__ == "__main__":

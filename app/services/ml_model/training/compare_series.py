@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from calendar import monthrange
 from datetime import date, datetime
 from typing import Any, Callable, TypedDict
 
@@ -68,7 +67,7 @@ def build_compare_series(
             continue
         facts_by_key[(row_date.year, row_date.month, row_date.day)] = row_value
 
-    max_days = max(monthrange(int(year_a), int(month))[1], monthrange(int(year_b), int(month))[1])
+    max_days = 31
     ml_a = ml_month_provider(int(year_a), int(month))
     ml_b = ml_month_provider(int(year_b), int(month))
 

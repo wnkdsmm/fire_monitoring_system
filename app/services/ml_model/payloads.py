@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from datetime import date, datetime
 from typing import Any
@@ -10,10 +10,8 @@ from .ml_model_config_types import ML_PREDICTIVE_BLOCK_DESCRIPTION, MODEL_NAME
 from .training.presentation_backtesting import _build_quality_assessment
 from .training.presentation_meta import _build_notes
 from .training.presentation_training import (
-    _build_forecast_chart,
     _build_importance_chart,
     _build_summary,
-    _empty_light_chart,
 )
 from .training.appg import compute_appg_series
 from .training.training_result import _empty_ml_result
@@ -99,7 +97,6 @@ def _build_ml_payload(
         'quality_assessment': _build_quality_assessment(ml_result),
         'features': _build_feature_cards_with_quality(metadata_items, temperature_quality=temperature_quality),
         'charts': {
-            'forecast': _build_forecast_chart(daily_history, ml_result),
             'importance': _build_importance_chart(
                 ml_result.get('feature_importance', []),
                 note=str(ml_result.get('feature_importance_note') or '').strip(),
@@ -167,26 +164,26 @@ def _empty_ml_model_data(
             'last_observed_date': '-',
             'count_mae_display': '-',
             'count_rmse_display': '-',
-            'count_smape_display': '—',
+            'count_smape_display': 'вЂ”',
             'count_poisson_deviance_display': '-',
             'baseline_count_mae_display': '-',
             'baseline_count_rmse_display': '-',
-            'baseline_count_smape_display': '—',
+            'baseline_count_smape_display': 'вЂ”',
             'heuristic_count_mae_display': '-',
             'heuristic_count_rmse_display': '-',
-            'heuristic_count_smape_display': '—',
+            'heuristic_count_smape_display': 'вЂ”',
             'heuristic_count_poisson_deviance_display': '-',
             'mae_vs_baseline_display': '-',
-            'brier_display': '—',
-            'baseline_brier_display': '—',
-            'heuristic_brier_display': '—',
-            'roc_auc_display': '—',
-            'baseline_roc_auc_display': '—',
-            'heuristic_roc_auc_display': '—',
-            'f1_display': '—',
-            'baseline_f1_display': '—',
-            'heuristic_f1_display': '—',
-            'log_loss_display': '—',
+            'brier_display': 'вЂ”',
+            'baseline_brier_display': 'вЂ”',
+            'heuristic_brier_display': 'вЂ”',
+            'roc_auc_display': 'вЂ”',
+            'baseline_roc_auc_display': 'вЂ”',
+            'heuristic_roc_auc_display': 'вЂ”',
+            'f1_display': 'вЂ”',
+            'baseline_f1_display': 'вЂ”',
+            'heuristic_f1_display': 'вЂ”',
+            'log_loss_display': 'вЂ”',
             'top_feature_label': '-',
             'temperature_scenario_display': temperature.strip() or 'историческая температура',
             'predicted_total_display': '0',
@@ -194,8 +191,8 @@ def _empty_ml_model_data(
             'peak_expected_count_display': '0',
             'peak_expected_count_day_display': '-',
             'elevated_risk_days_display': '0',
-            'average_event_probability_display': '—',
-            'peak_event_probability_display': '—',
+            'average_event_probability_display': 'вЂ”',
+            'peak_event_probability_display': 'вЂ”',
             'peak_event_probability_day_display': '-',
             'event_probability_enabled': False,
             'event_backtest_available': False,
@@ -203,7 +200,6 @@ def _empty_ml_model_data(
         'quality_assessment': _build_quality_assessment(empty_result),
         'features': [],
         'charts': {
-            'forecast': _empty_light_chart('ML-прогноз ожидаемого числа пожаров', 'Недостаточно данных для обучения модели.'),
             'importance': _build_importance_chart([], note=''),
         },
         'appg_series': [],
@@ -224,3 +220,4 @@ def _empty_ml_model_data(
             'available_object_categories': [{'value': 'all', 'label': 'Все категории'}],
         },
     }
+

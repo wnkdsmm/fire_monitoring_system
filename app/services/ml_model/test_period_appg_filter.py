@@ -11,7 +11,7 @@ def test_period_appg_series_is_built_from_daily_history_for_historical_month() -
         "appg_series": [],
         "appg_period_series": [],
         "filters": {},
-        "charts": {"forecast": {"series": {"forecast": [], "forecast_band": [], "appg": []}}},
+        "charts": {},
     }
     daily_history = [
         {"date": date(2024, 5, 1), "count": 2.0},
@@ -41,7 +41,7 @@ def test_period_appg_series_is_built_for_full_year_when_month_not_set() -> None:
         "appg_series": [],
         "appg_period_series": [],
         "filters": {},
-        "charts": {"forecast": {"series": {"forecast": [], "forecast_band": [], "appg": []}}},
+        "charts": {},
     }
     daily_history = [
         {"date": date(2024, 1, 10), "count": 2.0},

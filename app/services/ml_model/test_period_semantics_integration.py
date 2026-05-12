@@ -43,7 +43,7 @@ def test_period_filter_uses_daily_history_for_appg_even_when_forecast_is_future_
             "features": [],
             "notes": [],
             "filters": {},
-            "charts": {"forecast": {"series": {"forecast": [], "forecast_band": [], "appg": []}}},
+            "charts": {},
             "forecast_rows": [{"date": "2026-05-12", "forecast_value": 2.0}],
             "appg_series": [],
             "appg_period_series": [],

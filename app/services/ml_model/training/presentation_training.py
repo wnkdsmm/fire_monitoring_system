@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from typing import Any
 
@@ -19,107 +19,21 @@ from .presentation_format import (
     _format_row_display,
 )
 from .presentation_meta import _event_probability_context
-from .appg import compute_appg_series
 
 
-def _empty_light_chart(title: str, empty_message: str, kind: str = 'line') -> dict[str, Any]:  # one-off
-    payload: dict[str, Any] = {
-        'title': title,
-        'kind': kind,
-        'empty_message': empty_message,
-    }
-    if kind == 'bars':
-        payload['items'] = []
-    else:
-        payload['value_format'] = 'count'
-        payload['legend'] = []
-        payload['series'] = {
-            'history': [],
-            'backtest_actual': [],
-            'backtest_predicted': [],
-            'forecast': [],
-            'forecast_band': [],
-            'appg': [],
-        }
-    return payload
-
-
-def _build_forecast_chart(daily_history: list[ForecastingDailyHistoryRow], ml_result: TrainingMlResultPayload) -> dict[str, Any]:  # one-off
-    title = 'ML-прогноз ожидаемого числа пожаров'
-    if not daily_history or not ml_result.get('is_ready'):
-        return _empty_light_chart(title, ml_result.get('message') or 'Недостаточно данных для построения прогноза.')
-
-    history_tail = daily_history[-120:]
-    history_points = [
-        {
-            'x': item['date'].isoformat(),
-            'y': round(float(item['count']), 3),
-        }
-        for item in history_tail
-    ]
-    backtest_actual = [
-        {'x': item['date'], 'y': round(float(item.get('actual_count', 0.0)), 3)}
-        for item in ml_result.get('backtest_rows', [])
-    ]
-    backtest_predicted = [
-        {'x': item['date'], 'y': round(float(item.get('predicted_count', 0.0)), 3)}
-        for item in ml_result.get('backtest_rows', [])
-    ]
-    forecast_points = [
-        {
-            'x': item['date'],
-            'y': round(float(item.get('forecast_value', 0.0)), 3),
-        }
-        for item in ml_result.get('forecast_rows', [])
-    ]
-    forecast_band = [
-        {
-            'x': item['date'],
-            'low': round(float(item.get('lower_bound', 0.0)), 3),
-            'high': round(float(item.get('upper_bound', 0.0)), 3),
-        }
-        for item in ml_result.get('forecast_rows', [])
-    ]
-    appg_rows = compute_appg_series(
-        ml_result.get('forecast_rows', []),
-        daily_history,
-        current_date_key='date',
-        current_value_key='forecast_value',
-        history_date_key='date',
-        history_value_key='count',
-    )
-    appg_points = [
-        {'x': item['current_date'], 'y': round(float(item['appg_value']), 3)}
-        for item in appg_rows
-        if item.get('appg_available') and item.get('appg_value') is not None
-    ]
-
+def _empty_bars_chart(title: str, empty_message: str) -> dict[str, Any]:
     return {
         'title': title,
-        'kind': 'line',
-        'empty_message': '',
-        'value_format': 'count',
-        'legend': [
-            {'label': 'История', 'color': '#F97316'},
-            {'label': 'Проверка на истории: факт', 'color': '#94A3B8'},
-            {'label': 'Проверка на истории: прогноз', 'color': '#64748B'},
-            {'label': 'ML-прогноз', 'color': '#0F766E'},
-        ],
-        'series': {
-            'history': history_points,
-            'backtest_actual': backtest_actual,
-            'backtest_predicted': backtest_predicted,
-            'forecast': forecast_points,
-            'forecast_band': forecast_band,
-            'appg': appg_points,
-        },
+        'kind': 'bars',
+        'empty_message': empty_message,
+        'items': [],
     }
 
 
 def _build_importance_chart(feature_importance: list[TrainingFeatureImportanceRow], note: str = '') -> dict[str, Any]:  # one-off
     title = 'Важность признаков ML-блока'
     if not feature_importance:
-        payload = _empty_light_chart(title, 'Модель ещё не обучена: важность признаков появится после расчёта.', kind='bars')
+        payload = _empty_bars_chart(title, 'Модель ещё не обучена: важность признаков появится после расчёта.')
         payload['note'] = note
         return payload
     top_items = feature_importance[:8]
@@ -239,7 +153,7 @@ def _build_summary(
         'log_loss_display': _format_optional_number(ml_result.get('log_loss')),
         'top_feature_label': _format_optional_text(ml_result.get('top_feature_label')),
         'temperature_scenario_display': (
-            f"{_format_number(scenario_temperature)} °C" if scenario_temperature is not None else 'историческая температура'
+            f"{_format_number(scenario_temperature)} В°C" if scenario_temperature is not None else 'историческая температура'
         ),
         'predicted_total_display': _format_optional_number(predicted_total),
         'average_expected_count_display': _format_optional_number(average_expected_count),
@@ -271,8 +185,8 @@ def _build_summary(
     }
 
 __all__ = [
-    '_build_forecast_chart',
     '_build_importance_chart',
     '_build_summary',
-    '_empty_light_chart',
+    '_empty_bars_chart',
 ]
+
