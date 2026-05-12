@@ -47,11 +47,15 @@ def _find_option_label(options: list[dict[str, str]], value: str, fallback: str)
 def _date_expression(column_name: str) -> str:
     column_sql = quote_identifier(column_name)
     text_value = f"TRIM(CAST({column_sql} AS TEXT))"
+    numeric_text = f"REPLACE({text_value}, ',', '.')"
     return (
         "CASE "
         f"WHEN {text_value} ~ '^[0-9]{{2}}\\.[0-9]{{2}}\\.[0-9]{{4}}$' THEN TO_DATE({text_value}, 'DD.MM.YYYY') "
         f"WHEN {text_value} ~ '^[0-9]{{4}}-[0-9]{{2}}-[0-9]{{2}}' THEN TO_DATE(SUBSTRING({text_value} FROM 1 FOR 10), 'YYYY-MM-DD') "
         f"WHEN {text_value} ~ '^[0-9]{{4}}/[0-9]{{2}}/[0-9]{{2}}' THEN TO_DATE(SUBSTRING({text_value} FROM 1 FOR 10), 'YYYY/MM/DD') "
+        f"WHEN {text_value} ~ '^[0-9]{{5}}(?:[.,][0-9]+)?$' "
+        f"AND ({numeric_text})::double precision BETWEEN 20000 AND 100000 "
+        f"THEN DATE '1899-12-30' + FLOOR(({numeric_text})::double precision)::int "
         "ELSE NULL END"
     )
 

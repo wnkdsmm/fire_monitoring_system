@@ -59,7 +59,6 @@ def build_spatial_layer_defaults(
         'incidents': True,
         'heatmap': record_count >= 3 and mode != 'minimal',
         'hotspots': bool(hotspots),
-        'clusters': bool(dbscan.get('clusters')),
         'risk_zones': bool(risk_zones),
         'priorities': bool(priority_territories),
     }
@@ -118,7 +117,7 @@ def build_empty_spatial_analytics(source_record_count: int) -> SpatialAnalyticsP
         'priority_territories': [],
         'logistics': {'basis_ready': False, 'summary': '', 'coverage_note': 'Логистический слой не рассчитан.'},
         'summary': {'title': 'Пространственная аналитика пожаров', 'subtitle': 'Нет данных для аналитического слоя.', 'methods': ['Точечный слой пожаров'], 'insights': ['Координаты отсутствуют или некорректны.'], 'thesis_paragraphs': ['Координаты отсутствуют или некорректны, поэтому карта используется только как точечная карта.'], 'fallback_message': 'Координаты отсутствуют или некорректны.'},
-        'layer_defaults': {'incidents': True, 'heatmap': False, 'hotspots': False, 'clusters': False, 'risk_zones': False, 'priorities': False},
+        'layer_defaults': {'incidents': True, 'heatmap': False, 'hotspots': False, 'risk_zones': False, 'priorities': False},
     }
 
 
@@ -169,8 +168,6 @@ def build_spatial_methods(
         methods.append('KDE / heatmap плотности')
     if hotspots:
         methods.append('Hotspot detection')
-    if dbscan.get('clusters'):
-        methods.append('DBSCAN по координатам')
     if risk_zones:
         methods.append('Зоны повышенного риска')
     if priority_territories:
@@ -196,8 +193,6 @@ def build_spatial_insights(
         insights.append(logistics['summary'])
     elif logistics.get('coverage_note'):
         insights.append(logistics['coverage_note'])
-    if dbscan.get('availability_note'):
-        insights.append(dbscan['availability_note'])
     insights.extend(notes[:2])
     return insights
 
@@ -247,7 +242,7 @@ def build_spatial_summary_payload(
 ) -> SpatialSummaryPayload:
     return {
         'title': 'Пространственная аналитика пожаров',
-        'subtitle': 'Карта дополнена слоями плотности, hotspot/DBSCAN, приоритетами территорий и explainable logistics-метриками доезда.',
+        'subtitle': 'Карта дополнена слоями плотности, hotspot-анализом, приоритетами территорий и explainable logistics-метриками доезда.',
         'methods': methods,
         'insights': insights[:5],
         'thesis_paragraphs': thesis_paragraphs,
@@ -269,4 +264,3 @@ __all__ = [
     "build_spatial_summary_payload",
     "build_spatial_thesis_paragraphs",
 ]
-

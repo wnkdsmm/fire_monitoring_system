@@ -4,6 +4,7 @@ from copy import deepcopy
 from contextlib import nullcontext
 from calendar import monthrange
 from datetime import date, datetime
+import re
 from typing import Any, Sequence
 
 from app.perf import current_perf_trace, profiled
@@ -50,6 +51,7 @@ _MIN_SELECTABLE_YEAR = 1990
 _MAX_SELECTABLE_YEAR = 2100
 _DEFAULT_COMPARE_YEAR_A = 2024
 _DEFAULT_COMPARE_YEAR_B = 2025
+_YEAR_TOKEN_RE = re.compile(r"(19\d{2}|20\d{2}|2100)")
 
 
 def _build_ml_context(initial_data: MlPayload) -> MlContext:
@@ -515,6 +517,19 @@ def _normalize_compare_selection(
     return normalized_month, normalized_year_a, normalized_year_b
 
 
+def _extract_available_years_from_table_options(table_options: list[dict[str, str]]) -> list[dict[str, str]]:
+    years: set[int] = set()
+    for option in table_options:
+        value = str((option or {}).get('value') or '').strip()
+        if not value or value == 'all':
+            continue
+        for token in _YEAR_TOKEN_RE.findall(value):
+            year = int(token)
+            if 1900 <= year <= 2100:
+                years.add(year)
+    return [{'value': str(year), 'label': str(year)} for year in sorted(years, reverse=True)]
+
+
 def _date_matches_period(date_text: str, *, year: int | None, month: int | None) -> bool:
     parsed = _parse_optional_iso_date(str(date_text or ''))
     if parsed is None:
@@ -627,15 +642,27 @@ def _build_compare_series_payload(
         return float(sum(values) / len(values)) if values else 0.0
 
     def _retro_predict_missing_day(target_year: int, target_month: int, target_day: int) -> float:
-        # a) same day/month from nearest neighboring years
+        # a) same day/month trend across all years (not just nearest year)
         same_day_candidates: list[tuple[int, float]] = []
         for (row_year, row_month, row_day), row_value in facts_by_ymd.items():
             if row_month == target_month and row_day == target_day and row_year != target_year:
-                same_day_candidates.append((abs(row_year - target_year), row_value))
+                same_day_candidates.append((int(row_year), float(row_value)))
         if same_day_candidates:
-            min_dist = min(item[0] for item in same_day_candidates)
-            nearest_values = [item[1] for item in same_day_candidates if item[0] == min_dist]
-            return _avg(nearest_values)
+            if len(same_day_candidates) == 1:
+                return same_day_candidates[0][1]
+            years = [item[0] for item in same_day_candidates]
+            values = [item[1] for item in same_day_candidates]
+            x_mean = float(sum(years) / len(years))
+            y_mean = float(sum(values) / len(values))
+            denom = float(sum((year - x_mean) ** 2 for year in years))
+            if denom > 0:
+                slope = float(sum((year - x_mean) * (value - y_mean) for year, value in same_day_candidates) / denom)
+                intercept = y_mean - slope * x_mean
+                predicted = intercept + slope * float(target_year)
+                if predicted < 0:
+                    return 0.0
+                return float(predicted)
+            return y_mean
 
         # b) monthly average for this weekday
         try:
@@ -823,6 +850,7 @@ def get_ml_compare_series_data(
     selected_compare_month = int(request_state.get('selected_compare_month') or 0)
     selected_compare_year_a = int(request_state.get('selected_compare_year_a') or 0)
     selected_compare_year_b = int(request_state.get('selected_compare_year_b') or 0)
+    available_years = _extract_available_years_from_table_options(list(request_state.get('table_options') or []))
     compare_cache_key = _build_ml_compare_cache_key(
         cache_schema_version=ML_CACHE_SCHEMA_VERSION,
         selected_tables=tuple(request_state.get('source_tables') or []),
@@ -855,6 +883,8 @@ def get_ml_compare_series_data(
             'filters': {
                 'table_name': request_state.get('selected_table', 'all'),
                 'table_names': list(request_state.get('selected_tables') or []),
+                'available_tables': list(request_state.get('table_options') or []),
+                'available_years': available_years,
                 'cause': cause or 'all',
                 'object_category': object_category or 'all',
                 'compare_month': selected_compare_month,
@@ -890,6 +920,8 @@ def get_ml_compare_series_data(
         'filters': {
             'table_name': request_state.get('selected_table', 'all'),
             'table_names': list(request_state.get('selected_tables') or []),
+            'available_tables': list(request_state.get('table_options') or []),
+            'available_years': available_years,
             'cause': cause or 'all',
             'object_category': object_category or 'all',
             'compare_month': selected_compare_month,

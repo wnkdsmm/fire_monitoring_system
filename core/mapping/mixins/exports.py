@@ -36,7 +36,6 @@ class MapCreatorExportMixin:
             lines.append(f"- Покрытие координат: {quality.get('coordinate_coverage_display', '0')}")
             lines.append(f"- Даты для hotspot: {date_coverage_display}")
             lines.append(f"- Hotspot-ов: {len(analytics.get('hotspots', []))}")
-            lines.append(f"- DBSCAN кластеров: {analytics.get('dbscan', {}).get('cluster_count', 0)}")
             lines.append(f"- Приоритетных территорий: {len(analytics.get('priority_territories', []))}")
             lines.append(f"- Методы: {methods_label}")
             lines.append("")

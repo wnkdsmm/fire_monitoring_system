@@ -267,7 +267,6 @@ class SpatialLayerDefaults(TypedDict, total=False):
     incidents: bool
     heatmap: bool
     hotspots: bool
-    clusters: bool
     risk_zones: bool
     priorities: bool
 
@@ -302,7 +301,6 @@ class GeoJsonFeatureCollection(TypedDict, total=False):
 class AnalyticsLayersPayload(TypedDict, total=False):
     heatmap: GeoJsonFeatureCollection
     hotspots: GeoJsonFeatureCollection
-    clusters: GeoJsonFeatureCollection
     risk_zones: GeoJsonFeatureCollection
     priorities: GeoJsonFeatureCollection
 

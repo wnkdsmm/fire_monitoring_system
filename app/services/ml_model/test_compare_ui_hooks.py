@@ -21,6 +21,11 @@ def test_compare_chart_render_hook_present() -> None:
     assert "filters.available_years" in source
     assert "filters.available_tables" in source
     assert "value.match(/(19\\d{2}|20\\d{2}|2100)/g)" in source
+    assert "function buildFutureYearOptions()" in source
+    assert "mlFutureYearFilter" in source
+    assert "mlForecastButton" in source
+    assert "forcedFutureYear" in source
+    assert "forceAllTablesForMl" in source
     assert "yearFromCompareA = parseYear(compare.year_a)" in source
     assert "yearFromCompareB = parseYear(compare.year_b)" in source
     assert "resolveYearPair(years" in source
@@ -37,6 +42,7 @@ def test_compare_request_uses_current_filters_not_hardcoded_all() -> None:
     assert "object_category: objectCategory" in source
     assert "year_a: resolved.yearA" in source
     assert "year_b: resolved.yearB" in source
+    assert "ensureYearInList(years, yearB);" in source
 
 
 def test_year_options_do_not_use_synthetic_range() -> None:

@@ -30,7 +30,6 @@ def build_analytics_layer_geojsons(
     layers = {
         "heatmap": {"type": "FeatureCollection", "features": []},
         "hotspots": {"type": "FeatureCollection", "features": []},
-        "clusters": {"type": "FeatureCollection", "features": []},
         "risk_zones": {"type": "FeatureCollection", "features": []},
         "priorities": {"type": "FeatureCollection", "features": []},
     }
@@ -66,29 +65,6 @@ def build_analytics_layer_geojsons(
             }
         )
 
-    for item in analytics.get("dbscan", {}).get("clusters", []):
-        layers["clusters"]["features"].append(
-            {
-                "type": "Feature",
-                "geometry": {"type": "Point", "coordinates": [item["longitude"], item["latitude"]]},
-                "properties": {
-                    "popup_rows": build_popup_rows(
-                        [
-                            ("DBSCAN", item.get("cluster_display", "")),
-                            ("Локация", item.get("label", "")),
-                            ("Риск", item.get("risk_score_display", "")),
-                            ("Пожаров", item.get("incident_count", "")),
-                            ("Пояснение", item.get("explanation", "")),
-                        ]
-                    ),
-                    "label": item.get("label", ""),
-                    "rank": item.get("rank"),
-                    "risk_tone": item.get("risk_tone"),
-                    "risk_score": item.get("risk_score"),
-                    "incident_count": item.get("incident_count"),
-                },
-            }
-        )
 
     for item in analytics.get("risk_zones", []):
         layers["risk_zones"]["features"].append(
@@ -149,7 +125,6 @@ def default_analytics_layer_flags() -> dict[str, bool]:
         "incidents": True,
         "heatmap": False,
         "hotspots": False,
-        "clusters": False,
         "risk_zones": False,
         "priorities": False,
     }
@@ -173,7 +148,6 @@ def analytics_layer_definitions(analytics_layers: AnalyticsLayersPayload) -> lis
         ("incidents", "🗺", "Точки пожаров", True),
         ("heatmap", "🔥", "KDE / heatmap", bool(analytics_layers.get("heatmap", {}).get("features"))),
         ("hotspots", "📍", "Hotspot detection", bool(analytics_layers.get("hotspots", {}).get("features"))),
-        ("clusters", "🧭", "DBSCAN кластеры", bool(analytics_layers.get("clusters", {}).get("features"))),
         ("risk_zones", "⚠", "Зоны риска", bool(analytics_layers.get("risk_zones", {}).get("features"))),
         ("priorities", "🎯", "Приоритетные территории", bool(analytics_layers.get("priorities", {}).get("features"))),
     ]
@@ -181,7 +155,6 @@ def analytics_layer_definitions(analytics_layers: AnalyticsLayersPayload) -> lis
 
 def build_analytics_panel_html(analytics: SpatialAnalyticsPayload, idx: int, escape: Callable[[Any], str]) -> str:
     quality = analytics.get("quality", {})
-    dbscan = analytics.get("dbscan", {})
     logistics = analytics.get("logistics", {})
     summary = analytics.get("summary", {})
     summary_title = summary.get("title") or _DEFAULT_ANALYTICS_TITLE
@@ -226,7 +199,6 @@ def build_analytics_panel_html(analytics: SpatialAnalyticsPayload, idx: int, esc
                 <div class="analytics-card"><small>Покрытие координат</small><strong>{escape(quality.get('coordinate_coverage_display', '0'))}</strong></div>
                 <div class="analytics-card"><small>Даты для hotspot</small><strong>{escape(date_coverage_display)}</strong></div>
                 <div class="analytics-card"><small>Hotspot-ов</small><strong>{escape(len(analytics.get('hotspots', [])))}</strong></div>
-                <div class="analytics-card"><small>DBSCAN кластеров</small><strong>{escape(dbscan.get('cluster_count', 0))}</strong></div>
                 <div class="analytics-card"><small>Travel-time</small><strong>{escape(average_travel_time_display)}</strong></div>
                 <div class="analytics-card"><small>Покрытие ПЧ</small><strong>{escape(fire_station_coverage_display)}</strong></div>
             </div>

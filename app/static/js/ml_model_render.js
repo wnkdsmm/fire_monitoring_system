@@ -7,6 +7,8 @@
     var charts = global.MlModelCharts || {};
 
     var currentData = null;
+    var forcedFutureYear = '';
+    var forceAllTablesForMl = false;
 
     function parseYear(value) {
         var n = Number(String(value == null ? '' : value).trim());
@@ -41,6 +43,18 @@
         return result;
     }
 
+    function ensureYearInList(years, candidate) {
+        var year = parseYear(candidate);
+        if (year == null) {
+            return years;
+        }
+        if (years.indexOf(year) === -1) {
+            years.push(year);
+            years.sort(function (a, b) { return b - a; });
+        }
+        return years;
+    }
+
     function buildMonthOptions() {
         return [
             { value: '1', label: 'Январь' }, { value: '2', label: 'Февраль' }, { value: '3', label: 'Март' },
@@ -54,13 +68,36 @@
         return years.map(function (year) { return { value: String(year), label: String(year) }; });
     }
 
+    function currentUserYear() {
+        return new Date().getFullYear();
+    }
+
+    function buildFutureYearOptions() {
+        var base = currentUserYear();
+        var result = [];
+        for (var step = 0; step <= 3; step += 1) {
+            var year = base + step;
+            result.push({ value: String(year), label: String(year) });
+        }
+        return result;
+    }
+
     function resolveYearPair(years, rawYearA, rawYearB) {
+        var explicitYearA = String(rawYearA || '').trim();
+        var explicitYearB = String(rawYearB || '').trim();
+        if (!years.length) {
+            var fallbackNow = String(new Date().getFullYear());
+            return {
+                yearA: explicitYearA || fallbackNow,
+                yearB: explicitYearB || explicitYearA || fallbackNow
+            };
+        }
         var fallbackA = years.length ? String(years[0]) : '2024';
         var fallbackB = years.length > 1 ? String(years[1]) : fallbackA;
         var allowed = {};
         years.forEach(function (year) { allowed[String(year)] = true; });
-        var yearA = String(rawYearA || '').trim();
-        var yearB = String(rawYearB || '').trim();
+        var yearA = explicitYearA;
+        var yearB = explicitYearB;
         if (!allowed[yearA]) {
             yearA = fallbackA;
         }
@@ -71,12 +108,14 @@
     }
 
     function setBusy(isBusy) {
-        var button = byId('mlRefreshButton');
-        if (!button) {
-            return;
-        }
-        button.disabled = !!isBusy;
-        button.classList.toggle('is-loading', !!isBusy);
+        ['mlRefreshButton', 'mlForecastButton'].forEach(function (id) {
+            var button = byId(id);
+            if (!button) {
+                return;
+            }
+            button.disabled = !!isBusy;
+            button.classList.toggle('is-loading', !!isBusy);
+        });
     }
 
     function showError(message) {
@@ -103,12 +142,26 @@
             ? filters.table_names.map(function (value) { return String(value || '').trim(); }).filter(function (value) { return value.length > 0; })
             : [];
         var tableName = String(filters.table_name || '').trim() || 'all';
+        if (forceAllTablesForMl) {
+            var fromAvailable = (Array.isArray(filters.available_tables) ? filters.available_tables : [])
+                .map(function (option) { return String((option && option.value) || '').trim(); })
+                .filter(function (value) { return value && value !== 'all'; });
+            if (fromAvailable.length) {
+                tableNames = fromAvailable;
+                tableName = 'all';
+            }
+        }
         var cause = String(filters.cause || '').trim() || 'all';
         var objectCategory = String(filters.object_category || '').trim() || 'all';
         var month = byId('mlMonthFilter') ? String(byId('mlMonthFilter').value || '').trim() : '';
         var yearA = byId('mlYearAFilter') ? String(byId('mlYearAFilter').value || '').trim() : '';
         var yearB = byId('mlYearBFilter') ? String(byId('mlYearBFilter').value || '').trim() : '';
+        if (forcedFutureYear) {
+            yearB = String(forcedFutureYear).trim();
+        }
         var years = collectAvailableYears(filters);
+        ensureYearInList(years, yearA);
+        ensureYearInList(years, yearB);
         var resolved = resolveYearPair(years, yearA, yearB);
         return {
             table_name: tableName,
@@ -119,6 +172,35 @@
             year_a: resolved.yearA,
             year_b: resolved.yearB
         };
+    }
+
+    function runMlForecastForFutureYear() {
+        var futureYearNode = byId('mlFutureYearFilter');
+        if (!futureYearNode) {
+            refreshCompareSeriesOnly();
+            return;
+        }
+        var targetYear = String(futureYearNode.value || '').trim();
+        if (!targetYear) {
+            refreshCompareSeriesOnly();
+            return;
+        }
+        var yearBNode = byId('mlYearBFilter');
+        if (yearBNode) {
+            var hasOption = Array.prototype.some.call(yearBNode.options || [], function (option) {
+                return String(option.value) === targetYear;
+            });
+            if (!hasOption) {
+                var option = document.createElement('option');
+                option.value = targetYear;
+                option.textContent = targetYear;
+                yearBNode.appendChild(option);
+            }
+            yearBNode.value = targetYear;
+        }
+        forcedFutureYear = targetYear;
+        forceAllTablesForMl = true;
+        refreshCompareSeriesOnly();
     }
 
     function renderHero(data) {
@@ -207,6 +289,8 @@
         var compare = data.compare_series || {};
 
         var years = collectAvailableYears(filters);
+        ensureYearInList(years, compare.year_a || filters.year_a);
+        ensureYearInList(years, compare.year_b || filters.year_b);
         if (!years.length) {
             var fallbackYears = [];
             var yearFromCompareA = parseYear(compare.year_a);
@@ -228,6 +312,7 @@
         setSelectOptions('mlMonthFilter', buildMonthOptions(), month, 'Месяц');
         setSelectOptions('mlYearAFilter', buildYearOptions(years), yearA, 'Год 1');
         setSelectOptions('mlYearBFilter', buildYearOptions(years), yearB, 'Год 2');
+        setSelectOptions('mlFutureYearFilter', buildFutureYearOptions(), yearB, 'Год ML');
 
         renderHero(data);
         renderQuality(data);
@@ -254,9 +339,12 @@
                 filters: Object.assign({}, currentData && currentData.filters ? currentData.filters : {}, result.filters || {}),
                 compare_series: result.compare_series
             });
+            forcedFutureYear = '';
+            forceAllTablesForMl = false;
         } catch (error) {
             showError((error && error.message) ? error.message : 'Нет данных для сравнения выбранных лет за выбранный месяц.');
             charts.renderCompareChart({}, 'mlCompareChart', 'mlCompareChartFallback', 'mlCompareChartSummary');
+            forceAllTablesForMl = false;
         } finally {
             setBusy(false);
         }
@@ -276,6 +364,12 @@
                 node.addEventListener('change', refreshCompareSeriesOnly);
             }
         });
+        var mlForecastButton = byId('mlForecastButton');
+        if (mlForecastButton) {
+            mlForecastButton.addEventListener('click', function () {
+                runMlForecastForFutureYear();
+            });
+        }
     }
 
     function init() {

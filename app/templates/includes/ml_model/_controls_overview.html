@@ -19,6 +19,13 @@
         <div class="filter-field ml-submit-field">
             <button id="mlRefreshButton" class="primary-action" type="submit">Показать</button>
         </div>
+        <label class="filter-field">
+            <span>Год ML (текущий +3)</span>
+            <select id="mlFutureYearFilter"></select>
+        </label>
+        <div class="filter-field ml-submit-field">
+            <button id="mlForecastButton" class="primary-action" type="button">Рассчитать ML</button>
+        </div>
     </form>
     <div id="mlCompareChart" class="plotly-chart ml-plot{% if not data.compare_series or not data.compare_series.history_has_data %} is-empty{% endif %}"></div>
     <div id="mlCompareChartFallback" class="chart-empty{% if data.compare_series and data.compare_series.history_has_data %} is-hidden{% endif %}">Нет данных для сравнения выбранных лет за выбранный месяц.</div>

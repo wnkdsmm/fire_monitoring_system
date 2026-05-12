@@ -7,7 +7,6 @@ from ...types import AnalyticsLayersPayload, CategoryStyleLike, MapTablePayload,
 
 _POINT_ANALYTICS_LAYER_SPECS = (
     ("hotspots", 10),
-    ("clusters", 12),
     ("priorities", 11),
 )
 
