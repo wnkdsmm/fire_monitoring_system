@@ -1,4 +1,4 @@
-(function (global) {
+﻿(function (global) {
     var shared = global.FireUi || {};
     var byId = shared.byId;
     var escapeHtml = shared.escapeHtml;
@@ -40,7 +40,7 @@
         }
         setChartEmptyState(chartNode, true);
         chartNode.innerHTML = '';
-        fallbackNode.textContent = message || 'Нет данных для графика.';
+        fallbackNode.textContent = message || 'РќРµС‚ РґР°РЅРЅС‹С… РґР»СЏ РіСЂР°С„РёРєР°.';
         fallbackNode.classList.remove('is-hidden');
         fallbackNode.style.display = '';
     }
@@ -227,21 +227,42 @@
         applyChartDecorators(chartNode);
     }
 
-    function renderAppgChart(appgSeries, chartId, fallbackId) {
+    function renderAppgChart(appgSeries, chartId, fallbackId, noteId) {
         var chartNode = byId(chartId);
         var fallbackNode = byId(fallbackId);
+        var noteNode = noteId ? byId(noteId) : null;
         if (!chartNode || !fallbackNode) {
             return;
         }
         var rows = Array.isArray(appgSeries) ? appgSeries : [];
-        if (!rows.length) {
+        var currentCount = rows.filter(function (row) {
+            return row && row.current_value != null && !isNaN(Number(row.current_value));
+        }).length;
+        var appgAvailableCount = rows.filter(function (row) {
+            return row && row.appg_available && row.appg_value != null && !isNaN(Number(row.appg_value));
+        }).length;
+
+        if (!rows.length || currentCount === 0) {
             renderFallback(chartNode, fallbackNode, 'Нет данных для APPG-сравнения за выбранный период.');
+            if (noteNode) {
+                noteNode.textContent = '';
+                noteNode.classList.add('is-hidden');
+            }
             return;
         }
 
         setChartEmptyState(chartNode, false);
         fallbackNode.classList.add('is-hidden');
         fallbackNode.style.display = 'none';
+        if (noteNode) {
+            if (appgAvailableCount < currentCount) {
+                noteNode.textContent = 'Для части дат АППГ недоступен (нет записи за D-1 год).';
+                noteNode.classList.remove('is-hidden');
+            } else {
+                noteNode.textContent = '';
+                noteNode.classList.add('is-hidden');
+            }
+        }
 
         var width = 920;
         var height = 360;
@@ -340,8 +361,7 @@
             + '<div class="ml-chart-shell">' + svg + '</div>';
         applyChartDecorators(chartNode);
     }
-
-    function renderChartSkeleton(chartId, fallbackId) {
+function renderChartSkeleton(chartId, fallbackId) {
         var chartNode = byId(chartId);
         var fallbackNode = byId(fallbackId);
         if (chartNode) {
@@ -361,3 +381,4 @@
         renderLineChart: renderLineChart
     };
 }(window));
+

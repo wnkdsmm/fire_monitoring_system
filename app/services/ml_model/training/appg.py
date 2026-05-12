@@ -96,4 +96,38 @@ def compute_appg_series(
     return result
 
 
-__all__ = ["AppgRow", "compute_appg_series"]
+def compute_appg_period_series(
+    history_rows: list[dict[str, Any]],
+    *,
+    year: int,
+    month: int | None = None,
+    history_date_key: str = "date",
+    history_value_key: str = "count",
+) -> list[AppgRow]:
+    points: list[dict[str, Any]] = []
+    for item in history_rows:
+        item_date = _coerce_date(item.get(history_date_key))
+        if item_date is None:
+            continue
+        if item_date.year != int(year):
+            continue
+        if month is not None and item_date.month != int(month):
+            continue
+        points.append(
+            {
+                "date": item_date.isoformat(),
+                "value": _coerce_float(item.get(history_value_key)),
+            }
+        )
+    points.sort(key=lambda row: row["date"])
+    return compute_appg_series(
+        points,
+        history_rows,
+        current_date_key="date",
+        current_value_key="value",
+        history_date_key=history_date_key,
+        history_value_key=history_value_key,
+    )
+
+
+__all__ = ["AppgRow", "compute_appg_series", "compute_appg_period_series"]

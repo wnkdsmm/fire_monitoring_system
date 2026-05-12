@@ -308,6 +308,7 @@ class MlPayload(TypedDict, total=False):
     feature_importance: list[dict[str, Any]]
     forecast_rows: list[dict[str, Any]]
     appg_series: list[dict[str, Any]]
+    appg_period_series: list[dict[str, Any]]
     filters: dict[str, Any]
 
 

@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+from copy import deepcopy
 from contextlib import nullcontext
-from datetime import datetime, date
+from datetime import datetime
 from typing import Any, Sequence
 
 from app.perf import current_perf_trace, profiled
@@ -37,6 +38,7 @@ from .training.data_access import (
     load_ml_filter_bundle as _load_ml_filter_bundle_impl,
 )
 from .training.types import MlAggregationInputs, MlContext, MlFilterBundle, MlPayload, MlRequestState
+from .training.appg import compute_appg_period_series
 from .payloads import _build_ml_payload, _compact_ui_notes, _empty_ml_model_data
 from .training.training import _train_ml_model, clear_training_artifact_cache
 
@@ -213,10 +215,33 @@ def get_ml_model_data(
         )
     cached = _cache_get(cache_key, cache_set)
     if cached is not None:
+        period_daily_history: list[dict[str, Any]] = []
+        if request_state.get('selected_year') is not None and source_tables:
+            try:
+                filter_bundle = _load_ml_filter_bundle(
+                    source_tables=source_tables,
+                    selected_history_window=selected_history_window,
+                    cause=cause,
+                    object_category=object_category,
+                )
+                aggregation_inputs = _load_ml_aggregation_inputs(
+                    source_tables=source_tables,
+                    selected_history_window=selected_history_window,
+                    filter_bundle=filter_bundle,
+                )
+                period_daily_history = aggregation_inputs.get('daily_history', [])
+            except Exception:
+                period_daily_history = []
+        filtered_cached = _apply_period_filter(
+            deepcopy(cached),
+            daily_history=period_daily_history,
+            year=request_state.get('selected_year'),
+            month=request_state.get('selected_month'),
+        )
         if perf is not None:
-            perf.update(cache_hit=True, payload_has_data=bool(cached.get('has_data')))
+            perf.update(cache_hit=True, payload_has_data=bool(filtered_cached.get('has_data')))
         _emit_progress(progress_callback, 'ml_model.completed', '\u0420\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442 ML-\u0430\u043d\u0430\u043b\u0438\u0437\u0430 \u0432\u0437\u044f\u0442 \u0438\u0437 \u043a\u044d\u0448\u0430.')
-        return cached
+        return filtered_cached
 
     if perf is not None:
         perf.update(cache_hit=False)
@@ -307,7 +332,12 @@ def get_ml_model_data(
             scenario_temperature=scenario_temperature,
             temperature_quality=temperature_quality,
         )
-        payload = _apply_period_filter(payload, year=request_state.get('selected_year'), month=request_state.get('selected_month'))
+        payload = _apply_period_filter(
+            payload,
+            daily_history=daily_history,
+            year=request_state.get('selected_year'),
+            month=request_state.get('selected_month'),
+        )
         if perf is not None:
             perf.update(
                 payload_has_data=bool(payload['has_data']),
@@ -347,12 +377,7 @@ def _build_ml_request_state(
     month: int | None = None,
 ) -> MlRequestState:
     selected_year, selected_month = _normalize_period_selection(year=year, month=month)
-    anchor_date = _resolve_period_anchor_date(
-        selected_year=selected_year,
-        selected_month=selected_month,
-        current_user_date=current_user_date,
-    )
-    parsed_current_user_date = _parse_optional_iso_date(anchor_date)
+    parsed_current_user_date = _parse_optional_iso_date(current_user_date)
     normalized_current_user_date = (
         parsed_current_user_date.isoformat() if parsed_current_user_date is not None else ''
     )
@@ -423,18 +448,6 @@ def _normalize_period_selection(*, year: int | None, month: int | None) -> tuple
     return normalized_year, normalized_month
 
 
-def _resolve_period_anchor_date(
-    *,
-    selected_year: int | None,
-    selected_month: int | None,
-    current_user_date: str,
-) -> str:
-    if selected_year is None:
-        return current_user_date
-    month_value = selected_month or 1
-    return date(selected_year, month_value, 1).isoformat()
-
-
 def _date_matches_period(date_text: str, *, year: int | None, month: int | None) -> bool:
     parsed = _parse_optional_iso_date(str(date_text or ''))
     if parsed is None:
@@ -446,13 +459,29 @@ def _date_matches_period(date_text: str, *, year: int | None, month: int | None)
     return True
 
 
-def _apply_period_filter(payload: MlPayload, *, year: int | None, month: int | None) -> MlPayload:
+def _apply_period_filter(
+    payload: MlPayload,
+    *,
+    daily_history: list[dict[str, Any]],
+    year: int | None,
+    month: int | None,
+) -> MlPayload:
     if year is None and month is None:
         return payload
     forecast_rows = [row for row in payload.get('forecast_rows', []) if _date_matches_period(row.get('date', ''), year=year, month=month)]
     appg_series = [row for row in payload.get('appg_series', []) if _date_matches_period(row.get('current_date', ''), year=year, month=month)]
+    appg_period_series = [row for row in payload.get('appg_period_series', []) if _date_matches_period(row.get('current_date', ''), year=year, month=month)]
+    if year is not None and daily_history:
+        appg_period_series = compute_appg_period_series(
+            daily_history,
+            year=year,
+            month=month,
+            history_date_key='date',
+            history_value_key='count',
+        )
     payload['forecast_rows'] = forecast_rows
     payload['appg_series'] = appg_series
+    payload['appg_period_series'] = appg_period_series
     filters = payload.get('filters') or {}
     filters['year'] = year
     filters['month'] = month

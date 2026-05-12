@@ -15,6 +15,7 @@
                 </div>
                 <div id="mlAppgChart" class="plotly-chart ml-plot{% if not data.appg_series %} is-empty{% endif %}"></div>
                 <div id="mlAppgChartFallback" class="chart-empty{% if data.appg_series %} is-hidden{% endif %}">Нет данных для APPG-сравнения за выбранный период.</div>
+                <p id="mlAppgChartNote" class="panel-meta ml-appg-note is-hidden"></p>
             </article>
 
             <article class="panel ml-table-panel">

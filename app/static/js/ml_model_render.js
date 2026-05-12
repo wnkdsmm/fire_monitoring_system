@@ -470,8 +470,11 @@
         setSelectOptions('mlCauseFilter', filters.available_causes, filters.cause, 'Все причины');
         setSelectOptions('mlObjectCategoryFilter', filters.available_object_categories, filters.object_category, 'Все категории');
         var inferredLatestYear = null;
-        if (Array.isArray(data.appg_series) && data.appg_series.length) {
-            data.appg_series.forEach(function (item) {
+        var appgGraphSeries = (Array.isArray(data.appg_period_series) && data.appg_period_series.length)
+            ? data.appg_period_series
+            : (data.appg_series || []);
+        if (Array.isArray(appgGraphSeries) && appgGraphSeries.length) {
+            appgGraphSeries.forEach(function (item) {
                 var rawDate = String((item && item.current_date) || '');
                 var candidate = parseInt(rawDate.slice(0, 4), 10);
                 if (!isNaN(candidate) && (inferredLatestYear == null || candidate > inferredLatestYear)) {
@@ -498,7 +501,7 @@
         renderCountTable(quality.count_table || {});
         setText('mlForecastTitle', 'Сколько пожаров ожидается по дням');
         charts.renderLineChart(chartData.forecast, 'mlForecastChart', 'mlForecastChartFallback');
-        charts.renderAppgChart(data.appg_series || [], 'mlAppgChart', 'mlAppgChartFallback');
+        charts.renderAppgChart(appgGraphSeries || [], 'mlAppgChart', 'mlAppgChartFallback', 'mlAppgChartNote');
         if (Array.isArray(data.forecast_rows) && data.forecast_rows.length) {
             var forecastFallback = byId('mlForecastChartFallback');
             if (forecastFallback) {
