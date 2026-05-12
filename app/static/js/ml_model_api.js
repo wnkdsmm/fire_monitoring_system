@@ -211,6 +211,34 @@
         }
     }
 
+    async function fetchMlCompareSeries(options) {
+        var settings = options || {};
+        var requestPayload = buildRequestPayload(settings);
+        var body = requestPayload.body || {};
+        var comparePayload = {
+            table_name: body.table_name || 'all',
+            table_names: Array.isArray(body.table_names) ? body.table_names : [],
+            cause: body.cause || 'all',
+            object_category: body.object_category || 'all',
+            month: body.month || '',
+            year_a: body.year_a || '',
+            year_b: body.year_b || '',
+            current_user_date: body.current_user_date || getCurrentUserDateIso()
+        };
+        var result = await apiCall('/api/ml-compare-series', {
+            method: 'POST',
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(comparePayload)
+        }, 'Не удалось загрузить compare-series.');
+        return {
+            payload: result.payload || {},
+            requestBody: comparePayload
+        };
+    }
+
     global.MlModelApi = {
         buildPayloadFromQuery: buildPayloadFromQuery,
         buildQueryFromForm: buildQueryFromForm,
@@ -222,6 +250,7 @@
             return isFetching;
         },
         pollMlJob: pollMlJob,
+        fetchMlCompareSeries: fetchMlCompareSeries,
         startMlModelJob: startMlModelJob,
         stopJobPolling: stopJobPolling
     };

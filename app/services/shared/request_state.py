@@ -152,6 +152,29 @@ def build_ml_cache_key(
     )
 
 
+def build_ml_compare_cache_key(
+    *,
+    cache_schema_version: int,
+    selected_tables: Sequence[str],
+    cause: str,
+    object_category: str,
+    month: int,
+    year_a: int,
+    year_b: int,
+    current_user_date: str = "",
+) -> tuple[Any, ...]:
+    return (
+        cache_schema_version,
+        *tuple(selected_tables),
+        normalize_cache_value(cause, fallback="all"),
+        normalize_cache_value(object_category, fallback="all"),
+        int(month),
+        int(year_a),
+        int(year_b),
+        normalize_cache_value(current_user_date),
+    )
+
+
 def build_ml_request_state(
     *,
     table_name: str = "all",

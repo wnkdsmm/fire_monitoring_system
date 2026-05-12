@@ -21,6 +21,7 @@
     var latestCompareRequest = null;
     var compareRequestSeq = 0;
     var keepUserCompareSelection = false;
+    var compareOnlyRequestSeq = 0;
     var progressTimers = createTimerGroup();
     var appgDefaultInitialized = false;
     var mlTableChecklist = typeof createTableChecklist === 'function'
@@ -898,6 +899,43 @@
         });
     }
 
+    async function refreshCompareSeriesOnly(options) {
+        var settings = options || {};
+        if (!api.fetchMlCompareSeries || typeof api.fetchMlCompareSeries !== 'function') {
+            return;
+        }
+        var requestId = ++compareOnlyRequestSeq;
+        var requestPayload;
+        try {
+            requestPayload = await api.fetchMlCompareSeries(settings);
+            if (requestId !== compareOnlyRequestSeq) {
+                return;
+            }
+            var payload = requestPayload && requestPayload.payload ? requestPayload.payload : {};
+            var result = payload && payload.result ? payload.result : {};
+            var compareSeries = result.compare_series || {};
+            charts.renderCompareChart(compareSeries, 'mlCompareChart', 'mlCompareChartFallback', 'mlCompareChartSummary');
+
+            var expected = extractCompareFromRequestBody(requestPayload && requestPayload.requestBody ? requestPayload.requestBody : null);
+            var actual = {
+                year_a: normalizeCompareValue(compareSeries.year_a),
+                year_b: normalizeCompareValue(compareSeries.year_b)
+            };
+            if (shouldLogCompareMismatch(expected, actual) && global.console && typeof global.console.warn === 'function') {
+                global.console.warn('[ml-compare] response year mismatch', {
+                    request_payload: requestPayload ? requestPayload.requestBody : null,
+                    response_filters: result && result.filters ? result.filters : {},
+                    response_compare_series: compareSeries
+                });
+            }
+        } catch (_error) {
+            if (requestId !== compareOnlyRequestSeq) {
+                return;
+            }
+            charts.renderCompareChart({}, 'mlCompareChart', 'mlCompareChartFallback', 'mlCompareChartSummary');
+        }
+    }
+
     function init() {
         var form = byId('mlModelForm');
         var initialData = global.__FIRE_ML_INITIAL__ || null;
@@ -936,7 +974,11 @@
                     if (targetName === 'year_a' || targetName === 'year_b') {
                         keepUserCompareSelection = true;
                     }
-                    startMlModelJob();
+                    if (targetName === 'month' || targetName === 'year_a' || targetName === 'year_b') {
+                        refreshCompareSeriesOnly();
+                    } else {
+                        startMlModelJob();
+                    }
                 }
             });
             form.addEventListener('input', function (event) {

@@ -27,6 +27,7 @@ from app.services.forecasting.utils import (
 from app.services.forecasting.selection import _canonicalize_source_tables
 from app.services.shared.request_state import (
     build_ml_cache_key as _build_ml_cache_key,
+    build_ml_compare_cache_key as _build_ml_compare_cache_key,
     build_ml_request_state as _build_ml_request_state_impl,
 )
 from config.db import engine
@@ -578,6 +579,31 @@ def _attach_compare_series(
         payload['compare_series'] = {}
         return payload
 
+    payload['compare_series'] = _build_compare_series_payload(
+        month=int(compare_month),
+        year_a=int(compare_year_a),
+        year_b=int(compare_year_b),
+        daily_history=daily_history,
+        scenario_temperature=scenario_temperature,
+        caches=caches,
+    )
+    filters = payload.get('filters') or {}
+    filters['year_a'] = int(compare_year_a)
+    filters['year_b'] = int(compare_year_b)
+    filters['compare_month'] = int(compare_month)
+    payload['filters'] = filters
+    return payload
+
+
+def _build_compare_series_payload(
+    *,
+    month: int,
+    year_a: int,
+    year_b: int,
+    daily_history: list[dict[str, Any]],
+    scenario_temperature: float | None,
+    caches: MLModelCaches,
+) -> dict[str, Any]:
     ml_rows_cache: dict[tuple[int, int], dict[int, float | None]] = {}
 
     def _ml_month_provider(year_value: int, month_value: int) -> dict[int, float | None]:
@@ -605,26 +631,122 @@ def _attach_compare_series(
         ml_rows_cache[cache_key] = month_rows
         return month_rows
 
-    payload['compare_series'] = build_compare_series(
-        month=int(compare_month),
-        year_a=int(compare_year_a),
-        year_b=int(compare_year_b),
+    return build_compare_series(
+        month=int(month),
+        year_a=int(year_a),
+        year_b=int(year_b),
         daily_history=daily_history,
         ml_month_provider=_ml_month_provider,
         history_date_key='date',
         history_value_key='count',
     )
-    filters = payload.get('filters') or {}
-    filters['year_a'] = int(compare_year_a)
-    filters['year_b'] = int(compare_year_b)
-    filters['compare_month'] = int(compare_month)
-    payload['filters'] = filters
-    return payload
+
+
+def get_ml_compare_series_data(
+    table_name: str = 'all',
+    table_names: Sequence[str] | None = None,
+    cause: str = 'all',
+    object_category: str = 'all',
+    current_user_date: str = '',
+    month: int | None = None,
+    year_a: int | None = None,
+    year_b: int | None = None,
+    caches: MLModelCaches | None = None,
+) -> dict[str, Any]:
+    cache_set = caches or _DEFAULT_CACHES
+    request_state = _build_ml_request_state(
+        table_name=table_name,
+        table_names=table_names,
+        cause=cause,
+        object_category=object_category,
+        current_user_date=current_user_date,
+        year=None,
+        month=month,
+        year_a=year_a,
+        year_b=year_b,
+    )
+    selected_compare_month = int(request_state.get('selected_compare_month') or 0)
+    selected_compare_year_a = int(request_state.get('selected_compare_year_a') or 0)
+    selected_compare_year_b = int(request_state.get('selected_compare_year_b') or 0)
+    compare_cache_key = _build_ml_compare_cache_key(
+        cache_schema_version=ML_CACHE_SCHEMA_VERSION,
+        selected_tables=tuple(request_state.get('source_tables') or []),
+        cause=str(cause or 'all'),
+        object_category=str(object_category or 'all'),
+        month=selected_compare_month,
+        year_a=selected_compare_year_a,
+        year_b=selected_compare_year_b,
+        current_user_date=str(request_state.get('current_user_date') or ''),
+    )
+    cached = cache_set.compare_cache.get(compare_cache_key)
+    if cached is not None:
+        return cached
+
+    source_tables = list(request_state.get('source_tables') or [])
+    scenario_temperature = request_state.get('scenario_temperature')
+    if not source_tables:
+        result_payload = {
+            'compare_series': {
+                'month': selected_compare_month,
+                'year_a': selected_compare_year_a,
+                'year_b': selected_compare_year_b,
+                'rows': [],
+                'a_summary': {'fact_days': 0, 'ml_days': 0},
+                'b_summary': {'fact_days': 0, 'ml_days': 0},
+            },
+            'filters': {
+                'table_name': request_state.get('selected_table', 'all'),
+                'table_names': list(request_state.get('selected_tables') or []),
+                'cause': cause or 'all',
+                'object_category': object_category or 'all',
+                'compare_month': selected_compare_month,
+                'year_a': selected_compare_year_a,
+                'year_b': selected_compare_year_b,
+            },
+        }
+        cache_set.compare_cache.set(compare_cache_key, result_payload)
+        return result_payload
+
+    filter_bundle = _load_ml_filter_bundle(
+        source_tables=source_tables,
+        selected_history_window=str(request_state.get('selected_history_window') or 'all'),
+        cause=cause,
+        object_category=object_category,
+    )
+    aggregation_inputs = _load_ml_aggregation_inputs(
+        source_tables=source_tables,
+        selected_history_window=str(request_state.get('selected_history_window') or 'all'),
+        filter_bundle=filter_bundle,
+    )
+    daily_history = aggregation_inputs.get('daily_history', [])
+    compare_series = _build_compare_series_payload(
+        month=selected_compare_month,
+        year_a=selected_compare_year_a,
+        year_b=selected_compare_year_b,
+        daily_history=daily_history,
+        scenario_temperature=scenario_temperature,
+        caches=cache_set,
+    )
+    result_payload = {
+        'compare_series': compare_series,
+        'filters': {
+            'table_name': request_state.get('selected_table', 'all'),
+            'table_names': list(request_state.get('selected_tables') or []),
+            'cause': cause or 'all',
+            'object_category': object_category or 'all',
+            'compare_month': selected_compare_month,
+            'year_a': selected_compare_year_a,
+            'year_b': selected_compare_year_b,
+        },
+    }
+    cache_set.compare_cache.set(compare_cache_key, result_payload)
+    return result_payload
 
 
 def clear_ml_model_cache(caches: MLModelCaches | None = None) -> None:
     cache_set = caches or _DEFAULT_CACHES
     cache_set.ml_cache.clear()
+    cache_set.compare_cache.clear()
     clear_ml_model_input_cache()
     clear_training_artifact_cache(cache_set)
     clear_forecasting_sql_cache()
