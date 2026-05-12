@@ -1,4 +1,4 @@
-(function (global) {
+﻿(function (global) {
     var shared = global.FireUi || {};
     var byId = shared.byId;
     var createSingleTimer = shared.createSingleTimer;
@@ -30,9 +30,9 @@
         }
     }
 
-    function notifyCompleted(handlers, result, payload) {
+    function notifyCompleted(handlers, result, payload, requestBody) {
         if (handlers && typeof handlers.onCompleted === 'function') {
-            handlers.onCompleted(result, payload || currentJobState);
+            handlers.onCompleted(result, payload || currentJobState, requestBody || null);
         }
     }
 
@@ -70,6 +70,7 @@
 
     function buildPayloadFromQuery(query) {
         var params = new URLSearchParams(query || '');
+        var defaultMonth = String(new Date().getMonth() + 1);
         var tableNames = params.getAll('table_names').map(function (value) {
             return String(value || '').trim();
         }).filter(function (value) {
@@ -90,6 +91,10 @@
             table_names: tableNames,
             cause: params.get('cause') || 'all',
             object_category: params.get('object_category') || 'all',
+            year: params.get('year') || '',
+            month: params.get('month') || defaultMonth,
+            year_a: params.get('year_a') || '2024',
+            year_b: params.get('year_b') || '2025',
             forecast_days: FIXED_FORECAST_DAYS,
             current_user_date: params.get('current_user_date') || getCurrentUserDateIso()
         };
@@ -132,7 +137,7 @@
                 },
                 onDone: function (payload) {
                     notifyBusy(callbacks, false);
-                    notifyCompleted(callbacks, payload.result, payload);
+                    notifyCompleted(callbacks, payload.result, payload, callbacks.__requestBody || null);
                 },
                 onError: function (error) {
                     notifyBusy(callbacks, false);
@@ -167,6 +172,7 @@
         stopJobPolling();
         currentJobState = null;
         notifyBusy(callbacks, true);
+        callbacks.__requestBody = requestPayload.body;
         if (typeof callbacks.onStart === 'function') {
             callbacks.onStart(requestPayload, settings);
         }
@@ -195,7 +201,7 @@
 
             if (payload.status === 'completed' && payload.result) {
                 notifyBusy(callbacks, false);
-                notifyCompleted(callbacks, payload.result, payload);
+                notifyCompleted(callbacks, payload.result, payload, requestPayload.body);
                 return;
             }
 
@@ -204,6 +210,113 @@
             notifyBusy(callbacks, false);
             notifyError(callbacks, error, 'Не удалось запустить ML-анализ. Попробуйте еще раз.');
         }
+    }
+
+    async function fetchMlCompareSeries(options) {
+        var settings = options || {};
+        var requestPayload = buildRequestPayload(settings);
+        var body = (typeof settings.buildPayload === 'function')
+            ? (settings.buildPayload(requestPayload.body || {}) || {})
+            : (requestPayload.body || {});
+        var comparePayload = {
+            table_name: body.table_name || 'all',
+            table_names: Array.isArray(body.table_names) ? body.table_names : [],
+            cause: body.cause || 'all',
+            object_category: body.object_category || 'all',
+            month: body.month || '',
+            year_a: body.year_a || '',
+            year_b: body.year_b || '',
+            current_user_date: body.current_user_date || getCurrentUserDateIso()
+        };
+        var result;
+        try {
+            result = await apiCall('/api/ml-compare-series', {
+                method: 'POST',
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(comparePayload)
+            }, 'Не удалось загрузить compare-series.');
+        } catch (error) {
+            if (!(error && Number(error.status) === 404)) {
+                throw error;
+            }
+            result = await fetchMlCompareSeriesViaJob(comparePayload);
+        }
+        return {
+            payload: result.payload || {},
+            requestBody: comparePayload
+        };
+    }
+
+    async function fetchMlCompareSeriesViaJob(comparePayload) {
+        var start = await apiCall('/api/ml-model-jobs', {
+            method: 'POST',
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(comparePayload)
+        }, 'Не удалось запустить ML-задачу для compare-series.');
+        var startPayload = start.payload || {};
+        if (startPayload.status === 'completed' && startPayload.result) {
+            return {
+                payload: {
+                    status: 'completed',
+                    result: {
+                        compare_series: (startPayload.result && startPayload.result.compare_series) || {},
+                        filters: (startPayload.result && startPayload.result.filters) || {}
+                    }
+                },
+                response: start.response
+            };
+        }
+        if (!startPayload.job_id) {
+            throw new Error((startPayload && startPayload.error_message) || 'Не удалось получить задачу compare-series.');
+        }
+
+        return await new Promise(function (resolve, reject) {
+            pollUntilDone(
+                '/api/ml-model-jobs/' + encodeURIComponent(startPayload.job_id),
+                {
+                    requestOptions: { headers: { Accept: 'application/json' } },
+                    fallbackMessage: 'Не удалось дождаться результата compare-series.'
+                },
+                {
+                    onDone: function (payload, response) {
+                        var result = payload && payload.result ? payload.result : {};
+                        resolve({
+                            payload: {
+                                status: 'completed',
+                                result: {
+                                    compare_series: result.compare_series || {},
+                                    filters: result.filters || {}
+                                }
+                            },
+                            response: response
+                        });
+                    },
+                    onError: function (error) {
+                        reject(error);
+                    }
+                },
+                {
+                    intervalMs: 800,
+                    isDone: function (payload) {
+                        return Boolean(payload && payload.status === 'completed' && payload.result);
+                    },
+                    isFailed: function (payload) {
+                        return Boolean(payload && (payload.status === 'failed' || payload.status === 'missing'));
+                    },
+                    getFailureMessage: function (payload) {
+                        return payload && payload.error_message
+                            ? payload.error_message
+                            : 'Не удалось получить результат compare-series.';
+                    }
+                }
+            );
+        });
     }
 
     global.MlModelApi = {
@@ -217,6 +330,7 @@
             return isFetching;
         },
         pollMlJob: pollMlJob,
+        fetchMlCompareSeries: fetchMlCompareSeries,
         startMlModelJob: startMlModelJob,
         stopJobPolling: stopJobPolling
     };

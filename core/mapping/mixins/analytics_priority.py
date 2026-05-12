@@ -138,7 +138,7 @@ def build_fallback_risk_zones(
             'risk_tone': risk_tone,
             'support_count': territory['incident_count'],
             'source': 'Резервная территориальная зона',
-            'explanation': 'Зона сформирована по центроиду приоритетной территории, так как сигнал hotspot/DBSCAN пока недостаточно устойчив.',
+            'explanation': 'Зона сформирована по центроиду приоритетной территории, так как hotspot-сигнал пока недостаточно устойчив.',
             'rank': rank,
             'priority_label': f'Приоритет {rank}',
             'polygon': build_circle_polygon(territory['longitude'], territory['latitude'], radius_km),
@@ -181,4 +181,3 @@ __all__ = [
     "build_priority_territories",
     "build_spatial_risk_zones",
 ]
-

@@ -128,6 +128,11 @@ def build_ml_cache_key(
     days_ahead: int,
     history_window: str,
     current_user_date: str = "",
+    compare_month: int | None = None,
+    compare_year_a: int | None = None,
+    compare_year_b: int | None = None,
+    period_year: int | None = None,
+    period_month: int | None = None,
 ) -> tuple[Any, ...]:
     return (
         cache_schema_version,
@@ -138,6 +143,34 @@ def build_ml_cache_key(
         normalize_cache_value(temperature),
         days_ahead,
         history_window,
+        normalize_cache_value(current_user_date),
+        compare_month,
+        compare_year_a,
+        compare_year_b,
+        period_year,
+        period_month,
+    )
+
+
+def build_ml_compare_cache_key(
+    *,
+    cache_schema_version: int,
+    selected_tables: Sequence[str],
+    cause: str,
+    object_category: str,
+    month: int,
+    year_a: int,
+    year_b: int,
+    current_user_date: str = "",
+) -> tuple[Any, ...]:
+    return (
+        cache_schema_version,
+        *tuple(selected_tables),
+        normalize_cache_value(cause, fallback="all"),
+        normalize_cache_value(object_category, fallback="all"),
+        int(month),
+        int(year_a),
+        int(year_b),
         normalize_cache_value(current_user_date),
     )
 

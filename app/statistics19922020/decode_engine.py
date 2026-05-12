@@ -103,19 +103,29 @@ def read_excel_robust(path: Path, header: int | None = 0) -> pd.DataFrame:
 
 
 def find_field_description_file(base_dir: Path) -> Path:
-    for file_path in sorted(base_dir.glob("*.xlsx")):
+    for file_path in sorted(base_dir.rglob("*.xlsx")):
         if STAT_FILE_RE.match(file_path.name):
             continue
         try:
-            preview = read_excel_robust(file_path, header=None).head(3)
+            preview = read_excel_robust(file_path, header=None).head(5)
         except Exception:
             continue
-        if preview.empty or preview.shape[1] < 4:
+        if preview.empty:
             continue
-        f0 = normalize_text(preview.iat[0, 0])
-        p1 = normalize_text(preview.iat[1, 3]) if preview.shape[0] > 1 else ""
-        if f0.upper() == "F1" and p1.upper().startswith("P"):
+
+        has_legacy_layout = (
+            preview.shape[1] >= 4
+            and normalize_text(preview.iat[0, 0]).upper() == "F1"
+            and normalize_text(preview.iat[1, 3]).upper().startswith("P")
+        )
+        if has_legacy_layout:
             return file_path
+
+        if preview.shape[1] >= 2:
+            first = normalize_text(preview.iat[0, 0]).lower()
+            second = normalize_text(preview.iat[0, 1]).lower()
+            if first in {"nm_col", "name"} and second in {"col", "code"}:
+                return file_path
     raise FileNotFoundError(
         f"Could not locate field description workbook in: {base_dir}"
     )
@@ -142,11 +152,15 @@ def load_p98_descriptions(base_dir: Path) -> dict[str, str]:
     return out
 
 
-def load_field_info(base_dir: Path) -> tuple[dict[str, FieldInfo], Path]:
+def load_field_info(base_dir: Path, source_columns: Iterable[object] | None = None) -> tuple[dict[str, FieldInfo], Path]:
     field_file = find_field_description_file(base_dir)
     p98_desc = load_p98_descriptions(base_dir)
     raw = read_excel_robust(field_file, header=None)
     fields: dict[str, FieldInfo] = {}
+    source_iterable = source_columns if source_columns is not None else []
+    source_field_names = [normalize_text(c).upper() for c in source_iterable if normalize_text(c)]
+
+    # Legacy format: explicit field id in first column (F1, F2, F17A, ...).
     for _, row in raw.iterrows():
         field = normalize_text(row.iloc[0] if len(row) > 0 else "")
         if not field or not FIELD_RE.match(field):
@@ -157,7 +171,91 @@ def load_field_info(base_dir: Path) -> tuple[dict[str, FieldInfo], Path]:
         if not desc and pcode:
             desc = p98_desc.get(pcode, "")
         fields[field] = FieldInfo(pcode=pcode, description=desc)
+
+    # Fallback format (P98): columns [nm_col, col] without explicit F* field ids.
+    if not fields:
+        p98 = read_excel_robust(field_file, header=0)
+        if p98.shape[1] >= 2:
+            col_candidates = [c for c in p98.columns if normalize_text(c)]
+            if len(col_candidates) >= 2:
+                desc_col = col_candidates[0]
+                code_col = col_candidates[1]
+                p_rows: list[FieldInfo] = []
+                for _, row in p98.iterrows():
+                    desc = normalize_text(row.get(desc_col))
+                    pcode = normalize_text(row.get(code_col)).upper()
+                    if not pcode:
+                        continue
+                    p_rows.append(FieldInfo(pcode=pcode, description=desc))
+                if source_field_names:
+                    for field_name, info in zip(source_field_names, p_rows):
+                        fields[field_name] = info
     return fields, field_file
+
+
+def _normalize_fire_date_value(value: object) -> object:
+    if value is None:
+        return value
+    text = normalize_text(value)
+    if not text:
+        return value
+    if isinstance(value, pd.Timestamp):
+        if pd.isna(value):
+            return ""
+        return value.strftime("%Y-%m-%d")
+
+    compact = text.replace(" ", "")
+    if re.fullmatch(r"[+-]?\d+(?:[.,]\d+)?", compact):
+        numeric_text = compact.replace(",", ".")
+        try:
+            serial = float(numeric_text)
+        except ValueError:
+            return value
+        if 20000 <= serial <= 100000:
+            try:
+                dt = pd.to_datetime(serial, unit="D", origin="1899-12-30", errors="coerce")
+            except Exception:
+                dt = pd.NaT
+            if not pd.isna(dt):
+                return dt.strftime("%Y-%m-%d")
+    return value
+
+
+DATE_PCODE_SET = {"P4", "P19", "P45_1", "P46"}
+DATE_FIELD_FALLBACK_SET = {"F5", "F7", "F28", "F71", "F73"}
+
+
+def _is_date_column(field_name: str, info: FieldInfo | None) -> bool:
+    if normalize_text(field_name).upper() in DATE_FIELD_FALLBACK_SET:
+        return True
+    if info is None:
+        return False
+    if info.pcode.upper() in DATE_PCODE_SET:
+        return True
+    return False
+
+
+def _looks_like_excel_serial_date_column(values: pd.Series) -> bool:
+    checked = 0
+    serial_like = 0
+    for raw in values:
+        text = normalize_text(raw)
+        if not text:
+            continue
+        checked += 1
+        compact = text.replace(" ", "")
+        if not re.fullmatch(r"[+-]?\d+(?:[.,]\d+)?", compact):
+            continue
+        try:
+            serial = float(compact.replace(",", "."))
+        except ValueError:
+            continue
+        if 20000 <= serial <= 100000:
+            serial_like += 1
+    if checked < 5:
+        return False
+    return (serial_like / checked) >= 0.8
+
 
 
 def pick_code_and_text_columns(columns: Iterable[object]) -> tuple[str, str] | None:
@@ -374,9 +472,13 @@ def decode_dataframe(
         pcode = info.pcode if info else ""
         dictionary, matches, coverage = choose_dictionary(df[column], pcode, dictionaries)
         output_name = build_output_column_name(field_name, info)
+        is_fire_date = _is_date_column(field_name, info) or _looks_like_excel_serial_date_column(df[column])
 
         if dictionary is None:
-            decoded[output_name] = df[column]
+            if is_fire_date:
+                decoded[output_name] = [_normalize_fire_date_value(v) for v in df[column]]
+            else:
+                decoded[output_name] = df[column]
             report_rows.append(
                 {
                     "column": field_name,
@@ -392,6 +494,9 @@ def decode_dataframe(
         mapped_values: list[object] = []
         mapped_rows = 0
         for raw_value in df[column]:
+            if is_fire_date:
+                mapped_values.append(_normalize_fire_date_value(raw_value))
+                continue
             code = normalize_code(raw_value)
             if code in DEFAULT_LIKE_VALUES:
                 mapped_values.append(raw_value)
@@ -476,9 +581,9 @@ def main() -> None:
     output_path.parent.mkdir(parents=True, exist_ok=True)
     report_path.parent.mkdir(parents=True, exist_ok=True)
 
-    fields, field_file = load_field_info(base_dir)
-    dictionaries = build_dictionaries(base_dir, field_file)
     source_df = read_excel_robust(input_path, header=0)
+    fields, field_file = load_field_info(base_dir, source_columns=source_df.columns)
+    dictionaries = build_dictionaries(base_dir, field_file)
     decoded_df, report_df = decode_dataframe(source_df, fields, dictionaries)
 
     decoded_df.to_excel(output_path, index=False)

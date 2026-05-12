@@ -5,7 +5,6 @@ from typing import Any
 import pandas as pd
 
 from ...types import ColumnMapping, ProcessedRecord, SpatialAnalyticsPayload
-from .analytics_dbscan import build_dbscan_clusters
 from .analytics_hotspots import build_hotspots_from_dated_records
 from .analytics_logistics import build_logistics_summary_payload
 from .analytics_payload import (
@@ -24,16 +23,6 @@ from .analytics_priority import (
     build_priority_territories,
     build_spatial_risk_zones,
 )
-
-try:
-    from sklearn.cluster import DBSCAN
-    from sklearn.neighbors import NearestNeighbors
-    SKLEARN_AVAILABLE = True
-except Exception:  # pragma: no cover - graceful fallback when sklearn is unavailable
-    DBSCAN = None
-    NearestNeighbors = None
-    SKLEARN_AVAILABLE = False
-
 
 class MapCreatorAnalyticsMixin:
     def _collect_spatial_records(self, df: pd.DataFrame, lat_col: str, lon_col: str, columns: ColumnMapping) -> list[ProcessedRecord]:
@@ -123,15 +112,7 @@ class MapCreatorAnalyticsMixin:
         dated_records = quality_context['dated_records']
 
         hotspots = build_hotspots_from_dated_records(dated_records, notes, self._risk_level)
-        dbscan = build_dbscan_clusters(
-            records,
-            sklearn_available=SKLEARN_AVAILABLE,
-            dbscan_cls=DBSCAN,
-            nearest_neighbors_cls=NearestNeighbors,
-            risk_level=self._risk_level,
-            km_distance=self._km_distance,
-            dominant_label=self._dominant_label,
-        )
+        dbscan = {'clusters': [], 'eps_km': 0.0, 'min_samples': 0, 'noise_count': 0, 'availability_note': ''}
         risk_zones = build_spatial_risk_zones(
             dbscan,
             hotspots,
@@ -154,7 +135,7 @@ class MapCreatorAnalyticsMixin:
                 build_circle_polygon=self._build_circle_polygon,
             )
             if risk_zones:
-                notes.append('Основные зоны риска построены по центроидам приоритетных территорий, потому что hotspot/DBSCAN дали слабый сигнал.')
+                notes.append('Основные зоны риска построены по центроидам приоритетных территорий, потому что hotspot-сигнал оказался слабым.')
                 priority_territories = build_priority_territories(
                     records,
                     risk_zones,
@@ -193,4 +174,4 @@ class MapCreatorAnalyticsMixin:
     # PREPARE TABLE
     # =====================================================
 
-__all__ = ["MapCreatorAnalyticsMixin", "SKLEARN_AVAILABLE"]
+__all__ = ["MapCreatorAnalyticsMixin"]

@@ -18,11 +18,9 @@ class Statistics19922020Config:
 
     @classmethod
     def from_env(cls) -> "Statistics19922020Config":
+        bundled_reference_dir = (Path(__file__).resolve().parent / "dictionaries").resolve()
         return cls(
-            stat_reference_dir=_env_path(
-                "STATISTICS19922020_REFERENCE_DIR",
-                r"F:\filesFires\edittables\Statistica",
-            ),
+            stat_reference_dir=bundled_reference_dir,
             rename_headers_script_path=_env_path(
                 "STATISTICS19922020_RENAME_HEADERS_SCRIPT",
                 r"F:\filesFires\edittables\rename_headers_2019_2023.py",
@@ -42,8 +40,7 @@ SETTINGS = Statistics19922020Config.from_env()
 
 
 def resolve_reference_dir(base_dir: str | None) -> Path:
-    raw_path = Path(base_dir).expanduser() if (base_dir or "").strip() else SETTINGS.stat_reference_dir
-    resolved = raw_path.resolve()
+    resolved = SETTINGS.stat_reference_dir.resolve()
     if not resolved.exists():
         raise FileNotFoundError(f"Папка справочников не найдена: {resolved}")
     if not resolved.is_dir():

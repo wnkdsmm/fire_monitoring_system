@@ -38,6 +38,10 @@ def start_ml_model_job(
     cause: str = "all",
     object_category: str = "all",
     current_user_date: str = "",
+    year: int | None = None,
+    month: int | None = None,
+    year_a: int | None = None,
+    year_b: int | None = None,
 ) -> dict[str, Any]:
     request_state = _build_ml_request_state(
         table_name=table_name,
@@ -45,6 +49,10 @@ def start_ml_model_job(
         cause=cause,
         object_category=object_category,
         current_user_date=current_user_date,
+        year=year,
+        month=month,
+        year_a=year_a,
+        year_b=year_b,
     )
     cache_key_token = _serialize_cache_key(request_state["cache_key"])
     params_payload = _build_params_payload(
@@ -53,6 +61,10 @@ def start_ml_model_job(
         cause=cause,
         object_category=object_category,
         current_user_date=current_user_date,
+        year=year,
+        month=month,
+        year_a=year_a,
+        year_b=year_b,
         cache_key=request_state["cache_key"],
     )
     reuse_coordinator = JobReuseCoordinator(
@@ -125,12 +137,16 @@ def _run_ml_model_job(
         primary_job_id=main_job_id,
         on_start=lambda: _start_ml_job_execution(session_id=session_id, main_job_id=main_job_id),
         execute=lambda: get_ml_model_data(
-            table_name=params_payload["table_name"],
-            table_names=params_payload["table_names"],
-            cause=params_payload["cause"],
-            object_category=params_payload["object_category"],
-            current_user_date=params_payload["current_user_date"],
-            _prebuilt_cache_key=params_payload["cache_key"],
+            table_name=str(params_payload.get("table_name") or "all"),
+            table_names=params_payload.get("table_names") or [],
+            cause=str(params_payload.get("cause") or "all"),
+            object_category=str(params_payload.get("object_category") or "all"),
+            current_user_date=str(params_payload.get("current_user_date") or ""),
+            year=params_payload.get("year"),
+            month=params_payload.get("month"),
+            year_a=params_payload.get("year_a"),
+            year_b=params_payload.get("year_b"),
+            _prebuilt_cache_key=params_payload.get("cache_key"),
             progress_callback=reporter.handle_progress,
         ),
         on_success=lambda payload: _finalize_ml_job_success(
@@ -328,6 +344,10 @@ def _build_params_payload(
     cause: str,
     object_category: str,
     current_user_date: str,
+    year: int | None,
+    month: int | None,
+    year_a: int | None,
+    year_b: int | None,
     cache_key: tuple[Any, ...],
 ) -> dict[str, Any]:
     normalized_table_names = [str(item or "").strip() for item in (table_names or []) if str(item or "").strip()]
@@ -337,6 +357,10 @@ def _build_params_payload(
         "cause": str(cause or "all"),
         "object_category": str(object_category or "all"),
         "current_user_date": str(current_user_date or ""),
+        "year": int(year) if year is not None else None,
+        "month": int(month) if month is not None else None,
+        "year_a": int(year_a) if year_a is not None else None,
+        "year_b": int(year_b) if year_b is not None else None,
         "cache_key": cache_key,
     }
 

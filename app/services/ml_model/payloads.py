@@ -1,6 +1,7 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
-from datetime import datetime
+import re
+from datetime import date, datetime
 from typing import Any
 
 from app.services.forecasting.presentation import _build_feature_cards_with_quality
@@ -10,12 +11,13 @@ from .ml_model_config_types import ML_PREDICTIVE_BLOCK_DESCRIPTION, MODEL_NAME
 from .training.presentation_backtesting import _build_quality_assessment
 from .training.presentation_meta import _build_notes
 from .training.presentation_training import (
-    _build_forecast_chart,
     _build_importance_chart,
     _build_summary,
-    _empty_light_chart,
 )
+from .training.appg import compute_appg_series
 from .training.training_result import _empty_ml_result
+
+_YEAR_TOKEN_RE = re.compile(r"(19\d{2}|20\d{2}|2100)")
 
 
 def _compact_ui_notes(items: list[Any], limit: int = 2) -> list[str]:
@@ -28,6 +30,51 @@ def _compact_ui_notes(items: list[Any], limit: int = 2) -> list[str]:
         if len(notes) >= limit:
             break
     return notes
+
+
+def _extract_available_years_from_table_options(table_options: list[dict[str, str]]) -> list[dict[str, str]]:
+    years: set[int] = set()
+    for option in table_options:
+        value = str((option or {}).get('value') or '').strip()
+        if not value or value == 'all':
+            continue
+        for token in _YEAR_TOKEN_RE.findall(value):
+            year = int(token)
+            if 1900 <= year <= 2100:
+                years.add(year)
+    return [
+        {'value': str(year), 'label': str(year)}
+        for year in sorted(years, reverse=True)
+    ]
+
+
+def _extract_available_years_from_daily_history(daily_history: list[dict[str, Any]]) -> list[dict[str, str]]:
+    years: set[int] = set()
+    for row in daily_history:
+        raw_date = row.get('date') if isinstance(row, dict) else None
+        if isinstance(raw_date, datetime):
+            years.add(int(raw_date.year))
+            continue
+        if isinstance(raw_date, date):
+            years.add(int(raw_date.year))
+            continue
+        text = str(raw_date or '').strip()
+        if len(text) >= 4 and text[:4].isdigit():
+            years.add(int(text[:4]))
+    return [
+        {'value': str(year), 'label': str(year)}
+        for year in sorted(years, reverse=True)
+    ]
+
+
+def _extract_available_years(
+    table_options: list[dict[str, str]],
+    daily_history: list[dict[str, Any]],
+) -> list[dict[str, str]]:
+    from_tables = _extract_available_years_from_table_options(table_options)
+    if from_tables:
+        return from_tables
+    return _extract_available_years_from_daily_history(daily_history)
 
 
 def _build_ml_payload(
@@ -52,6 +99,14 @@ def _build_ml_payload(
     scenario_temperature: Any,
     temperature_quality: dict[str, Any],
 ) -> dict[str, Any]:
+    appg_series = compute_appg_series(
+        ml_result.get('forecast_rows', []),
+        daily_history,
+        current_date_key='date',
+        current_value_key='forecast_value',
+        history_date_key='date',
+        history_value_key='count',
+    )
     summary = _build_summary(
         selected_table=selected_table,
         selected_table_label=selected_table_label,
@@ -71,12 +126,14 @@ def _build_ml_payload(
         'quality_assessment': _build_quality_assessment(ml_result),
         'features': _build_feature_cards_with_quality(metadata_items, temperature_quality=temperature_quality),
         'charts': {
-            'forecast': _build_forecast_chart(daily_history, ml_result),
             'importance': _build_importance_chart(
                 ml_result.get('feature_importance', []),
                 note=str(ml_result.get('feature_importance_note') or '').strip(),
             ),
         },
+        'appg_series': appg_series,
+        'appg_period_series': [],
+        'compare_series': {},
         'forecast_rows': ml_result.get('forecast_rows', []),
         'feature_importance': ml_result.get('feature_importance', []),
         'notes': _compact_ui_notes(
@@ -98,6 +155,7 @@ def _build_ml_payload(
             'object_category': selected_object_category,
             'forecast_days': str(days_ahead),
             'available_tables': table_options,
+            'available_years': _extract_available_years(table_options, daily_history),
             'available_causes': option_catalog['causes'],
             'available_object_categories': option_catalog['object_categories'],
         },
@@ -135,26 +193,26 @@ def _empty_ml_model_data(
             'last_observed_date': '-',
             'count_mae_display': '-',
             'count_rmse_display': '-',
-            'count_smape_display': '—',
+            'count_smape_display': 'вЂ”',
             'count_poisson_deviance_display': '-',
             'baseline_count_mae_display': '-',
             'baseline_count_rmse_display': '-',
-            'baseline_count_smape_display': '—',
+            'baseline_count_smape_display': 'вЂ”',
             'heuristic_count_mae_display': '-',
             'heuristic_count_rmse_display': '-',
-            'heuristic_count_smape_display': '—',
+            'heuristic_count_smape_display': 'вЂ”',
             'heuristic_count_poisson_deviance_display': '-',
             'mae_vs_baseline_display': '-',
-            'brier_display': '—',
-            'baseline_brier_display': '—',
-            'heuristic_brier_display': '—',
-            'roc_auc_display': '—',
-            'baseline_roc_auc_display': '—',
-            'heuristic_roc_auc_display': '—',
-            'f1_display': '—',
-            'baseline_f1_display': '—',
-            'heuristic_f1_display': '—',
-            'log_loss_display': '—',
+            'brier_display': 'вЂ”',
+            'baseline_brier_display': 'вЂ”',
+            'heuristic_brier_display': 'вЂ”',
+            'roc_auc_display': 'вЂ”',
+            'baseline_roc_auc_display': 'вЂ”',
+            'heuristic_roc_auc_display': 'вЂ”',
+            'f1_display': 'вЂ”',
+            'baseline_f1_display': 'вЂ”',
+            'heuristic_f1_display': 'вЂ”',
+            'log_loss_display': 'вЂ”',
             'top_feature_label': '-',
             'temperature_scenario_display': temperature.strip() or 'историческая температура',
             'predicted_total_display': '0',
@@ -162,8 +220,8 @@ def _empty_ml_model_data(
             'peak_expected_count_display': '0',
             'peak_expected_count_day_display': '-',
             'elevated_risk_days_display': '0',
-            'average_event_probability_display': '—',
-            'peak_event_probability_display': '—',
+            'average_event_probability_display': 'вЂ”',
+            'peak_event_probability_display': 'вЂ”',
             'peak_event_probability_day_display': '-',
             'event_probability_enabled': False,
             'event_backtest_available': False,
@@ -171,9 +229,11 @@ def _empty_ml_model_data(
         'quality_assessment': _build_quality_assessment(empty_result),
         'features': [],
         'charts': {
-            'forecast': _empty_light_chart('ML-прогноз ожидаемого числа пожаров', 'Недостаточно данных для обучения модели.'),
             'importance': _build_importance_chart([], note=''),
         },
+        'appg_series': [],
+        'appg_period_series': [],
+        'compare_series': {},
         'forecast_rows': [],
         'feature_importance': [],
         'notes': [],
@@ -184,8 +244,10 @@ def _empty_ml_model_data(
             'object_category': 'all',
             'forecast_days': str(forecast_days),
             'available_tables': table_options,
+            'available_years': _extract_available_years_from_table_options(table_options),
             'available_causes': [{'value': 'all', 'label': 'Все причины'}],
             'available_object_categories': [{'value': 'all', 'label': 'Все категории'}],
         },
     }
+
 

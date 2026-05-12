@@ -157,21 +157,55 @@ def _find_metric_column(table: DashboardTableRef, metric_key: str) -> str:
         if normalized_name in preferred:
             return column_name
 
+    fallback_rules: dict[str, dict[str, list[list[str]] | list[str]]] = {
+        "evacuated_children": {
+            "include_any": [["p21_2"], ["children_evacuated"], ["evacuated_children"]],
+            "exclude": ["date", "time", "hour", "minute"],
+        },
+        "rescued_children": {
+            "include_any": [["p22_2"], ["children_saved"], ["rescued_children"]],
+            "exclude": ["date", "time", "hour", "minute"],
+        },
+        "evacuated": {
+            "include_any": [["evacuated"]],
+            "exclude": ["children", "child", "date", "time", "hour", "minute"],
+        },
+        "deaths": {
+            "include_any": [["p21_1"], ["deaths"], ["dead"]],
+            "exclude": ["education", "sex", "age", "date", "cause", "place", "moment"],
+        },
+        "injuries": {
+            "include_any": [["p22_1"], ["injur"]],
+            "exclude": ["education", "sex", "age", "date", "place"],
+        },
+    }
+    rule = fallback_rules.get(metric_key, {})
+    include_all_fallback = rule.get("include_all", [])
+    include_any_fallback = rule.get("include_any", [])
+    exclude_fallback = rule.get("exclude", [])
+
     best_match = ""
     best_score = -1
     for column_name, normalized_name in normalized_columns.items():
-        if any(excluded in normalized_name for excluded in config.get("exclude", [])):
+        if any(_name_has_exclusion(normalized_name, excluded) for excluded in config.get("exclude", [])):
+            continue
+        if any(_name_has_exclusion(normalized_name, excluded) for excluded in exclude_fallback):
             continue
 
         score = 0
         for token_group in config.get("include_all", []):
             if all(token in normalized_name for token in token_group):
                 score = max(score, 5 + len(token_group))
-        for token_group in config.get("include_any", []):
+        for token_group in include_all_fallback:
             if all(token in normalized_name for token in token_group):
+                score = max(score, 50 + len(token_group))
+        for token_group in config.get("include_any", []):
+            if any(token in normalized_name for token in token_group):
                 score = max(score, 3 + len(token_group))
-        if "количество" in normalized_name:
-            score += 1
+        for token_group in include_any_fallback:
+            if any(token in normalized_name for token in token_group):
+                score = max(score, 30 + len(token_group))
+
         if score > best_score:
             best_score = score
             best_match = column_name
@@ -189,6 +223,16 @@ def _normalize_match_text(value: str) -> str:
     normalized = value.lower().replace("ё", "е")
     normalized = re.sub(r"\s+", " ", normalized)
     return normalized
+
+
+def _name_has_exclusion(normalized_name: str, excluded: str) -> bool:
+    token = str(excluded or "").strip().lower()
+    if not token:
+        return False
+    if len(token) <= 3:
+        word_tokens = [part for part in re.split(r"[^\w]+", normalized_name) if part]
+        return token in word_tokens
+    return token in normalized_name
 
 
 def _build_yearly_query(table: DashboardTableRef) -> str | None:
