@@ -266,9 +266,9 @@ class SpatialDbscanPayload(DbscanResult, total=False):
 class SpatialLayerDefaults(TypedDict, total=False):
     incidents: bool
     heatmap: bool
+    hotspot_risk: bool
     hotspots: bool
     risk_zones: bool
-    priorities: bool
 
 
 class SpatialAnalyticsPayload(TypedDict, total=False):
@@ -277,7 +277,6 @@ class SpatialAnalyticsPayload(TypedDict, total=False):
     hotspots: list[HotspotPayload]
     dbscan: SpatialDbscanPayload
     risk_zones: list[RiskZone]
-    priority_territories: list[PriorityTerritory]
     logistics: LogisticsSummaryPayload
     summary: SpatialSummaryPayload
     layer_defaults: SpatialLayerDefaults
@@ -302,7 +301,6 @@ class AnalyticsLayersPayload(TypedDict, total=False):
     heatmap: GeoJsonFeatureCollection
     hotspots: GeoJsonFeatureCollection
     risk_zones: GeoJsonFeatureCollection
-    priorities: GeoJsonFeatureCollection
 
 
 class MapTablePayload(TypedDict, total=False):

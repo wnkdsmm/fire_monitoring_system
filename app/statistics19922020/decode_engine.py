@@ -102,30 +102,67 @@ def read_excel_robust(path: Path, header: int | None = 0) -> pd.DataFrame:
     return pd.read_excel(path, header=header, dtype=str)
 
 
-def find_field_description_file(base_dir: Path) -> Path:
-    for file_path in sorted(base_dir.rglob("*.xlsx")):
-        if STAT_FILE_RE.match(file_path.name):
-            continue
-        try:
-            preview = read_excel_robust(file_path, header=None).head(5)
-        except Exception:
-            continue
-        if preview.empty:
-            continue
+def _looks_like_field_description_workbook(file_path: Path) -> bool:
+    try:
+        preview = read_excel_robust(file_path, header=None).head(5)
+    except Exception:
+        return False
+    if preview.empty:
+        return False
+    has_legacy_layout = (
+        preview.shape[1] >= 4
+        and normalize_text(preview.iat[0, 0]).upper() == "F1"
+        and normalize_text(preview.iat[1, 3]).upper().startswith("P")
+    )
+    if has_legacy_layout:
+        return True
+    if preview.shape[1] >= 2:
+        first = normalize_text(preview.iat[0, 0]).lower()
+        second = normalize_text(preview.iat[0, 1]).lower()
+        if first in {"nm_col", "name"} and second in {"col", "code"}:
+            return True
+    return False
 
-        has_legacy_layout = (
-            preview.shape[1] >= 4
-            and normalize_text(preview.iat[0, 0]).upper() == "F1"
-            and normalize_text(preview.iat[1, 3]).upper().startswith("P")
-        )
-        if has_legacy_layout:
+
+def _score_legacy_field_description_workbook(file_path: Path) -> int:
+    try:
+        raw = read_excel_robust(file_path, header=None)
+    except Exception:
+        return 0
+    if raw.empty:
+        return 0
+
+    score = 0
+    for _, row in raw.iterrows():
+        field = normalize_text(row.iloc[0] if len(row) > 0 else "").upper()
+        pcode = normalize_text(row.iloc[3] if len(row) > 3 else "").upper()
+        if not FIELD_RE.match(field):
+            continue
+        score += 1
+        if PCODE_RE.match(pcode):
+            score += 2
+    return score
+
+
+def find_field_description_file(base_dir: Path) -> Path:
+    candidates = [p for p in sorted(base_dir.rglob("*.xlsx")) if not STAT_FILE_RE.match(p.name)]
+
+    # Primary strategy: choose workbook with strongest explicit F* -> P* structure.
+    best_legacy_file: Path | None = None
+    best_legacy_score = 0
+    for file_path in candidates:
+        score = _score_legacy_field_description_workbook(file_path)
+        if score > best_legacy_score:
+            best_legacy_score = score
+            best_legacy_file = file_path
+    if best_legacy_file is not None and best_legacy_score >= 20:
+        return best_legacy_file
+
+    # Fallback strategy: first workbook with nm_col/col style.
+    for file_path in candidates:
+        if _looks_like_field_description_workbook(file_path):
             return file_path
 
-        if preview.shape[1] >= 2:
-            first = normalize_text(preview.iat[0, 0]).lower()
-            second = normalize_text(preview.iat[0, 1]).lower()
-            if first in {"nm_col", "name"} and second in {"col", "code"}:
-                return file_path
     raise FileNotFoundError(
         f"Could not locate field description workbook in: {base_dir}"
     )
@@ -168,6 +205,8 @@ def load_field_info(base_dir: Path, source_columns: Iterable[object] | None = No
         field = field.upper()
         pcode = normalize_text(row.iloc[3] if len(row) > 3 else "").upper()
         desc = normalize_text(row.iloc[7] if len(row) > 7 else "")
+        if desc.lower().startswith("system.xml."):
+            desc = ""
         if not desc and pcode:
             desc = p98_desc.get(pcode, "")
         fields[field] = FieldInfo(pcode=pcode, description=desc)

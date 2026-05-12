@@ -7,7 +7,6 @@ from ...types import (
     HeatmapPoint,
     HotspotPayload,
     LogisticsSummaryPayload,
-    PriorityTerritory,
     ProcessedRecord,
     RiskZone,
     SpatialAnalyticsPayload,
@@ -53,14 +52,13 @@ def build_spatial_layer_defaults(
     hotspots: list[HotspotPayload],
     dbscan: DbscanResult,
     risk_zones: list[RiskZone],
-    priority_territories: list[PriorityTerritory],
 ) -> SpatialLayerDefaults:
     return {
         'incidents': True,
         'heatmap': record_count >= 3 and mode != 'minimal',
+        'hotspot_risk': bool(hotspots) or bool(risk_zones),
         'hotspots': bool(hotspots),
         'risk_zones': bool(risk_zones),
-        'priorities': bool(priority_territories),
     }
 
 
@@ -72,7 +70,6 @@ def build_spatial_analytics_payload(
     hotspots: list[HotspotPayload],
     dbscan: DbscanResult,
     risk_zones: list[RiskZone],
-    priority_territories: list[PriorityTerritory],
     logistics: LogisticsSummaryPayload,
     summary: SpatialSummaryPayload,
     mode: str,
@@ -83,7 +80,6 @@ def build_spatial_analytics_payload(
         'hotspots': hotspots,
         'dbscan': build_spatial_dbscan_payload(dbscan),
         'risk_zones': risk_zones,
-        'priority_territories': priority_territories,
         'logistics': logistics,
         'summary': summary,
         'layer_defaults': build_spatial_layer_defaults(
@@ -92,7 +88,6 @@ def build_spatial_analytics_payload(
             hotspots=hotspots,
             dbscan=dbscan,
             risk_zones=risk_zones,
-            priority_territories=priority_territories,
         ),
     }
 
@@ -114,10 +109,9 @@ def build_empty_spatial_analytics(source_record_count: int) -> SpatialAnalyticsP
         'hotspots': [],
         'dbscan': {'enabled': False, 'clusters': [], 'eps_km': 0.0, 'eps_display': '-', 'min_samples': 0, 'cluster_count': 0, 'noise_count': 0, 'availability_note': 'Недостаточно данных.'},
         'risk_zones': [],
-        'priority_territories': [],
         'logistics': {'basis_ready': False, 'summary': '', 'coverage_note': 'Логистический слой не рассчитан.'},
         'summary': {'title': 'Пространственная аналитика пожаров', 'subtitle': 'Нет данных для аналитического слоя.', 'methods': ['Точечный слой пожаров'], 'insights': ['Координаты отсутствуют или некорректны.'], 'thesis_paragraphs': ['Координаты отсутствуют или некорректны, поэтому карта используется только как точечная карта.'], 'fallback_message': 'Координаты отсутствуют или некорректны.'},
-        'layer_defaults': {'incidents': True, 'heatmap': False, 'hotspots': False, 'risk_zones': False, 'priorities': False},
+        'layer_defaults': {'incidents': True, 'heatmap': False, 'hotspot_risk': False, 'hotspots': False, 'risk_zones': False},
     }
 
 
@@ -160,7 +154,6 @@ def build_spatial_methods(
     hotspots: list[HotspotPayload],
     dbscan: DbscanResult,
     risk_zones: list[RiskZone],
-    priority_territories: list[PriorityTerritory],
     logistics: LogisticsSummaryPayload,
 ) -> list[str]:
     methods = ['Точечный слой пожаров']
@@ -170,8 +163,6 @@ def build_spatial_methods(
         methods.append('Hotspot detection')
     if risk_zones:
         methods.append('Зоны повышенного риска')
-    if priority_territories:
-        methods.append('Приоритетные территории')
     if logistics.get('basis_ready'):
         methods.append('Explainable travel-time, покрытие ПЧ и сервисные зоны')
     return methods
@@ -179,7 +170,6 @@ def build_spatial_methods(
 
 def build_spatial_insights(
     hotspots: list[HotspotPayload],
-    priority_territories: list[PriorityTerritory],
     logistics: LogisticsSummaryPayload,
     dbscan: DbscanResult,
     notes: list[str],
@@ -187,8 +177,6 @@ def build_spatial_insights(
     insights = []
     if hotspots:
         insights.append(f"Главный hotspot: {hotspots[0]['label']} ({hotspots[0]['risk_score_display']}).")
-    if priority_territories:
-        insights.append(f"Приоритетная территория: {priority_territories[0]['label']} ({priority_territories[0]['risk_score_display']}).")
     if logistics.get('basis_ready'):
         insights.append(logistics['summary'])
     elif logistics.get('coverage_note'):
@@ -203,13 +191,12 @@ def build_spatial_thesis_paragraphs(
     source_record_count: int,
     methods: list[str],
     risk_zones: list[RiskZone],
-    priority_territories: list[PriorityTerritory],
     logistics: LogisticsSummaryPayload,
 ) -> list[str]:
     enhanced_methods = methods[1:] if len(methods) > 1 else ['ранжирования территорий и резервного пространственного режима']
     return [
         f"\u0414\u043b\u044f \u0442\u0430\u0431\u043b\u0438\u0446\u044b {table_name} \u043f\u0440\u043e\u0441\u0442\u0440\u0430\u043d\u0441\u0442\u0432\u0435\u043d\u043d\u044b\u0439 \u0430\u043d\u0430\u043b\u0438\u0437 \u0432\u044b\u043f\u043e\u043b\u043d\u0435\u043d \u043f\u043e {len(records)} \u043f\u043e\u0436\u0430\u0440\u0430\u043c \u0441 \u043a\u043e\u043e\u0440\u0434\u0438\u043d\u0430\u0442\u0430\u043c\u0438 \u0438\u0437 {source_record_count} \u0438\u0441\u0445\u043e\u0434\u043d\u044b\u0445 \u0437\u0430\u043f\u0438\u0441\u0435\u0439. \u0411\u0430\u0437\u043e\u0432\u0430\u044f \u0442\u043e\u0447\u0435\u0447\u043d\u0430\u044f \u043a\u0430\u0440\u0442\u0430 \u0441\u043e\u0445\u0440\u0430\u043d\u0435\u043d\u0430, \u043d\u043e \u0443\u0441\u0438\u043b\u0435\u043d\u0430 \u043c\u0435\u0442\u043e\u0434\u0430\u043c\u0438 {', '.join(enhanced_methods)}.",
-        f"\u041d\u0430 \u043a\u0430\u0440\u0442\u0435 \u0432\u044b\u0434\u0435\u043b\u0435\u043d\u043e {len(risk_zones)} \u0437\u043e\u043d \u043f\u043e\u0432\u044b\u0448\u0435\u043d\u043d\u043e\u0433\u043e \u0440\u0438\u0441\u043a\u0430 \u0438 {len(priority_territories)} \u043f\u0440\u0438\u043e\u0440\u0438\u0442\u0435\u0442\u043d\u044b\u0445 \u0442\u0435\u0440\u0440\u0438\u0442\u043e\u0440\u0438\u0439, \u0447\u0442\u043e \u043f\u0435\u0440\u0435\u0432\u043e\u0434\u0438\u0442 \u043a\u0430\u0440\u0442\u0443 \u0438\u0437 \u0440\u0435\u0436\u0438\u043c\u0430 \u0432\u0438\u0437\u0443\u0430\u043b\u0438\u0437\u0430\u0446\u0438\u0438 \u0432 \u0440\u0435\u0436\u0438\u043c \u043f\u043e\u0434\u0434\u0435\u0440\u0436\u043a\u0438 \u043f\u0440\u0438\u043d\u044f\u0442\u0438\u044f \u0440\u0435\u0448\u0435\u043d\u0438\u0439 \u0434\u043b\u044f \u0441\u0435\u043b\u044c\u0441\u043a\u0438\u0445 \u0442\u0435\u0440\u0440\u0438\u0442\u043e\u0440\u0438\u0439.",
+        f"\u041d\u0430 \u043a\u0430\u0440\u0442\u0435 \u0432\u044b\u0434\u0435\u043b\u0435\u043d\u043e {len(risk_zones)} \u0437\u043e\u043d \u043f\u043e\u0432\u044b\u0448\u0435\u043d\u043d\u043e\u0433\u043e \u0440\u0438\u0441\u043a\u0430, \u0447\u0442\u043e \u043f\u0435\u0440\u0435\u0432\u043e\u0434\u0438\u0442 \u043a\u0430\u0440\u0442\u0443 \u0438\u0437 \u0440\u0435\u0436\u0438\u043c\u0430 \u0432\u0438\u0437\u0443\u0430\u043b\u0438\u0437\u0430\u0446\u0438\u0438 \u0432 \u0440\u0435\u0436\u0438\u043c \u043f\u043e\u0434\u0434\u0435\u0440\u0436\u043a\u0438 \u043f\u0440\u0438\u043d\u044f\u0442\u0438\u044f \u0440\u0435\u0448\u0435\u043d\u0438\u0439.",
         logistics['summary'] if logistics.get('summary') else logistics.get('coverage_note') or 'Логистический слой пока носит разведочный характер.',
     ]
 
@@ -242,11 +229,11 @@ def build_spatial_summary_payload(
 ) -> SpatialSummaryPayload:
     return {
         'title': 'Пространственная аналитика пожаров',
-        'subtitle': 'Карта дополнена слоями плотности, hotspot-анализом, приоритетами территорий и explainable logistics-метриками доезда.',
+        'subtitle': 'Карта дополнена слоями плотности, hotspot-анализом и explainable logistics-метриками доезда.',
         'methods': methods,
         'insights': insights[:5],
         'thesis_paragraphs': thesis_paragraphs,
-        'fallback_message': '' if mode == 'full' else '\u0418\u0441\u043f\u043e\u043b\u044c\u0437\u0443\u0435\u0442\u0441\u044f \u0440\u0435\u0437\u0435\u0440\u0432\u043d\u044b\u0439 \u0440\u0435\u0436\u0438\u043c \u0441 \u0443\u043f\u043e\u0440\u043e\u043c \u043d\u0430 \u0442\u0435\u043f\u043b\u043e\u0432\u0443\u044e \u043a\u0430\u0440\u0442\u0443 \u043f\u043b\u043e\u0442\u043d\u043e\u0441\u0442\u0438 \u0438 \u043f\u0440\u0438\u043e\u0440\u0438\u0442\u0435\u0442\u043d\u044b\u0435 \u0442\u0435\u0440\u0440\u0438\u0442\u043e\u0440\u0438\u0438.',
+        'fallback_message': '' if mode == 'full' else '\u0418\u0441\u043f\u043e\u043b\u044c\u0437\u0443\u0435\u0442\u0441\u044f \u0440\u0435\u0437\u0435\u0440\u0432\u043d\u044b\u0439 \u0440\u0435\u0436\u0438\u043c \u0441 \u0443\u043f\u043e\u0440\u043e\u043c \u043d\u0430 \u0442\u0435\u043f\u043b\u043e\u0432\u0443\u044e \u043a\u0430\u0440\u0442\u0443 \u043f\u043b\u043e\u0442\u043d\u043e\u0441\u0442\u0438 \u0438 hotspot-\u0441\u0438\u0433\u043d\u0430\u043b\u044b.',
     }
 
 

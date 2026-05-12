@@ -81,6 +81,7 @@ def decode_uploaded_stat_file(
         source_df = read_excel_robust(input_path, header=0)
         fields, field_file = load_field_info(reference_dir, source_columns=source_df.columns)
         dictionaries = build_dictionaries(reference_dir, field_file)
+        add_log(session_id, resolved_job_id, f"{log_prefix} Файл описания полей: {field_file}")
         decoded_df, report_df = decode_dataframe(source_df, fields, dictionaries)
 
         decoded_df.to_excel(output_path, index=False)

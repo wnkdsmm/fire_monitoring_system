@@ -36,7 +36,6 @@ class MapCreatorExportMixin:
             lines.append(f"- Покрытие координат: {quality.get('coordinate_coverage_display', '0')}")
             lines.append(f"- Даты для hotspot: {date_coverage_display}")
             lines.append(f"- Hotspot-ов: {len(analytics.get('hotspots', []))}")
-            lines.append(f"- Приоритетных территорий: {len(analytics.get('priority_territories', []))}")
             lines.append(f"- Методы: {methods_label}")
             lines.append("")
 
@@ -46,14 +45,6 @@ class MapCreatorExportMixin:
                     lines.append(f"- {item}")
                 lines.append("")
 
-            if analytics.get("priority_territories"):
-                lines.append("### Приоритетные территории")
-                for item in analytics.get("priority_territories", [])[:5]:
-                    lines.append(
-                        f"- {item['priority_label']}: {item['label']} | риск {item['risk_score_display']} | "
-                        f"ПЧ {item['avg_station_distance_display']} | прибытие {item['avg_response_display']}"
-                    )
-                lines.append("")
 
             logistics_text = logistics.get("summary") or logistics.get("coverage_note")
             if logistics_text:

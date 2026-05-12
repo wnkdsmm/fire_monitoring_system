@@ -7,7 +7,6 @@ from ...types import AnalyticsLayersPayload, CategoryStyleLike, MapTablePayload,
 
 _POINT_ANALYTICS_LAYER_SPECS = (
     ("hotspots", 10),
-    ("priorities", 11),
 )
 
 
@@ -30,6 +29,17 @@ def build_filter_script_lines(idx: int, container_id: str) -> list[str]:
         "    const updateAnalyticsLayers = () => {",
         "        layerCheckboxes.forEach(box => {",
         '            if (box.dataset.layer === "incidents") {',
+        "                return;",
+        "            }",
+        '            if (box.dataset.layer === "hotspot_risk") {',
+        "                const hotspotsLayer = analyticsLayers.hotspots;",
+        "                const riskZonesLayer = analyticsLayers.risk_zones;",
+        "                if (hotspotsLayer) {",
+        "                    hotspotsLayer.setVisible(box.checked);",
+        "                }",
+        "                if (riskZonesLayer) {",
+        "                    riskZonesLayer.setVisible(box.checked);",
+        "                }",
         "                return;",
         "            }",
         "            const layer = analyticsLayers[box.dataset.layer];",

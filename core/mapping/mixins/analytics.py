@@ -19,8 +19,6 @@ from .analytics_payload import (
     build_spatial_thesis_paragraphs,
 )
 from .analytics_priority import (
-    build_fallback_risk_zones,
-    build_priority_territories,
     build_spatial_risk_zones,
 )
 
@@ -28,7 +26,13 @@ class MapCreatorAnalyticsMixin:
     def _collect_spatial_records(self, df: pd.DataFrame, lat_col: str, lon_col: str, columns: ColumnMapping) -> list[ProcessedRecord]:
         latitudes = pd.to_numeric(df[lat_col], errors='coerce')
         longitudes = pd.to_numeric(df[lon_col], errors='coerce')
-        valid_mask = latitudes.notna() & longitudes.notna()
+        valid_mask = (
+            latitudes.notna()
+            & longitudes.notna()
+            & latitudes.between(-90.0, 90.0)
+            & longitudes.between(-180.0, 180.0)
+            & ~((latitudes.abs() < 1e-9) & (longitudes.abs() < 1e-9))
+        )
         if not valid_mask.any():
             return []
 
@@ -120,40 +124,16 @@ class MapCreatorAnalyticsMixin:
             build_circle_polygon=self._build_circle_polygon,
         )
 
-        priority_territories = build_priority_territories(
-            records,
-            risk_zones,
-            risk_level=self._risk_level,
-            km_distance=self._km_distance,
-        )
-        if not risk_zones and priority_territories:
-            risk_zones = build_fallback_risk_zones(
-                records,
-                priority_territories,
-                risk_level=self._risk_level,
-                km_distance=self._km_distance,
-                build_circle_polygon=self._build_circle_polygon,
-            )
-            if risk_zones:
-                notes.append('Основные зоны риска построены по центроидам приоритетных территорий, потому что hotspot-сигнал оказался слабым.')
-                priority_territories = build_priority_territories(
-                    records,
-                    risk_zones,
-                    risk_level=self._risk_level,
-                    km_distance=self._km_distance,
-                )
-
-        logistics = build_logistics_summary_payload(records, priority_territories)
+        logistics = build_logistics_summary_payload(records, [])
         heatmap_points = build_heatmap_points(records)
-        methods = build_spatial_methods(records, hotspots, dbscan, risk_zones, priority_territories, logistics)
-        insights = build_spatial_insights(hotspots, priority_territories, logistics, dbscan, notes)
+        methods = build_spatial_methods(records, hotspots, dbscan, risk_zones, logistics)
+        insights = build_spatial_insights(hotspots, logistics, dbscan, notes)
         thesis_paragraphs = build_spatial_thesis_paragraphs(
             table_name,
             records,
             source_record_count,
             methods,
             risk_zones,
-            priority_territories,
             logistics,
         )
         mode = quality_context['mode']
@@ -165,7 +145,6 @@ class MapCreatorAnalyticsMixin:
             hotspots=hotspots,
             dbscan=dbscan,
             risk_zones=risk_zones,
-            priority_territories=priority_territories,
             logistics=logistics,
             summary=build_spatial_summary_payload(mode, methods, insights, thesis_paragraphs),
             mode=mode,

@@ -49,10 +49,22 @@ def _build_geo_prediction(
     records: list[dict[str, Any]],
     planning_horizon_days: int,
 ) -> dict[str, Any]:
+    def _is_valid_coordinate_pair(latitude: Any, longitude: Any) -> bool:
+        try:
+            lat = float(latitude)
+            lon = float(longitude)
+        except (TypeError, ValueError):
+            return False
+        if not (-90.0 <= lat <= 90.0 and -180.0 <= lon <= 180.0):
+            return False
+        if abs(lat) < 1e-9 and abs(lon) < 1e-9:
+            return False
+        return True
+
     geo_records = [
         record
         for record in records
-        if record.get("latitude") is not None and record.get("longitude") is not None
+        if _is_valid_coordinate_pair(record.get("latitude"), record.get("longitude"))
     ]
     if not geo_records:
         return {
@@ -160,8 +172,9 @@ def _build_geo_prediction(
             + max(0.0, GEO_CONFIDENCE_FRESHNESS_CAP - cell["freshness_days"] * GEO_CONFIDENCE_FRESHNESS_DECAY),
         )
         short_label = cell["dominant_district"] if cell["dominant_district"] != "Без района" else f"Сектор {rank}"
+        last_fire_date_display = cell["last_fire"].strftime("%d.%m.%Y") if cell["last_fire"] else "-"
         explanation = (
-            f"{_format_integer(cell['incidents'])} пожаров в ячейке, последний очаг {_format_days_ago(cell['freshness_days'])}, "
+            f"{_format_integer(cell['incidents'])} пожаров в ячейке, последний очаг {last_fire_date_display}, "
             f"типовая причина: {cell['dominant_cause']}"
         )
         points.append(

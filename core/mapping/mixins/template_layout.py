@@ -106,7 +106,11 @@ def build_layer_filter_items(
     for layer_id, icon_html, label, available in analytics_layer_definitions(analytics_layers):
         if not available:
             continue
-        checked = " checked" if analytics_defaults.get(layer_id, layer_id == "incidents") else ""
+        if layer_id == "hotspot_risk":
+            default_on = bool(analytics_defaults.get("hotspots") or analytics_defaults.get("risk_zones"))
+            checked = " checked" if analytics_defaults.get(layer_id, default_on) else ""
+        else:
+            checked = " checked" if analytics_defaults.get(layer_id, layer_id == "incidents") else ""
         layer_items.append(
             "".join(
                 [

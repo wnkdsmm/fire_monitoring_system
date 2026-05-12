@@ -10,16 +10,12 @@ from ...types import (
 )
 
 _NO_DATA_DISPLAY = "н/д"
-_UNDEFINED_ZONE_LABEL = "зона не определена"
 _DEFAULT_ANALYTICS_TITLE = "Пространственная аналитика пожаров"
 _DEFAULT_LOGISTICS_TITLE = "Сервисная зона не определена"
 _DEFAULT_LOGISTICS_TEXT = "Логистический слой пока не рассчитан."
 _DEFAULT_NO_INSIGHTS_HTML = "<li>Без дополнительных аналитических выводов.</li>"
 _DEFAULT_NO_HOTSPOTS_HTML = (
     "<div class='analytics-item analytics-item-empty'>Hotspot-данные пока не выделены аналитикой.</div>"
-)
-_DEFAULT_NO_TERRITORIES_HTML = (
-    "<div class='analytics-item analytics-item-empty'>Приоритетные территории пока не определены.</div>"
 )
 
 
@@ -31,7 +27,6 @@ def build_analytics_layer_geojsons(
         "heatmap": {"type": "FeatureCollection", "features": []},
         "hotspots": {"type": "FeatureCollection", "features": []},
         "risk_zones": {"type": "FeatureCollection", "features": []},
-        "priorities": {"type": "FeatureCollection", "features": []},
     }
 
     for point in analytics.get("heatmap", {}).get("points", []):
@@ -89,34 +84,6 @@ def build_analytics_layer_geojsons(
             }
         )
 
-    for item in analytics.get("priority_territories", []):
-        layers["priorities"]["features"].append(
-            {
-                "type": "Feature",
-                "geometry": {"type": "Point", "coordinates": [item["longitude"], item["latitude"]]},
-                "properties": {
-                    "popup_rows": build_popup_rows(
-                        [
-                            ("Территория", item.get("label", "")),
-                            ("Риск", item.get("risk_score_display", "")),
-                            ("Пожаров", item.get("incident_count_display", "")),
-                            ("Travel-time", item.get("travel_time_display", "")),
-                            ("Факт прибытия", item.get("avg_response_display", "")),
-                            ("Удалённость до ПЧ", item.get("avg_station_distance_display", "")),
-                            ("Покрытие ПЧ", item.get("fire_station_coverage_display", "")),
-                            ("Сервисная зона", item.get("service_zone_label", "")),
-                            ("Логистический приоритет", item.get("logistics_priority_display", "")),
-                            ("Пояснение", item.get("explanation", "")),
-                        ],
-                        title=item.get("priority_label", ""),
-                    ),
-                    "label": item.get("label", ""),
-                    "rank": item.get("rank"),
-                    "risk_tone": item.get("risk_tone"),
-                    "risk_score": item.get("risk_score"),
-                },
-            }
-        )
     return layers
 
 
@@ -124,9 +91,9 @@ def default_analytics_layer_flags() -> dict[str, bool]:
     return {
         "incidents": True,
         "heatmap": False,
+        "hotspot_risk": False,
         "hotspots": False,
         "risk_zones": False,
-        "priorities": False,
     }
 
 
@@ -144,12 +111,12 @@ def analytics_heatmap_config(analytics: SpatialAnalyticsPayload) -> dict[str, ob
 
 
 def analytics_layer_definitions(analytics_layers: AnalyticsLayersPayload) -> list[tuple[str, str, str, bool]]:
+    hotspot_available = bool(analytics_layers.get("hotspots", {}).get("features"))
+    risk_available = bool(analytics_layers.get("risk_zones", {}).get("features"))
     return [
         ("incidents", "🗺", "Точки пожаров", True),
         ("heatmap", "🔥", "KDE / heatmap", bool(analytics_layers.get("heatmap", {}).get("features"))),
-        ("hotspots", "📍", "Hotspot detection", bool(analytics_layers.get("hotspots", {}).get("features"))),
-        ("risk_zones", "⚠", "Зоны риска", bool(analytics_layers.get("risk_zones", {}).get("features"))),
-        ("priorities", "🎯", "Приоритетные территории", bool(analytics_layers.get("priorities", {}).get("features"))),
+        ("hotspot_risk", "📍 ⚠", "Hotspot detection + Зоны риска", hotspot_available or risk_available),
     ]
 
 
@@ -173,17 +140,6 @@ def build_analytics_panel_html(analytics: SpatialAnalyticsPayload, idx: int, esc
         for item in analytics.get("hotspots", [])[:4]
     ) or _DEFAULT_NO_HOTSPOTS_HTML
 
-    territory_items = "".join(
-        (
-            f"<div class='analytics-item'><strong>{escape(item.get('label', ''))}</strong>"
-            f"<span>{escape(item.get('risk_score_display', ''))}</span>"
-            f"<small>{escape(item.get('travel_time_display') or _NO_DATA_DISPLAY)} | "
-            f"{escape(item.get('fire_station_coverage_display') or _NO_DATA_DISPLAY)} | "
-            f"{escape(item.get('service_zone_label') or _UNDEFINED_ZONE_LABEL)}</small></div>"
-        )
-        for item in analytics.get("priority_territories", [])[:5]
-    ) or _DEFAULT_NO_TERRITORIES_HTML
-
     method_items = "".join(f"<span class='analytics-chip'>{escape(item)}</span>" for item in summary.get("methods", []))
     note_items = "".join(f"<li>{escape(item)}</li>" for item in summary.get("insights", [])) or _DEFAULT_NO_INSIGHTS_HTML
     fallback_message = quality.get("fallback_message")
@@ -203,10 +159,6 @@ def build_analytics_panel_html(analytics: SpatialAnalyticsPayload, idx: int, esc
                 <div class="analytics-card"><small>Покрытие ПЧ</small><strong>{escape(fire_station_coverage_display)}</strong></div>
             </div>
             {fallback_html}
-            <div class="analytics-section">
-                <div class="analytics-section-title">Приоритетные территории</div>
-                {territory_items}
-            </div>
             <div class="analytics-section">
                 <div class="analytics-section-title">Hotspot detection</div>
                 {hotspot_items}
