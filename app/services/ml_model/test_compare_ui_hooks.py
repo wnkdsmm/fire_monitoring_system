@@ -34,3 +34,10 @@ def test_compare_chart_function_exists() -> None:
     assert "var historyHasData = data.history_has_data === true;" in source
     assert "if (!historyHasData)" in source
     assert "renderFallback(chartNode, fallbackNode, 'Нет данных для сравнения выбранных лет за выбранный месяц.');" in source
+
+
+def test_compare_chart_hides_fallback_when_history_available() -> None:
+    source = Path("app/static/js/ml_model_charts.js").read_text(encoding="utf-8")
+    assert "setChartEmptyState(chartNode, false);" in source
+    assert "fallbackNode.classList.add('is-hidden');" in source
+    assert "fallbackNode.style.display = 'none';" in source

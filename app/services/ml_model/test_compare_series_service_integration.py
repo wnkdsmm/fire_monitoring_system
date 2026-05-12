@@ -233,3 +233,37 @@ def test_compare_service_with_empty_history_has_no_points_and_flag_false(monkeyp
     assert compare["history_has_data"] is False
     assert all(row.get("a_value") is None for row in compare["rows"])
     assert all(row.get("b_value") is None for row in compare["rows"])
+
+
+def test_compare_service_july_2024_2023_history_first_hard_regression_f829337(monkeypatch) -> None:
+    caches = create_default_caches()
+    monkeypatch.setattr(ml_core, "_build_ml_request_state", lambda **kwargs: _fake_request_state(month=7, year_a=2024, year_b=2023))
+    monkeypatch.setattr(ml_core, "_load_ml_filter_bundle", lambda **_k: {"option_catalog": {}, "metadata_items": [], "preload_notes": [], "selected_cause": "all", "selected_object_category": "all"})
+    monkeypatch.setattr(
+        ml_core,
+        "_load_ml_aggregation_inputs",
+        lambda **_k: {
+            "daily_history": [
+                {"date": date(2023, 7, 10), "count": 8.0},
+                {"date": date(2024, 7, 15), "count": 11.0},
+                {"date": date(2025, 7, 20), "count": 6.0},
+                {"date": date(2026, 7, 5), "count": 9.0},
+            ],
+            "filtered_records_count": 4,
+        },
+    )
+
+    payload = ml_core.get_ml_compare_series_data(month=7, year_a=2024, year_b=2023, caches=caches)
+    compare = payload["compare_series"]
+    rows = compare["rows"]
+
+    assert len(rows) == 31
+    assert all((row.get("a_value") is not None and row.get("b_value") is not None) for row in rows)
+
+    by_day = {int(row["day"]): row for row in rows}
+    assert by_day[15]["a_source"] == "fact"
+    assert by_day[10]["b_source"] == "fact"
+    assert by_day[1]["a_source"] == "ml"
+    assert by_day[1]["b_source"] == "ml"
+    assert by_day[1]["a_value"] is not None
+    assert by_day[1]["b_value"] is not None
