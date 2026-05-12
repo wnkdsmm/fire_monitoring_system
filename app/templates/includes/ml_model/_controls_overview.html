@@ -1,11 +1,11 @@
 ﻿<section class="panel filters-panel">
         <div class="panel-head">
-            <h2>РџР°СЂР°РјРµС‚СЂС‹ ML-РїСЂРѕРіРЅРѕР·Р°</h2>
-            <span class="panel-meta">Р’С‹Р±РѕСЂ РёСЃС…РѕРґРЅС‹С… РґР°РЅРЅС‹С… Рё СЃС†РµРЅР°СЂРЅС‹С… СѓСЃР»РѕРІРёР№ РґР»СЏ СЂР°СЃС‡РµС‚Р° РѕР¶РёРґР°РµРјРѕРіРѕ РєРѕР»РёС‡РµСЃС‚РІР° РїРѕР¶Р°СЂРѕРІ РїРѕ РґРЅСЏРј.</span>
+            <h2>Параметры ML-прогноза</h2>
+            <span class="panel-meta">Выбор исходных данных и сценарных условий для расчета ожидаемого количества пожаров по дням.</span>
         </div>
                 <form class="filters-grid ml-form-grid" id="mlModelForm" method="get" action="/ml-model">
             <label class="filter-field">
-                <span>РўР°Р±Р»РёС†С‹</span>
+                <span>Таблицы</span>
                 <div id="mlTableFilter" class="ml-table-select">
                     <button
                         id="mlTableFilterToggle"
@@ -15,14 +15,14 @@
                         aria-expanded="false"
                         aria-controls="mlTableFilterMenu"
                     >
-                        <span id="mlTableFilterSummary" class="ml-table-select-summary">Р’СЃРµ С‚Р°Р±Р»РёС†С‹</span>
-                        <span class="ml-table-select-caret" aria-hidden="true">в–ѕ</span>
+                        <span id="mlTableFilterSummary" class="ml-table-select-summary">Все таблицы</span>
+                        <span class="ml-table-select-caret" aria-hidden="true">▾</span>
                     </button>
                     <div
                         id="mlTableFilterMenu"
                         class="ml-table-checklist is-hidden"
                         role="group"
-                        aria-label="Р’С‹Р±РѕСЂ С‚Р°Р±Р»РёС† РґР»СЏ ML-РїСЂРѕРіРЅРѕР·Р°"
+                        aria-label="Выбор таблиц для ML-прогноза"
                     >
                         {% set selected_tables = filters.table_names if filters.table_names is defined else [] %}
                         {% if not selected_tables and filters.table_name and filters.table_name != 'all' %}
@@ -39,7 +39,7 @@
                 <div id="mlTableFilterSelectedList" class="ml-table-selected-list"></div>
             </label>
             <label class="filter-field">
-                <span>РџСЂРёС‡РёРЅР° РїРѕР¶Р°СЂР°</span>
+                <span>Причина пожара</span>
                 <select id="mlCauseFilter" name="cause">
                     {% for option in filters.available_causes %}
                     <option value="{{ option.value }}" {% if option.value == filters.cause %}selected{% endif %}>{{ option.label }}</option>
@@ -47,7 +47,7 @@
                 </select>
             </label>
             <label class="filter-field">
-                <span>РўРёРї РѕР±СЉРµРєС‚Р°</span>
+                <span>Тип объекта</span>
                 <select id="mlObjectCategoryFilter" name="object_category">
                     {% for option in filters.available_object_categories %}
                     <option value="{{ option.value }}" {% if option.value == filters.object_category %}selected{% endif %}>{{ option.label }}</option>
@@ -55,13 +55,13 @@
                 </select>
             </label>
             <div class="filter-field filter-actions ml-actions">
-                <span>Р”РµР№СЃС‚РІРёРµ</span>
-                <button id="mlRefreshButton" class="primary-action" type="submit">РџРµСЂРµСЃС‡РёС‚Р°С‚СЊ ML-РїСЂРѕРіРЅРѕР·</button>
+                <span>Действие</span>
+                <button id="mlRefreshButton" class="primary-action" type="submit">Пересчитать ML-прогноз</button>
             </div>
         </form>
         <div class="ml-forecast-horizon-wrap">
             <div class="ml-forecast-horizon">
-                <span>Р“РѕСЂРёР·РѕРЅС‚ РїСЂРѕРіРЅРѕР·Р°</span>
+                <span>Горизонт прогноза</span>
                 <span id="mlForecastDaysDisplay" class="ml-forecast-days-value">{{ summary.forecast_days_display }} дней</span>
             </div>
         </div>
@@ -69,15 +69,15 @@
             <div id="mlLoadingState" class="analysis-status-card ml-loading-state{% if data.bootstrap_mode == 'deferred' %} is-pending{% else %} is-hidden{% endif %}" aria-live="polite">
                 <div class="analysis-status-head u-flex-between-gap-12 ml-loading-head">
                     <div class="analysis-status-copy">
-                        <strong id="mlLoadingLead" class="analysis-status-lead">Р’С‹РїРѕР»РЅСЏРµС‚СЃСЏ РїРѕРґРіРѕС‚РѕРІРєР° ML-СЂР°Р·РґРµР»Р°</strong>
-                        <span id="mlLoadingMessage" class="analysis-status-message">РРЅРёС†РёР°Р»РёР·РёСЂСѓРµС‚СЃСЏ РёРЅС‚РµСЂС„РµР№СЃ Рё РїРѕСЃР»РµРґРѕРІР°С‚РµР»СЊРЅРѕ Р·Р°РіСЂСѓР¶Р°СЋС‚СЃСЏ СЂРµР·СѓР»СЊС‚Р°С‚С‹ СЂР°СЃС‡РµС‚Р°.</span>
+                        <strong id="mlLoadingLead" class="analysis-status-lead">Выполняется подготовка ML-раздела</strong>
+                        <span id="mlLoadingMessage" class="analysis-status-message">Инициализируется интерфейс и последовательно загружаются результаты расчета.</span>
                     </div>
                 </div>
                 <div class="analysis-step-list ml-progress-steps" id="mlProgressSteps">
-                    <span class="analysis-step ml-progress-step is-active">Р—Р°РіСЂСѓР·РєР° РґР°РЅРЅС‹С…</span>
-                    <span class="analysis-step ml-progress-step">РђРіСЂРµРіР°С†РёСЏ</span>
-                    <span class="analysis-step ml-progress-step">РћР±СѓС‡РµРЅРёРµ / РІР°Р»РёРґР°С†РёСЏ</span>
-                    <span class="analysis-step ml-progress-step">Р¤РѕСЂРјРёСЂРѕРІР°РЅРёРµ РІРёР·СѓР°Р»РёР·Р°С†РёР№</span>
+                    <span class="analysis-step ml-progress-step is-active">Загрузка данных</span>
+                    <span class="analysis-step ml-progress-step">Агрегация</span>
+                    <span class="analysis-step ml-progress-step">Обучение / валидация</span>
+                    <span class="analysis-step ml-progress-step">Формирование визуализаций</span>
                 </div>
                 <div id="mlLoadingSkeleton" class="analysis-skeleton-grid">
                     <div class="analysis-skeleton-card">
@@ -99,11 +99,11 @@
             </div>
             <div id="mlErrorState" class="analysis-error-card ml-error-state is-hidden" aria-live="polite">
                 <div class="analysis-error-copy">
-                    <strong>Р’С‹РїРѕР»РЅРµРЅРёРµ ML-Р°РЅР°Р»РёР·Р° РЅРµ Р·Р°РІРµСЂС€РµРЅРѕ</strong>
-                    <span id="mlErrorMessage">РџРѕРІС‚РѕСЂРёС‚Рµ СЂР°СЃС‡РµС‚ СЃ С‚РµРєСѓС‰РёРјРё РїР°СЂР°РјРµС‚СЂР°РјРё РёР»Рё СѓС‚РѕС‡РЅРёС‚Рµ РёСЃС…РѕРґРЅС‹Рµ СѓСЃР»РѕРІРёСЏ.</span>
+                    <strong>Выполнение ML-анализа не завершено</strong>
+                    <span id="mlErrorMessage">Повторите расчет с текущими параметрами или уточните исходные условия.</span>
                 </div>
                 <div class="analysis-inline-actions">
-                    <button id="mlRetryButton" class="primary-action analysis-retry-button" type="button">РџРѕРІС‚РѕСЂРёС‚СЊ</button>
+                    <button id="mlRetryButton" class="primary-action analysis-retry-button" type="button">Повторить</button>
                 </div>
             </div>
         </div>
@@ -111,32 +111,32 @@
 
     <section class="stats-grid ml-stats-grid" id="mlStatsGrid">
         <article class="stat-card stat-card-accent">
-            <span class="stat-label">РџРѕР¶Р°СЂРѕРІ РІ РѕР±СѓС‡РµРЅРёРё</span>
+            <span class="stat-label">Пожаров в обучении</span>
             <strong class="stat-value">{{ summary.fires_count_display }}</strong>
-            <span class="stat-foot">РџРѕСЃР»Рµ РІС‹Р±СЂР°РЅРЅС‹С… С„РёР»СЊС‚СЂРѕРІ.</span>
+            <span class="stat-foot">После выбранных фильтров.</span>
         </article>
         <article class="stat-card">
-            <span class="stat-label">Р”Р»РёРЅР° РёСЃС‚РѕСЂРёРё</span>
+            <span class="stat-label">Длина истории</span>
             <strong class="stat-value">{{ summary.history_days_display }}</strong>
-            <span class="stat-foot">РќРµРїСЂРµСЂС‹РІРЅС‹Р№ РґРЅРµРІРЅРѕР№ СЂСЏРґ СЃ РЅСѓР»СЏРјРё РјРµР¶РґСѓ РїРѕР¶Р°СЂР°РјРё.</span>
+            <span class="stat-foot">Непрерывный дневной ряд с нулями между пожарами.</span>
         </article>
         <article class="stat-card">
-            <span class="stat-label">РћР¶РёРґР°РµРјРѕ РЅР° РІСЃС‘Рј РіРѕСЂРёР·РѕРЅС‚Рµ</span>
+            <span class="stat-label">Ожидаемо на всём горизонте</span>
             <strong class="stat-value">{{ summary.predicted_total_display }}</strong>
-            <span class="stat-foot">РЎСѓРјРјР°СЂРЅРѕРµ РѕР¶РёРґР°РµРјРѕРµ С‡РёСЃР»Рѕ РїРѕР¶Р°СЂРѕРІ РЅР° РІСЃРµРј РїСЂРѕРіРЅРѕР·РЅРѕРј РіРѕСЂРёР·РѕРЅС‚Рµ.</span>
+            <span class="stat-foot">Суммарное ожидаемое число пожаров на всем прогнозном горизонте.</span>
         </article>
         <article class="stat-card">
-            <span class="stat-label">Р”РЅРµР№ СЃ РїРѕРІС‹С€РµРЅРЅРѕР№ РЅР°РіСЂСѓР·РєРѕР№</span>
+            <span class="stat-label">Дней с повышенной нагрузкой</span>
             <strong class="stat-value">{{ summary.elevated_risk_days_display }}</strong>
-            <span class="stat-foot">РљРѕР»РёС‡РµСЃС‚РІРѕ РґРЅРµР№, РіРґРµ СЂРёСЃРє-РёРЅРґРµРєСЃ РЅРµ РЅРёР¶Рµ 75/100.</span>
+            <span class="stat-foot">Количество дней, где риск-индекс не ниже 75/100.</span>
         </article>
     </section>
 
     <article id="mlNotesPanel" class="panel insight-panel{% if data.notes %}{% else %} is-hidden{% endif %}">
         <div class="panel-head">
             <div>
-                <h2>Р¤Р°РєС‚РѕСЂС‹, РІР»РёСЏСЋС‰РёРµ РЅР° РёРЅС‚РµСЂРїСЂРµС‚Р°С†РёСЋ РїСЂРѕРіРЅРѕР·Р° РєРѕР»РёС‡РµСЃС‚РІР°</h2>
-                <span class="panel-meta">РљСЂРёС‚РёС‡РµСЃРєРёРµ Р·Р°РјРµС‡Р°РЅРёСЏ, СЃРїРѕСЃРѕР±РЅС‹Рµ РїРѕРІР»РёСЏС‚СЊ РЅР° РєРѕСЂСЂРµРєС‚РЅРѕСЃС‚СЊ С‚СЂР°РєС‚РѕРІРєРё РїСЂРѕРіРЅРѕР·Р° РїРѕ С‡РёСЃР»Сѓ РїРѕР¶Р°СЂРѕРІ.</span>
+                <h2>Факторы, влияющие на интерпретацию прогноза количества пожаров</h2>
+                <span class="panel-meta">Критические замечания, способные повлиять на корректность трактовки прогноза по числу пожаров.</span>
             </div>
         </div>
         <ul class="notice-list forecast-note-list" id="mlNotesList">

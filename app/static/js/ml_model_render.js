@@ -31,24 +31,24 @@
         : null;
     var progressSteps = [
         {
-            label: 'Р—Р°РіСЂСѓР·РєР° РґР°РЅРЅС‹С…',
-            lead: 'Р—Р°РіСЂСѓР¶Р°РµРј РґР°РЅРЅС‹Рµ ML-РїСЂРѕРіРЅРѕР·Р°',
-            message: 'РџРѕР»СѓС‡Р°РµРј РІС‹Р±СЂР°РЅРЅС‹Р№ СЃСЂРµР· Рё РѕР±РЅРѕРІР»СЏРµРј РїР°СЂР°РјРµС‚СЂС‹ СЃС‚СЂР°РЅРёС†С‹.'
+            label: 'Загрузка данных',
+            lead: 'Загружаем данные ML-прогноза',
+            message: 'Получаем выбранный срез и обновляем параметры страницы.'
         },
         {
-            label: 'РђРіСЂРµРіР°С†РёСЏ',
-            lead: 'РђРіСЂРµРіРёСЂСѓРµРј РёСЃС‚РѕСЂРёСЋ',
-            message: 'РЎРѕР±РёСЂР°РµРј РґРЅРµРІРЅРѕР№ СЂСЏРґ, С„РёР»СЊС‚СЂС‹ Рё РґРѕСЃС‚СѓРїРЅС‹Рµ РїСЂРёР·РЅР°РєРё.'
+            label: 'Агрегация',
+            lead: 'Агрегируем историю',
+            message: 'Собираем дневной ряд, фильтры и доступные признаки.'
         },
         {
-            label: 'РћР±СѓС‡РµРЅРёРµ / РІР°Р»РёРґР°С†РёСЏ',
-            lead: 'РћР±СѓС‡РµРЅРёРµ Рё РІР°Р»РёРґР°С†РёСЏ',
-            message: 'РЎС‡РёС‚Р°РµРј backtesting, РїСЂРѕРіРЅРѕР· Рё РёС‚РѕРіРѕРІС‹Рµ С‚Р°Р±Р»РёС†С‹.'
+            label: 'Обучение / валидация',
+            lead: 'Обучение и валидация',
+            message: 'Считаем backtesting, прогноз и итоговые таблицы.'
         },
         {
-            label: 'РџРѕСЃС‚СЂРѕРµРЅРёРµ РІРёР·СѓР°Р»РёР·Р°С†РёР№',
-            lead: 'РћР±РЅРѕРІР»СЏРµРј РІРёР·СѓР°Р»РёР·Р°С†РёРё',
-            message: 'РџРѕРґСЃС‚Р°РІР»СЏРµРј РіСЂР°С„РёРєРё, С‚Р°Р±Р»РёС†С‹ Рё РєР°СЂС‚РѕС‡РєРё СЂРµР·СѓР»СЊС‚Р°С‚Р°.'
+            label: 'Построение визуализаций',
+            lead: 'Обновляем визуализации',
+            message: 'Подставляем графики, таблицы и карточки результата.'
         }
     ];
 
@@ -69,36 +69,36 @@
             badgeClass += ' status-badge-live';
         }
 
-        var badgeLabel = 'РќСѓР¶РЅРѕ СѓС‚РѕС‡РЅРёС‚СЊ С„РёР»СЊС‚СЂС‹';
+        var badgeLabel = 'Нужно уточнить фильтры';
         if (data && data.error_message) {
-            badgeLabel = 'РўСЂРµР±СѓРµС‚СЃСЏ РїРѕРІС‚РѕСЂРЅС‹Р№ СЂР°СЃС‡РµС‚';
+            badgeLabel = 'Требуется повторный расчет';
         } else if ((api.isFetching && api.isFetching()) || (data && data.bootstrap_mode === 'deferred')) {
-            badgeLabel = 'РЎРѕР±РёСЂР°РµРј ML-РїСЂРѕРіРЅРѕР·';
+            badgeLabel = 'Собираем ML-прогноз';
         } else if (data && data.has_data) {
-            badgeLabel = 'ML-РїСЂРѕРіРЅРѕР· РіРѕС‚РѕРІ';
+            badgeLabel = 'ML-прогноз готов';
         }
 
         container.innerHTML = ''
             + '<span class="' + badgeClass + '">' + escapeHtml(badgeLabel) + '</span>'
-            + '<div class="status-line"><span>РњРѕРґРµР»СЊ РїРѕ С‡РёСЃР»Сѓ РїРѕР¶Р°СЂРѕРІ</span><strong>' + escapeHtml(summary.count_model_label || 'Р РµРіСЂРµСЃСЃРёСЏ РџСѓР°СЃСЃРѕРЅР°') + '</strong></div>'
-            + '<div class="status-line"><span>РЎРѕР±С‹С‚РёРµ РїРѕР¶Р°СЂР°</span><strong>' + escapeHtml(summary.event_model_label || 'РќРµ РѕР±СѓС‡РµРЅ') + '</strong></div>'
-            + '<div class="status-line"><span>РџСЂРѕРІРµСЂРєР° РЅР° РёСЃС‚РѕСЂРёРё</span><strong>' + escapeHtml(summary.backtest_method_label || 'РџСЂРѕРІРµСЂРєР° РЅР° РёСЃС‚РѕСЂРёРё РЅРµ РІС‹РїРѕР»РЅРµРЅР°') + '</strong></div>'
-            + '<div class="status-line"><span>РџРµСЂРёРѕРґ</span><strong>' + escapeHtml(summary.history_period_label || 'РќРµС‚ РґР°РЅРЅС‹С…') + '</strong></div>';
+            + '<div class="status-line"><span>Модель по числу пожаров</span><strong>' + escapeHtml(summary.count_model_label || 'Регрессия Пуассона') + '</strong></div>'
+            + '<div class="status-line"><span>Событие пожара</span><strong>' + escapeHtml(summary.event_model_label || 'Не обучен') + '</strong></div>'
+            + '<div class="status-line"><span>Проверка на истории</span><strong>' + escapeHtml(summary.backtest_method_label || 'Проверка на истории не выполнена') + '</strong></div>'
+            + '<div class="status-line"><span>Период</span><strong>' + escapeHtml(summary.history_period_label || 'Нет данных') + '</strong></div>';
     }
 
     function renderHero(data) {
         var summary = data.summary || {};
-        setText('mlModelDescription', summary.hero_summary || data.model_description || 'РџРѕСЃР»Рµ Р·Р°РіСЂСѓР·РєРё Р·РґРµСЃСЊ РїРѕСЏРІРёС‚СЃСЏ РєСЂР°С‚РєРёР№ РІС‹РІРѕРґ РїРѕ РѕР¶РёРґР°РµРјРѕРјСѓ С‡РёСЃР»Сѓ РїРѕР¶Р°СЂРѕРІ Рё РЅР°РґРµР¶РЅРѕСЃС‚Рё СЂР°СЃС‡РµС‚Р°.');
+        setText('mlModelDescription', summary.hero_summary || data.model_description || 'После загрузки здесь появится краткий вывод по ожидаемому числу пожаров и надежности расчета.');
 
         var heroTags = byId('mlHeroTags');
         if (heroTags) {
             heroTags.innerHTML = ''
-                + '<span class="hero-tag">РўР°Р±Р»РёС†Р°: <strong>' + escapeHtml(summary.selected_table_label || 'РќРµС‚ С‚Р°Р±Р»РёС†С‹') + '</strong></span>'
-                + '<span class="hero-tag">Р“Р»Р°РІРЅС‹Р№ С„Р°РєС‚РѕСЂ РјРѕРґРµР»Рё: <strong>' + escapeHtml(summary.top_feature_label || '-') + '</strong></span>'
+                + '<span class="hero-tag">Таблица: <strong>' + escapeHtml(summary.selected_table_label || 'Нет таблицы') + '</strong></span>'
+                + '<span class="hero-tag">Главный фактор модели: <strong>' + escapeHtml(summary.top_feature_label || '-') + '</strong></span>'
                 + '<span class="hero-tag">'
                 + (summary.event_probability_enabled
-                    ? 'РЎСЂРµРґРЅСЏСЏ РІРµСЂРѕСЏС‚РЅРѕСЃС‚СЊ P(>=1 РїРѕР¶Р°СЂР°): <strong>' + escapeHtml(summary.average_event_probability_display || 'вЂ”') + '</strong>'
-                    : 'РЎРѕР±С‹С‚РёРµ РїРѕР¶Р°СЂР°: <strong>РЅРµ РїРѕРєР°Р·Р°РЅРѕ</strong>')
+                    ? 'Средняя вероятность P(>=1 пожара): <strong>' + escapeHtml(summary.average_event_probability_display || '—') + '</strong>'
+                    : 'Событие пожара: <strong>не показано</strong>')
                 + '</span>';
         }
 
@@ -106,14 +106,14 @@
         if (heroStats) {
             heroStats.innerHTML = ''
                 + '<article class="hero-stat-card">'
-                + '<span class="hero-stat-label">РЎСЂРµРґРЅРёР№ РѕР¶РёРґР°РµРјС‹Р№ РґРµРЅСЊ</span>'
+                + '<span class="hero-stat-label">Средний ожидаемый день</span>'
                 + '<strong class="hero-stat-value">' + escapeHtml(summary.average_expected_count_display || '0') + '</strong>'
-                + '<span class="hero-stat-foot">РЎСЂРµРґРЅСЏСЏ РґРЅРµРІРЅР°СЏ РёРЅС‚РµРЅСЃРёРІРЅРѕСЃС‚СЊ РЅР° РІС‹Р±СЂР°РЅРЅРѕРј РіРѕСЂРёР·РѕРЅС‚Рµ РїСЂРѕРіРЅРѕР·Р°.</span>'
+                + '<span class="hero-stat-foot">Средняя дневная интенсивность на выбранном горизонте прогноза.</span>'
                 + '</article>'
                 + '<article class="hero-stat-card hero-stat-card-soft">'
-                + '<span class="hero-stat-label">Р”РµРЅСЊ СЃ РјР°РєСЃРёРјР°Р»СЊРЅРѕР№ РЅР°РіСЂСѓР·РєРѕР№</span>'
+                + '<span class="hero-stat-label">День с максимальной нагрузкой</span>'
                 + '<strong class="hero-stat-value">' + escapeHtml(summary.peak_expected_count_display || '0') + '</strong>'
-                + '<span class="hero-stat-foot">РњР°РєСЃРёРјР°Р»СЊРЅРѕРµ РѕР¶РёРґР°РµРјРѕРµ С‡РёСЃР»Рѕ РїРѕР¶Р°СЂРѕРІ: ' + escapeHtml(summary.peak_expected_count_day_display || '-') + '.</span>'
+                + '<span class="hero-stat-foot">Максимальное ожидаемое число пожаров: ' + escapeHtml(summary.peak_expected_count_day_display || '-') + '.</span>'
                 + '</article>';
         }
     }
@@ -126,24 +126,24 @@
 
         container.innerHTML = ''
             + '<article class="stat-card stat-card-accent">'
-            + '<span class="stat-label">РџРѕР¶Р°СЂРѕРІ РІ РѕР±СѓС‡РµРЅРёРё</span>'
+            + '<span class="stat-label">Пожаров в обучении</span>'
             + '<strong class="stat-value">' + escapeHtml(summary.fires_count_display || '0') + '</strong>'
-            + '<span class="stat-foot">РџРѕСЃР»Рµ РІС‹Р±СЂР°РЅРЅС‹С… С„РёР»СЊС‚СЂРѕРІ.</span>'
+            + '<span class="stat-foot">После выбранных фильтров.</span>'
             + '</article>'
             + '<article class="stat-card">'
-            + '<span class="stat-label">Р”Р»РёРЅР° РёСЃС‚РѕСЂРёРё</span>'
+            + '<span class="stat-label">Длина истории</span>'
             + '<strong class="stat-value">' + escapeHtml(summary.history_days_display || '0') + '</strong>'
-            + '<span class="stat-foot">РќРµРїСЂРµСЂС‹РІРЅС‹Р№ РґРЅРµРІРЅРѕР№ СЂСЏРґ СЃ РЅСѓР»СЏРјРё РјРµР¶РґСѓ РїРѕР¶Р°СЂР°РјРё.</span>'
+            + '<span class="stat-foot">Непрерывный дневной ряд с нулями между пожарами.</span>'
             + '</article>'
             + '<article class="stat-card">'
-            + '<span class="stat-label">РћР¶РёРґР°РµРјРѕ РЅР° РІСЃС‘Рј РіРѕСЂРёР·РѕРЅС‚Рµ</span>'
+            + '<span class="stat-label">Ожидаемо на всём горизонте</span>'
             + '<strong class="stat-value">' + escapeHtml(summary.predicted_total_display || '0') + '</strong>'
-            + '<span class="stat-foot">РћР¶РёРґР°РµРјРѕРµ С‡РёСЃР»Рѕ РїРѕР¶Р°СЂРѕРІ РЅР° РІСЃРµРј РіРѕСЂРёР·РѕРЅС‚Рµ.</span>'
+            + '<span class="stat-foot">Ожидаемое число пожаров на всем горизонте.</span>'
             + '</article>'
             + '<article class="stat-card">'
-            + '<span class="stat-label">Р”РЅРµР№ СЃ РїРѕРІС‹С€РµРЅРЅРѕР№ РЅР°РіСЂСѓР·РєРѕР№</span>'
+            + '<span class="stat-label">Дней с повышенной нагрузкой</span>'
             + '<strong class="stat-value">' + escapeHtml(summary.elevated_risk_days_display || '0') + '</strong>'
-            + '<span class="stat-foot">РљРѕР»РёС‡РµСЃС‚РІРѕ РґРЅРµР№, РіРґРµ СЂРёСЃРє-РёРЅРґРµРєСЃ РЅРµ РЅРёР¶Рµ 75/100.</span>'
+            + '<span class="stat-foot">Количество дней, где риск-индекс не ниже 75/100.</span>'
             + '</article>';
     }
 
@@ -172,7 +172,7 @@
             warningNode = document.createElement('p');
             warningNode.setAttribute('data-role', 'class-balance-warning');
             warningNode.className = 'help is-warning is-hidden';
-            warningNode.textContent = 'РљР»Р°СЃСЃС‹ РЅРµСЃР±Р°Р»Р°РЅСЃРёСЂРѕРІР°РЅС‹ (< 10% РёР»Рё > 90%). F1 РјРѕР¶РµС‚ Р±С‹С‚СЊ РЅРµРёРЅС„РѕСЂРјР°С‚РёРІРЅС‹Рј.';
+            warningNode.textContent = 'Классы несбалансированы (< 10% или > 90%). F1 может быть неинформативным.';
         }
 
         var f1Card = null;
@@ -252,24 +252,24 @@
         }
 
         if (!rows.length) {
-            container.innerHTML = '<div class="mini-empty">' + escapeHtml(safeTable.empty_message || 'РЎСЂР°РІРЅРµРЅРёРµ baseline, СЃС†РµРЅР°СЂРЅРѕРіРѕ РїСЂРѕРіРЅРѕР·Р° Рё count-РјРѕРґРµР»РµР№ РїРѕСЏРІРёС‚СЃСЏ РїРѕСЃР»Рµ РїСЂРѕРІРµСЂРєРё РЅР° РёСЃС‚РѕСЂРёРё.') + '</div>';
+            container.innerHTML = '<div class="mini-empty">' + escapeHtml(safeTable.empty_message || 'Сравнение baseline, сценарного прогноза и count-моделей появится после проверки на истории.') + '</div>';
             return;
         }
 
         container.innerHTML = ''
             + '<table class="forecast-table">'
-            + '<thead><tr><th>РњРµС‚РѕРґ</th><th>Р РѕР»СЊ</th><th>MAE</th><th>RMSE</th><th>sMAPE</th><th>Р”РµРІРёР°С†РёСЏ РџСѓР°СЃСЃРѕРЅР°</th><th>О”MAE Рє Р±Р°Р·РѕРІРѕР№ РјРѕРґРµР»Рё</th><th>РЎС‚Р°С‚СѓСЃ</th></tr></thead>'
+            + '<thead><tr><th>Метод</th><th>Роль</th><th>MAE</th><th>RMSE</th><th>sMAPE</th><th>Девиация Пуассона</th><th>ΔMAE к базовой модели</th><th>Статус</th></tr></thead>'
             + '<tbody>' + rows.map(function (row) {
                 return ''
                     + '<tr>'
-                    + '<td data-label="РњРµС‚РѕРґ">' + escapeHtml(row.method_label || '-') + '</td>'
-                    + '<td data-label="Р РѕР»СЊ">' + escapeHtml(row.role_label || '-') + '</td>'
+                    + '<td data-label="Метод">' + escapeHtml(row.method_label || '-') + '</td>'
+                    + '<td data-label="Роль">' + escapeHtml(row.role_label || '-') + '</td>'
                     + '<td data-label="MAE">' + escapeHtml(row.mae_display || '-') + '</td>'
                     + '<td data-label="RMSE">' + escapeHtml(row.rmse_display || '-') + '</td>'
                     + '<td data-label="SMAPE">' + escapeHtml(row.smape_display || '-') + '</td>'
-                    + '<td data-label="Р”РµРІРёР°С†РёСЏ РџСѓР°СЃСЃРѕРЅР°">' + escapeHtml(row.poisson_display || '-') + '</td>'
-                    + '<td data-label="MAE Рє Р±Р°Р·РѕРІРѕР№ РјРѕРґРµР»Рё">' + escapeHtml(row.mae_delta_display || '-') + '</td>'
-                    + '<td data-label="РЎС‚Р°С‚СѓСЃ">' + escapeHtml(row.selection_label || '-') + '</td>'
+                    + '<td data-label="Девиация Пуассона">' + escapeHtml(row.poisson_display || '-') + '</td>'
+                    + '<td data-label="MAE к базовой модели">' + escapeHtml(row.mae_delta_display || '-') + '</td>'
+                    + '<td data-label="Статус">' + escapeHtml(row.selection_label || '-') + '</td>'
                     + '</tr>';
             }).join('') + '</tbody></table>';
     }
@@ -281,20 +281,20 @@
         }
 
         if (!Array.isArray(rows) || !rows.length) {
-            container.innerHTML = '<div class="mini-empty">РџРѕСЃР»Рµ РѕР±СѓС‡РµРЅРёСЏ Р·РґРµСЃСЊ РїРѕСЏРІРёС‚СЃСЏ РїСЂРѕРіРЅРѕР· РїРѕ Р±СѓРґСѓС‰РёРј РґР°С‚Р°Рј.</div>';
+            container.innerHTML = '<div class="mini-empty">После обучения здесь появится прогноз по будущим датам.</div>';
             return;
         }
 
         container.innerHTML = ''
             + '<table class="forecast-table forecast-table-ml">'
             + '<colgroup><col style="width:22%"><col style="width:22%"><col style="width:56%"></colgroup>'
-            + '<thead><tr><th>Р”Р°С‚Р°</th><th>РћР¶РёРґР°РµРјРѕРµ С‡РёСЃР»Рѕ РїРѕР¶Р°СЂРѕРІ</th><th>Р”РёР°РїР°Р·РѕРЅ</th></tr></thead>'
+            + '<thead><tr><th>Дата</th><th>Ожидаемое число пожаров</th><th>Диапазон</th></tr></thead>'
             + '<tbody>' + rows.map(function (row) {
                 return ''
                     + '<tr>'
-                    + '<td data-label="Р”Р°С‚Р°">' + escapeHtml(row.date_display || '-') + '</td>'
-                    + '<td data-label="РћР¶РёРґР°РµРјРѕРµ С‡РёСЃР»Рѕ РїРѕР¶Р°СЂРѕРІ">' + escapeHtml(row.forecast_value_display || '0') + '</td>'
-                    + '<td data-label="Р”РёР°РїР°Р·РѕРЅ">' + escapeHtml(normalizeRangeDisplay(row.range_display || 'вЂ”')) + '</td>'
+                    + '<td data-label="Дата">' + escapeHtml(row.date_display || '-') + '</td>'
+                    + '<td data-label="Ожидаемое число пожаров">' + escapeHtml(row.forecast_value_display || '0') + '</td>'
+                    + '<td data-label="Диапазон">' + escapeHtml(normalizeRangeDisplay(row.range_display || '—')) + '</td>'
                     + '</tr>';
             }).join('') + '</tbody></table>';
     }
@@ -306,7 +306,7 @@
         }
 
         if (!Array.isArray(items) || !items.length) {
-            container.innerHTML = '<div class="mini-empty">РџРѕСЃР»Рµ СЂР°СЃС‡РµС‚Р° Р·РґРµСЃСЊ РїРѕСЏРІСЏС‚СЃСЏ РґР°РЅРЅС‹Рµ, РЅР° РєРѕС‚РѕСЂС‹С… СЂРµР°Р»СЊРЅРѕ РґРµСЂР¶РёС‚СЃСЏ РјРѕРґРµР»СЊ.</div>';
+            container.innerHTML = '<div class="mini-empty">После расчета здесь появятся данные, на которых реально держится модель.</div>';
             return;
         }
 
@@ -431,21 +431,21 @@
         }
         renderTableChecklist(filters.available_tables, selectedTableNames);
         setTableChecklistOpen(false);
-        setSelectOptions('mlCauseFilter', filters.available_causes, filters.cause, 'Р’СЃРµ РїСЂРёС‡РёРЅС‹');
-        setSelectOptions('mlObjectCategoryFilter', filters.available_object_categories, filters.object_category, 'Р’СЃРµ РєР°С‚РµРіРѕСЂРёРё');
+        setSelectOptions('mlCauseFilter', filters.available_causes, filters.cause, 'Все причины');
+        setSelectOptions('mlObjectCategoryFilter', filters.available_object_categories, filters.object_category, 'Все категории');
         setText('mlForecastDaysDisplay', (summary.forecast_days_display || '7') + ' дней');
 
-        setText('mlQualityTitle', quality.title || 'Р’Р°Р»РёРґР°С†РёСЏ РєР°С‡РµСЃС‚РІР° ML-РїСЂРѕРіРЅРѕР·Р° РєРѕР»РёС‡РµСЃС‚РІР° РїРѕР¶Р°СЂРѕРІ');
-        setText('mlQualitySubtitle', quality.subtitle || 'РњРµС‚СЂРёРєРё СЂР°СЃСЃС‡РёС‚Р°РЅС‹ РЅР° РµРґРёРЅРѕР№ РёСЃС‚РѕСЂРёС‡РµСЃРєРѕР№ РІС‹Р±РѕСЂРєРµ Рё РїРѕРєР°Р·С‹РІР°СЋС‚ С‚РѕС‡РЅРѕСЃС‚СЊ РїСЂРѕРіРЅРѕР·Р° РєРѕР»РёС‡РµСЃС‚РІР° РїРѕР¶Р°СЂРѕРІ РїРѕ РґРЅСЏРј.');
-        renderMetricCards('mlQualityMetricCards', quality.metric_cards || [], 'РџРѕСЃР»Рµ СЂР°СЃС‡РµС‚Р° Р·РґРµСЃСЊ РїРѕСЏРІСЏС‚СЃСЏ РјРµС‚СЂРёРєРё РєР°С‡РµСЃС‚РІР° ML-РїСЂРѕРіРЅРѕР·Р°.');
+        setText('mlQualityTitle', quality.title || 'Валидация качества ML-прогноза количества пожаров');
+        setText('mlQualitySubtitle', quality.subtitle || 'Метрики рассчитаны на единой исторической выборке и показывают точность прогноза количества пожаров по дням.');
+        renderMetricCards('mlQualityMetricCards', quality.metric_cards || [], 'После расчета здесь появятся метрики качества ML-прогноза.');
         renderOptionalMetricCards('mlQualityEventMetricsSection', 'mlQualityEventMetricCards', quality.event_metric_cards || [], '');
         renderClassBalanceWarning(
             'mlQualityEventMetricCards',
             Boolean(quality.class_balance_warning)
         );
-        setText('mlCountTableTitle', (quality.count_table && quality.count_table.title) || 'РЎСЂР°РІРЅРµРЅРёРµ РјРµС‚РѕРґРѕРІ РїСЂРѕРіРЅРѕР·Р° РєРѕР»РёС‡РµСЃС‚РІР° РїРѕР¶Р°СЂРѕРІ');
+        setText('mlCountTableTitle', (quality.count_table && quality.count_table.title) || 'Сравнение методов прогноза количества пожаров');
         renderCountTable(quality.count_table || {});
-        setText('mlForecastTitle', 'РЎРєРѕР»СЊРєРѕ РїРѕР¶Р°СЂРѕРІ РѕР¶РёРґР°РµС‚СЃСЏ РїРѕ РґРЅСЏРј');
+        setText('mlForecastTitle', 'Сколько пожаров ожидается по дням');
         charts.renderLineChart(chartData.forecast, 'mlForecastChart', 'mlForecastChartFallback');
         if (Array.isArray(data.forecast_rows) && data.forecast_rows.length) {
             var forecastFallback = byId('mlForecastChartFallback');
@@ -456,7 +456,7 @@
         }
         renderForecastTable(data.forecast_rows || []);
 
-        setText('mlImportanceTitle', 'Р§С‚Рѕ СЃРёР»СЊРЅРµРµ РІСЃРµРіРѕ РІР»РёСЏРµС‚ РЅР° РїСЂРѕРіРЅРѕР·');
+        setText('mlImportanceTitle', 'Что сильнее всего влияет на прогноз');
         charts.renderBarsChart(chartData.importance, 'mlImportanceChart', 'mlImportanceChartFallback');
         renderImportanceNote(chartData.importance && chartData.importance.note ? chartData.importance.note : '');
         renderFeatureCards(data.features || []);
@@ -554,10 +554,10 @@
         setLoadingStateMode('ready');
         updateProgressStep(activeIndex, {
             isError: true,
-            lead: 'РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РІРµСЂС€РёС‚СЊ ML-Р°РЅР°Р»РёР·',
-            message: message || 'РџРѕРїСЂРѕР±СѓР№С‚Рµ РїРѕРІС‚РѕСЂРёС‚СЊ Р·Р°РїСѓСЃРє СЃ С‚РµРјРё Р¶Рµ С„РёР»СЊС‚СЂР°РјРё.'
+            lead: 'Не удалось завершить ML-анализ',
+            message: message || 'Попробуйте повторить запуск с теми же фильтрами.'
         });
-        setText('mlErrorMessage', message || 'РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РіСЂСѓР·РёС‚СЊ ML-РґР°РЅРЅС‹Рµ. РџРѕРїСЂРѕР±СѓР№С‚Рµ РµС‰Рµ СЂР°Р·.');
+        setText('mlErrorMessage', message || 'Не удалось загрузить ML-данные. Попробуйте еще раз.');
     }
 
     function hideError() {
@@ -591,29 +591,29 @@
         var safeJob = jobPayload || {};
         var backtestJob = safeJob.backtest_job || null;
         var activeIndex = 0;
-        var lead = 'ML-Р·Р°РґР°С‡Р° РїРѕСЃС‚Р°РІР»РµРЅР° РІ РѕС‡РµСЂРµРґСЊ';
-        var message = 'РћР¶РёРґР°РµРј Р·Р°РїСѓСЃРєР° С„РѕРЅРѕРІРѕРіРѕ СЂР°СЃС‡С‘С‚Р°.';
+        var lead = 'ML-задача поставлена в очередь';
+        var message = 'Ожидаем запуска фонового расчета.';
         var finished = false;
 
         if (safeJob.status === 'running') {
             activeIndex = 1;
-            lead = 'РђРіСЂРµРіРёСЂСѓРµРј РёСЃС‚РѕСЂРёСЋ Рё РїСЂРёР·РЅР°РєРё';
-            message = 'РЎРѕР±РёСЂР°РµРј SQL-Р°РіСЂРµРіР°С‚С‹, С„РёР»СЊС‚СЂС‹ Рё РґРЅРµРІРЅРѕР№ СЂСЏРґ РґР»СЏ ML-РїСЂРѕРіРЅРѕР·Р°.';
+            lead = 'Агрегируем историю и признаки';
+            message = 'Собираем SQL-агрегаты, фильтры и дневной ряд для ML-прогноза.';
         }
         if (backtestJob && (backtestJob.status === 'running' || backtestJob.status === 'completed')) {
             activeIndex = 2;
-            lead = backtestJob.status === 'completed' ? 'Р’Р°Р»РёРґР°С†РёСЏ Р·Р°РІРµСЂС€РµРЅР°' : 'Р’С‹РїРѕР»РЅСЏРµРј РѕР±СѓС‡РµРЅРёРµ Рё РІР°Р»РёРґР°С†РёСЋ';
+            lead = backtestJob.status === 'completed' ? 'Валидация завершена' : 'Выполняем обучение и валидацию';
             message = backtestJob.logs && backtestJob.logs.length
                 ? backtestJob.logs[backtestJob.logs.length - 1]
-                : 'РџСЂРѕРІРµСЂСЏРµРј РјРѕРґРµР»Рё РЅР° РёСЃС‚РѕСЂРёРё Рё РІС‹Р±РёСЂР°РµРј СЂР°Р±РѕС‡СѓСЋ РєРѕРЅС„РёРіСѓСЂР°С†РёСЋ.';
+                : 'Проверяем модели на истории и выбираем рабочую конфигурацию.';
         }
         if (safeJob.logs && safeJob.logs.length) {
             message = safeJob.logs[safeJob.logs.length - 1];
         }
         if (safeJob.status === 'completed') {
             activeIndex = 3;
-            lead = 'ML-Р°РЅР°Р»РёР· Р·Р°РІРµСЂС€С‘РЅ';
-            message = 'Р РµР·СѓР»СЊС‚Р°С‚ РіРѕС‚РѕРІ, РІРёР·СѓР°Р»РёР·Р°С†РёРё Рё С‚Р°Р±Р»РёС†С‹ СѓР¶Рµ РїРѕРґСЃС‚Р°РІР»РµРЅС‹ РІ РёРЅС‚РµСЂС„РµР№СЃ.';
+            lead = 'ML-анализ завершён';
+            message = 'Результат готов, визуализации и таблицы уже подставлены в интерфейс.';
             finished = true;
         }
         setLoadingStateMode(finished ? 'ready' : 'pending');
@@ -636,8 +636,8 @@
                 showLoadingState();
                 hideError();
                 updateProgressStep(0, {
-                    lead: 'ML-Р·Р°РґР°С‡Р° РїРѕСЃС‚Р°РІР»РµРЅР° РІ РѕС‡РµСЂРµРґСЊ',
-                    message: 'РџРѕРґРіРѕС‚Р°РІР»РёРІР°РµРј С„РѕРЅРѕРІС‹Р№ Р·Р°РїСѓСЃРє Р°РЅР°Р»РёР·Р°.'
+                    lead: 'ML-задача поставлена в очередь',
+                    message: 'Подготавливаем фоновый запуск анализа.'
                 });
                 renderSidebarStatus(currentMlData || global.__FIRE_ML_INITIAL__ || {});
 
@@ -736,8 +736,8 @@
         } else {
             applyMlModelData(initialData || {});
             updateProgressStep(0, {
-                lead: 'Р›С‘РіРєРёР№ shell СЃС‚СЂР°РЅРёС†С‹ СѓР¶Рµ РѕС‚РєСЂС‹С‚',
-                message: 'Р—Р°РїСѓСЃРєР°РµРј ML-Р°РЅР°Р»РёР· РІ С„РѕРЅРµ Рё СЃР»РµРґРёРј Р·Р° СЃС‚Р°С‚СѓСЃРѕРј РїРѕ job_id.'
+                lead: 'Лёгкий shell страницы уже открыт',
+                message: 'Запускаем ML-анализ в фоне и следим за статусом по job_id.'
             });
             startMlModelJob({ initialLoad: true, useLocationSearch: true });
         }
