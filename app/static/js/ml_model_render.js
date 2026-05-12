@@ -18,6 +18,9 @@
 
     var currentMlData = null;
     var tableCheckboxDebounceTimer = null;
+    var latestCompareRequest = null;
+    var compareRequestSeq = 0;
+    var keepUserCompareSelection = false;
     var progressTimers = createTimerGroup();
     var appgDefaultInitialized = false;
     var mlTableChecklist = typeof createTableChecklist === 'function'
@@ -69,6 +72,48 @@
         }
         year = Math.trunc(year);
         return year > 0 ? year : null;
+    }
+
+    function normalizeCompareValue(value) {
+        var normalized = String(value == null ? '' : value).trim();
+        return normalized;
+    }
+
+    function extractCompareFromResponse(data) {
+        var safeData = data || {};
+        var filters = safeData.filters || {};
+        var compareSeries = safeData.compare_series || {};
+        var responseYearA = normalizeCompareValue(
+            filters.year_a != null ? filters.year_a : compareSeries.year_a
+        );
+        var responseYearB = normalizeCompareValue(
+            filters.year_b != null ? filters.year_b : compareSeries.year_b
+        );
+        return {
+            year_a: responseYearA,
+            year_b: responseYearB
+        };
+    }
+
+    function extractCompareFromRequestBody(requestBody) {
+        var body = requestBody || {};
+        return {
+            year_a: normalizeCompareValue(body.year_a),
+            year_b: normalizeCompareValue(body.year_b)
+        };
+    }
+
+    function shouldLogCompareMismatch(expected, actual) {
+        if (!expected) {
+            return false;
+        }
+        if (!expected.year_a && !expected.year_b) {
+            return false;
+        }
+        if (!actual) {
+            return true;
+        }
+        return expected.year_a !== actual.year_a || expected.year_b !== actual.year_b;
     }
 
     function collectAvailableYears(filters) {
@@ -514,10 +559,11 @@
         renderCriticalNotes([]);
     }
 
-    function applyMlModelData(data) {
+    function applyMlModelData(data, options) {
         if (!data) {
             return;
         }
+        var settings = options || {};
 
         currentMlData = data;
 
@@ -564,8 +610,12 @@
         }
         var historyYears = collectAvailableYears(filters);
         var compareSeries = data.compare_series || {};
-        var compareYearA = compareSeries.year_a != null ? String(compareSeries.year_a) : (effectiveYear || String(new Date().getFullYear()));
-        var compareYearB = compareSeries.year_b != null ? String(compareSeries.year_b) : String(Math.max(1990, parseInt(compareYearA, 10) - 1));
+        var responseCompare = extractCompareFromResponse(data);
+        var requestCompare = settings.requestCompare || null;
+        var formCompareYearA = byId('mlYearAFilter') ? String(byId('mlYearAFilter').value || '').trim() : '';
+        var formCompareYearB = byId('mlYearBFilter') ? String(byId('mlYearBFilter').value || '').trim() : '';
+        var compareYearA = responseCompare.year_a || (effectiveYear || String(new Date().getFullYear()));
+        var compareYearB = responseCompare.year_b || String(Math.max(1990, parseInt(compareYearA, 10) - 1));
         var compareMonth = compareSeries.month != null ? String(compareSeries.month) : (effectiveMonth || defaultMonth);
         var compareYearOptions = buildYearOptions(compareYearA, {
             years: historyYears,
@@ -580,8 +630,13 @@
             expandToDefault: historyYears.length < 2
         }), effectiveYear, 'Текущий режим');
         setSelectOptions('mlMonthFilter', buildMonthOptions(), compareMonth, 'Все месяцы');
-        setSelectOptions('mlYearAFilter', compareYearOptions, compareYearA, 'Текущий режим');
-        setSelectOptions('mlYearBFilter', compareYearOptions, compareYearB, 'Текущий режим');
+        if (keepUserCompareSelection && requestCompare) {
+            setSelectOptions('mlYearAFilter', compareYearOptions, formCompareYearA || requestCompare.year_a || compareYearA, 'Текущий режим');
+            setSelectOptions('mlYearBFilter', compareYearOptions, formCompareYearB || requestCompare.year_b || compareYearB, 'Текущий режим');
+        } else {
+            setSelectOptions('mlYearAFilter', compareYearOptions, compareYearA, 'Текущий режим');
+            setSelectOptions('mlYearBFilter', compareYearOptions, compareYearB, 'Текущий режим');
+        }
         setText('mlForecastDaysDisplay', (summary.forecast_days_display || '7') + ' дней');
 
         setText('mlQualityTitle', quality.title || 'Валидация качества ML-прогноза количества пожаров');
@@ -790,10 +845,16 @@
                 setRefreshButtonState(isBusy);
                 renderSidebarStatus(currentMlData || global.__FIRE_ML_INITIAL__ || {});
             },
-            onStart: function () {
+            onStart: function (requestPayload) {
                 clearProgressTimers();
                 showLoadingState();
                 hideError();
+                var requestBody = requestPayload && requestPayload.body ? requestPayload.body : null;
+                latestCompareRequest = {
+                    id: ++compareRequestSeq,
+                    compare: extractCompareFromRequestBody(requestBody),
+                    requestBody: requestBody
+                };
                 updateProgressStep(0, {
                     lead: 'ML-задача поставлена в очередь',
                     message: 'Подготавливаем фоновый запуск анализа.'
@@ -807,8 +868,24 @@
             onJobState: function (payload) {
                 updateAsyncStateForJob(payload);
             },
-            onCompleted: function (result, payload) {
-                applyMlModelData(result);
+            onCompleted: function (result, payload, requestBody) {
+                var expected = latestCompareRequest && latestCompareRequest.requestBody
+                    ? extractCompareFromRequestBody(latestCompareRequest.requestBody)
+                    : extractCompareFromRequestBody(requestBody);
+                var actual = extractCompareFromResponse(result);
+                if (shouldLogCompareMismatch(expected, actual) && global.console && typeof global.console.warn === 'function') {
+                    global.console.warn('[ml-compare] response year mismatch', {
+                        request_payload: latestCompareRequest && latestCompareRequest.requestBody
+                            ? latestCompareRequest.requestBody
+                            : requestBody,
+                        response_filters: result && result.filters ? result.filters : {},
+                        response_compare_series: result && result.compare_series ? result.compare_series : {}
+                    });
+                }
+                applyMlModelData(result, {
+                    requestCompare: expected
+                });
+                keepUserCompareSelection = false;
                 updateAsyncStateForJob(payload || {});
                 hideError();
                 renderSidebarStatus(currentMlData || result || global.__FIRE_ML_INITIAL__ || {});
@@ -856,6 +933,9 @@
                     || targetName === 'cause'
                     || targetName === 'object_category'
                 ) {
+                    if (targetName === 'year_a' || targetName === 'year_b') {
+                        keepUserCompareSelection = true;
+                    }
                     startMlModelJob();
                 }
             });

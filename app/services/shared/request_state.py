@@ -128,6 +128,11 @@ def build_ml_cache_key(
     days_ahead: int,
     history_window: str,
     current_user_date: str = "",
+    compare_month: int | None = None,
+    compare_year_a: int | None = None,
+    compare_year_b: int | None = None,
+    period_year: int | None = None,
+    period_month: int | None = None,
 ) -> tuple[Any, ...]:
     return (
         cache_schema_version,
@@ -139,6 +144,11 @@ def build_ml_cache_key(
         days_ahead,
         history_window,
         normalize_cache_value(current_user_date),
+        compare_month,
+        compare_year_a,
+        compare_year_b,
+        period_year,
+        period_month,
     )
 
 

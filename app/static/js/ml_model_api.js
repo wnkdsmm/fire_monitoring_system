@@ -30,9 +30,9 @@
         }
     }
 
-    function notifyCompleted(handlers, result, payload) {
+    function notifyCompleted(handlers, result, payload, requestBody) {
         if (handlers && typeof handlers.onCompleted === 'function') {
-            handlers.onCompleted(result, payload || currentJobState);
+            handlers.onCompleted(result, payload || currentJobState, requestBody || null);
         }
     }
 
@@ -136,7 +136,7 @@
                 },
                 onDone: function (payload) {
                     notifyBusy(callbacks, false);
-                    notifyCompleted(callbacks, payload.result, payload);
+                    notifyCompleted(callbacks, payload.result, payload, callbacks.__requestBody || null);
                 },
                 onError: function (error) {
                     notifyBusy(callbacks, false);
@@ -171,6 +171,7 @@
         stopJobPolling();
         currentJobState = null;
         notifyBusy(callbacks, true);
+        callbacks.__requestBody = requestPayload.body;
         if (typeof callbacks.onStart === 'function') {
             callbacks.onStart(requestPayload, settings);
         }
@@ -199,7 +200,7 @@
 
             if (payload.status === 'completed' && payload.result) {
                 notifyBusy(callbacks, false);
-                notifyCompleted(callbacks, payload.result, payload);
+                notifyCompleted(callbacks, payload.result, payload, requestPayload.body);
                 return;
             }
 

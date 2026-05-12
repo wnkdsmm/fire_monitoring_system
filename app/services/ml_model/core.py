@@ -459,6 +459,11 @@ def _build_ml_request_state(
         days_ahead=state['days_ahead'],
         history_window=state['selected_history_window'],
         current_user_date=normalized_current_user_date,
+        compare_month=selected_compare_month,
+        compare_year_a=selected_compare_year_a,
+        compare_year_b=selected_compare_year_b,
+        period_year=selected_year,
+        period_month=selected_month,
     )
     state['current_user_date'] = normalized_current_user_date
     state['current_user_day'] = parsed_current_user_date
