@@ -47,7 +47,7 @@ from .charts import (
     _build_table_breakdown_plotly,
     _finalize_chart,
 )
-from .data_access import _build_year_filter_clause, _numeric_expression_for_column, _resolve_table_column_name
+from .data_access import _build_year_filter_clause, _numeric_expression_for_column, _resolve_table_column_name, _uses_selected_year_param
 from .types import (
     DashboardTableRef,
     DistributionItem,
@@ -174,7 +174,7 @@ def _build_distribution_chart(
                     LIMIT 20
                     """
                 )
-                params = {"selected_year": selected_year} if selected_year is not None and DATE_COLUMN in table["column_set"] else {}
+                params = {"selected_year": selected_year} if _uses_selected_year_param(table, selected_year) else {}
                 for row in conn.execute(query, params).mappings().all():
                     grouped[row["label"]] += int(row["fire_count"] or 0)
 
@@ -207,7 +207,7 @@ def _collect_positive_column_counts(
         where_clause = _build_year_filter_clause(table, selected_year)
         if where_clause is None:
             continue
-        if selected_year is not None and DATE_COLUMN in table["column_set"]:
+        if _uses_selected_year_param(table, selected_year):
             uses_selected_year_param = True
 
         selects = []
@@ -448,7 +448,7 @@ def _build_table_breakdown_chart(
                     WHERE {where_clause}
                     """
                 )
-                params = {"selected_year": selected_year} if selected_year is not None and DATE_COLUMN in table["column_set"] else {}
+                params = {"selected_year": selected_year} if _uses_selected_year_param(table, selected_year) else {}
                 fire_count = int(conn.execute(query, params).scalar() or 0)
                 items.append(
                     {

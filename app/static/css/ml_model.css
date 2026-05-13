@@ -91,6 +91,10 @@
     position: relative;
 }
 
+#mlCompareChart {
+    margin-top: 12px;
+}
+
 .ml-plot.is-empty {
     display: none;
     min-height: 0;
@@ -254,7 +258,7 @@
 }
 
 .ml-controls-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     align-items: end;
 }
 

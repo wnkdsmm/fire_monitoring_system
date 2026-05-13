@@ -95,17 +95,21 @@ def _build_dashboard_aggregation(
         )
     cause_counts = grouped_counts_bundle["cause_counts"]
     cause_overview = _build_cause_chart(selected_tables, selected_year, cause_counts=cause_counts)
+    damage_counts = grouped_counts_bundle.get("positive_column_counts") or {}
+    has_damage_data = any(int(value or 0) > 0 for value in damage_counts.values())
+    use_damage_group = is_damage_group and has_damage_data
+
     dashboard_charts = (
         _build_damage_dashboard_charts(
             selected_tables,
             selected_year,
-            damage_counts=grouped_counts_bundle["positive_column_counts"],
+            damage_counts=damage_counts,
         )
-        if is_damage_group
+        if use_damage_group
         else _build_standard_dashboard_charts(
             selected_tables,
             selected_year,
-            selected_group_column,
+            selected_group_column if not is_damage_group else "",
             grouped_counts_bundle,
         )
     )
@@ -140,12 +144,14 @@ def _build_dashboard_aggregation(
         summary=summary,
         metadata=metadata,
         selected_table_name=selected_table_name,
-        selected_group_column=selected_group_column,
+        selected_group_column=selected_group_column if use_damage_group or not is_damage_group else "",
         available_group_columns=available_group_columns,
         available_years=available_years,
     )
     if selected_table_label:
         scope["table_label"] = selected_table_label
+    if is_damage_group and not has_damage_data:
+        scope["group_label"] = "Нет данных по ущербу (показан общий режим)"
 
     return {
         "summary": summary,
@@ -186,6 +192,7 @@ def _build_dashboard_payload(
     cause_overview = aggregation["cause_overview"]
     distribution = aggregation["distribution"]
     yearly_area_chart = aggregation["yearly_area_chart"]
+    yearly_trend_chart = aggregation["yearly_fires_series"]
     monthly_profile = aggregation["monthly_profile"]
     monthly_heatmap = aggregation["monthly_heatmap"]
     area_buckets = aggregation["area_buckets"]
@@ -216,6 +223,7 @@ def _build_dashboard_payload(
         "charts": {
             "yearly_fires": cause_overview,
             "yearly_area": yearly_area_chart,
+            "yearly_trend": yearly_trend_chart,
             "distribution": distribution,
             "monthly_heatmap": monthly_heatmap,
             "monthly_profile": monthly_profile,
@@ -320,6 +328,7 @@ def _empty_dashboard_data(
         "charts": {
             "yearly_fires": _finalize_chart("Причины возгораний", [], "Нет данных по причинам возгорания."),
             "yearly_area": _finalize_chart("Последствия, эвакуация и дети", [], "Нет данных по погибшим, травмам и эвакуации."),
+            "yearly_trend": _finalize_chart("Динамика количества пожаров по годам", [], "Недостаточно данных для динамики по годам."),
             "distribution": _finalize_chart("Распределение по колонке", [], "Нет данных для графика."),
 
             "monthly_heatmap": _finalize_chart("Сезонность по месяцам и годам", [], "Недостаточно данных для тепловой карты сезонности."),

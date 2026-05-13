@@ -639,7 +639,11 @@ def _build_compare_series_payload(
         month_day_values_by_year[year_month_key][int(row_date.day)] = row_value
 
     def _avg(values: list[float]) -> float:
-        return float(sum(values) / len(values)) if values else 0.0
+        if not values:
+            return 0.0
+        positive_values = [value for value in values if value > 0]
+        base = positive_values if positive_values else values
+        return float(sum(base) / len(base))
 
     def _retro_predict_missing_day(target_year: int, target_month: int, target_day: int) -> float:
         # a) same day/month trend across all years (not just nearest year)
@@ -647,6 +651,9 @@ def _build_compare_series_payload(
         for (row_year, row_month, row_day), row_value in facts_by_ymd.items():
             if row_month == target_month and row_day == target_day and row_year != target_year:
                 same_day_candidates.append((int(row_year), float(row_value)))
+        positive_same_day_candidates = [item for item in same_day_candidates if item[1] > 0]
+        if positive_same_day_candidates:
+            same_day_candidates = positive_same_day_candidates
         if same_day_candidates:
             if len(same_day_candidates) == 1:
                 return same_day_candidates[0][1]

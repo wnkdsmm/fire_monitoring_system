@@ -19,6 +19,8 @@ from .charts import (
 from .data_access import (
     _area_expression,
     _build_year_filter_clause,
+    _resolve_date_column,
+    _uses_selected_year_param,
     _metric_expression,
     _month_expression,
     _numeric_expression_for_column,
@@ -66,7 +68,7 @@ def _collect_cause_counts(selected_tables: list[DashboardTableRef], selected_yea
                 LIMIT 20
                 """
             )
-            params = {"selected_year": selected_year} if selected_year is not None and DATE_COLUMN in table["column_set"] else {}
+            params = {"selected_year": selected_year} if _uses_selected_year_param(table, selected_year) else {}
             for row in conn.execute(query, params).mappings().all():
                 grouped[row["label"]] += int(row["fire_count"] or 0)
 
@@ -94,12 +96,13 @@ def _collect_month_counts(selected_tables: list[DashboardTableRef], selected_yea
 
     with engine.connect() as conn:
         for table in selected_tables:
-            if DATE_COLUMN not in table["column_set"]:
+            date_column_name = _resolve_date_column(table)
+            if not date_column_name:
                 continue
-            month_expression = _month_expression(DATE_COLUMN)
+            month_expression = _month_expression(date_column_name)
             conditions = [f"{month_expression} BETWEEN 1 AND 12"]
             if selected_year is not None:
-                conditions.append(f"{_year_expression(DATE_COLUMN)} = :selected_year")
+                conditions.append(f"{_year_expression(date_column_name)} = :selected_year")
             query = text(
                 f"""
                 SELECT
@@ -145,7 +148,10 @@ def _resolve_grouped_count_query_context(
         else ""
     )
     district_column = _resolve_district_column(table)
-    has_date_column = DATE_COLUMN in table["column_set"]
+    date_column_name = _resolve_date_column(table)
+    has_date_column = bool(date_column_name)
+    if selected_year is not None and DATE_COLUMN not in table["column_set"] and has_date_column:
+        where_clause = f"{_year_expression(date_column_name)} = :selected_year"
     has_timeline = include_impact_timeline and (has_date_column or table["table_year"] is not None)
     dimensions: list[tuple[str, str]] = []
     if cause_column:
@@ -168,6 +174,7 @@ def _resolve_grouped_count_query_context(
         "cause_column": cause_column,
         "distribution_column": distribution_column,
         "district_column": district_column,
+        "date_column_name": date_column_name,
         "has_date_column": has_date_column,
         "has_timeline": has_timeline,
         "include_area_buckets": include_area_buckets,
@@ -229,14 +236,15 @@ def _build_grouped_count_time_expressions(
     table: DashboardTableRef,
     *,
     has_date_column: bool,
+    date_column_name: str = "",
 ) -> tuple[str, str]:
     if has_date_column:
-        month_expression = _month_expression(DATE_COLUMN)
+        month_expression = _month_expression(date_column_name or DATE_COLUMN)
         month_label_expression = (
             f"CASE WHEN {month_expression} BETWEEN 1 AND 12 "
             f"THEN CAST({month_expression} AS TEXT) ELSE NULL END"
         )
-        return month_label_expression, _date_expression(DATE_COLUMN)
+        return month_label_expression, _date_expression(date_column_name or DATE_COLUMN)
 
     date_value_expression = (
         f"MAKE_DATE({int(table['table_year'])}, 1, 1)"
@@ -357,6 +365,7 @@ def _build_dashboard_grouped_counts_query(
     month_label_expression, date_value_expression = _build_grouped_count_time_expressions(
         table,
         has_date_column=context["has_date_column"],
+        date_column_name=context.get("date_column_name", ""),
     )
 
     source_selects = _build_grouped_count_source_selects(
@@ -519,7 +528,7 @@ def _build_area_buckets_chart(selected_tables: list[DashboardTableRef], selected
                 GROUP BY bucket
                 """
             )
-            params = {"selected_year": selected_year} if selected_year is not None and DATE_COLUMN in table["column_set"] else {}
+            params = {"selected_year": selected_year} if _uses_selected_year_param(table, selected_year) else {}
             for row in conn.execute(query, params).mappings().all():
                 grouped[row["bucket"]] += int(row["fire_count"] or 0)
 
@@ -672,10 +681,11 @@ def _build_monthly_heatmap_chart(
 
     with engine.connect() as conn:
         for table in selected_tables:
-            if DATE_COLUMN not in table["column_set"]:
+            date_column_name = _resolve_date_column(table)
+            if not date_column_name:
                 continue
-            month_expression = _month_expression(DATE_COLUMN)
-            year_expression = _year_expression(DATE_COLUMN)
+            month_expression = _month_expression(date_column_name)
+            year_expression = _year_expression(date_column_name)
             conditions = [f"{month_expression} BETWEEN 1 AND 12", f"{year_expression} IS NOT NULL"]
             if selected_year is not None:
                 conditions.append(f"{year_expression} = :selected_year")

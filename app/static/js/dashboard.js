@@ -171,7 +171,6 @@ async function fetchDashboardData() {
             onTableFilterOpen: syncBriefLink,
             onTableFilterChange: function () {
                 syncBriefLink();
-                fetchDashboardData();
             },
             onRetry: fetchDashboardData,
             onSubmit: fetchDashboardData

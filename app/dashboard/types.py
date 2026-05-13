@@ -186,6 +186,7 @@ class DashboardGroupedQueryContext(TypedDict, total=False):
     cause_column: str
     distribution_column: str
     district_column: str
+    date_column_name: str
     has_date_column: bool
     has_timeline: bool
     include_area_buckets: bool

@@ -108,7 +108,7 @@
     }
 
     function setBusy(isBusy) {
-        ['mlRefreshButton', 'mlForecastButton'].forEach(function (id) {
+        ['mlForecastButton'].forEach(function (id) {
             var button = byId(id);
             if (!button) {
                 return;
@@ -351,13 +351,6 @@
     }
 
     function wireEvents() {
-        var form = byId('mlModelForm');
-        if (form) {
-            form.addEventListener('submit', function (event) {
-                event.preventDefault();
-                refreshCompareSeriesOnly();
-            });
-        }
         ['mlMonthFilter', 'mlYearAFilter', 'mlYearBFilter'].forEach(function (id) {
             var node = byId(id);
             if (node) {

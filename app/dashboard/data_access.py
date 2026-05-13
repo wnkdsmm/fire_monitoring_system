@@ -5,6 +5,7 @@ from typing import Any
 
 from sqlalchemy import text
 
+from app.domain.fire_columns import FIRE_DATE_COLUMN_CANDIDATES
 from app.domain.fire_columns import DASHBOARD_DISTRICT_COLUMN_CANDIDATES as DISTRICT_COLUMN_CANDIDATES
 from app.statistics_constants import AREA_COLUMN, CAUSE_COLUMNS, DATE_COLUMN, IMPACT_METRIC_CONFIG
 
@@ -32,6 +33,49 @@ def _resolve_district_column(table: DashboardTableRef) -> str:
     return ""
 
 
+def _resolve_date_column(table: DashboardTableRef) -> str:
+    for candidate in FIRE_DATE_COLUMN_CANDIDATES:
+        resolved = _resolve_table_column_name(table, candidate)
+        if resolved:
+            return resolved
+    normalized_columns = {
+        column_name: _normalize_match_text(column_name)
+        for column_name in table.get("column_set", set())
+    }
+    for candidate in FIRE_DATE_COLUMN_CANDIDATES:
+        normalized_candidate = _normalize_match_text(candidate)
+        if not normalized_candidate:
+            continue
+        for column_name, normalized_column in normalized_columns.items():
+            if normalized_candidate in normalized_column:
+                return column_name
+    best_match = ""
+    best_score = -1
+    for column_name in sorted(table.get("column_set", set())):
+        normalized_column = _normalize_match_text(column_name)
+        score = -1
+        if "дата" in normalized_column and "пожар" in normalized_column:
+            score = 100
+            if "возник" in normalized_column:
+                score = 130
+        elif "дата" in normalized_column and "время" in normalized_column and "сообщ" in normalized_column:
+            score = 90
+        elif "дата" in normalized_column and "время" in normalized_column:
+            score = 70
+        elif "дата" in normalized_column:
+            score = 50
+        if score > best_score:
+            best_score = score
+            best_match = column_name
+    if best_score > 0:
+        return best_match
+    return ""
+
+
+def _uses_selected_year_param(table: DashboardTableRef, selected_year: int | None) -> bool:
+    return selected_year is not None and bool(_resolve_date_column(table))
+
+
 def _collect_impact_totals(selected_tables: list[DashboardTableRef], selected_year: int | None) -> ImpactTotals:
     from config.db import engine
 
@@ -53,7 +97,7 @@ def _collect_impact_totals(selected_tables: list[DashboardTableRef], selected_ye
                 WHERE {where_clause}
                 """
             )
-            params = {"selected_year": selected_year} if selected_year is not None and DATE_COLUMN in table["column_set"] else {}
+            params = {"selected_year": selected_year} if _uses_selected_year_param(table, selected_year) else {}
             row = conn.execute(query, params).mappings().one()
             for metric_key in IMPACT_METRIC_CONFIG:
                 totals[metric_key] += float(row[metric_key] or 0)
@@ -69,8 +113,9 @@ def _build_impact_timeline_query(
 ) -> str | None:
     where_conditions: list[str] = []
 
-    if DATE_COLUMN in table["column_set"]:
-        date_expression = _date_expression(DATE_COLUMN)
+    date_column_name = _resolve_date_column(table)
+    if date_column_name:
+        date_expression = _date_expression(date_column_name)
         where_conditions.append(f"{date_expression} IS NOT NULL")
         year_clause = _build_year_filter_clause(table, selected_year)
         if year_clause is None:
@@ -239,8 +284,9 @@ def _build_yearly_query(table: DashboardTableRef) -> str | None:
     table_name = quote_identifier(table["name"])
     area_expression = _area_expression(table)
 
-    if DATE_COLUMN in table["column_set"]:
-        year_expression = _year_expression(DATE_COLUMN)
+    date_column_name = _resolve_date_column(table)
+    if date_column_name:
+        year_expression = _year_expression(date_column_name)
         return f"""
             SELECT
                 {year_expression} AS year_value,
@@ -265,9 +311,11 @@ def _build_yearly_query(table: DashboardTableRef) -> str | None:
 
 
 def _fetch_table_years(conn: Any, table_name: str, column_set: set) -> list[int]:
-    if DATE_COLUMN not in column_set:
+    table_ref: DashboardTableRef = {"name": table_name, "column_set": set(column_set)}
+    date_column_name = _resolve_date_column(table_ref)
+    if not date_column_name:
         return []
-    year_expression = _year_expression(DATE_COLUMN)
+    year_expression = _year_expression(date_column_name)
     query = text(
         f"""
         SELECT DISTINCT {year_expression} AS year_value
@@ -282,29 +330,20 @@ def _fetch_table_years(conn: Any, table_name: str, column_set: set) -> list[int]
 def _build_year_filter_clause(table: DashboardTableRef, selected_year: int | None) -> str | None:
     if selected_year is None:
         return "TRUE"
-    if DATE_COLUMN in table["column_set"]:
-        return f"{_year_expression(DATE_COLUMN)} = :selected_year"
+    date_column_name = _resolve_date_column(table)
+    if date_column_name:
+        return f"{_year_expression(date_column_name)} = :selected_year"
     if table["table_year"] == selected_year:
         return "TRUE"
     return None
 
 
 def _year_expression(column_name: str) -> str:
-    column_sql = quote_identifier(column_name)
-    return f"NULLIF(SUBSTRING(CAST({column_sql} AS TEXT) FROM '([0-9]{{4}})'), '')::int"
+    return f"EXTRACT(YEAR FROM {_date_expression(column_name)})::int"
 
 
 def _month_expression(column_name: str) -> str:
-    column_sql = quote_identifier(column_name)
-    text_value = f"TRIM(CAST({column_sql} AS TEXT))"
-    return (
-        "CASE "
-        f"WHEN {text_value} ~ '^[0-9]{{4}}[-./][0-9]{{1,2}}[-./][0-9]{{1,2}}' "
-        f"THEN NULLIF(SUBSTRING({text_value} FROM '^[0-9]{{4}}[-./]([0-9]{{1,2}})'), '')::int "
-        f"WHEN {text_value} ~ '^[0-9]{{1,2}}[-./][0-9]{{1,2}}[-./][0-9]{{4}}' "
-        f"THEN NULLIF(SUBSTRING({text_value} FROM '^[0-9]{{1,2}}[-./]([0-9]{{1,2}})'), '')::int "
-        "ELSE NULL END"
-    )
+    return f"EXTRACT(MONTH FROM {_date_expression(column_name)})::int"
 
 
 def _area_expression(table: DashboardTableRef) -> str:
@@ -337,8 +376,10 @@ __all__ = [
     "_month_expression",
     "_numeric_expression_for_column",
     "_resolve_cause_column",
+    "_resolve_date_column",
     "_resolve_district_column",
     "_resolve_table_column_name",
     "_resolve_years_in_scope",
+    "_uses_selected_year_param",
     "_year_expression",
 ]

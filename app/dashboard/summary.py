@@ -12,6 +12,7 @@ from .charts import _build_yearly_plotly, _finalize_chart
 from .data_access import (
     _area_expression,
     _build_year_filter_clause,
+    _uses_selected_year_param,
     _build_yearly_query,
     _metric_expression,
     _resolve_years_in_scope,
@@ -64,7 +65,7 @@ def _collect_summary_table_rows(
                 WHERE {where_clause}
                 """
             )
-            params = {"selected_year": selected_year} if selected_year is not None and DATE_COLUMN in table["column_set"] else {}
+            params = {"selected_year": selected_year} if _uses_selected_year_param(table, selected_year) else {}
             row = conn.execute(query, params).mappings().one()
             summary_rows.append(
                 {

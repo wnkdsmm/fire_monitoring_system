@@ -18,6 +18,7 @@ from .data_access import (
     _build_impact_timeline_query,
     _build_year_filter_clause,
     _resolve_district_column,
+    _uses_selected_year_param,
 )
 from .impact_fire_metrics import _collect_cause_counts, _collect_month_counts
 from .types import (
@@ -109,7 +110,7 @@ def _collect_impact_timeline_rows(
         if query is None:
             continue
         queries.append(f"SELECT * FROM ({query}) AS impact_timeline_{index}")
-        if selected_year is not None and DATE_COLUMN in table["column_set"]:
+        if _uses_selected_year_param(table, selected_year):
             uses_selected_year_param = True
 
     if not queries:
@@ -210,7 +211,7 @@ def _build_sql_district_widget(selected_tables: list[DashboardTableRef], selecte
                 ORDER BY fire_count DESC
                 """
             )
-            params = {"selected_year": selected_year} if selected_year is not None and DATE_COLUMN in table["column_set"] else {}
+            params = {"selected_year": selected_year} if _uses_selected_year_param(table, selected_year) else {}
             for row in conn.execute(query, params).mappings().all():
                 grouped[row["label"]] += int(row["fire_count"] or 0)
 

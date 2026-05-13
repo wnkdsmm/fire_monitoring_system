@@ -60,6 +60,9 @@
                                     {% if not selected_tables and filters.table_name and filters.table_name != 'all' %}
                                         {% set selected_tables = [filters.table_name] %}
                                     {% endif %}
+                                    {% if not selected_tables and (not filters.table_name or filters.table_name == 'all') %}
+                                        {% set selected_tables = (filters.available_tables | rejectattr('value', 'equalto', 'all') | map(attribute='value') | list) %}
+                                    {% endif %}
                                     <span id="dashboardTableFilterSummary" class="dashboard-table-select-summary">
                                         {% if selected_tables %}Выбрано таблиц: {{ selected_tables|length }}{% else %}Выбраны все таблицы{% endif %}
                                     </span>
