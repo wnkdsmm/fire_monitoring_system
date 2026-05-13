@@ -41,6 +41,7 @@ CAUSE_COLUMNS = [
 
 FIRE_DATE_COLUMN_CANDIDATES = [
     DATE_COLUMN,
+    "Дата и время сообщения",
     "Дата пожара",
     "Дата возгорания",
     "Дата загорания",
