@@ -183,14 +183,19 @@ def ml_model_page(
     object_category: str = "all",
     current_user_date: str = "",
 ):
+    normalized_table_names = table_names if isinstance(table_names, list) else []
     page_kwargs = {
         "table_name": table_name,
-        "table_names": table_names or [],
         "cause": cause,
         "object_category": object_category,
+        "temperature": "",
+        "forecast_days": "7",
+        "history_window": "all",
         "current_user_date": current_user_date,
     }
-    ml_model = get_ml_model_shell_context(**page_kwargs, prefer_cached=False)
+    if normalized_table_names:
+        page_kwargs["table_names"] = normalized_table_names
+    ml_model = get_ml_model_shell_context(**page_kwargs, prefer_cached=True)
     return render_context_page(
         request,
         "ml_model.html",

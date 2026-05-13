@@ -21,7 +21,7 @@
             <select id="mlFutureYearFilter"></select>
         </label>
         <div class="filter-field ml-submit-field">
-            <button id="mlForecastButton" class="primary-action" type="button">Рассчитать ML</button>
+            <button id="mlRefreshButton" class="primary-action" type="button">Обновить сравнение</button>
         </div>
     </form>
     <div id="mlCompareChart" class="plotly-chart ml-plot{% if not data.compare_series or not data.compare_series.history_has_data %} is-empty{% endif %}"></div>

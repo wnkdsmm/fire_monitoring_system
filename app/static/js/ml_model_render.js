@@ -7,8 +7,6 @@
     var charts = global.MlModelCharts || {};
 
     var currentData = null;
-    var forcedFutureYear = '';
-    var forceAllTablesForMl = false;
 
     function parseYear(value) {
         var n = Number(String(value == null ? '' : value).trim());
@@ -108,7 +106,7 @@
     }
 
     function setBusy(isBusy) {
-        ['mlForecastButton'].forEach(function (id) {
+        ['mlRefreshButton'].forEach(function (id) {
             var button = byId(id);
             if (!button) {
                 return;
@@ -149,23 +147,11 @@
             ? filters.table_names.map(function (value) { return String(value || '').trim(); }).filter(function (value) { return value.length > 0; })
             : [];
         var tableName = String(filters.table_name || '').trim() || 'all';
-        if (forceAllTablesForMl) {
-            var fromAvailable = (Array.isArray(filters.available_tables) ? filters.available_tables : [])
-                .map(function (option) { return String((option && option.value) || '').trim(); })
-                .filter(function (value) { return value && value !== 'all'; });
-            if (fromAvailable.length) {
-                tableNames = fromAvailable;
-                tableName = 'all';
-            }
-        }
         var cause = String(filters.cause || '').trim() || 'all';
         var objectCategory = String(filters.object_category || '').trim() || 'all';
         var month = byId('mlMonthFilter') ? String(byId('mlMonthFilter').value || '').trim() : '';
         var yearA = byId('mlYearAFilter') ? String(byId('mlYearAFilter').value || '').trim() : '';
         var yearB = byId('mlYearBFilter') ? String(byId('mlYearBFilter').value || '').trim() : '';
-        if (forcedFutureYear) {
-            yearB = String(forcedFutureYear).trim();
-        }
         var years = collectAvailableYears(filters);
         ensureYearInList(years, yearA);
         ensureYearInList(years, yearB);
@@ -181,15 +167,13 @@
         };
     }
 
-    function runMlForecastForFutureYear() {
+    function syncFutureYearToYearB() {
         var futureYearNode = byId('mlFutureYearFilter');
         if (!futureYearNode) {
-            refreshCompareSeriesOnly();
             return;
         }
         var targetYear = String(futureYearNode.value || '').trim();
         if (!targetYear) {
-            refreshCompareSeriesOnly();
             return;
         }
         var yearBNode = byId('mlYearBFilter');
@@ -205,33 +189,6 @@
             }
             yearBNode.value = targetYear;
         }
-        forcedFutureYear = targetYear;
-        forceAllTablesForMl = true;
-        hideError();
-        api.startMlModelJob(
-            {
-                useLocationSearch: false,
-                buildPayload: function () {
-                    return collectFormFilters();
-                }
-            },
-            {
-                onBusyChange: function (isBusy) {
-                    setBusy(isBusy);
-                },
-                onCompleted: function (result) {
-                    applyData(result || {});
-                    forcedFutureYear = '';
-                    forceAllTablesForMl = false;
-                    refreshCompareSeriesOnly();
-                },
-                onError: function (message) {
-                    showError(message || 'Не удалось запустить ML-анализ. Попробуйте еще раз.');
-                    forceAllTablesForMl = false;
-                    forcedFutureYear = '';
-                }
-            }
-        );
     }
 
     function renderHero(data) {
@@ -374,12 +331,9 @@
                     compare_series: result.compare_series
                 }
             ));
-            forcedFutureYear = '';
-            forceAllTablesForMl = false;
         } catch (error) {
             showError((error && error.message) ? error.message : 'Нет данных для сравнения выбранных лет за выбранный месяц.');
             charts.renderCompareChart({}, 'mlCompareChart', 'mlCompareChartFallback', 'mlCompareChartSummary');
-            forceAllTablesForMl = false;
         } finally {
             setBusy(false);
         }
@@ -392,10 +346,11 @@
                 node.addEventListener('change', refreshCompareSeriesOnly);
             }
         });
-        var mlForecastButton = byId('mlForecastButton');
-        if (mlForecastButton) {
-            mlForecastButton.addEventListener('click', function () {
-                runMlForecastForFutureYear();
+        var mlRefreshButton = byId('mlRefreshButton');
+        if (mlRefreshButton) {
+            mlRefreshButton.addEventListener('click', function () {
+                syncFutureYearToYearB();
+                refreshCompareSeriesOnly();
             });
         }
     }

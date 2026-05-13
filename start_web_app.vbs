@@ -9,6 +9,7 @@ Dim existingAppUrl
 Dim venvPython, basePython
 Dim bootstrapCommand, startCommand, runCode
 Dim reqFilePath, installCode
+Dim databaseUrl, dbCheckCode
 
 Set shell = CreateObject("WScript.Shell")
 Set fso = CreateObject("Scripting.FileSystemObject")
@@ -44,6 +45,19 @@ End If
 Set envVars = LoadEnvFile(envFilePath)
 appHost = GetEnvOrDefault(envVars, "APP_HOST", "127.0.0.1")
 appPort = GetEnvOrDefault(envVars, "APP_PORT", "8000")
+databaseUrl = Trim(GetEnvOrDefault(envVars, "DATABASE_URL", ""))
+If Len(databaseUrl) = 0 Then
+    LogMessage "ERROR: DATABASE_URL is empty."
+    MsgBox "DATABASE_URL is not configured in .env." & vbCrLf & _
+           "Open .env and set DATABASE_URL before starting.", vbCritical, "Fire Data"
+    WScript.Quit 1
+End If
+If InStr(1, databaseUrl, "YOUR_PASSWORD", vbTextCompare) > 0 Then
+    LogMessage "ERROR: DATABASE_URL still contains placeholder password."
+    MsgBox "DATABASE_URL in .env still contains YOUR_PASSWORD." & vbCrLf & _
+           "Set the real PostgreSQL password and restart.", vbCritical, "Fire Data"
+    WScript.Quit 1
+End If
 existingAppUrl = FindRunningAppUrl(appHost, appPort, 20)
 If Len(existingAppUrl) > 0 Then
     LogMessage "Found already running app at " & existingAppUrl & ". Open browser only."
@@ -109,6 +123,15 @@ If Not HasRuntimeDeps(venvPython) Then
     End If
 Else
     LogMessage "Runtime dependencies in .venv: OK"
+End If
+
+dbCheckCode = CheckDatabaseConnection(projectRoot, venvPython, logFilePath)
+LogMessage "Database check exit code: " & CStr(dbCheckCode)
+If dbCheckCode <> 0 Then
+    MsgBox "Database connection failed." & vbCrLf & _
+           "Check DATABASE_URL and PostgreSQL availability." & vbCrLf & _
+           "See logs\startup.log for details.", vbCritical, "Fire Data"
+    WScript.Quit 1
 End If
 
 startCommand = _
@@ -396,6 +419,15 @@ Function InstallRequirements(rootPath, venvPythonPath, requirementsPath, startup
         "cmd /c cd /d " & Quote(rootPath) & _
         " && " & Quote(venvPythonPath) & " -m pip install --disable-pip-version-check --no-cache-dir -r " & Quote(requirementsPath)
     InstallRequirements = shell.Run(installCommand & " >> " & Quote(startupLogPath) & " 2>>&1", 0, True)
+End Function
+
+Function CheckDatabaseConnection(rootPath, venvPythonPath, startupLogPath)
+    Dim pythonCode, checkCommand
+    pythonCode = "from config.db import check_connection; ok,msg=check_connection(); print(msg); raise SystemExit(0 if ok else 1)"
+    checkCommand = _
+        "cmd /c cd /d " & Quote(rootPath) & _
+        " && " & Quote(venvPythonPath) & " -c " & Quote(pythonCode)
+    CheckDatabaseConnection = shell.Run(checkCommand & " >> " & Quote(startupLogPath) & " 2>>&1", 0, True)
 End Function
 
 Sub LogMessage(messageText)

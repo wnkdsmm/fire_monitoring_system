@@ -82,20 +82,32 @@ def _build_ml_deferred_shell_data(
     cause: str,
     object_category: str,
 ) -> MlPayload:
+    selected_table = str(request_state.get('selected_table') or 'all')
+    selected_tables = request_state.get('selected_tables')
+    if not isinstance(selected_tables, list):
+        selected_tables = [selected_table] if selected_table != 'all' else []
+    selected_table_label = str(
+        request_state.get('selected_table_label')
+        or _selected_table_label(selected_tables, selected_table=selected_table)
+    )
+    days_ahead = int(request_state.get('days_ahead') or FIXED_FORECAST_DAYS)
+    selected_history_window = str(request_state.get('selected_history_window') or 'all')
+    source_table_notes = request_state.get('source_table_notes') or []
+
     initial_data = _empty_ml_model_data(
-        request_state['table_options'],
-        request_state['selected_table'],
-        request_state['selected_tables'],
-        request_state['selected_table_label'],
-        request_state['days_ahead'],
+        request_state.get('table_options') or [],
+        selected_table,
+        selected_tables,
+        selected_table_label,
+        days_ahead,
         "",
-        request_state['selected_history_window'],
+        selected_history_window,
     )
     initial_data['bootstrap_mode'] = 'deferred'
     initial_data['charts']['importance']['empty_message'] = (
         'Собираем драйверы прогноза: блок заполнится после фонового расчёта.'
     )
-    initial_data['notes'].extend(request_state['source_table_notes'])
+    initial_data['notes'].extend(source_table_notes)
     initial_data['notes'] = _compact_ui_notes(initial_data['notes'])
     initial_data['filters']['cause'] = cause or 'all'
     initial_data['filters']['object_category'] = object_category or 'all'
@@ -151,14 +163,23 @@ def get_ml_model_shell_context(
     table_names: Sequence[str] | None = None,
     cause: str = 'all',
     object_category: str = 'all',
+    temperature: str = '',
+    forecast_days: str = str(FIXED_FORECAST_DAYS),
+    history_window: str = 'all',
     current_user_date: str = '',
     prefer_cached: bool = False,
     caches: MLModelCaches | None = None,
 ) -> MlContext:
+    del temperature, forecast_days, history_window
+
+    normalized_table_names: list[str] = []
+    if isinstance(table_names, (list, tuple, set)):
+        normalized_table_names = [str(item or '').strip() for item in table_names if str(item or '').strip()]
+
     cache_set = caches or _DEFAULT_CACHES
     request_state = _build_ml_request_state(
         table_name=table_name,
-        table_names=table_names,
+        table_names=normalized_table_names,
         cause=cause,
         object_category=object_category,
         current_user_date=current_user_date,

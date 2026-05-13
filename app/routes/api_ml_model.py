@@ -51,12 +51,36 @@ def start_ml_model_job_endpoint(request: Request, payload: dict = Body(...)):
         month = _parse_optional_int(payload, "month")
         year_a = _parse_optional_int(payload, "year_a")
         year_b = _parse_optional_int(payload, "year_b")
+        raw_district = payload.get("district_id")
+        if raw_district in (None, ""):
+            raw_district = payload.get("district")
+        district_id = str(raw_district or "all")
+
+        raw_horizon = payload.get("horizon")
+        if raw_horizon in (None, ""):
+            raw_horizon = payload.get("forecast_days")
+        if raw_horizon in (None, ""):
+            horizon = 7
+        else:
+            try:
+                horizon = int(raw_horizon)
+            except (TypeError, ValueError):
+                raise ValueError("Параметр horizon должен быть целым числом.")
+
+        raw_temperature_scenario = payload.get("temperature_scenario")
+        if raw_temperature_scenario in (None, ""):
+            raw_temperature_scenario = payload.get("temperature")
+        temperature_scenario = str(raw_temperature_scenario or "")
+
         return run_session_json_action(
             request,
             lambda session_id: start_ml_model_job(
                 session_id=session_id,
                 table_name=str(payload.get("table_name") or "all"),
                 table_names=table_names,
+                district_id=district_id,
+                horizon=horizon,
+                temperature_scenario=temperature_scenario,
                 cause=str(payload.get("cause") or "all"),
                 object_category=str(payload.get("object_category") or "all"),
                 current_user_date=str(payload.get("current_user_date") or ""),
