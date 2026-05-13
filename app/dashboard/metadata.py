@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any, Sequence
 
 from app.db_metadata import get_table_columns_cached, get_table_signature_cached
-from app.table_catalog import build_table_options, select_user_table_names
+from app.table_catalog import build_table_options, get_clean_table_names
 from app.statistics_constants import (
     BUILDING_CATEGORY_COLUMN,
     BUILDING_CAUSE_COLUMN,
@@ -70,7 +70,7 @@ def _collect_dashboard_metadata(table_names: Sequence[str | None] = None) -> dic
     resolved_table_names = (
         list(table_names)
         if table_names is not None
-        else list(select_user_table_names(list(get_table_signature_cached()), prefer_clean=True))
+        else list(get_clean_table_names(fallback_to_user=True))
     )
     resolved_table_names = _prefer_clean_source_tables(resolved_table_names)
 

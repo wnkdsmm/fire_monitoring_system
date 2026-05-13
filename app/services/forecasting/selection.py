@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Sequence
 
-from app.table_catalog import get_user_table_options, resolve_selected_table_value
+from app.table_catalog import get_clean_table_options, resolve_selected_table_value
 
 
 def _normalize_filter_value(value: str) -> str:
@@ -21,7 +21,7 @@ def _history_window_year_span(history_window: str) -> int:
 def _build_forecasting_table_options() -> list[dict[str, str]]:
     options = []
     seen = set()
-    for option in get_user_table_options(prefer_clean=True):
+    for option in get_clean_table_options(fallback_to_user=True):
         value = str(option.get("value") or "").strip()
         if not value or value == "all" or value in seen:
             continue

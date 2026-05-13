@@ -10,9 +10,9 @@ import copy
 import json
 from typing import Any
 
-from app.db_metadata import get_table_signature_cached, invalidate_db_metadata_cache
+from app.db_metadata import invalidate_db_metadata_cache
 from app.cache import CopyingTtlCache
-from app.table_catalog import select_user_table_names
+from app.table_catalog import get_clean_table_names
 
 from .metadata import _collect_dashboard_metadata
 
@@ -27,7 +27,7 @@ _DASHBOARD_CACHE = CopyingTtlCache[tuple[Any, ...], dict[str, Any]](
 
 
 def _current_dashboard_table_names() -> tuple[str, ...]:
-    return tuple(sorted(select_user_table_names(list(get_table_signature_cached()))))
+    return tuple(sorted(get_clean_table_names(fallback_to_user=True)))
 
 
 def _metadata_table_names(metadata: dict[str, Any] | None) -> tuple[str, ...]:

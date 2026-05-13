@@ -3,6 +3,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Body, File, Form, Request, UploadFile
 
 from app.state import job_store
+from app.runtime_invalidation import invalidate_runtime_caches
 
 from .api_common import run_session_json_action
 
@@ -43,6 +44,18 @@ def run_profiling_for_table(*, session_id: str, table_name: str, thresholds, job
     )
 
 
+def clear_runtime_cache(*, session_id: str) -> dict[str, object]:
+    warnings: list[str] = []
+    invalidate_runtime_caches(on_warning=warnings.append, include_metadata=True)
+    return {
+        "ok": True,
+        "status": "completed",
+        "message": "Runtime caches cleared.",
+        "warnings": warnings,
+        "session_id": session_id,
+    }
+
+
 @router.post("/upload")
 async def upload_file(request: Request, file: UploadFile = File(...), job_id: str | None = Form(None)):
     return run_session_json_action(
@@ -78,4 +91,12 @@ def run_profiling_endpoint(request: Request, payload: dict = Body(...)):
             thresholds=payload.get("thresholds"),
             job_id=raw_job_id or None,
         ),
+    )
+
+
+@router.post("/api/admin/clear-cache")
+def clear_cache_endpoint(request: Request):
+    return run_session_json_action(
+        request,
+        lambda session_id: clear_runtime_cache(session_id=session_id),
     )

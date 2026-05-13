@@ -47,8 +47,23 @@ def select_user_table_names(table_names: Sequence[str], *, prefer_clean: bool = 
     return list(selected_by_key.values())
 
 
+def select_clean_table_names(table_names: Sequence[str]) -> list[str]:
+    return [
+        normalized
+        for normalized in (_normalize_table_name(table_name) for table_name in table_names)
+        if normalized and is_clean_table_name(normalized)
+    ]
+
+
 def get_user_table_names(*, prefer_clean: bool = False) -> list[str]:
     return select_user_table_names(get_table_names_cached(), prefer_clean=prefer_clean)
+
+
+def get_clean_table_names(*, fallback_to_user: bool = False) -> list[str]:
+    clean_names = select_clean_table_names(get_table_names_cached())
+    if clean_names or not fallback_to_user:
+        return clean_names
+    return select_user_table_names(get_table_names_cached(), prefer_clean=False)
 
 
 def build_table_options(
@@ -79,6 +94,22 @@ def get_user_table_options(
         all_label=all_label,
         prefer_clean=prefer_clean,
     )
+
+
+def get_clean_table_options(
+    *,
+    include_all: bool = False,
+    all_label: str = _ALL_TABLES_LABEL,
+    fallback_to_user: bool = False,
+) -> list[dict[str, str]]:
+    table_names = get_clean_table_names(fallback_to_user=fallback_to_user)
+    options = [
+        {"value": table_name, "label": table_name}
+        for table_name in table_names
+    ]
+    if include_all:
+        return [{"value": "all", "label": all_label}, *options]
+    return options
 
 
 def resolve_selected_table_value(

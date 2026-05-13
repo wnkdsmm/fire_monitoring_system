@@ -20,7 +20,7 @@ from config.constants import (
     MEAN_SMOOTHING_PRIOR_STRENGTH,
     RATE_SMOOTHING_PRIOR_STRENGTH,
 )
-from app.table_catalog import get_user_table_names, get_user_table_options, resolve_selected_table_value
+from app.table_catalog import get_clean_table_names, get_clean_table_options, resolve_selected_table_value
 
 from app.services.forecast_risk.data import _collect_risk_inputs
 from app.services.forecast_risk.utils import _counter_top_label, _is_rural_label
@@ -90,10 +90,10 @@ def _summarize_support(entity_frame: pd.DataFrame) -> dict[str, float]:
 
 
 def _build_table_options() -> list[ClusteringTableOption]:
-    options = get_user_table_options(
+    options = get_clean_table_options(
         include_all=True,
         all_label=ALL_TABLES_LABEL,
-        prefer_clean=True,
+        fallback_to_user=True,
     )
     return [
         {"value": str(item.get("value") or ""), "label": str(item.get("label") or "")}
@@ -120,7 +120,7 @@ def _resolve_source_tables(table_name: str, table_names: Sequence[str] | None = 
     if table_names:
         available_tables = {
             item
-            for item in get_user_table_names(prefer_clean=True)
+            for item in get_clean_table_names(fallback_to_user=True)
             if item and not item.startswith(TABLE_EXCLUDED_PREFIXES)
         }
         explicit_tables: list[str] = []
@@ -139,7 +139,7 @@ def _resolve_source_tables(table_name: str, table_names: Sequence[str] | None = 
     if normalized == ALL_TABLES_VALUE:
         return [
             item
-            for item in get_user_table_names(prefer_clean=True)
+            for item in get_clean_table_names(fallback_to_user=True)
             if item and not item.startswith(TABLE_EXCLUDED_PREFIXES)
         ]
     return [normalized]

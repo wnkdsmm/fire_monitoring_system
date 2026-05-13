@@ -9,7 +9,7 @@ from app.services.shared.formatting import (
     format_percentage as _format_percentage,
 )
 from app.shared.sql_utils import quote_identifier
-from app.table_catalog import select_user_table_names
+from app.table_catalog import select_clean_table_names
 from config.constants import FORECASTING_FORECAST_DAY_OPTIONS
 
 DASHBOARD_HORIZON_OPTIONS: tuple[int, ...] = tuple(int(day) for day in FORECASTING_FORECAST_DAY_OPTIONS)
@@ -20,7 +20,7 @@ def build_horizon_day_options() -> list[dict[str, str]]:
 
 
 def _select_tables(table_names: list[str]) -> list[str]:
-    return select_user_table_names(table_names)
+    return select_clean_table_names(table_names)
 
 
 def _extract_year_from_name(table_name: str) -> int | None:

@@ -22,7 +22,7 @@ from app.services.shared.data_utils import (
     _to_float_or_none,
     _truthy_value,
 )
-from app.table_catalog import get_user_table_options, resolve_selected_table_value
+from app.table_catalog import get_clean_table_options, resolve_selected_table_value
 from config.db import engine
 
 from .constants import (
@@ -70,7 +70,7 @@ from .types import (
 
 
 def _build_access_points_table_options() -> list[OptionItem]:
-    return [{"value": "all", "label": "\u0412\u0441\u0435 \u0442\u0430\u0431\u043b\u0438\u0446\u044b"}, *get_user_table_options(prefer_clean=True)]
+    return [{"value": "all", "label": "\u0412\u0441\u0435 \u0442\u0430\u0431\u043b\u0438\u0446\u044b"}, *get_clean_table_options(fallback_to_user=True)]
 
 
 def _resolve_selected_table(table_options: Sequence[OptionItem], table_name: str) -> str:
