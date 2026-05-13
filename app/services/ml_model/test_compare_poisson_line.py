@@ -77,3 +77,17 @@ def test_compare_series_payload_contains_poisson_line_contract(monkeypatch) -> N
     first = compare["rows"][0]
     assert "d_value" in first
     assert first["d_source"] == "ml_model"
+
+
+def test_poisson_predictor_fallback_when_dependencies_unavailable(monkeypatch) -> None:
+    monkeypatch.setattr(core, "_load_poisson_dependencies", lambda: None)
+    daily_history = _build_daily_series(date(2024, 1, 1), 240, base=2.0)
+    preds, summary = core._predict_month_poisson_ml(
+        daily_history=daily_history,
+        target_year=2026,
+        target_month=5,
+    )
+    assert len(preds) == 31
+    assert summary["model_days"] == 0
+    assert summary["clipped_days"] == 31
+    assert all((value is not None and value >= 0.0) for value in preds.values())

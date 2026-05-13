@@ -6,9 +6,6 @@ import math
 import re
 from typing import Any, Sequence
 
-import numpy as np
-from sklearn.linear_model import PoissonRegressor
-
 from app.services.forecasting.data import (
     _build_forecasting_table_options,
     _resolve_forecasting_selection,
@@ -38,6 +35,15 @@ _DEFAULT_COMPARE_YEAR_A = 2024
 _DEFAULT_COMPARE_YEAR_B = 2025
 _DEFAULT_COMPARE_YEAR_ML_OFFSET = 3
 _YEAR_TOKEN_RE = re.compile(r"(19\d{2}|20\d{2}|2100)")
+
+
+def _load_poisson_dependencies() -> tuple[Any, Any] | None:
+    try:
+        import numpy as np  # type: ignore
+        from sklearn.linear_model import PoissonRegressor  # type: ignore
+    except Exception:
+        return None
+    return np, PoissonRegressor
 
 
 def _selected_table_label(table_names: Sequence[str], *, selected_table: str) -> str:
@@ -437,11 +443,21 @@ def _predict_month_poisson_ml(
             return max(0.0, float(sum(day_values) / float(len(day_values))))
         return global_mean
 
+    def _build_month_baseline() -> dict[int, float]:
+        return {day: _baseline_for_day(day) for day in range(1, month_days + 1)}
+
     # Fall back to day-of-month baseline when history is too short for lag features.
     if len(parsed_history) < 60:
-        baseline = {day: _baseline_for_day(day) for day in range(1, month_days + 1)}
+        baseline = _build_month_baseline()
         summary["clipped_days"] = month_days
         return baseline, summary
+
+    deps = _load_poisson_dependencies()
+    if deps is None:
+        baseline = _build_month_baseline()
+        summary["clipped_days"] = month_days
+        return baseline, summary
+    np, PoissonRegressor = deps
 
     def _build_features(day: date, value_lookup: dict[date, float], predicted_lookup: dict[date, float]) -> list[float]:
         def _lag_value(offset: int) -> float:
@@ -490,7 +506,7 @@ def _predict_month_poisson_ml(
         model = PoissonRegressor(alpha=0.05, max_iter=500)
         model.fit(np.asarray(X_train, dtype=float), np.asarray(y_train, dtype=float))
     except Exception:
-        baseline = {day: _baseline_for_day(day) for day in range(1, month_days + 1)}
+        baseline = _build_month_baseline()
         summary["clipped_days"] = month_days
         return baseline, summary
 
