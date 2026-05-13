@@ -34,7 +34,7 @@ def _build_dashboard_summary_series(
             selected_tables,
             metric="count",
             yearly_grouped=summary_bundle["yearly_grouped"],
-            include_plotly=False,
+            include_plotly=True,
         ),
         "table_breakdown_series": _build_table_breakdown_chart(
             selected_tables,

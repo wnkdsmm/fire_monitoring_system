@@ -12,6 +12,7 @@ from .charts import _build_yearly_plotly, _finalize_chart
 from .data_access import (
     _area_expression,
     _build_year_filter_clause,
+    _resolve_date_column,
     _uses_selected_year_param,
     _build_yearly_query,
     _metric_expression,
@@ -104,8 +105,9 @@ def _collect_dashboard_summary_bundle(
             metric_selects.append(f"COALESCE(SUM({metric_expression}), 0) AS {metric_key}")
         table_name_literal = _sql_string_literal(table["name"])
 
-        if DATE_COLUMN in table["column_set"]:
-            year_expression = _year_expression(DATE_COLUMN)
+        date_column_name = _resolve_date_column(table)
+        if date_column_name:
+            year_expression = _year_expression(date_column_name)
             query_parts.append(
                 f"""
                 SELECT
@@ -154,7 +156,8 @@ def _collect_dashboard_summary_bundle(
 
     for table in selected_tables:
         rows = rows_by_table.get(table["name"], [])
-        if DATE_COLUMN in table["column_set"] or table["table_year"] is not None:
+        date_column_name = _resolve_date_column(table)
+        if date_column_name or table["table_year"] is not None:
             for row in rows:
                 year_value = row["year_value"]
                 if year_value is None:
@@ -166,7 +169,7 @@ def _collect_dashboard_summary_bundle(
         if _build_year_filter_clause(table, selected_year) is None:
             continue
 
-        if DATE_COLUMN in table["column_set"] and selected_year is not None:
+        if date_column_name and selected_year is not None:
             rows_for_summary = [
                 row
                 for row in rows

@@ -106,8 +106,12 @@
             ? global.location.search.replace(/^\?/, '')
             : buildQueryFromForm(settings.formId || 'mlModelForm');
         var query = withCurrentUserDate(baseQuery);
+        var body = buildPayloadFromQuery(query);
+        if (typeof settings.buildPayload === 'function') {
+            body = settings.buildPayload(body) || body;
+        }
         return {
-            body: buildPayloadFromQuery(query),
+            body: body,
             query: query
         };
     }

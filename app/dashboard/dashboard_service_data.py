@@ -389,7 +389,8 @@ def get_dashboard_data(
                 if cached is not None:
                     if not include_charts:
                         cached = dict(cached)
-                        cached["charts"] = {}
+                        charts = dict(cached.get("charts") or {})
+                        cached["charts"] = {"yearly_trend": charts.get("yearly_trend") or {}}
                     perf.update(
                         cache_hit=True,
                         available_tables=len(metadata["table_options"]),
@@ -412,7 +413,8 @@ def get_dashboard_data(
                 if cached is not None:
                     if not include_charts:
                         cached = dict(cached)
-                        cached["charts"] = {}
+                        charts = dict(cached.get("charts") or {})
+                        cached["charts"] = {"yearly_trend": charts.get("yearly_trend") or {}}
                     _update_dashboard_filter_metrics(
                         perf,
                         metadata=metadata,
@@ -458,7 +460,8 @@ def get_dashboard_data(
                     horizon_days=request_state["horizon_days"],
                 )
                 if not include_charts:
-                    data["charts"] = {}
+                    charts = dict(data.get("charts") or {})
+                    data["charts"] = {"yearly_trend": charts.get("yearly_trend") or {}}
                 perf.update(
                     payload_has_data=bool(data["has_data"]),
                     payload_notes=len(data.get("notes") or []),

@@ -144,7 +144,15 @@ async function fetchDashboardData() {
     function bootstrap() {
         var initialData = state.getInitialData();
         var isDeferredBootstrap = !!(initialData && initialData.bootstrap_mode === 'deferred');
-        var shouldFetchOnLoad = !initialData || isDeferredBootstrap;
+        var initialCharts = initialData && initialData.charts ? initialData.charts : {};
+        var initialYearlyTrend = initialCharts && initialCharts.yearly_trend ? initialCharts.yearly_trend : null;
+        var hasInitialYearlyTrendPlotly = !!(
+            initialYearlyTrend
+            && initialYearlyTrend.plotly
+            && Array.isArray(initialYearlyTrend.plotly.data)
+            && initialYearlyTrend.plotly.data.length
+        );
+        var shouldFetchOnLoad = !initialData || isDeferredBootstrap || !hasInitialYearlyTrendPlotly;
 
         if (initialData && !isDeferredBootstrap) {
             renderApi.renderDashboardCharts(initialData.charts || {});

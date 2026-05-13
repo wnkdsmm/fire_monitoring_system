@@ -190,7 +190,7 @@ def ml_model_page(
         "object_category": object_category,
         "current_user_date": current_user_date,
     }
-    ml_model = get_ml_model_shell_context(**page_kwargs, prefer_cached=True)
+    ml_model = get_ml_model_shell_context(**page_kwargs, prefer_cached=False)
     return render_context_page(
         request,
         "ml_model.html",

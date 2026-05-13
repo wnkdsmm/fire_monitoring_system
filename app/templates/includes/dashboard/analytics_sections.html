@@ -25,18 +25,7 @@
                                 <h2>Динамика показателей по годам</h2>
                                 <span class="panel-meta">Многолетнее изменение интенсивности пожарной обстановки в выбранном срезе.</span>
                             </div>
-                            <div id="recentYearsList" class="ranking-list">
-                                {% if rankings.recent_years %}
-                                    {% for item in rankings.recent_years %}
-                                    <div class="ranking-row ranking-row-year" title="{{ item.label }}: {{ item.value_display }}">
-                                        <div class="ranking-label">{{ item.label }}</div>
-                                        <div class="ranking-meta">{{ item.value_display }}</div>
-                                    </div>
-                                    {% endfor %}
-                                {% else %}
-                                <div class="mini-empty">Недостаточно данных для межгодового анализа.</div>
-                                {% endif %}
-                            </div>
+                            {{ render_plotly_chart('recentYearsChart', 'График: динамика количества пожаров по годам') }}
                         </article>
 
                         <article class="panel ranking-panel">

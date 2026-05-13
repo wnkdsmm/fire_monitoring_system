@@ -57,6 +57,7 @@
         renderPlotlyInContainer(safeCharts.yearly_fires, 'yearlyFiresChart');
         renderPlotlyInContainer(safeCharts.distribution, 'distributionChart');
         renderPlotlyInContainer(safeCharts.yearly_area, 'yearlyAreaChart');
+        renderPlotlyInContainer(safeCharts.yearly_trend, 'recentYearsChart');
         renderPlotlyInContainer(safeCharts.cumulative_area, 'cumulativeAreaChart');
         renderPlotlyInContainer(safeCharts.monthly_heatmap, 'monthlyHeatmapChart');
         renderPlotlyInContainer(safeCharts.monthly_profile, 'monthlyProfileChart');
@@ -68,6 +69,7 @@
             'yearlyFiresChart',
             'distributionChart',
             'yearlyAreaChart',
+            'recentYearsChart',
             'cumulativeAreaChart',
             'monthlyHeatmapChart',
             'monthlyProfileChart',

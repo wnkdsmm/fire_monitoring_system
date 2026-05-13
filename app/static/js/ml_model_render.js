@@ -136,6 +136,13 @@
         node.classList.add('is-hidden');
     }
 
+    function normalizeDashEscapes(value) {
+        var text = String(value == null ? '' : value);
+        return text
+            .replace(/\\u2014/g, '—')
+            .replace(/\\u2013/g, '–');
+    }
+
     function collectFormFilters() {
         var filters = (currentData && currentData.filters) || {};
         var tableNames = Array.isArray(filters.table_names)
@@ -200,7 +207,31 @@
         }
         forcedFutureYear = targetYear;
         forceAllTablesForMl = true;
-        refreshCompareSeriesOnly();
+        hideError();
+        api.startMlModelJob(
+            {
+                useLocationSearch: false,
+                buildPayload: function () {
+                    return collectFormFilters();
+                }
+            },
+            {
+                onBusyChange: function (isBusy) {
+                    setBusy(isBusy);
+                },
+                onCompleted: function (result) {
+                    applyData(result || {});
+                    forcedFutureYear = '';
+                    forceAllTablesForMl = false;
+                    refreshCompareSeriesOnly();
+                },
+                onError: function (message) {
+                    showError(message || 'Не удалось запустить ML-анализ. Попробуйте еще раз.');
+                    forceAllTablesForMl = false;
+                    forcedFutureYear = '';
+                }
+            }
+        );
     }
 
     function renderHero(data) {
@@ -249,9 +280,9 @@
             cards.innerHTML = rows.map(function (item) {
                 return ''
                     + '<article class="stat-card">'
-                    + '<span class="stat-label">' + escapeHtml(item.label || '-') + '</span>'
-                    + '<strong class="stat-value">' + escapeHtml(item.value || '-') + '</strong>'
-                    + '<span class="stat-foot">' + escapeHtml(item.meta || '') + '</span>'
+                    + '<span class="stat-label">' + escapeHtml(normalizeDashEscapes(item.label || '-')) + '</span>'
+                    + '<strong class="stat-value">' + escapeHtml(normalizeDashEscapes(item.value || '-')) + '</strong>'
+                    + '<span class="stat-foot">' + escapeHtml(normalizeDashEscapes(item.meta || '')) + '</span>'
                     + '</article>';
             }).join('');
         }
@@ -267,14 +298,14 @@
                 + '<thead><tr><th>Метод</th><th>Роль</th><th>MAE</th><th>RMSE</th><th>sMAPE</th><th>Девиация Пуассона</th><th>ΔMAE к базовой модели</th><th>Статус</th></tr></thead>'
                 + '<tbody>' + countRows.map(function (row) {
                     return '<tr>'
-                        + '<td>' + escapeHtml(row.method_label || '-') + '</td>'
-                        + '<td>' + escapeHtml(row.role_label || '-') + '</td>'
-                        + '<td>' + escapeHtml(row.mae_display || '-') + '</td>'
-                        + '<td>' + escapeHtml(row.rmse_display || '-') + '</td>'
-                        + '<td>' + escapeHtml(row.smape_display || '-') + '</td>'
-                        + '<td>' + escapeHtml(row.poisson_display || '-') + '</td>'
-                        + '<td>' + escapeHtml(row.mae_delta_display || '-') + '</td>'
-                        + '<td>' + escapeHtml(row.selection_label || '-') + '</td>'
+                        + '<td>' + escapeHtml(normalizeDashEscapes(row.method_label || '-')) + '</td>'
+                        + '<td>' + escapeHtml(normalizeDashEscapes(row.role_label || '-')) + '</td>'
+                        + '<td>' + escapeHtml(normalizeDashEscapes(row.mae_display || '-')) + '</td>'
+                        + '<td>' + escapeHtml(normalizeDashEscapes(row.rmse_display || '-')) + '</td>'
+                        + '<td>' + escapeHtml(normalizeDashEscapes(row.smape_display || '-')) + '</td>'
+                        + '<td>' + escapeHtml(normalizeDashEscapes(row.poisson_display || '-')) + '</td>'
+                        + '<td>' + escapeHtml(normalizeDashEscapes(row.mae_delta_display || '-')) + '</td>'
+                        + '<td>' + escapeHtml(normalizeDashEscapes(row.selection_label || '-')) + '</td>'
                         + '</tr>';
                 }).join('') + '</tbody></table>';
         }
@@ -335,10 +366,14 @@
                 charts.renderCompareChart({}, 'mlCompareChart', 'mlCompareChartFallback', 'mlCompareChartSummary');
                 return;
             }
-            applyData({
-                filters: Object.assign({}, currentData && currentData.filters ? currentData.filters : {}, result.filters || {}),
-                compare_series: result.compare_series
-            });
+            applyData(Object.assign(
+                {},
+                currentData || {},
+                {
+                    filters: Object.assign({}, currentData && currentData.filters ? currentData.filters : {}, result.filters || {}),
+                    compare_series: result.compare_series
+                }
+            ));
             forcedFutureYear = '';
             forceAllTablesForMl = false;
         } catch (error) {
