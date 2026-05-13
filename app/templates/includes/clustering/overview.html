@@ -53,6 +53,9 @@
                         {% if not selected_tables and filters.table_name and filters.table_name != 'all' %}
                             {% set selected_tables = [filters.table_name] %}
                         {% endif %}
+                        {% if not selected_tables and (not filters.table_name or filters.table_name == 'all') %}
+                            {% set selected_tables = (filters.available_tables | rejectattr('value', 'equalto', 'all') | map(attribute='value') | list) %}
+                        {% endif %}
                         {% for option in filters.available_tables if option.value != 'all' %}
                         <label class="cluster-table-checklist-item">
                             <input type="checkbox" name="table_names" value="{{ option.value }}" {% if option.value in selected_tables %}checked{% endif %}>
@@ -61,7 +64,6 @@
                         {% endfor %}
                     </div>
                 </div>
-                <div id="clusterTableFilterSelectedList" class="cluster-table-selected-list"></div>
             </label>
             <label class="filter-field">
                 <span>Число кластеров</span>
@@ -74,6 +76,20 @@
             <div class="filter-field filter-actions">
                 <span>Действие</span>
                 <button id="clusterRefreshButton" class="primary-action" type="submit">Пересчитать кластеры</button>
+            </div>
+            <div class="filter-field-wide cluster-selected-panel">
+                {% set selected_tables_preview = filters.table_names if filters.table_names is defined else [] %}
+                {% if not selected_tables_preview and filters.table_name and filters.table_name != 'all' %}
+                    {% set selected_tables_preview = [filters.table_name] %}
+                {% endif %}
+                {% if not selected_tables_preview and (not filters.table_name or filters.table_name == 'all') %}
+                    {% set selected_tables_preview = (filters.available_tables | rejectattr('value', 'equalto', 'all') | map(attribute='value') | list) %}
+                {% endif %}
+                <div id="clusterTableFilterSelectedList" class="cluster-table-selected-list">
+                    {% for table_name in selected_tables_preview %}
+                    <span class="selected-table-chip" title="{{ table_name }}">{{ table_name }}</span>
+                    {% endfor %}
+                </div>
             </div>
 
             <div class="cluster-feature-picker filter-field-wide" id="clusteringFeaturePicker">

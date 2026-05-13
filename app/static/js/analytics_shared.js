@@ -137,6 +137,10 @@
         var singleSelectedPrefix = settings.singleSelectedPrefix || selectedPrefix;
         var selectedListPrefix = settings.selectedListPrefix || '\u0422\u0430\u0431\u043b\u0438\u0446\u044b: ';
         var maxSummaryNames = Number.isFinite(settings.maxSummaryNames) ? settings.maxSummaryNames : 2;
+        var compactSelectedList = Boolean(settings.compactSelectedList);
+        var selectedListMode = String(settings.selectedListMode || 'text').toLowerCase();
+        var maxSelectedListChips = Number.isFinite(settings.maxSelectedListChips) ? settings.maxSelectedListChips : 2;
+        var selectAllWhenEmpty = Boolean(settings.selectAllWhenEmpty);
         var esc = typeof uiHelpers.escapeHtml === 'function'
             ? uiHelpers.escapeHtml
             : function (value) {
@@ -189,7 +193,19 @@
                 return;
             }
             var list = Array.isArray(values) ? values : [];
-            labelNode.textContent = list.length ? (selectedListPrefix + list.join(', ')) : allSelectedLabel;
+            if (!list.length) {
+                labelNode.textContent = allSelectedLabel;
+                return;
+            }
+            if (selectedListMode === 'chips') {
+                labelNode.innerHTML = list.map(function (name) {
+                    return '<span class="selected-table-chip" title="' + esc(name) + '">' + esc(name) + '</span>';
+                }).join('');
+                return;
+            }
+            labelNode.textContent = compactSelectedList
+                ? summarizeSelected(list)
+                : (selectedListPrefix + list.join(', '));
         }
 
         function renderChecklist(options, selectedValues) {
@@ -202,13 +218,16 @@
             var normalizedSelected = (Array.isArray(selectedValues) ? selectedValues : [])
                 .map(normalizeValue)
                 .filter(function (value) { return value.length > 0; });
-            var selectedSet = new Set(normalizedSelected);
             var safeOptions = Array.isArray(options)
                 ? options.filter(function (option) {
                     var optionValue = normalizeValue(option && option.value);
                     return optionValue && optionValue !== 'all';
                 })
                 : [];
+            if (selectAllWhenEmpty && !normalizedSelected.length) {
+                normalizedSelected = safeOptions.map(function (option) { return normalizeValue(option.value); });
+            }
+            var selectedSet = new Set(normalizedSelected);
 
             container.innerHTML = safeOptions.map(function (option) {
                 var value = normalizeValue(option.value);

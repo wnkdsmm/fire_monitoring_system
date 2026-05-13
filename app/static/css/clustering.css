@@ -14,6 +14,8 @@
 
 .cluster-table-select {
     position: relative;
+    flex: 1 1 60%;
+    min-width: 0;
 }
 
 .cluster-table-select-toggle {
@@ -105,13 +107,49 @@
 }
 
 .cluster-table-selected-list {
-    margin-top: 6px;
+    margin-top: 0;
     color: var(--color-token-06);
-    font-size: var(--font-size-token-07);
+    font-size: var(--font-size-token-08);
     line-height: 1.35;
     letter-spacing: 0;
     text-transform: none;
-    word-break: break-word;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.cluster-selected-panel {
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-control);
+    background: var(--surface-panel);
+}
+
+.cluster-table-selected-list .selected-table-chip {
+    display: inline-flex;
+    align-items: center;
+    min-width: 0;
+    max-width: 148px;
+    padding: 4px 8px;
+    border-radius: var(--radius-pill);
+    background: var(--accent-soft);
+    color: var(--accent-deep);
+    font-size: var(--font-size-token-07);
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cluster-table-selected-list .selected-table-chip-more {
+    max-width: none;
+    padding-inline: 8px;
+}
+
+@media (max-width: 900px) {
+    .cluster-selected-panel {
+        padding: 8px 10px;
+    }
 }
 
 .cluster-feature-picker {

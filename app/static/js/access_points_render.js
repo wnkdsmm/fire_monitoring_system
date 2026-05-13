@@ -22,7 +22,11 @@
                     toggleId: 'accessPointsTableFilterToggle',
                     summaryId: 'accessPointsTableFilterSummary',
                     selectedListId: 'accessPointsTableFilterSelectedList',
-                    itemClassName: 'access-points-table-checklist-item'
+                    itemClassName: 'access-points-table-checklist-item',
+                    compactSelectedList: true,
+                    selectedListMode: 'chips',
+                    maxSelectedListChips: 4,
+                    selectAllWhenEmpty: true
                 })
                 : null;
 
@@ -119,7 +123,7 @@ function showLoading(message) {
         setText('accessPointsLead', data.top_point_explanation || 'Недостаточно данных для выделения приоритетных точек.');
         setText('accessPointsTableLabel', summary.selected_table_label || 'Все таблицы');
         setText('accessPointsDistrictLabel', summary.selected_district_label || 'Все районы');
-        setText('accessPointsLimitLabel', summary.limit_display || '25');
+        setText('accessPointsLimitLabel', summary.limit_display || '50');
         setText('accessPointsHeroLabel', data.top_point_label || '-');
         setText(
             'accessPointsHeroMeta',
@@ -414,7 +418,6 @@ function showLoading(message) {
         renderTableChecklist(filters.available_tables, selectedTableNames);
         setTableChecklistOpen(false);
         setSelectOptions('accessPointsDistrictFilter', filters.available_districts, filters.district, 'Все районы');
-        setSelectOptions('accessPointsLimitFilter', filters.available_limits, filters.limit, 'Топ 25');
         renderFeaturePicker(filters);
     }
     function renderCharts(charts) {

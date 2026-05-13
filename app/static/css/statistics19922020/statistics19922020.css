@@ -165,6 +165,14 @@
     margin-top: 6px;
 }
 
+.statistics19922020-reference-path {
+    display: inline-block;
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
 @media (max-width: 640px) {
     .statistics19922020-role-label {
         white-space: normal;

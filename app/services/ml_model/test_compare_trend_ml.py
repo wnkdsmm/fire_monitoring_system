@@ -6,7 +6,7 @@ from app.services.ml_model import core as ml_core
 from app.services.ml_model.caches import create_default_caches
 
 
-def test_compare_ml_uses_cross_year_trend_not_only_last_year(monkeypatch) -> None:
+def test_compare_ml_does_not_backfill_with_heuristics_when_ml_not_ready(monkeypatch) -> None:
     caches = create_default_caches()
 
     def _fake_request_state(**_kwargs):
@@ -32,7 +32,7 @@ def test_compare_ml_uses_cross_year_trend_not_only_last_year(monkeypatch) -> Non
             "selected_object_category": "all",
         }
 
-    # Day 1 trend by years: 2021->1, 2022->3, 2023->5, 2024->7 => 2026 should be ~11
+    # Sparse history: ML training is not ready, so compare mode should not inject heuristic values.
     daily_history = [
         {"date": date(2021, 5, 1), "count": 1.0},
         {"date": date(2022, 5, 1), "count": 3.0},
@@ -51,5 +51,4 @@ def test_compare_ml_uses_cross_year_trend_not_only_last_year(monkeypatch) -> Non
     rows = (payload.get("compare_series") or {}).get("rows") or []
     first = rows[0]
     assert first["a_source"] == "ml"
-    assert abs(float(first["a_value"]) - 11.0) < 1e-6
-
+    assert first["a_value"] is None

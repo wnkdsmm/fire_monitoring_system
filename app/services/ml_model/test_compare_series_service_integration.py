@@ -179,7 +179,7 @@ def test_compare_service_returns_non_empty_rows_when_data_available(monkeypatch)
     assert any((row.get("a_value") is not None or row.get("b_value") is not None) for row in rows)
 
 
-def test_compare_service_past_years_build_with_sparse_facts_using_retro_fill(monkeypatch) -> None:
+def test_compare_service_sparse_history_does_not_use_heuristic_fill(monkeypatch) -> None:
     caches = create_default_caches()
     monkeypatch.setattr(ml_core, "_build_ml_request_state", lambda **kwargs: _fake_request_state(month=5, year_a=2024, year_b=2023))
     monkeypatch.setattr(ml_core, "_load_ml_filter_bundle", lambda **_k: {"option_catalog": {}, "metadata_items": [], "preload_notes": [], "selected_cause": "all", "selected_object_category": "all"})
@@ -199,10 +199,10 @@ def test_compare_service_past_years_build_with_sparse_facts_using_retro_fill(mon
     payload = ml_core.get_ml_compare_series_data(month=5, year_a=2024, year_b=2023, caches=caches)
     rows = payload["compare_series"]["rows"]
     assert rows
-    assert any(row.get("a_value") is not None for row in rows)
-    assert any(row.get("b_value") is not None for row in rows)
     assert any(row.get("a_source") == "ml" for row in rows)
     assert any(row.get("b_source") == "ml" for row in rows)
+    assert all(row.get("a_value") is None for row in rows)
+    assert all(row.get("b_value") is None for row in rows)
 
 
 def test_compare_service_history_has_data_flag(monkeypatch) -> None:
@@ -258,15 +258,14 @@ def test_compare_service_july_2024_2023_history_first_hard_regression_f829337(mo
     rows = compare["rows"]
 
     assert len(rows) == 31
-    assert all((row.get("a_value") is not None and row.get("b_value") is not None) for row in rows)
 
     by_day = {int(row["day"]): row for row in rows}
     assert by_day[15]["a_source"] == "fact"
     assert by_day[10]["b_source"] == "fact"
     assert by_day[1]["a_source"] == "ml"
     assert by_day[1]["b_source"] == "ml"
-    assert by_day[1]["a_value"] is not None
-    assert by_day[1]["b_value"] is not None
+    assert by_day[1]["a_value"] is None
+    assert by_day[1]["b_value"] is None
 
 
 def test_compare_service_rebuilds_legacy_cached_payload_without_history_flag(monkeypatch) -> None:
@@ -315,7 +314,7 @@ def test_compare_service_rebuilds_legacy_cached_payload_without_history_flag(mon
     rows = compare["rows"]
     assert compare.get("history_has_data") is True
     assert len(rows) == 31
-    assert any((row.get("a_value") is not None or row.get("b_value") is not None) for row in rows)
+    assert all((row.get("a_value") is None and row.get("b_value") is None) for row in rows)
 
 
 def test_compare_service_may_2020_vs_2018_returns_history_has_data_true_when_points_exist(monkeypatch) -> None:
@@ -343,7 +342,7 @@ def test_compare_service_may_2020_vs_2018_returns_history_has_data_true_when_poi
     assert compare["history_has_data"] is True
 
 
-def test_compare_service_caps_overheated_linear_extrapolation(monkeypatch) -> None:
+def test_compare_service_without_ml_ready_returns_empty_ml_points(monkeypatch) -> None:
     caches = create_default_caches()
     monkeypatch.setattr(ml_core, "_build_ml_request_state", lambda **kwargs: _fake_request_state(month=5, year_a=2030, year_b=2024))
     monkeypatch.setattr(ml_core, "_load_ml_filter_bundle", lambda **_k: {"option_catalog": {}, "metadata_items": [], "preload_notes": [], "selected_cause": "all", "selected_object_category": "all"})
@@ -363,4 +362,4 @@ def test_compare_service_caps_overheated_linear_extrapolation(monkeypatch) -> No
     payload = ml_core.get_ml_compare_series_data(month=5, year_a=2030, year_b=2024, caches=caches)
     compare = payload["compare_series"]
     first_day = next(row for row in compare["rows"] if int(row.get("day") or 0) == 1)
-    assert float(first_day["a_value"]) <= 32.5
+    assert first_day["a_value"] is None

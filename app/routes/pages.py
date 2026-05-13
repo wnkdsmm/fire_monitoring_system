@@ -239,7 +239,7 @@ def access_points_page(
     table_names: list[str] | None = Query(None),
     district: str = "all",
     year: str = "all",
-    limit: str = "25",
+    limit: str = "50",
     feature_columns: list[str] | None = Query(None),
 ):
     access_points = get_access_points_shell_context(

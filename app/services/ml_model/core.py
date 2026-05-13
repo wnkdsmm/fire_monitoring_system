@@ -33,7 +33,7 @@ from app.services.shared.request_state import (
 )
 from config.db import engine
 
-from .ml_model_config_types import FIXED_FORECAST_DAYS, ML_CACHE_SCHEMA_VERSION, MlProgressCallback, _emit_progress
+from .ml_model_config_types import FIXED_FORECAST_DAYS, MIN_DAILY_HISTORY, ML_CACHE_SCHEMA_VERSION, MlProgressCallback, _emit_progress
 from .caches import MLModelCaches, create_default_caches
 from .training.data_access import (
     clear_ml_model_input_cache,
@@ -614,105 +614,54 @@ def _build_compare_series_payload(
 ) -> dict[str, Any]:
     ml_rows_cache: dict[tuple[int, int], dict[int, float | None]] = {}
     history_has_data = bool(daily_history)
-    facts_by_ymd: dict[tuple[int, int, int], float] = {}
-    month_values: dict[int, list[float]] = {}
-    month_weekday_values: dict[tuple[int, int], list[float]] = {}
-    month_day_values_by_year: dict[tuple[int, int], dict[int, float]] = {}
 
-    for row in daily_history:
-        row_date = _parse_optional_iso_date(str(row.get('date') or ''))
-        if row_date is None:
-            continue
-        raw_value = row.get('count')
-        if raw_value is None:
-            continue
-        try:
-            row_value = float(raw_value)
-        except (TypeError, ValueError):
-            continue
-        facts_by_ymd[(int(row_date.year), int(row_date.month), int(row_date.day))] = row_value
-        month_values.setdefault(int(row_date.month), []).append(row_value)
-        month_weekday_values.setdefault((int(row_date.month), int(row_date.weekday())), []).append(row_value)
-        year_month_key = (int(row_date.year), int(row_date.month))
-        if year_month_key not in month_day_values_by_year:
-            month_day_values_by_year[year_month_key] = {}
-        month_day_values_by_year[year_month_key][int(row_date.day)] = row_value
-
-    def _avg(values: list[float]) -> float:
-        if not values:
-            return 0.0
-        positive_values = [value for value in values if value > 0]
-        base = positive_values if positive_values else values
-        return float(sum(base) / len(base))
-
-    def _median(values: list[float]) -> float:
-        if not values:
-            return 0.0
-        ordered = sorted(values)
-        mid = len(ordered) // 2
-        if len(ordered) % 2 == 1:
-            return float(ordered[mid])
-        return float((ordered[mid - 1] + ordered[mid]) / 2.0)
-
-    def _percentile(values: list[float], q: float) -> float:
-        if not values:
-            return 0.0
-        ordered = sorted(values)
-        if len(ordered) == 1:
-            return float(ordered[0])
-        rank = max(0.0, min(1.0, q)) * (len(ordered) - 1)
-        low = int(rank)
-        high = min(low + 1, len(ordered) - 1)
-        weight = rank - low
-        return float(ordered[low] * (1.0 - weight) + ordered[high] * weight)
-
-    def _retro_predict_missing_day(target_year: int, target_month: int, target_day: int) -> float:
-        month_positive_values = [value for value in month_values.get(int(target_month), []) if value > 0]
-        if month_positive_values:
-            month_median = _median(month_positive_values)
-            month_p75 = _percentile(month_positive_values, 0.75)
-            month_ceiling = min(
-                max(month_positive_values) * 1.25,
-                month_p75 * 1.35,
-                month_median * 2.20,
+    def _predict_month_with_trained_ml(target_year: int, target_month: int) -> dict[int, float | None]:
+        month_start = date(int(target_year), int(target_month), 1)
+        month_days = int(monthrange(int(target_year), int(target_month))[1])
+        history_before_month: list[dict[str, Any]] = []
+        for row in daily_history:
+            row_date = _parse_optional_iso_date(str(row.get('date') or ''))
+            if row_date is None or row_date >= month_start:
+                continue
+            raw_count = row.get('count')
+            if raw_count is None:
+                continue
+            try:
+                count_value = float(raw_count)
+            except (TypeError, ValueError):
+                continue
+            history_before_month.append(
+                {
+                    'date': row_date.isoformat(),
+                    'count': count_value,
+                    'avg_temperature': row.get('avg_temperature'),
+                }
             )
-        else:
-            month_ceiling = None
 
-        def _apply_ceiling(value: float) -> float:
-            if month_ceiling is None:
-                return float(value)
-            return float(min(value, month_ceiling))
+        if len(history_before_month) < MIN_DAILY_HISTORY:
+            return {}
 
-        # a) same day/month robust baseline across all years
-        same_day_candidates: list[tuple[int, float]] = []
-        for (row_year, row_month, row_day), row_value in facts_by_ymd.items():
-            if row_month == target_month and row_day == target_day and row_year != target_year:
-                same_day_candidates.append((int(row_year), float(row_value)))
-        positive_same_day_candidates = [item for item in same_day_candidates if item[1] > 0]
-        if positive_same_day_candidates:
-            same_day_candidates = positive_same_day_candidates
-        if same_day_candidates:
-            values = [item[1] for item in same_day_candidates]
-            return _apply_ceiling(_median(values))
+        ml_payload = _train_ml_model(
+            daily_history=history_before_month,
+            forecast_days=month_days,
+            scenario_temperature=scenario_temperature,
+            current_user_date=month_start,
+            caches=caches,
+        )
+        if not bool(ml_payload.get('is_ready')):
+            return {}
 
-        # b) monthly average for this weekday
-        try:
-            target_weekday = date(int(target_year), int(target_month), int(target_day)).weekday()
-        except ValueError:
-            target_weekday = None
-        if target_weekday is not None:
-            weekday_values = month_weekday_values.get((int(target_month), int(target_weekday)), [])
-            if weekday_values:
-                return _apply_ceiling(_avg(weekday_values))
-
-        # c) monthly average
-        by_month = month_values.get(int(target_month), [])
-        if by_month:
-            return _apply_ceiling(_avg(by_month))
-
-        # d) fallback zero
-        return 0.0
+        month_rows: dict[int, float | None] = {}
+        for row in ml_payload.get('forecast_rows', []) or []:
+            row_date = _parse_optional_iso_date(str(row.get('date') or ''))
+            if row_date is None or row_date.year != int(target_year) or row_date.month != int(target_month):
+                continue
+            try:
+                forecast_value = float(row.get('forecast_value'))
+            except (TypeError, ValueError):
+                continue
+            month_rows[int(row_date.day)] = max(0.0, forecast_value)
+        return month_rows
 
     facts_by_year_day: dict[tuple[int, int], set[int]] = {}
     for row in daily_history:
@@ -762,13 +711,8 @@ def _build_compare_series_payload(
             ml_rows_cache[cache_key] = {}
             return ml_rows_cache[cache_key]
         ml_invoked_by_year[int(year_value)] = True
-        month_rows: dict[int, float | None] = {}
-        for day in sorted(needed_days):
-            month_rows[int(day)] = _retro_predict_missing_day(
-                target_year=int(year_value),
-                target_month=int(month_value),
-                target_day=int(day),
-            )
+        month_rows = _predict_month_with_trained_ml(int(year_value), int(month_value))
+        month_rows = {int(day): month_rows.get(int(day)) for day in needed_days} if month_rows else {}
         ml_rows_cache[cache_key] = month_rows
         return month_rows
 

@@ -150,26 +150,32 @@ def _build_cause_plotly(title: str, items: list[ChartData], empty_message: str) 
     if not items:
         return _empty_plotly_payload(empty_message)
     ordered_items = list(reversed(items))
+    max_value = max((float(item.get("value") or 0) for item in ordered_items), default=0.0)
     plotly_payload = build_item_horizontal_bar_payload(
         ordered_items,
         layout=_plotly_layout("Количество пожаров", showlegend=False),
-        y_values=[_wrap_plotly_label(item["label"], max_width=64, max_lines=3) for item in ordered_items],
+        y_values=[_wrap_plotly_label(item["label"], max_width=44, max_lines=2) for item in ordered_items],
         hovertemplate="<b>%{customdata}</b><br>Пожаров: %{text}<extra></extra>",
         color=PLOTLY_PALETTE["fire"],
         line_color=PLOTLY_PALETTE["fire_soft"],
         customdata=[item["label"] for item in ordered_items],
         layout_updates=merge_plotly_layout(
             updates={
-                "height": min(700, max(420, 42 * len(items) + 100)),
-                "margin": {"l": 420, "r": 72, "t": 20, "b": 36},
-                "bargap": 0.62,
+                "height": min(430, max(300, 27 * len(items) + 56)),
+                "margin": {"l": 270, "r": 72, "t": 10, "b": 20},
+                "bargap": 0.5,
             },
-            xaxis={"automargin": True, "tickfont": {"size": 12}},
-            yaxis={"automargin": True, "tickfont": {"size": 15}},
+            xaxis={
+                "automargin": True,
+                "tickfont": {"size": 11},
+                "range": [0, max_value * 1.16 if max_value > 0 else 1],
+            },
+            yaxis={"automargin": True, "tickfont": {"size": 11}},
         ),
     )
     if plotly_payload.get("data"):
-        plotly_payload["data"][0]["textfont"] = {"size": 13}
+        plotly_payload["data"][0]["textfont"] = {"size": 11}
+        plotly_payload["data"][0]["cliponaxis"] = False
     return plotly_payload
 
 

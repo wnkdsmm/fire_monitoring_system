@@ -19,7 +19,7 @@ def access_points_data_endpoint(
     table_names: list[str] | None = Query(None),
     district: str = "all",
     year: str = "all",
-    limit: str = "25",
+    limit: str = "50",
     feature_columns: list[str] | None = Query(None),
 ):
     return run_analytics_request(

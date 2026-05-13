@@ -26,7 +26,6 @@
             table_names: tableNames,
             district: String(formData.get('district') || 'all'),
             year: 'all',
-            limit: String(formData.get('limit') || '25'),
             feature_columns: formData.getAll('feature_columns').map(function (value) {
                 return String(value || '').trim();
             }).filter(Boolean)
@@ -49,7 +48,6 @@
             query.set('table_name', params.table_name || 'all');
         }
         query.set('district', params.district || 'all');
-        query.set('limit', params.limit || '25');
         (Array.isArray(params.feature_columns) ? params.feature_columns : []).forEach(function (value) {
             query.append('feature_columns', value);
         });

@@ -52,6 +52,7 @@ from .presentation import (
 )
 
 _ACCESS_POINTS_CACHE = CopyingTtlCache(ttl_seconds=None)
+_AUTO_ACCESS_POINT_LIMIT = 50
 
 
 def clear_access_points_cache() -> None:
@@ -170,7 +171,7 @@ def _build_access_points_request_state(
     table_names: list[str] | None = None,
     district: str = "all",
     year: str = "all",
-    limit: str = "25",
+    limit: str = "50",
     feature_columns: list[str] | None = None,
 ) -> dict[str, Any]:
     table_options = _build_access_points_table_options()
@@ -183,7 +184,7 @@ def _build_access_points_request_state(
         source_tables = _selected_source_tables(table_options, selected_table)
         if selected_table and selected_table != "all":
             selected_table_names = [selected_table]
-    parsed_limit = _parse_limit(limit)
+    parsed_limit = _AUTO_ACCESS_POINT_LIMIT
     normalized_feature_columns = _normalize_access_point_feature_columns(feature_columns)
     cache_key = _build_access_points_cache_key(
         selected_table=selected_table,
@@ -223,7 +224,7 @@ def get_access_points_shell_context(
     table_names: list[str] | None = None,
     district: str = "all",
     year: str = "all",
-    limit: str = "25",
+    limit: str = "50",
     feature_columns: list[str] | None = None,
 ) -> dict[str, Any]:
     request_state = _build_access_points_request_state(
@@ -304,7 +305,7 @@ def get_access_points_data(
     table_names: list[str] | None = None,
     district: str = "all",
     year: str = "all",
-    limit: str = "25",
+    limit: str = "50",
     feature_columns: list[str] | None = None,
 ) -> dict[str, Any]:
     request_state = _build_access_points_request_state(

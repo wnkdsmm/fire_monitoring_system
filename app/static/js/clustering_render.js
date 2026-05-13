@@ -23,7 +23,11 @@
                     toggleId: 'clusterTableFilterToggle',
                     summaryId: 'clusterTableFilterSummary',
                     selectedListId: 'clusterTableFilterSelectedList',
-                    itemClassName: 'cluster-table-checklist-item'
+                    itemClassName: 'cluster-table-checklist-item',
+                    compactSelectedList: true,
+                    selectedListMode: 'chips',
+                    maxSelectedListChips: 4,
+                    selectAllWhenEmpty: true
                 })
                 : null;
 
@@ -381,4 +385,3 @@ function applyClusteringData(data) {
         }
     };
 }(window));
-

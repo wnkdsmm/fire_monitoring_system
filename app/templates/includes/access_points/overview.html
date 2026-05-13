@@ -27,7 +27,7 @@
     <section class="panel filters-panel">
         <div class="panel-head">
             <h2>Фильтры рейтинга</h2>
-            <span class="panel-meta">Настройка рейтинга по таблицам, району и объему выборки верхних позиций.</span>
+            <span class="panel-meta">Настройка рейтинга по таблицам и району.</span>
         </div>
         <form class="filters-grid access-points-form-grid" id="accessPointsForm" method="get" action="/access-points">
             <label class="filter-field">
@@ -54,6 +54,9 @@
                         {% if not selected_tables and filters.table_name and filters.table_name != 'all' %}
                             {% set selected_tables = [filters.table_name] %}
                         {% endif %}
+                        {% if not selected_tables and (not filters.table_name or filters.table_name == 'all') %}
+                            {% set selected_tables = (filters.available_tables | rejectattr('value', 'equalto', 'all') | map(attribute='value') | list) %}
+                        {% endif %}
                         {% for option in filters.available_tables if option.value != 'all' %}
                         <label class="access-points-table-checklist-item">
                             <input type="checkbox" name="table_names" value="{{ option.value }}" {% if option.value in selected_tables %}checked{% endif %}>
@@ -62,7 +65,6 @@
                         {% endfor %}
                     </div>
                 </div>
-                <div id="accessPointsTableFilterSelectedList" class="access-points-table-selected-list"></div>
             </label>
             <label class="filter-field">
                 <span>Район</span>
@@ -72,17 +74,23 @@
                     {% endfor %}
                 </select>
             </label>
-            <label class="filter-field">
-                <span>Размер выборки</span>
-                <select id="accessPointsLimitFilter" name="limit">
-                    {% for option in filters.available_limits %}
-                    <option value="{{ option.value }}" {% if option.value == filters.limit %}selected{% endif %}>{{ option.label }}</option>
-                    {% endfor %}
-                </select>
-            </label>
             <div class="filter-field filter-actions">
                 <span>Действие</span>
                 <button id="accessPointsRefreshButton" class="primary-action" type="submit">Пересчитать рейтинг</button>
+            </div>
+            <div class="filter-field-wide access-points-selected-panel">
+                {% set selected_tables_preview = filters.table_names if filters.table_names is defined else [] %}
+                {% if not selected_tables_preview and filters.table_name and filters.table_name != 'all' %}
+                    {% set selected_tables_preview = [filters.table_name] %}
+                {% endif %}
+                {% if not selected_tables_preview and (not filters.table_name or filters.table_name == 'all') %}
+                    {% set selected_tables_preview = (filters.available_tables | rejectattr('value', 'equalto', 'all') | map(attribute='value') | list) %}
+                {% endif %}
+                <div id="accessPointsTableFilterSelectedList" class="access-points-table-selected-list">
+                    {% for table_name in selected_tables_preview %}
+                    <span class="selected-table-chip" title="{{ table_name }}">{{ table_name }}</span>
+                    {% endfor %}
+                </div>
             </div>
             <div class="access-point-feature-picker filter-field-wide" id="accessPointsFeaturePicker">
                 <span>Факторы расчетного балла</span>
