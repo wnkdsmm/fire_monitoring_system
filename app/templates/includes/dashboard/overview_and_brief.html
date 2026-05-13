@@ -91,14 +91,14 @@
                             <span>Действие</span>
                             <button id="refreshDashboardButton" class="primary-action" type="submit">Обновить аналитический срез</button>
                         </div>
-                        <div class="filter-field-wide dashboard-selected-panel">
-                            <div id="dashboardTableFilterSelectedList" class="dashboard-table-selected-list">
-                                {% for table_name in selected_tables %}
-                                <span class="selected-table-chip" title="{{ table_name }}">{{ table_name }}</span>
-                                {% endfor %}
-                            </div>
-                        </div>
                     </form>
+                    <div class="dashboard-selected-panel">
+                        <div id="dashboardTableFilterSelectedList" class="dashboard-table-selected-list">
+                            {% for table_name in selected_tables %}
+                            <span class="selected-table-chip" title="{{ table_name }}">{{ table_name }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
                 </section>
 
                 <div id="dashboardInlineError" class="analysis-error-card is-hidden" aria-live="polite">

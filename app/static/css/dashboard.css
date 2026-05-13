@@ -206,7 +206,7 @@
 }
 
 .dashboard-selected-panel {
-    grid-column: 1 / -1;
+    margin-top: 12px;
     padding: 10px 12px;
     border: 1px solid var(--line);
     border-radius: var(--radius-control);
