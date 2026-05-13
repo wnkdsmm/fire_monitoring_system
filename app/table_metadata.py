@@ -29,7 +29,14 @@ def _natural_sort_key(value: str) -> tuple[object, ...]:
 
 def get_all_tables(*, force_refresh: bool = False) -> list[str]:
     table_names = get_table_names_cached(force_refresh=force_refresh)
-    return sorted(table_names, key=_natural_sort_key)
+    visible_tables: list[str] = []
+    for table_name in table_names:
+        try:
+            if get_table_columns_cached(table_name, force_refresh=force_refresh):
+                visible_tables.append(table_name)
+        except Exception:
+            continue
+    return sorted(visible_tables, key=_natural_sort_key)
 
 
 def get_table_columns(table_name: str, *, force_refresh: bool = False) -> list[str]:

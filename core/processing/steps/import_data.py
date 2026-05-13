@@ -13,6 +13,29 @@ logger = logging.getLogger(__name__)
 _CSV_FALLBACK_ENCODINGS = ("utf-8-sig", "windows-1251", "latin-1")
 
 
+def _is_valid_tabular_frame(df: pd.DataFrame) -> bool:
+    if df is None or list(df.columns) == []:
+        return False
+    if len(df.columns) == 1:
+        only_column = str(df.columns[0]).strip().lower()
+        if only_column.startswith("unnamed"):
+            return False
+    return True
+
+
+def _read_excel_best_sheet(input_file: str, *, engine_name: str) -> pd.DataFrame:
+    workbook = pd.ExcelFile(input_file, engine=engine_name)
+    last_df: pd.DataFrame | None = None
+    for sheet_name in workbook.sheet_names:
+        df = pd.read_excel(workbook, sheet_name=sheet_name, engine=engine_name)
+        last_df = df
+        if _is_valid_tabular_frame(df):
+            return df
+    if last_df is not None:
+        return last_df
+    raise ValueError(f"Workbook {input_file!r} has no sheets.")
+
+
 def _detect_csv_encoding(input_file: str) -> str | None:
     try:
         import chardet
@@ -46,13 +69,13 @@ def _read_csv(input_file: str) -> pd.DataFrame:
 def _read_tabular_data(input_file: str, ext: str) -> pd.DataFrame:
     if ext == ".xls":
         try:
-            return pd.read_excel(input_file, engine="xlrd")
+            return _read_excel_best_sheet(input_file, engine_name="xlrd")
         except ImportError as exc:
             raise ImportError(
                 "Reading .xls requires xlrd>=2.0.1. Install dependency and restart the app."
             ) from exc
     if ext == ".xlsx":
-        return pd.read_excel(input_file, engine="openpyxl")
+        return _read_excel_best_sheet(input_file, engine_name="openpyxl")
     if ext == ".csv":
         return _read_csv(input_file)
     raise ValueError("Only XLS, XLSX and CSV are supported")
@@ -77,6 +100,9 @@ class ImportDataStep(PipelineStep):
         except Exception:
             logger.exception("Failed to read input file: %s", input_file)
             raise
+
+        if not _is_valid_tabular_frame(self.data):
+            raise ValueError("Input file has no valid table columns. Please check header row and file format.")
 
         os.makedirs(output_folder, exist_ok=True)
 

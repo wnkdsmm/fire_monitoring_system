@@ -81,3 +81,17 @@ def test_compare_chart_marks_ml_in_legend_and_summary() -> None:
     assert "d_quality" in source
     assert "Poisson quality" in source
     assert "ML-model (Poisson)" in source
+    assert "Качество Poisson сейчас недоступно" in source
+    assert "Compare-series совпадает с Год 2 для текущих параметров." in source
+
+
+def test_compare_reading_guide_template_present() -> None:
+    source = Path("app/templates/includes/ml_model/_controls_overview.html").read_text(encoding="utf-8")
+    assert "Как читать график" in source
+    assert "ML-prog (Poisson)" in source
+    assert "MAE" in source
+    assert "RMSE" in source
+    assert "sMAPE" in source
+    assert "n=" in source
+    assert "folds" in source
+    assert "Качество Poisson сейчас недоступно" not in source

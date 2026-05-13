@@ -496,6 +496,7 @@ def import_uploaded_data(
     job = job_store.resolve_job(session_id=session_id, job_id=job_id, kind="import")
     if job is None or job.current_file_path is None or not job.current_file_path.exists():
         return {
+            "ok": False,
             "status": "Файл не загружен",
             "rows": 0,
             "columns": 0,
@@ -510,7 +511,7 @@ def import_uploaded_data(
     if output_folder:
         resolved = (RESULTS_DIR / Path(output_folder).name).resolve()
         if not str(resolved).startswith(str(RESULTS_DIR.resolve())):
-            return {"status": "error", "message": "Недопустимый путь к папке результатов", "job_id": job_id or ""}
+            return {"ok": False, "status": "error", "message": "Недопустимый путь к папке результатов", "job_id": job_id or ""}
         output_folder = str(resolved)
 
     settings = Settings(
@@ -536,6 +537,7 @@ def import_uploaded_data(
 
         if step.data is not None:
             return {
+                "ok": True,
                 "status": "Импорт выполнен успешно",
                 "rows": step.data.shape[0],
                 "columns": step.data.shape[1],
@@ -545,6 +547,7 @@ def import_uploaded_data(
             }
 
         return {
+            "ok": False,
             "status": "Импорт завершён, но данные недоступны",
             "rows": 0,
             "columns": 0,
@@ -555,6 +558,7 @@ def import_uploaded_data(
         error_msg = f"Ошибка импорта: {exc}"
         add_log(session_id, resolved_job_id, error_msg)
         return {
+            "ok": False,
             "status": error_msg,
             "rows": 0,
             "columns": 0,

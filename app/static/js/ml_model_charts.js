@@ -12,6 +12,28 @@
         return n.toFixed(2);
     }
 
+    function renderGuideHint(compareSeries, overlapBC) {
+        var hintNode = byId('mlCompareGuideHint');
+        if (!hintNode) {
+            return;
+        }
+        var hints = [];
+        var quality = (compareSeries && compareSeries.d_quality) || {};
+        if (quality.quality_available === false) {
+            hints.push('Качество Poisson сейчас недоступно: ' + String(quality.reason || 'insufficient_history'));
+        }
+        if (overlapBC) {
+            hints.push('Compare-series совпадает с Год 2 для текущих параметров.');
+        }
+        if (!hints.length) {
+            hintNode.textContent = '';
+            hintNode.classList.add('is-hidden');
+            return;
+        }
+        hintNode.textContent = hints.join(' ');
+        hintNode.classList.remove('is-hidden');
+    }
+
     function applyLegendDecorators(root) {
         var scope = root && typeof root.querySelectorAll === 'function' ? root : document;
         Array.prototype.forEach.call(scope.querySelectorAll('[data-legend-color]'), function (node) {
@@ -147,6 +169,7 @@
             if (cPoints) {
                 // Allow rendering chart when only Compare-series has points.
             } else {
+                renderGuideHint(data, overlapBC);
                 renderFallback(chartNode, fallbackNode, 'Нет данных для сравнения выбранных лет за выбранный месяц.');
                 if (summaryNode) {
                     summaryNode.textContent = '';
@@ -156,6 +179,7 @@
         }
 
         if (!rows.length || (!aPoints && !bPoints && !cPoints && !dPoints)) {
+            renderGuideHint(data, overlapBC);
             renderFallback(chartNode, fallbackNode, 'Нет данных для сравнения выбранных лет за выбранный месяц.');
             if (summaryNode) {
                 summaryNode.textContent = '';
@@ -273,6 +297,7 @@
             + '<div class="ml-chart-shell">' + svg + '</div>';
         applyLegendDecorators(chartNode);
         wirePointTooltips(chartNode);
+        renderGuideHint(data, overlapBC);
 
         if (summaryNode) {
             var aSummary = data.a_summary || {};

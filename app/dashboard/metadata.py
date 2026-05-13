@@ -34,7 +34,7 @@ def _source_table_canonical_key(table_name: str) -> str:
     return normalized.casefold()
 
 
-def _prefer_original_source_tables(table_names: Sequence[str]) -> list[str]:
+def _prefer_clean_source_tables(table_names: Sequence[str]) -> list[str]:
     selected_by_key: dict[str, str] = {}
     for raw_name in table_names:
         normalized = str(raw_name or "").strip()
@@ -47,7 +47,7 @@ def _prefer_original_source_tables(table_names: Sequence[str]) -> list[str]:
             continue
         current_is_clean = _is_clean_source_table(current)
         normalized_is_clean = _is_clean_source_table(normalized)
-        if current_is_clean and not normalized_is_clean:
+        if normalized_is_clean and not current_is_clean:
             selected_by_key[key] = normalized
     return list(selected_by_key.values())
 
@@ -61,7 +61,7 @@ def _resolve_original_table_name(table_name: str, available_tables: Sequence[str
         candidate_name = str(candidate or "").strip()
         if not candidate_name:
             continue
-        if _source_table_canonical_key(candidate_name) == canonical and not _is_clean_source_table(candidate_name):
+        if _source_table_canonical_key(candidate_name) == canonical and _is_clean_source_table(candidate_name):
             return candidate_name
     return normalized
 
@@ -70,9 +70,9 @@ def _collect_dashboard_metadata(table_names: Sequence[str | None] = None) -> dic
     resolved_table_names = (
         list(table_names)
         if table_names is not None
-        else list(select_user_table_names(list(get_table_signature_cached())))
+        else list(select_user_table_names(list(get_table_signature_cached()), prefer_clean=True))
     )
-    resolved_table_names = _prefer_original_source_tables(resolved_table_names)
+    resolved_table_names = _prefer_clean_source_tables(resolved_table_names)
 
     tables: list[dict[str, Any]] = []
     errors: list[str] = []

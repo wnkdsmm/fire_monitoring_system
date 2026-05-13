@@ -24,5 +24,48 @@
     <div id="mlCompareChart" class="plotly-chart ml-plot{% if not data.compare_series or not data.compare_series.history_has_data %} is-empty{% endif %}"></div>
     <div id="mlCompareChartFallback" class="chart-empty{% if data.compare_series and data.compare_series.history_has_data %} is-hidden{% endif %}">Нет данных для сравнения выбранных лет за выбранный месяц.</div>
     <p id="mlCompareChartSummary" class="panel-meta"></p>
+    <section class="ml-reading-guide" aria-label="Как читать график compare-series">
+        <div class="ml-reading-guide-head">
+            <h3>Как читать график</h3>
+            <p class="panel-meta">4 линии показывают факт и два типа модельных оценок для выбранного месяца.</p>
+        </div>
+        <ul class="ml-reading-lines">
+            <li><span class="ml-line-chip ml-line-chip-year-a"></span><strong>Год 1:</strong> факт + ML-достройка пропусков.</li>
+            <li><span class="ml-line-chip ml-line-chip-year-b"></span><strong>Год 2:</strong> факт + ML-достройка пропусков.</li>
+            <li><span class="ml-line-chip ml-line-chip-compare"></span><strong>Compare-series:</strong> сравнительная расчётная линия для Год ML (эвристика системы).</li>
+            <li><span class="ml-line-chip ml-line-chip-poisson"></span><strong>ML-prog (Poisson):</strong> отдельный прогноз модели PoissonRegressor.</li>
+        </ul>
+        <p id="mlCompareGuideHint" class="ml-reading-hint is-hidden"></p>
+        <details class="ml-reading-details" aria-label="Подробнее о логике сравнения и качестве Poisson">
+            <summary>Подробнее</summary>
+            <div class="ml-reading-grid">
+                <article>
+                    <h4>Источник точек</h4>
+                    <ul>
+                        <li><strong>факт:</strong> реальное наблюдение.</li>
+                        <li><strong>ML:</strong> эвристическая достройка пропусков.</li>
+                        <li><strong>ML-model (Poisson):</strong> прогноз PoissonRegressor.</li>
+                    </ul>
+                </article>
+                <article>
+                    <h4>Как читать качество Poisson</h4>
+                    <ul>
+                        <li><strong>MAE:</strong> средняя абсолютная ошибка, меньше лучше.</li>
+                        <li><strong>RMSE:</strong> сильнее штрафует большие промахи, меньше лучше.</li>
+                        <li><strong>sMAPE:</strong> относительная ошибка в %, ближе к 0 лучше.</li>
+                        <li><strong>n=</strong> число фактических точек в оценке.</li>
+                        <li><strong>folds</strong> число backtest-сплитов.</li>
+                    </ul>
+                </article>
+                <article>
+                    <h4>Ограничения</h4>
+                    <ul>
+                        <li>При нехватке истории метрики могут быть недоступны.</li>
+                        <li>Прогноз не заменяет факт, а дополняет анализ.</li>
+                    </ul>
+                </article>
+            </div>
+        </details>
+    </section>
     <div id="mlCompareError" class="chart-empty is-hidden"></div>
 </section>

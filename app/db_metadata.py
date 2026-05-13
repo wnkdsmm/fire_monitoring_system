@@ -80,6 +80,9 @@ def get_table_columns_cached(table_name: str, force_refresh: bool = False) -> li
             return list(cached)
 
     table_names = get_table_names_cached(force_refresh=force_refresh)
+    if normalized_name not in table_names and not force_refresh:
+        # Defensive retry for just-created tables when metadata cache is stale.
+        table_names = get_table_names_cached(force_refresh=True)
     if normalized_name not in table_names:
         raise ValueError(f"Table '{normalized_name}' does not exist")
 
