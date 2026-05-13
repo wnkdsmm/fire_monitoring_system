@@ -55,6 +55,12 @@
         }
     }
 
+    function clearAllTableNames() {
+        if (accessPointsTableChecklist && typeof accessPointsTableChecklist.clearAll === 'function') {
+            accessPointsTableChecklist.clearAll();
+        }
+    }
+
     function setTableChecklistOpen(isOpen) {
         if (accessPointsTableChecklist && typeof accessPointsTableChecklist.setOpen === 'function') {
             accessPointsTableChecklist.setOpen(isOpen);
@@ -454,6 +460,7 @@ function showLoading(message) {
                 render: render,
                 renderCharts: renderCharts,
                 selectAllTableNames: selectAllTableNames,
+                clearAllTableNames: clearAllTableNames,
                 setTableChecklistOpen: setTableChecklistOpen,
                 showError: showError,
                 showLoading: showLoading,

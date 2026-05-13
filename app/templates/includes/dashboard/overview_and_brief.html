@@ -47,46 +47,56 @@
                     <form class="filters-grid filters-grid-dashboard" id="filtersForm" method="get" action="/">
                         <label class="filter-field">
                             <span>Таблицы</span>
-                            <div id="dashboardTableFilter" class="dashboard-table-select">
-                                <button
-                                    id="dashboardTableFilterToggle"
-                                    class="dashboard-table-select-toggle"
-                                    type="button"
-                                    aria-haspopup="true"
-                                    aria-expanded="false"
-                                    aria-controls="dashboardTableFilterMenu"
-                                >
-                                    {% set selected_tables = filters.table_names if filters.table_names is defined else [] %}
-                                    {% if not selected_tables and filters.table_name and filters.table_name != 'all' %}
-                                        {% set selected_tables = [filters.table_name] %}
-                                    {% endif %}
-                                    {% if not selected_tables and (not filters.table_name or filters.table_name == 'all') %}
-                                        {% set selected_tables = (filters.available_tables | rejectattr('value', 'equalto', 'all') | map(attribute='value') | list) %}
-                                    {% endif %}
-                                    <span id="dashboardTableFilterSummary" class="dashboard-table-select-summary">
-                                        {% if selected_tables %}Выбрано таблиц: {{ selected_tables|length }}{% else %}Выбраны все таблицы{% endif %}
-                                    </span>
-                                    <span class="dashboard-table-select-caret" aria-hidden="true">▾</span>
-                                </button>
-                                <div
-                                    id="dashboardTableFilterMenu"
-                                    class="dashboard-table-checklist is-hidden"
-                                    role="group"
-                                    aria-label="Выбор таблиц для аналитического среза"
-                                >
-                                    {% for option in filters.available_tables if option.value != 'all' %}
-                                    <label class="dashboard-table-checklist-item">
-                                        <input type="checkbox" name="table_names" value="{{ option.value }}" {% if option.value in selected_tables %}checked{% endif %}>
-                                        <span>{{ option.label }}</span>
-                                    </label>
-                                    {% endfor %}
+                            {% set selected_tables = filters.table_names if filters.table_names is defined else [] %}
+                            {% if not selected_tables and filters.table_name and filters.table_name != 'all' %}
+                                {% set selected_tables = [filters.table_name] %}
+                            {% endif %}
+                            {% if not selected_tables and (not filters.table_name or filters.table_name == 'all') %}
+                                {% set selected_tables = (filters.available_tables | rejectattr('value', 'equalto', 'all') | map(attribute='value') | list) %}
+                            {% endif %}
+                            <div class="dashboard-table-control-row">
+                                <div id="dashboardTableFilter" class="dashboard-table-select">
+                                    <button
+                                        id="dashboardTableFilterToggle"
+                                        class="dashboard-table-select-toggle"
+                                        type="button"
+                                        aria-haspopup="true"
+                                        aria-expanded="false"
+                                        aria-controls="dashboardTableFilterMenu"
+                                    >
+                                        <span id="dashboardTableFilterSummary" class="dashboard-table-select-summary">
+                                            {% if selected_tables %}Выбрано таблиц: {{ selected_tables|length }}{% else %}Выбраны все таблицы{% endif %}
+                                        </span>
+                                        <span class="dashboard-table-select-caret" aria-hidden="true">▾</span>
+                                    </button>
+                                    <div
+                                        id="dashboardTableFilterMenu"
+                                        class="dashboard-table-checklist is-hidden"
+                                        role="group"
+                                        aria-label="Выбор таблиц для аналитического среза"
+                                    >
+                                        {% for option in filters.available_tables if option.value != 'all' %}
+                                        <label class="dashboard-table-checklist-item">
+                                            <input type="checkbox" name="table_names" value="{{ option.value }}" {% if option.value in selected_tables %}checked{% endif %}>
+                                            <span>{{ option.label }}</span>
+                                        </label>
+                                        {% endfor %}
+                                    </div>
                                 </div>
+                                <button id="dashboardTableSelectAllButton" class="table-mini-action" type="button">Выбрать все</button>
+                                <button id="dashboardTableClearAllButton" class="table-mini-action" type="button">Убрать все</button>
                             </div>
-                            <div id="dashboardTableFilterSelectedList" class="dashboard-table-selected-list"></div>
                         </label>
                         <div class="filter-field filter-actions">
                             <span>Действие</span>
                             <button id="refreshDashboardButton" class="primary-action" type="submit">Обновить аналитический срез</button>
+                        </div>
+                        <div class="filter-field-wide dashboard-selected-panel">
+                            <div id="dashboardTableFilterSelectedList" class="dashboard-table-selected-list">
+                                {% for table_name in selected_tables %}
+                                <span class="selected-table-chip" title="{{ table_name }}">{{ table_name }}</span>
+                                {% endfor %}
+                            </div>
                         </div>
                     </form>
                 </section>

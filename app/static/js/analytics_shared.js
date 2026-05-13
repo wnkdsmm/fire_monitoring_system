@@ -264,6 +264,15 @@
             return syncSummary();
         }
 
+        function clearAll() {
+            if (!menuId) { return []; }
+            Array.prototype.forEach.call(
+                document.querySelectorAll('#' + menuId + ' input[name="' + checkboxName + '"]:checked'),
+                function (checkbox) { checkbox.checked = false; }
+            );
+            return syncSummary();
+        }
+
         function setOpen(isOpen) {
             var root = getNode(rootId);
             var menu = getNode(menuId);
@@ -282,6 +291,7 @@
             renderSelectedLabel: renderSelectedLabel,
             setOpen: setOpen,
             selectAll: selectAll,
+            clearAll: clearAll,
             summarizeSelected: summarizeSelected,
             syncSummary: syncSummary
         };

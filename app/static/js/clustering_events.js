@@ -11,6 +11,8 @@
             var form = byId('clusteringForm');
             var tableFilterRoot = byId('clusterTableFilter');
             var tableFilterToggle = byId('clusterTableFilterToggle');
+            var tableSelectAllButton = byId('clusterTableSelectAllButton');
+            var tableClearAllButton = byId('clusterTableClearAllButton');
             var retryButton = byId('clusteringRetryButton');
             var initialData = options && options.initialData ? options.initialData : null;
 
@@ -29,6 +31,24 @@
                     event.stopPropagation();
                     if (options && typeof options.onToggleTableFilter === 'function') {
                         options.onToggleTableFilter();
+                    }
+                });
+            }
+
+            if (tableSelectAllButton) {
+                tableSelectAllButton.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    if (options && typeof options.onSelectAllTables === 'function') {
+                        options.onSelectAllTables();
+                    }
+                });
+            }
+
+            if (tableClearAllButton) {
+                tableClearAllButton.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    if (options && typeof options.onClearAllTables === 'function') {
+                        options.onClearAllTables();
                     }
                 });
             }

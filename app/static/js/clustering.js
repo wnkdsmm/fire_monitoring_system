@@ -178,6 +178,23 @@ async function fetchClusteringData() {
                 }
                 fetchClusteringData();
             },
+            onSelectAllTables: function () {
+                if (renderApi.selectAllTableNames) {
+                    renderApi.selectAllTableNames();
+                }
+                if (renderApi.syncTableChecklistSummary) {
+                    renderApi.syncTableChecklistSummary();
+                }
+                fetchClusteringData();
+            },
+            onClearAllTables: function () {
+                if (renderApi.clearAllTableNames) {
+                    renderApi.clearAllTableNames();
+                }
+                if (renderApi.syncTableChecklistSummary) {
+                    renderApi.syncTableChecklistSummary();
+                }
+            },
             onToggleTableFilter: function () {
                 var root = byId('clusterTableFilter');
                 var isOpen = root && root.classList.contains('is-open');

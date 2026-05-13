@@ -31,38 +31,42 @@
         <form class="filters-grid cluster-form-grid" id="clusteringForm" method="get" action="/clustering">
             <label class="filter-field">
                 <span>Таблицы</span>
-                <div id="clusterTableFilter" class="cluster-table-select">
-                    <button
-                        id="clusterTableFilterToggle"
-                        class="cluster-table-select-toggle"
-                        type="button"
-                        aria-haspopup="true"
-                        aria-expanded="false"
-                        aria-controls="clusterTableFilterMenu"
-                    >
-                        <span id="clusterTableFilterSummary" class="cluster-table-select-summary">Все таблицы</span>
-                        <span class="cluster-table-select-caret" aria-hidden="true">▾</span>
-                    </button>
-                    <div
-                        id="clusterTableFilterMenu"
-                        class="cluster-table-checklist is-hidden"
-                        role="group"
-                        aria-label="Выбор таблиц для кластеризации"
-                    >
-                        {% set selected_tables = filters.table_names if filters.table_names is defined else [] %}
-                        {% if not selected_tables and filters.table_name and filters.table_name != 'all' %}
-                            {% set selected_tables = [filters.table_name] %}
-                        {% endif %}
-                        {% if not selected_tables and (not filters.table_name or filters.table_name == 'all') %}
-                            {% set selected_tables = (filters.available_tables | rejectattr('value', 'equalto', 'all') | map(attribute='value') | list) %}
-                        {% endif %}
-                        {% for option in filters.available_tables if option.value != 'all' %}
-                        <label class="cluster-table-checklist-item">
-                            <input type="checkbox" name="table_names" value="{{ option.value }}" {% if option.value in selected_tables %}checked{% endif %}>
-                            <span>{{ option.label }}</span>
-                        </label>
-                        {% endfor %}
+                <div class="cluster-table-control-row">
+                    <div id="clusterTableFilter" class="cluster-table-select">
+                        <button
+                            id="clusterTableFilterToggle"
+                            class="cluster-table-select-toggle"
+                            type="button"
+                            aria-haspopup="true"
+                            aria-expanded="false"
+                            aria-controls="clusterTableFilterMenu"
+                        >
+                            <span id="clusterTableFilterSummary" class="cluster-table-select-summary">Все таблицы</span>
+                            <span class="cluster-table-select-caret" aria-hidden="true">▾</span>
+                        </button>
+                        <div
+                            id="clusterTableFilterMenu"
+                            class="cluster-table-checklist is-hidden"
+                            role="group"
+                            aria-label="Выбор таблиц для кластеризации"
+                        >
+                            {% set selected_tables = filters.table_names if filters.table_names is defined else [] %}
+                            {% if not selected_tables and filters.table_name and filters.table_name != 'all' %}
+                                {% set selected_tables = [filters.table_name] %}
+                            {% endif %}
+                            {% if not selected_tables and (not filters.table_name or filters.table_name == 'all') %}
+                                {% set selected_tables = (filters.available_tables | rejectattr('value', 'equalto', 'all') | map(attribute='value') | list) %}
+                            {% endif %}
+                            {% for option in filters.available_tables if option.value != 'all' %}
+                            <label class="cluster-table-checklist-item">
+                                <input type="checkbox" name="table_names" value="{{ option.value }}" {% if option.value in selected_tables %}checked{% endif %}>
+                                <span>{{ option.label }}</span>
+                            </label>
+                            {% endfor %}
+                        </div>
                     </div>
+                    <button id="clusterTableSelectAllButton" class="table-mini-action" type="button">Выбрать все</button>
+                    <button id="clusterTableClearAllButton" class="table-mini-action" type="button">Убрать все</button>
                 </div>
             </label>
             <label class="filter-field">

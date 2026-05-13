@@ -22,7 +22,10 @@
                     summaryId: 'dashboardTableFilterSummary',
                     selectedListId: 'dashboardTableFilterSelectedList',
                     itemClassName: 'dashboard-table-checklist-item',
-                    singleSelectedPrefix: 'Выбрана: '
+                    singleSelectedPrefix: 'Выбрана: ',
+                    compactSelectedList: true,
+                    selectedListMode: 'chips',
+                    selectAllWhenEmpty: true
                 })
                 : null;
 

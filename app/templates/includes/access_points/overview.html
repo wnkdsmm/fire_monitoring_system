@@ -32,38 +32,42 @@
         <form class="filters-grid access-points-form-grid" id="accessPointsForm" method="get" action="/access-points">
             <label class="filter-field">
                 <span>Таблицы</span>
-                <div id="accessPointsTableFilter" class="access-points-table-select">
-                    <button
-                        id="accessPointsTableFilterToggle"
-                        class="access-points-table-select-toggle"
-                        type="button"
-                        aria-haspopup="true"
-                        aria-expanded="false"
-                        aria-controls="accessPointsTableFilterMenu"
-                    >
-                        <span id="accessPointsTableFilterSummary" class="access-points-table-select-summary">Все таблицы</span>
-                        <span class="access-points-table-select-caret" aria-hidden="true">▾</span>
-                    </button>
-                    <div
-                        id="accessPointsTableFilterMenu"
-                        class="access-points-table-checklist is-hidden"
-                        role="group"
-                        aria-label="Выбор таблиц для рейтинга проблемных точек"
-                    >
-                        {% set selected_tables = filters.table_names if filters.table_names is defined else [] %}
-                        {% if not selected_tables and filters.table_name and filters.table_name != 'all' %}
-                            {% set selected_tables = [filters.table_name] %}
-                        {% endif %}
-                        {% if not selected_tables and (not filters.table_name or filters.table_name == 'all') %}
-                            {% set selected_tables = (filters.available_tables | rejectattr('value', 'equalto', 'all') | map(attribute='value') | list) %}
-                        {% endif %}
-                        {% for option in filters.available_tables if option.value != 'all' %}
-                        <label class="access-points-table-checklist-item">
-                            <input type="checkbox" name="table_names" value="{{ option.value }}" {% if option.value in selected_tables %}checked{% endif %}>
-                            <span>{{ option.label }}</span>
-                        </label>
-                        {% endfor %}
+                <div class="access-points-table-control-row">
+                    <div id="accessPointsTableFilter" class="access-points-table-select">
+                        <button
+                            id="accessPointsTableFilterToggle"
+                            class="access-points-table-select-toggle"
+                            type="button"
+                            aria-haspopup="true"
+                            aria-expanded="false"
+                            aria-controls="accessPointsTableFilterMenu"
+                        >
+                            <span id="accessPointsTableFilterSummary" class="access-points-table-select-summary">Все таблицы</span>
+                            <span class="access-points-table-select-caret" aria-hidden="true">▾</span>
+                        </button>
+                        <div
+                            id="accessPointsTableFilterMenu"
+                            class="access-points-table-checklist is-hidden"
+                            role="group"
+                            aria-label="Выбор таблиц для рейтинга проблемных точек"
+                        >
+                            {% set selected_tables = filters.table_names if filters.table_names is defined else [] %}
+                            {% if not selected_tables and filters.table_name and filters.table_name != 'all' %}
+                                {% set selected_tables = [filters.table_name] %}
+                            {% endif %}
+                            {% if not selected_tables and (not filters.table_name or filters.table_name == 'all') %}
+                                {% set selected_tables = (filters.available_tables | rejectattr('value', 'equalto', 'all') | map(attribute='value') | list) %}
+                            {% endif %}
+                            {% for option in filters.available_tables if option.value != 'all' %}
+                            <label class="access-points-table-checklist-item">
+                                <input type="checkbox" name="table_names" value="{{ option.value }}" {% if option.value in selected_tables %}checked{% endif %}>
+                                <span>{{ option.label }}</span>
+                            </label>
+                            {% endfor %}
+                        </div>
                     </div>
+                    <button id="accessPointsTableSelectAllButton" class="table-mini-action" type="button">Выбрать все</button>
+                    <button id="accessPointsTableClearAllButton" class="table-mini-action" type="button">Убрать все</button>
                 </div>
             </label>
             <label class="filter-field">

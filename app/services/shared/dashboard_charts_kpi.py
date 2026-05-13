@@ -163,7 +163,7 @@ def _build_cause_plotly(title: str, items: list[ChartData], empty_message: str) 
             updates={
                 "height": min(430, max(300, 27 * len(items) + 56)),
                 "margin": {"l": 270, "r": 72, "t": 10, "b": 20},
-                "bargap": 0.5,
+                "bargap": 0.18,
             },
             xaxis={
                 "automargin": True,

@@ -616,12 +616,14 @@ def _build_compare_series_payload(
     history_has_data = bool(daily_history)
 
     def _predict_month_with_trained_ml(target_year: int, target_month: int) -> dict[int, float | None]:
-        month_start = date(int(target_year), int(target_month), 1)
         month_days = int(monthrange(int(target_year), int(target_month))[1])
         history_before_month: list[dict[str, Any]] = []
         for row in daily_history:
             row_date = _parse_optional_iso_date(str(row.get('date') or ''))
-            if row_date is None or row_date >= month_start:
+            if row_date is None:
+                continue
+            # Compare-series ML mode: train only on the same calendar month across prior years.
+            if row_date.month != int(target_month) or row_date.year >= int(target_year):
                 continue
             raw_count = row.get('count')
             if raw_count is None:
@@ -638,30 +640,37 @@ def _build_compare_series_payload(
                 }
             )
 
-        if len(history_before_month) < MIN_DAILY_HISTORY:
-            return {}
+        def _month_history_profile() -> dict[int, float | None]:
+            if not history_before_month:
+                return {}
+            by_day: dict[int, list[float]] = {}
+            all_values: list[float] = []
+            for item in history_before_month:
+                item_date = _parse_optional_iso_date(str(item.get('date') or ''))
+                if item_date is None:
+                    continue
+                raw_value = item.get('count')
+                try:
+                    numeric_value = float(raw_value)
+                except (TypeError, ValueError):
+                    continue
+                by_day.setdefault(int(item_date.day), []).append(numeric_value)
+                all_values.append(numeric_value)
+            if not all_values:
+                return {}
+            overall_mean = sum(all_values) / float(len(all_values))
+            result: dict[int, float | None] = {}
+            for day in range(1, month_days + 1):
+                day_values = by_day.get(day) or []
+                if day_values:
+                    result[day] = max(0.0, sum(day_values) / float(len(day_values)))
+                else:
+                    result[day] = max(0.0, overall_mean)
+            return result
 
-        ml_payload = _train_ml_model(
-            daily_history=history_before_month,
-            forecast_days=month_days,
-            scenario_temperature=scenario_temperature,
-            current_user_date=month_start,
-            caches=caches,
-        )
-        if not bool(ml_payload.get('is_ready')):
-            return {}
-
-        month_rows: dict[int, float | None] = {}
-        for row in ml_payload.get('forecast_rows', []) or []:
-            row_date = _parse_optional_iso_date(str(row.get('date') or ''))
-            if row_date is None or row_date.year != int(target_year) or row_date.month != int(target_month):
-                continue
-            try:
-                forecast_value = float(row.get('forecast_value'))
-            except (TypeError, ValueError):
-                continue
-            month_rows[int(row_date.day)] = max(0.0, forecast_value)
-        return month_rows
+        # Compare-series mode should follow month-across-years logic directly:
+        # use the selected month from prior years as the profile for target year.
+        return _month_history_profile()
 
     facts_by_year_day: dict[tuple[int, int], set[int]] = {}
     for row in daily_history:

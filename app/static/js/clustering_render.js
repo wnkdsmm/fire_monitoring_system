@@ -56,6 +56,12 @@ function getSelectedTableNamesFromForm() {
         }
     }
 
+    function clearAllTableNames() {
+        if (clusterTableChecklist && typeof clusterTableChecklist.clearAll === 'function') {
+            clusterTableChecklist.clearAll();
+        }
+    }
+
     function setTableChecklistOpen(isOpen) {
         if (clusterTableChecklist && typeof clusterTableChecklist.setOpen === 'function') {
             clusterTableChecklist.setOpen(isOpen);
@@ -376,6 +382,7 @@ function applyClusteringData(data) {
                 hideClusteringError: hideClusteringError,
                 renderClusteringJobRuntime: renderClusteringJobRuntime,
                 selectAllTableNames: selectAllTableNames,
+                clearAllTableNames: clearAllTableNames,
                 setTableChecklistOpen: setTableChecklistOpen,
                 showClusteringError: showClusteringError,
                 syncTableChecklistSummary: syncTableChecklistSummary,

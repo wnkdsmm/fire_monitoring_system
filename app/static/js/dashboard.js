@@ -77,7 +77,15 @@ async function fetchDashboardData() {
             return;
         }
 
-        const params = new URLSearchParams(new FormData(form));
+        const formData = new FormData(form);
+        const selectedTables = formData.getAll('table_names')
+            .map(function (value) { return String(value || '').trim(); })
+            .filter(function (value) { return value.length > 0; });
+        const totalTableOptions = form.querySelectorAll('#dashboardTableFilterMenu input[name="table_names"]').length;
+        if (totalTableOptions > 0 && selectedTables.length === totalTableOptions) {
+            formData.delete('table_names');
+        }
+        const params = new URLSearchParams(formData);
         const query = params.toString();
 
         if (button) {
@@ -178,6 +186,12 @@ async function fetchDashboardData() {
             onFilterChange: syncBriefLink,
             onTableFilterOpen: syncBriefLink,
             onTableFilterChange: function () {
+                syncBriefLink();
+            },
+            onSelectAllTables: function () {
+                syncBriefLink();
+            },
+            onClearAllTables: function () {
                 syncBriefLink();
             },
             onRetry: fetchDashboardData,

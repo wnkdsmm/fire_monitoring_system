@@ -26,10 +26,15 @@
                 var selectedTableNames = dashboardTableChecklist && typeof dashboardTableChecklist.getSelectedValues === 'function'
                     ? dashboardTableChecklist.getSelectedValues()
                     : [];
+                var totalTableOptions = Array.prototype.slice.call(
+                    document.querySelectorAll('#dashboardTableFilterMenu input[name="table_names"]')
+                ).length;
+                var useAllTables = totalTableOptions > 0 && selectedTableNames.length === totalTableOptions;
+                var normalizedTableNames = useAllTables ? [] : selectedTableNames;
 
                 return {
-                    table_name: selectedTableNames.length === 1 ? selectedTableNames[0] : 'all',
-                    table_names: selectedTableNames
+                    table_name: normalizedTableNames.length === 1 ? normalizedTableNames[0] : 'all',
+                    table_names: normalizedTableNames
                 };
             }
 

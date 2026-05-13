@@ -11,6 +11,8 @@
             var form = byId('accessPointsForm');
             var tableFilterRoot = byId('accessPointsTableFilter');
             var tableFilterToggle = byId('accessPointsTableFilterToggle');
+            var tableSelectAllButton = byId('accessPointsTableSelectAllButton');
+            var tableClearAllButton = byId('accessPointsTableClearAllButton');
             if (form) {
                 form.addEventListener('submit', function (event) {
                     event.preventDefault();
@@ -34,6 +36,24 @@
                     event.stopPropagation();
                     if (options && typeof options.onToggleTableFilter === 'function') {
                         options.onToggleTableFilter();
+                    }
+                });
+            }
+
+            if (tableSelectAllButton) {
+                tableSelectAllButton.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    if (options && typeof options.onSelectAllTables === 'function') {
+                        options.onSelectAllTables();
+                    }
+                });
+            }
+
+            if (tableClearAllButton) {
+                tableClearAllButton.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    if (options && typeof options.onClearAllTables === 'function') {
+                        options.onClearAllTables();
                     }
                 });
             }
