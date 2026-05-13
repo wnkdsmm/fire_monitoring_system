@@ -50,6 +50,7 @@
             month: params.get('month') || defaultMonth,
             year_a: params.get('year_a') || '2024',
             year_b: params.get('year_b') || '2025',
+            year_ml: params.get('year_ml') || String(new Date().getFullYear()),
             current_user_date: params.get('current_user_date') || getCurrentUserDateIso()
         };
     }
@@ -82,6 +83,7 @@
             month: body.month || '',
             year_a: body.year_a || '',
             year_b: body.year_b || '',
+            year_ml: body.year_ml || '',
             current_user_date: body.current_user_date || getCurrentUserDateIso()
         };
         var result = await apiCall('/api/ml-compare-series', {

@@ -108,10 +108,44 @@
         var historyHasData = data.history_has_data === true;
         var aYear = data.year_a != null ? String(data.year_a) : 'A';
         var bYear = data.year_b != null ? String(data.year_b) : 'B';
+        var cYear = data.year_ml != null ? String(data.year_ml) : 'Compare-series';
         var aPoints = rows.filter(function (row) { return row && row.a_value != null && !isNaN(Number(row.a_value)); }).length;
         var bPoints = rows.filter(function (row) { return row && row.b_value != null && !isNaN(Number(row.b_value)); }).length;
+        var cPoints = rows.filter(function (row) { return row && row.c_value != null && !isNaN(Number(row.c_value)); }).length;
+        var overlapBC = false;
+        if (bPoints && cPoints) {
+            var same = 0;
+            var both = 0;
+            rows.forEach(function (row) {
+                if (!row || row.b_value == null || row.c_value == null) {
+                    return;
+                }
+                var bVal = Number(row.b_value);
+                var cVal = Number(row.c_value);
+                if (isNaN(bVal) || isNaN(cVal)) {
+                    return;
+                }
+                both += 1;
+                if (Math.abs(bVal - cVal) < 1e-9 && String(row.b_source || '') === String(row.c_source || '')) {
+                    same += 1;
+                }
+            });
+            overlapBC = both > 0 && same === both;
+        }
 
         if (!rows.length || (!aPoints && !bPoints)) {
+            if (cPoints) {
+                // Allow rendering chart when only Compare-series has points.
+            } else {
+                renderFallback(chartNode, fallbackNode, 'Нет данных для сравнения выбранных лет за выбранный месяц.');
+                if (summaryNode) {
+                    summaryNode.textContent = '';
+                }
+                return;
+            }
+        }
+
+        if (!rows.length || (!aPoints && !bPoints && !cPoints)) {
             renderFallback(chartNode, fallbackNode, 'Нет данных для сравнения выбранных лет за выбранный месяц.');
             if (summaryNode) {
                 summaryNode.textContent = '';
@@ -127,6 +161,7 @@
         rows.forEach(function (row) {
             if (row && row.a_value != null) { values.push(Number(row.a_value)); }
             if (row && row.b_value != null) { values.push(Number(row.b_value)); }
+            if (row && row.c_value != null) { values.push(Number(row.c_value)); }
         });
         var yMin = 0;
         var yMax = Math.max.apply(null, values.concat([1]));
@@ -200,18 +235,25 @@
 
         buildSegments('a_value').forEach(function (path) { svg += '<path d="' + path + '" class="ml-line-forecast"></path>'; });
         buildSegments('b_value').forEach(function (path) { svg += '<path d="' + path + '" class="ml-line-appg"></path>'; });
+        buildSegments('c_value').forEach(function (path) {
+            var className = overlapBC ? 'ml-line-compare-series ml-line-compare-series-overlap' : 'ml-line-compare-series';
+            svg += '<path d="' + path + '" class="' + className + '"></path>';
+        });
         svg += buildPoints('a_value', 'ml-forecast-point', aYear, 'a_source');
         svg += buildPoints('b_value', 'ml-appg-point', bYear, 'b_source');
+        svg += buildPoints('c_value', 'ml-compare-series-point', 'Compare-series ' + cYear, 'c_source');
         svg += axisLabels + '</svg>';
 
         var modes = data.modes || {};
         var legendA = aYear + (modes.year_a === 'ml' ? ' (ML)' : (modes.year_a === 'mixed' ? ' (факт+ML)' : ' (факт)'));
         var legendB = bYear + (modes.year_b === 'ml' ? ' (ML)' : (modes.year_b === 'mixed' ? ' (факт+ML)' : ' (факт)'));
+        var legendC = 'Compare-series ' + cYear + (modes.year_ml === 'ml' ? ' (ML)' : (modes.year_ml === 'mixed' ? ' (факт+ML)' : ' (факт)'));
 
         chartNode.innerHTML = ''
             + '<div class="ml-chart-legend">'
             + '<span class="ml-chart-legend-item"><i data-legend-color="#0F766E"></i>' + escapeHtml(legendA) + '</span>'
             + '<span class="ml-chart-legend-item"><i data-legend-color="#B45309"></i>' + escapeHtml(legendB) + '</span>'
+            + '<span class="ml-chart-legend-item"><i data-legend-color="#1D4ED8"></i>' + escapeHtml(legendC) + '</span>'
             + '</div>'
             + '<div class="ml-chart-shell">' + svg + '</div>';
         applyLegendDecorators(chartNode);
@@ -220,8 +262,11 @@
         if (summaryNode) {
             var aSummary = data.a_summary || {};
             var bSummary = data.b_summary || {};
+            var cSummary = data.c_summary || {};
             summaryNode.textContent = 'Год 1 (' + aYear + '): факт ' + String(aSummary.fact_days || 0) + ', ML ' + String(aSummary.ml_days || 0)
                 + ' | Год 2 (' + bYear + '): факт ' + String(bSummary.fact_days || 0) + ', ML ' + String(bSummary.ml_days || 0)
+                + ' | Compare-series (' + cYear + '): факт ' + String(cSummary.fact_days || 0) + ', ML ' + String(cSummary.ml_days || 0)
+                + (overlapBC ? ' | Compare-series совпадает с Год 2 для выбранных параметров' : '')
                 + (modes.overall === 'ml_ml' ? ' | обе линии построены ML' : '')
                 + (historyHasData ? '' : ' | нет входных данных');
         }

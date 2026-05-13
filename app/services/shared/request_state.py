@@ -161,6 +161,7 @@ def build_ml_compare_cache_key(
     month: int,
     year_a: int,
     year_b: int,
+    year_ml: int | None = None,
     current_user_date: str = "",
 ) -> tuple[Any, ...]:
     return (
@@ -171,6 +172,7 @@ def build_ml_compare_cache_key(
         int(month),
         int(year_a),
         int(year_b),
+        int(year_ml) if year_ml is not None else None,
         normalize_cache_value(current_user_date),
     )
 

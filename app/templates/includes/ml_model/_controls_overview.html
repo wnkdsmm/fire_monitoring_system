@@ -1,7 +1,7 @@
 ﻿<section class="panel filters-panel">
     <div class="panel-head">
         <h2>Параметры сравнения</h2>
-        <span class="panel-meta">Две линии по дням месяца: факт, при отсутствии факта — ML.</span>
+        <span class="panel-meta">Три линии по дням месяца: Год 1, Год 2 и Compare-series (Год ML).</span>
     </div>
     <form class="filters-grid ml-controls-grid" id="mlModelForm" method="get" action="/ml-model">
         <label class="filter-field">
@@ -17,12 +17,9 @@
             <select id="mlYearBFilter" name="year_b"></select>
         </label>
         <label class="filter-field">
-            <span>Год ML (текущий +3)</span>
-            <select id="mlFutureYearFilter"></select>
+            <span>Год ML (текущий .. +3)</span>
+            <select id="mlFutureYearFilter" name="year_ml"></select>
         </label>
-        <div class="filter-field ml-submit-field">
-            <button id="mlRefreshButton" class="primary-action" type="button">Обновить сравнение</button>
-        </div>
     </form>
     <div id="mlCompareChart" class="plotly-chart ml-plot{% if not data.compare_series or not data.compare_series.history_has_data %} is-empty{% endif %}"></div>
     <div id="mlCompareChartFallback" class="chart-empty{% if data.compare_series and data.compare_series.history_has_data %} is-hidden{% endif %}">Нет данных для сравнения выбранных лет за выбранный месяц.</div>

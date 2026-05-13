@@ -136,7 +136,8 @@
 }
 
 .ml-line-forecast,
-.ml-line-appg {
+.ml-line-appg,
+.ml-line-compare-series {
     fill: none;
     stroke-linecap: round;
     stroke-linejoin: round;
@@ -150,7 +151,6 @@
 .ml-line-appg {
     stroke: #B45309;
     stroke-width: 2.5;
-    stroke-dasharray: 5 5;
 }
 
 .ml-forecast-point {
@@ -167,8 +167,27 @@
     cursor: pointer;
 }
 
+.ml-line-compare-series {
+    stroke: #1D4ED8;
+    stroke-width: 2.5;
+    stroke-dasharray: 2 6;
+}
+
+.ml-line-compare-series-overlap {
+    stroke-width: 3.5;
+    filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.9));
+}
+
+.ml-compare-series-point {
+    fill: #1D4ED8;
+    stroke: #ffffff;
+    stroke-width: 1.2;
+    cursor: pointer;
+}
+
 .ml-forecast-point:hover,
-.ml-appg-point:hover {
+.ml-appg-point:hover,
+.ml-compare-series-point:hover {
     stroke-width: 2;
 }
 
@@ -258,16 +277,8 @@
 }
 
 .ml-controls-grid {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     align-items: end;
-}
-
-.ml-submit-field {
-    justify-content: end;
-}
-
-.ml-submit-field .primary-action {
-    width: 100%;
 }
 
 @media (max-width: 980px) {

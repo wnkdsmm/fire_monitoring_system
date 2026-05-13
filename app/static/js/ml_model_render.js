@@ -106,14 +106,11 @@
     }
 
     function setBusy(isBusy) {
-        ['mlRefreshButton'].forEach(function (id) {
-            var button = byId(id);
-            if (!button) {
-                return;
-            }
-            button.disabled = !!isBusy;
-            button.classList.toggle('is-loading', !!isBusy);
-        });
+        var form = byId('mlModelForm');
+        if (!form) {
+            return;
+        }
+        form.classList.toggle('is-loading', !!isBusy);
     }
 
     function showError(message) {
@@ -145,10 +142,12 @@
         var month = byId('mlMonthFilter') ? String(byId('mlMonthFilter').value || '').trim() : '';
         var yearA = byId('mlYearAFilter') ? String(byId('mlYearAFilter').value || '').trim() : '';
         var yearB = byId('mlYearBFilter') ? String(byId('mlYearBFilter').value || '').trim() : '';
+        var yearMl = byId('mlFutureYearFilter') ? String(byId('mlFutureYearFilter').value || '').trim() : '';
         var years = collectAvailableYears(filters);
         ensureYearInList(years, yearA);
         ensureYearInList(years, yearB);
         var resolved = resolveYearPair(years, yearA, yearB);
+        var defaultYearMl = String(currentUserYear());
         return {
             table_name: tableName,
             table_names: tableNames,
@@ -156,32 +155,9 @@
             object_category: objectCategory,
             month: month || String(new Date().getMonth() + 1),
             year_a: resolved.yearA,
-            year_b: resolved.yearB
+            year_b: resolved.yearB,
+            year_ml: yearMl || defaultYearMl
         };
-    }
-
-    function syncFutureYearToYearB() {
-        var futureYearNode = byId('mlFutureYearFilter');
-        if (!futureYearNode) {
-            return;
-        }
-        var targetYear = String(futureYearNode.value || '').trim();
-        if (!targetYear) {
-            return;
-        }
-        var yearBNode = byId('mlYearBFilter');
-        if (yearBNode) {
-            var hasOption = Array.prototype.some.call(yearBNode.options || [], function (option) {
-                return String(option.value) === targetYear;
-            });
-            if (!hasOption) {
-                var option = document.createElement('option');
-                option.value = targetYear;
-                option.textContent = targetYear;
-                yearBNode.appendChild(option);
-            }
-            yearBNode.value = targetYear;
-        }
     }
 
     function renderHero(data) {
@@ -241,11 +217,12 @@
         var resolved = resolveYearPair(years, compare.year_a || filters.year_a, compare.year_b || filters.year_b);
         var yearA = resolved.yearA;
         var yearB = resolved.yearB;
+        var yearMl = String(compare.year_ml || filters.year_ml || currentUserYear());
 
         setSelectOptions('mlMonthFilter', buildMonthOptions(), month, 'Месяц');
         setSelectOptions('mlYearAFilter', buildYearOptions(years), yearA, 'Год 1');
         setSelectOptions('mlYearBFilter', buildYearOptions(years), yearB, 'Год 2');
-        setSelectOptions('mlFutureYearFilter', buildFutureYearOptions(), yearB, 'Год ML');
+        setSelectOptions('mlFutureYearFilter', buildFutureYearOptions(), yearMl, 'Год ML');
 
         renderHero(data);
         charts.renderCompareChart(compare, 'mlCompareChart', 'mlCompareChartFallback', 'mlCompareChartSummary');
@@ -290,12 +267,9 @@
                 node.addEventListener('change', refreshCompareSeriesOnly);
             }
         });
-        var mlRefreshButton = byId('mlRefreshButton');
-        if (mlRefreshButton) {
-            mlRefreshButton.addEventListener('click', function () {
-                syncFutureYearToYearB();
-                refreshCompareSeriesOnly();
-            });
+        var futureYearNode = byId('mlFutureYearFilter');
+        if (futureYearNode) {
+            futureYearNode.addEventListener('change', refreshCompareSeriesOnly);
         }
     }
 

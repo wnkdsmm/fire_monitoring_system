@@ -38,6 +38,7 @@ def ml_compare_series_endpoint(request: Request, payload: dict = Body(...)):
         month = _parse_optional_int(payload, "month")
         year_a = _parse_optional_int(payload, "year_a")
         year_b = _parse_optional_int(payload, "year_b")
+        year_ml = _parse_optional_int(payload, "year_ml")
         if month is None or year_a is None or year_b is None:
             return utf8_json(
                 {"status": "failed", "error_message": "Параметры month, year_a и year_b обязательны."},
@@ -55,6 +56,7 @@ def ml_compare_series_endpoint(request: Request, payload: dict = Body(...)):
                     month=month,
                     year_a=year_a,
                     year_b=year_b,
+                    year_ml=year_ml,
                     current_user_date=str(payload.get("current_user_date") or ""),
                 ),
             },

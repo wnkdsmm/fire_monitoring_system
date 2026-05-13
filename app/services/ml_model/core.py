@@ -32,6 +32,7 @@ _MIN_SELECTABLE_YEAR = 1990
 _MAX_SELECTABLE_YEAR = 2100
 _DEFAULT_COMPARE_YEAR_A = 2024
 _DEFAULT_COMPARE_YEAR_B = 2025
+_DEFAULT_COMPARE_YEAR_ML_OFFSET = 3
 _YEAR_TOKEN_RE = re.compile(r"(19\d{2}|20\d{2}|2100)")
 
 
@@ -66,8 +67,9 @@ def _normalize_compare_selection(
     month: int | None,
     year_a: int | None,
     year_b: int | None,
+    year_ml: int | None,
     current_user_date: str,
-) -> tuple[int, int, int]:
+) -> tuple[int, int, int, int]:
     parsed_current = _parse_optional_iso_date(current_user_date)
     baseline = parsed_current or datetime.now().date()
     normalized_month = int(month) if month is not None else int(baseline.month)
@@ -75,11 +77,14 @@ def _normalize_compare_selection(
         raise ValueError("Параметр month должен быть в диапазоне 1..12.")
     normalized_year_a = int(year_a) if year_a is not None else _DEFAULT_COMPARE_YEAR_A
     normalized_year_b = int(year_b) if year_b is not None else _DEFAULT_COMPARE_YEAR_B
+    normalized_year_ml = int(year_ml) if year_ml is not None else int(baseline.year)
     if normalized_year_a < _MIN_SELECTABLE_YEAR or normalized_year_a > _MAX_SELECTABLE_YEAR:
         raise ValueError(f"Параметр year_a должен быть в диапазоне {_MIN_SELECTABLE_YEAR}..{_MAX_SELECTABLE_YEAR}.")
     if normalized_year_b < _MIN_SELECTABLE_YEAR or normalized_year_b > _MAX_SELECTABLE_YEAR:
         raise ValueError(f"Параметр year_b должен быть в диапазоне {_MIN_SELECTABLE_YEAR}..{_MAX_SELECTABLE_YEAR}.")
-    return normalized_month, normalized_year_a, normalized_year_b
+    if normalized_year_ml < _MIN_SELECTABLE_YEAR or normalized_year_ml > _MAX_SELECTABLE_YEAR:
+        raise ValueError(f"Параметр year_ml должен быть в диапазоне {_MIN_SELECTABLE_YEAR}..{_MAX_SELECTABLE_YEAR}.")
+    return normalized_month, normalized_year_a, normalized_year_b, normalized_year_ml
 
 
 def _build_ml_request_state(
@@ -91,13 +96,15 @@ def _build_ml_request_state(
     month: int | None = None,
     year_a: int | None = None,
     year_b: int | None = None,
+    year_ml: int | None = None,
 ) -> dict[str, Any]:
     parsed_current_user_date = _parse_optional_iso_date(current_user_date)
     normalized_current_user_date = parsed_current_user_date.isoformat() if parsed_current_user_date is not None else ""
-    selected_compare_month, selected_compare_year_a, selected_compare_year_b = _normalize_compare_selection(
+    selected_compare_month, selected_compare_year_a, selected_compare_year_b, selected_compare_year_ml = _normalize_compare_selection(
         month=month,
         year_a=year_a,
         year_b=year_b,
+        year_ml=year_ml,
         current_user_date=normalized_current_user_date,
     )
 
@@ -124,6 +131,7 @@ def _build_ml_request_state(
     state["selected_compare_month"] = selected_compare_month
     state["selected_compare_year_a"] = selected_compare_year_a
     state["selected_compare_year_b"] = selected_compare_year_b
+    state["selected_compare_year_ml"] = selected_compare_year_ml
     state["current_user_date"] = normalized_current_user_date
     return state
 
@@ -172,6 +180,7 @@ def get_ml_model_shell_context(
             "compare_month": int(request_state.get("selected_compare_month") or datetime.now().month),
             "year_a": int(request_state.get("selected_compare_year_a") or _DEFAULT_COMPARE_YEAR_A),
             "year_b": int(request_state.get("selected_compare_year_b") or _DEFAULT_COMPARE_YEAR_B),
+            "year_ml": int(request_state.get("selected_compare_year_ml") or datetime.now().year),
         },
     }
     return {
@@ -248,6 +257,7 @@ def _build_compare_series_payload(
 
         by_day: dict[int, list[float]] = {}
         all_values: list[float] = []
+        by_year: dict[int, list[float]] = {}
         for item in history_before_month:
             item_date = _parse_optional_iso_date(str(item.get("date") or ""))
             if item_date is None:
@@ -255,15 +265,37 @@ def _build_compare_series_payload(
             numeric_value = float(item.get("count") or 0.0)
             by_day.setdefault(int(item_date.day), []).append(numeric_value)
             all_values.append(numeric_value)
+            by_year.setdefault(int(item_date.year), []).append(numeric_value)
 
         if not all_values:
             return {}
 
         overall_mean = sum(all_values) / float(len(all_values))
+        latest_history_year = max(by_year.keys()) if by_year else int(target_year)
+        # Future-only correction: add a mild linear year trend so 2026/2027/2028/2029
+        # do not collapse into the same synthetic curve when facts are absent.
+        trend_per_year = 0.0
+        if by_year and int(target_year) > int(latest_history_year) and len(by_year) >= 2:
+            years = sorted(by_year.keys())
+            xs = [float(year) for year in years]
+            ys = [sum(by_year[year]) / float(len(by_year[year])) for year in years]
+            x_mean = sum(xs) / float(len(xs))
+            y_mean = sum(ys) / float(len(ys))
+            denom = sum((x - x_mean) ** 2 for x in xs)
+            if denom > 0:
+                raw_slope = sum((x - x_mean) * (y - y_mean) for x, y in zip(xs, ys)) / denom
+                baseline = max(1.0, abs(y_mean))
+                slope_limit = baseline * 0.15
+                trend_per_year = max(-slope_limit, min(slope_limit, raw_slope))
+        future_year_shift = max(0, int(target_year) - int(latest_history_year))
+
         result: dict[int, float | None] = {}
         for day in range(1, month_days + 1):
             day_values = by_day.get(day) or []
-            result[day] = max(0.0, sum(day_values) / float(len(day_values))) if day_values else max(0.0, overall_mean)
+            base_value = (sum(day_values) / float(len(day_values))) if day_values else overall_mean
+            if future_year_shift > 0 and trend_per_year != 0.0:
+                base_value = base_value + trend_per_year * float(future_year_shift)
+            result[day] = max(0.0, base_value)
         return result
 
     facts_by_year_day: dict[tuple[int, int], set[int]] = {}
@@ -357,6 +389,51 @@ def _build_compare_series_payload(
     return compare_payload
 
 
+def _append_compare_series_line(
+    *,
+    compare_payload: dict[str, Any],
+    compare_line_payload: dict[str, Any],
+    year_ml: int,
+) -> dict[str, Any]:
+    rows = list(compare_payload.get("rows") or [])
+    compare_rows = list(compare_line_payload.get("rows") or [])
+    c_by_day: dict[int, dict[str, Any]] = {}
+    for row in compare_rows:
+        day = row.get("day")
+        if day is None:
+            continue
+        c_by_day[int(day)] = {
+            "c_value": row.get("b_value"),
+            "c_source": row.get("b_source") or "ml",
+        }
+
+    merged_rows: list[dict[str, Any]] = []
+    for row in rows:
+        normalized = dict(row)
+        day = normalized.get("day")
+        c_row = c_by_day.get(int(day)) if day is not None else None
+        if c_row is None:
+            normalized["c_value"] = None
+            normalized["c_source"] = "ml"
+        else:
+            normalized["c_value"] = c_row.get("c_value")
+            normalized["c_source"] = str(c_row.get("c_source") or "ml")
+        merged_rows.append(normalized)
+
+    merged_payload = dict(compare_payload)
+    merged_payload["rows"] = merged_rows
+    merged_payload["year_ml"] = int(year_ml)
+    merged_payload["c_summary"] = dict(compare_line_payload.get("b_summary") or {"fact_days": 0, "ml_days": 0})
+    merged_payload["ml_usage"] = {
+        **dict(compare_payload.get("ml_usage") or {}),
+        "year_ml": dict((compare_line_payload.get("ml_usage") or {}).get("year_b") or {}),
+    }
+    merged_modes = dict(compare_payload.get("modes") or {})
+    merged_modes["year_ml"] = str(((compare_line_payload.get("modes") or {}).get("year_b") or "empty"))
+    merged_payload["modes"] = merged_modes
+    return merged_payload
+
+
 def get_ml_compare_series_data(
     table_name: str = "all",
     table_names: Sequence[str] | None = None,
@@ -366,6 +443,7 @@ def get_ml_compare_series_data(
     month: int | None = None,
     year_a: int | None = None,
     year_b: int | None = None,
+    year_ml: int | None = None,
     caches: MLModelCaches | None = None,
 ) -> dict[str, Any]:
     cache_set = caches or _DEFAULT_CACHES
@@ -378,11 +456,13 @@ def get_ml_compare_series_data(
         month=month,
         year_a=year_a,
         year_b=year_b,
+        year_ml=year_ml,
     )
 
     selected_compare_month = int(request_state.get("selected_compare_month") or 0)
     selected_compare_year_a = int(request_state.get("selected_compare_year_a") or 0)
     selected_compare_year_b = int(request_state.get("selected_compare_year_b") or 0)
+    selected_compare_year_ml = int(request_state.get("selected_compare_year_ml") or 0)
     available_years = _extract_available_years_from_table_options(list(request_state.get("table_options") or []))
 
     compare_cache_key = _build_ml_compare_cache_key(
@@ -393,6 +473,7 @@ def get_ml_compare_series_data(
         month=selected_compare_month,
         year_a=selected_compare_year_a,
         year_b=selected_compare_year_b,
+        year_ml=selected_compare_year_ml,
         current_user_date=str(request_state.get("current_user_date") or ""),
     )
 
@@ -407,9 +488,11 @@ def get_ml_compare_series_data(
                 "month": selected_compare_month,
                 "year_a": selected_compare_year_a,
                 "year_b": selected_compare_year_b,
+                "year_ml": selected_compare_year_ml,
                 "rows": [],
                 "a_summary": {"fact_days": 0, "ml_days": 0},
                 "b_summary": {"fact_days": 0, "ml_days": 0},
+                "c_summary": {"fact_days": 0, "ml_days": 0},
                 "history_has_data": False,
             },
             "filters": {
@@ -422,6 +505,7 @@ def get_ml_compare_series_data(
                 "compare_month": selected_compare_month,
                 "year_a": selected_compare_year_a,
                 "year_b": selected_compare_year_b,
+                "year_ml": selected_compare_year_ml,
             },
         }
         return cache_set.compare_cache.set(compare_cache_key, result_payload)
@@ -439,6 +523,17 @@ def get_ml_compare_series_data(
         year_b=selected_compare_year_b,
         daily_history=daily_history,
     )
+    compare_series_ml = _build_compare_series_payload(
+        month=selected_compare_month,
+        year_a=selected_compare_year_a,
+        year_b=selected_compare_year_ml,
+        daily_history=daily_history,
+    )
+    compare_series = _append_compare_series_line(
+        compare_payload=compare_series,
+        compare_line_payload=compare_series_ml,
+        year_ml=selected_compare_year_ml,
+    )
     result_payload = {
         "compare_series": compare_series,
         "filters": {
@@ -451,6 +546,7 @@ def get_ml_compare_series_data(
             "compare_month": selected_compare_month,
             "year_a": selected_compare_year_a,
             "year_b": selected_compare_year_b,
+            "year_ml": selected_compare_year_ml,
         },
     }
     return cache_set.compare_cache.set(compare_cache_key, result_payload)
