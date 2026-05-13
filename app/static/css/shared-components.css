@@ -477,11 +477,22 @@ td {
     width: max-content;
     min-width: 100%;
     table-layout: auto;
+    border-collapse: collapse;
 }
 
 .data-table th,
 .data-table td {
     min-width: max(10rem, 18ch);
+    border-right: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+}
+
+.data-table :is(th, td):first-child {
+    border-left: 1px solid var(--line);
+}
+
+.data-table thead th {
+    border-top: 1px solid var(--line);
 }
 
 .data-table th {
