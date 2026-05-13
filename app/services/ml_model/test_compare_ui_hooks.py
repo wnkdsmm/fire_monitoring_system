@@ -75,3 +75,7 @@ def test_compare_chart_marks_ml_in_legend_and_summary() -> None:
     assert "modes.year_a === 'ml'" in source
     assert "modes.year_b === 'ml'" in source
     assert "обе линии построены ML" in source
+    assert "ML-prog (Poisson)" in source
+    assert "d_value" in source
+    assert "d_summary" in source
+    assert "ML-model (Poisson)" in source

@@ -1,9 +1,13 @@
 ﻿from __future__ import annotations
 
 from calendar import monthrange
-from datetime import datetime
+from datetime import date, datetime, timedelta
+import math
 import re
 from typing import Any, Sequence
+
+import numpy as np
+from sklearn.linear_model import PoissonRegressor
 
 from app.services.forecasting.data import (
     _build_forecasting_table_options,
@@ -389,6 +393,127 @@ def _build_compare_series_payload(
     return compare_payload
 
 
+def _predict_month_poisson_ml(
+    *,
+    daily_history: list[dict[str, Any]],
+    target_year: int,
+    target_month: int,
+) -> tuple[dict[int, float | None], dict[str, int]]:
+    month_days = int(monthrange(int(target_year), int(target_month))[1])
+    first_target_day = date(int(target_year), int(target_month), 1)
+    parsed_history: list[tuple[date, float]] = []
+    for row in daily_history:
+        row_date = _parse_optional_iso_date(str(row.get("date") or ""))
+        if row_date is None or row_date >= first_target_day:
+            continue
+        raw_value = row.get("count")
+        if raw_value is None:
+            continue
+        try:
+            count_value = float(raw_value)
+        except (TypeError, ValueError):
+            continue
+        if not math.isfinite(count_value):
+            continue
+        parsed_history.append((row_date, max(0.0, count_value)))
+
+    summary = {"model_days": 0, "clipped_days": 0}
+    if not parsed_history:
+        return ({day: None for day in range(1, month_days + 1)}, summary)
+
+    parsed_history.sort(key=lambda item: item[0])
+    series_by_date: dict[date, float] = {dt: value for dt, value in parsed_history}
+    all_values = [value for _, value in parsed_history]
+    global_mean = sum(all_values) / float(len(all_values)) if all_values else 0.0
+    global_mean = max(0.0, global_mean)
+
+    by_day_of_month: dict[int, list[float]] = {}
+    for dt, value in parsed_history:
+        by_day_of_month.setdefault(int(dt.day), []).append(float(value))
+
+    def _baseline_for_day(day: int) -> float:
+        day_values = by_day_of_month.get(int(day)) or []
+        if day_values:
+            return max(0.0, float(sum(day_values) / float(len(day_values))))
+        return global_mean
+
+    # Fall back to day-of-month baseline when history is too short for lag features.
+    if len(parsed_history) < 60:
+        baseline = {day: _baseline_for_day(day) for day in range(1, month_days + 1)}
+        summary["clipped_days"] = month_days
+        return baseline, summary
+
+    def _build_features(day: date, value_lookup: dict[date, float], predicted_lookup: dict[date, float]) -> list[float]:
+        def _lag_value(offset: int) -> float:
+            lag_day = day - timedelta(days=int(offset))
+            if lag_day in value_lookup:
+                return float(value_lookup[lag_day])
+            if lag_day in predicted_lookup:
+                return float(predicted_lookup[lag_day])
+            return global_mean
+
+        def _rolling_mean(window: int) -> float:
+            values: list[float] = []
+            for step in range(1, int(window) + 1):
+                source_day = day - timedelta(days=step)
+                if source_day in value_lookup:
+                    values.append(float(value_lookup[source_day]))
+                elif source_day in predicted_lookup:
+                    values.append(float(predicted_lookup[source_day]))
+            if values:
+                return float(sum(values) / float(len(values)))
+            return global_mean
+
+        day_of_year = int(day.timetuple().tm_yday)
+        phase = 2.0 * math.pi * float(day_of_year) / 366.0
+        return [
+            float(day.day),
+            float(day.month),
+            float(day.weekday()),
+            1.0 if day.weekday() >= 5 else 0.0,
+            _lag_value(7),
+            _lag_value(14),
+            _rolling_mean(7),
+            _rolling_mean(14),
+            math.sin(phase),
+            math.cos(phase),
+        ]
+
+    training_dates = [dt for dt, _ in parsed_history]
+    X_train: list[list[float]] = []
+    y_train: list[float] = []
+    for dt in training_dates:
+        X_train.append(_build_features(dt, series_by_date, {}))
+        y_train.append(float(series_by_date[dt]))
+
+    try:
+        model = PoissonRegressor(alpha=0.05, max_iter=500)
+        model.fit(np.asarray(X_train, dtype=float), np.asarray(y_train, dtype=float))
+    except Exception:
+        baseline = {day: _baseline_for_day(day) for day in range(1, month_days + 1)}
+        summary["clipped_days"] = month_days
+        return baseline, summary
+
+    predicted_dates: dict[date, float] = {}
+    result: dict[int, float | None] = {}
+    for day in range(1, month_days + 1):
+        current_day = date(int(target_year), int(target_month), int(day))
+        try:
+            features = _build_features(current_day, series_by_date, predicted_dates)
+            raw_pred = float(model.predict(np.asarray([features], dtype=float))[0])
+        except Exception:
+            raw_pred = _baseline_for_day(day)
+        if not math.isfinite(raw_pred):
+            raw_pred = _baseline_for_day(day)
+        pred = max(0.0, raw_pred)
+        predicted_dates[current_day] = pred
+        result[int(day)] = pred
+        summary["model_days"] += 1
+        if pred != raw_pred:
+            summary["clipped_days"] += 1
+    return result, summary
+
+
 def _append_compare_series_line(
     *,
     compare_payload: dict[str, Any],
@@ -432,6 +557,37 @@ def _append_compare_series_line(
     merged_modes["year_ml"] = str(((compare_line_payload.get("modes") or {}).get("year_b") or "empty"))
     merged_payload["modes"] = merged_modes
     return merged_payload
+
+
+def _append_poisson_ml_line(
+    *,
+    compare_payload: dict[str, Any],
+    daily_history: list[dict[str, Any]],
+    year_ml: int,
+) -> dict[str, Any]:
+    month = int(compare_payload.get("month") or 0)
+    rows = list(compare_payload.get("rows") or [])
+    predicted_by_day, d_summary = _predict_month_poisson_ml(
+        daily_history=daily_history,
+        target_year=int(year_ml),
+        target_month=month,
+    )
+    merged_rows: list[dict[str, Any]] = []
+    for row in rows:
+        normalized = dict(row)
+        day = int(normalized.get("day") or 0)
+        d_value = predicted_by_day.get(day)
+        normalized["d_value"] = float(d_value) if d_value is not None and math.isfinite(float(d_value)) else None
+        normalized["d_source"] = "ml_model"
+        merged_rows.append(normalized)
+    merged = dict(compare_payload)
+    merged["rows"] = merged_rows
+    merged["year_model"] = int(year_ml)
+    merged["d_summary"] = {
+        "model_days": int(d_summary.get("model_days") or 0),
+        "clipped_days": int(d_summary.get("clipped_days") or 0),
+    }
+    return merged
 
 
 def get_ml_compare_series_data(
@@ -493,6 +649,8 @@ def get_ml_compare_series_data(
                 "a_summary": {"fact_days": 0, "ml_days": 0},
                 "b_summary": {"fact_days": 0, "ml_days": 0},
                 "c_summary": {"fact_days": 0, "ml_days": 0},
+                "d_summary": {"model_days": 0, "clipped_days": 0},
+                "year_model": selected_compare_year_ml,
                 "history_has_data": False,
             },
             "filters": {
@@ -532,6 +690,11 @@ def get_ml_compare_series_data(
     compare_series = _append_compare_series_line(
         compare_payload=compare_series,
         compare_line_payload=compare_series_ml,
+        year_ml=selected_compare_year_ml,
+    )
+    compare_series = _append_poisson_ml_line(
+        compare_payload=compare_series,
+        daily_history=daily_history,
         year_ml=selected_compare_year_ml,
     )
     result_payload = {

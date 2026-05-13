@@ -137,7 +137,8 @@
 
 .ml-line-forecast,
 .ml-line-appg,
-.ml-line-compare-series {
+.ml-line-compare-series,
+.ml-line-poisson {
     fill: none;
     stroke-linecap: round;
     stroke-linejoin: round;
@@ -185,9 +186,23 @@
     cursor: pointer;
 }
 
+.ml-line-poisson {
+    stroke: #7C3AED;
+    stroke-width: 2.8;
+    stroke-dasharray: 7 4;
+}
+
+.ml-poisson-point {
+    fill: #7C3AED;
+    stroke: #ffffff;
+    stroke-width: 1.2;
+    cursor: pointer;
+}
+
 .ml-forecast-point:hover,
 .ml-appg-point:hover,
-.ml-compare-series-point:hover {
+.ml-compare-series-point:hover,
+.ml-poisson-point:hover {
     stroke-width: 2;
 }
 

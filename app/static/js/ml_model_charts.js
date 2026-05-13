@@ -109,9 +109,11 @@
         var aYear = data.year_a != null ? String(data.year_a) : 'A';
         var bYear = data.year_b != null ? String(data.year_b) : 'B';
         var cYear = data.year_ml != null ? String(data.year_ml) : 'Compare-series';
+        var dYear = data.year_model != null ? String(data.year_model) : cYear;
         var aPoints = rows.filter(function (row) { return row && row.a_value != null && !isNaN(Number(row.a_value)); }).length;
         var bPoints = rows.filter(function (row) { return row && row.b_value != null && !isNaN(Number(row.b_value)); }).length;
         var cPoints = rows.filter(function (row) { return row && row.c_value != null && !isNaN(Number(row.c_value)); }).length;
+        var dPoints = rows.filter(function (row) { return row && row.d_value != null && !isNaN(Number(row.d_value)); }).length;
         var overlapBC = false;
         if (bPoints && cPoints) {
             var same = 0;
@@ -145,7 +147,7 @@
             }
         }
 
-        if (!rows.length || (!aPoints && !bPoints && !cPoints)) {
+        if (!rows.length || (!aPoints && !bPoints && !cPoints && !dPoints)) {
             renderFallback(chartNode, fallbackNode, 'Нет данных для сравнения выбранных лет за выбранный месяц.');
             if (summaryNode) {
                 summaryNode.textContent = '';
@@ -162,6 +164,7 @@
             if (row && row.a_value != null) { values.push(Number(row.a_value)); }
             if (row && row.b_value != null) { values.push(Number(row.b_value)); }
             if (row && row.c_value != null) { values.push(Number(row.c_value)); }
+            if (row && row.d_value != null) { values.push(Number(row.d_value)); }
         });
         var yMin = 0;
         var yMax = Math.max.apply(null, values.concat([1]));
@@ -202,7 +205,7 @@
                 }
                 var dayText = row && row.day != null ? String(row.day) : '';
                 var source = row && row[sourceKey] ? String(row[sourceKey]) : '';
-                var sourceLabel = source === 'ml' ? 'ML' : 'факт';
+                var sourceLabel = source === 'ml' ? 'ML' : (source === 'ml_model' ? 'ML-model (Poisson)' : 'факт');
                 var valueText = String(Math.round(val * 100) / 100).replace('.', ',');
                 var tip = 'Год: ' + yearLabel + ' | День: ' + dayText + ' | Значение: ' + valueText + ' | Источник: ' + sourceLabel;
                 points += '<circle cx="' + x(i).toFixed(2) + '" cy="' + y(val).toFixed(2) + '" r="4.2" class="ml-point ' + pointClass + '" tabindex="0" data-tip="' + escapeHtml(tip) + '"></circle>';
@@ -239,21 +242,25 @@
             var className = overlapBC ? 'ml-line-compare-series ml-line-compare-series-overlap' : 'ml-line-compare-series';
             svg += '<path d="' + path + '" class="' + className + '"></path>';
         });
+        buildSegments('d_value').forEach(function (path) { svg += '<path d="' + path + '" class="ml-line-poisson"></path>'; });
         svg += buildPoints('a_value', 'ml-forecast-point', aYear, 'a_source');
         svg += buildPoints('b_value', 'ml-appg-point', bYear, 'b_source');
         svg += buildPoints('c_value', 'ml-compare-series-point', 'Compare-series ' + cYear, 'c_source');
+        svg += buildPoints('d_value', 'ml-poisson-point', 'ML-prog (Poisson) ' + dYear, 'd_source');
         svg += axisLabels + '</svg>';
 
         var modes = data.modes || {};
         var legendA = aYear + (modes.year_a === 'ml' ? ' (ML)' : (modes.year_a === 'mixed' ? ' (факт+ML)' : ' (факт)'));
         var legendB = bYear + (modes.year_b === 'ml' ? ' (ML)' : (modes.year_b === 'mixed' ? ' (факт+ML)' : ' (факт)'));
         var legendC = 'Compare-series ' + cYear + (modes.year_ml === 'ml' ? ' (ML)' : (modes.year_ml === 'mixed' ? ' (факт+ML)' : ' (факт)'));
+        var legendD = 'ML-prog (Poisson) ' + dYear;
 
         chartNode.innerHTML = ''
             + '<div class="ml-chart-legend">'
             + '<span class="ml-chart-legend-item"><i data-legend-color="#0F766E"></i>' + escapeHtml(legendA) + '</span>'
             + '<span class="ml-chart-legend-item"><i data-legend-color="#B45309"></i>' + escapeHtml(legendB) + '</span>'
             + '<span class="ml-chart-legend-item"><i data-legend-color="#1D4ED8"></i>' + escapeHtml(legendC) + '</span>'
+            + '<span class="ml-chart-legend-item"><i data-legend-color="#7C3AED"></i>' + escapeHtml(legendD) + '</span>'
             + '</div>'
             + '<div class="ml-chart-shell">' + svg + '</div>';
         applyLegendDecorators(chartNode);
@@ -263,9 +270,11 @@
             var aSummary = data.a_summary || {};
             var bSummary = data.b_summary || {};
             var cSummary = data.c_summary || {};
+            var dSummary = data.d_summary || {};
             summaryNode.textContent = 'Год 1 (' + aYear + '): факт ' + String(aSummary.fact_days || 0) + ', ML ' + String(aSummary.ml_days || 0)
                 + ' | Год 2 (' + bYear + '): факт ' + String(bSummary.fact_days || 0) + ', ML ' + String(bSummary.ml_days || 0)
                 + ' | Compare-series (' + cYear + '): факт ' + String(cSummary.fact_days || 0) + ', ML ' + String(cSummary.ml_days || 0)
+                + ' | ML-prog (Poisson): model_days ' + String(dSummary.model_days || 0) + ', clipped_days ' + String(dSummary.clipped_days || 0)
                 + (overlapBC ? ' | Compare-series совпадает с Год 2 для выбранных параметров' : '')
                 + (modes.overall === 'ml_ml' ? ' | обе линии построены ML' : '')
                 + (historyHasData ? '' : ' | нет входных данных');
