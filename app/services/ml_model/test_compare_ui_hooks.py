@@ -8,8 +8,8 @@ def test_compare_filters_sent_to_api() -> None:
     assert "var defaultMonth = String(new Date().getMonth() + 1);" in source
     assert "month: params.get('month') || defaultMonth" in source
     assert "/api/ml-compare-series" in source
-    assert "fetchMlCompareSeriesViaJob" in source
-    assert "Number(error.status) === 404" in source
+    assert "fetchMlCompareSeriesViaJob" not in source
+    assert "ml-model-jobs" not in source
 
 
 def test_compare_chart_render_hook_present() -> None:
@@ -23,9 +23,6 @@ def test_compare_chart_render_hook_present() -> None:
     assert "value.match(/(19\\d{2}|20\\d{2}|2100)/g)" in source
     assert "function buildFutureYearOptions()" in source
     assert "mlFutureYearFilter" in source
-    assert "mlForecastButton" in source
-    assert "forcedFutureYear" in source
-    assert "forceAllTablesForMl" in source
     assert "yearFromCompareA = parseYear(compare.year_a)" in source
     assert "yearFromCompareB = parseYear(compare.year_b)" in source
     assert "resolveYearPair(years" in source

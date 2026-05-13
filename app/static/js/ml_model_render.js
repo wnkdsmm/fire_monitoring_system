@@ -134,13 +134,6 @@
         node.classList.add('is-hidden');
     }
 
-    function normalizeDashEscapes(value) {
-        var text = String(value == null ? '' : value);
-        return text
-            .replace(/\\u2014/g, '—')
-            .replace(/\\u2013/g, '–');
-    }
-
     function collectFormFilters() {
         var filters = (currentData && currentData.filters) || {};
         var tableNames = Array.isArray(filters.table_names)
@@ -202,69 +195,21 @@
         if (tags) {
             tags.innerHTML = ''
                 + '<span class="hero-tag">Таблица: <strong>' + escapeHtml(summary.selected_table_label || 'Все таблицы') + '</strong></span>'
-                + '<span class="hero-tag">Главный фактор модели: <strong>' + escapeHtml(summary.top_feature_label || '-') + '</strong></span>'
-                + '<span class="hero-tag">Событие пожара: <strong>' + escapeHtml(summary.event_probability_enabled ? (summary.average_event_probability_display || '—') : 'не показано') + '</strong></span>';
+                + '<span class="hero-tag">Сравнение: <strong>факт и ML-достройка</strong></span>'
+                + '<span class="hero-tag">Горизонт: <strong>выбранный месяц</strong></span>';
         }
         if (stats) {
             stats.innerHTML = ''
                 + '<article class="hero-stat-card">'
-                + '<span class="hero-stat-label">Средний ожидаемый день</span>'
-                + '<strong class="hero-stat-value">' + escapeHtml(summary.average_expected_count_display || '0') + '</strong>'
-                + '<span class="hero-stat-foot">Средняя дневная интенсивность на выбранном горизонте прогноза.</span>'
+                + '<span class="hero-stat-label">Исторический период</span>'
+                + '<strong class="hero-stat-value">' + escapeHtml(summary.history_period_label || '-') + '</strong>'
+                + '<span class="hero-stat-foot">Данные, доступные для сравнения по дням месяца.</span>'
                 + '</article>'
                 + '<article class="hero-stat-card">'
-                + '<span class="hero-stat-label">День с максимальной нагрузкой</span>'
-                + '<strong class="hero-stat-value">' + escapeHtml(summary.peak_expected_count_display || '0') + '</strong>'
-                + '<span class="hero-stat-foot">Максимальное ожидаемое число пожаров: ' + escapeHtml(summary.peak_expected_count_day_display || '-') + '.</span>'
+                + '<span class="hero-stat-label">Записей в срезе</span>'
+                + '<strong class="hero-stat-value">' + escapeHtml(summary.fires_count_display || '0') + '</strong>'
+                + '<span class="hero-stat-foot">Количество пожаров после фильтров таблиц, причины и категории.</span>'
                 + '</article>';
-        }
-    }
-
-    function renderQuality(data) {
-        var quality = (data && data.quality_assessment) || {};
-        var title = byId('mlQualityTitle');
-        var subtitle = byId('mlQualitySubtitle');
-        var cards = byId('mlQualityMetricCards');
-        var tableShell = byId('mlCountTableShell');
-        if (title) {
-            title.textContent = quality.title || 'Валидация качества ML-прогноза количества пожаров';
-        }
-        if (subtitle) {
-            subtitle.textContent = quality.subtitle || 'Метрики рассчитаны на единой исторической выборке и показывают точность прогноза количества пожаров по дням.';
-        }
-        if (cards) {
-            var rows = Array.isArray(quality.metric_cards) ? quality.metric_cards : [];
-            cards.innerHTML = rows.map(function (item) {
-                return ''
-                    + '<article class="stat-card">'
-                    + '<span class="stat-label">' + escapeHtml(normalizeDashEscapes(item.label || '-')) + '</span>'
-                    + '<strong class="stat-value">' + escapeHtml(normalizeDashEscapes(item.value || '-')) + '</strong>'
-                    + '<span class="stat-foot">' + escapeHtml(normalizeDashEscapes(item.meta || '')) + '</span>'
-                    + '</article>';
-            }).join('');
-        }
-        if (tableShell) {
-            var countTable = quality.count_table || {};
-            var countRows = Array.isArray(countTable.rows) ? countTable.rows : [];
-            if (!countRows.length) {
-                tableShell.innerHTML = '<div class="mini-empty">' + escapeHtml(countTable.empty_message || 'Нет данных для сравнения методов.') + '</div>';
-                return;
-            }
-            tableShell.innerHTML = ''
-                + '<table class="forecast-table forecast-table-ml">'
-                + '<thead><tr><th>Метод</th><th>Роль</th><th>MAE</th><th>RMSE</th><th>sMAPE</th><th>Девиация Пуассона</th><th>ΔMAE к базовой модели</th><th>Статус</th></tr></thead>'
-                + '<tbody>' + countRows.map(function (row) {
-                    return '<tr>'
-                        + '<td>' + escapeHtml(normalizeDashEscapes(row.method_label || '-')) + '</td>'
-                        + '<td>' + escapeHtml(normalizeDashEscapes(row.role_label || '-')) + '</td>'
-                        + '<td>' + escapeHtml(normalizeDashEscapes(row.mae_display || '-')) + '</td>'
-                        + '<td>' + escapeHtml(normalizeDashEscapes(row.rmse_display || '-')) + '</td>'
-                        + '<td>' + escapeHtml(normalizeDashEscapes(row.smape_display || '-')) + '</td>'
-                        + '<td>' + escapeHtml(normalizeDashEscapes(row.poisson_display || '-')) + '</td>'
-                        + '<td>' + escapeHtml(normalizeDashEscapes(row.mae_delta_display || '-')) + '</td>'
-                        + '<td>' + escapeHtml(normalizeDashEscapes(row.selection_label || '-')) + '</td>'
-                        + '</tr>';
-                }).join('') + '</tbody></table>';
         }
     }
 
@@ -303,7 +248,6 @@
         setSelectOptions('mlFutureYearFilter', buildFutureYearOptions(), yearB, 'Год ML');
 
         renderHero(data);
-        renderQuality(data);
         charts.renderCompareChart(compare, 'mlCompareChart', 'mlCompareChartFallback', 'mlCompareChartSummary');
     }
 

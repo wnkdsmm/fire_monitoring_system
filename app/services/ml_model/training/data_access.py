@@ -1,12 +1,11 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from typing import Any, Callable, Sequence
 
 from app.cache import build_immutable_payload_ttl_cache, callable_cache_scope
-from app.services.forecasting.types import ForecastingDailyHistoryRow, ForecastingOptionCatalog, ForecastingTableMetadata
 from app.services.forecasting.selection import _canonicalize_source_tables, _normalize_filter_value
+from app.services.forecasting.types import ForecastingDailyHistoryRow, ForecastingOptionCatalog, ForecastingTableMetadata
 from app.services.shared.data_base import DataLoader
-from .types import MlAggregationInputs, MlFilterBundle
 
 _ML_FILTER_BUNDLE_CACHE = build_immutable_payload_ttl_cache(ttl_seconds=None)
 _ML_AGGREGATION_INPUT_CACHE = build_immutable_payload_ttl_cache(ttl_seconds=None)
@@ -25,8 +24,8 @@ def load_ml_filter_bundle(
     object_category: str,
     collect_forecasting_metadata: Callable[[Sequence[str]], tuple[list[ForecastingTableMetadata], list[str]]],
     build_option_catalog_sql: Callable[..., ForecastingOptionCatalog],
-    resolve_option_value: Callable[[Sequence[dict[str, str]], str], str],  # one-off
-) -> MlFilterBundle:
+    resolve_option_value: Callable[[Sequence[dict[str, str]], str], str],
+) -> dict[str, Any]:
     bundle = _load_ml_filter_bundle(
         source_tables=source_tables,
         selected_history_window=selected_history_window,
@@ -37,10 +36,7 @@ def load_ml_filter_bundle(
     return {
         **bundle,
         "selected_cause": resolve_option_value(option_catalog["causes"], cause),
-        "selected_object_category": resolve_option_value(
-            option_catalog["object_categories"],
-            object_category,
-        ),
+        "selected_object_category": resolve_option_value(option_catalog["object_categories"], object_category),
     }
 
 
@@ -48,15 +44,15 @@ def load_ml_aggregation_inputs(
     *,
     source_tables: Sequence[str],
     selected_history_window: str,
-    filter_bundle: MlFilterBundle,
+    filter_bundle: dict[str, Any],
     build_daily_history_sql: Callable[..., list[ForecastingDailyHistoryRow]],
     count_forecasting_records_sql: Callable[..., int],
-) -> MlAggregationInputs:
+) -> dict[str, Any]:
     cache_key = _ml_aggregation_input_cache_key(
         source_tables,
         selected_history_window,
-        filter_bundle["selected_cause"],
-        filter_bundle["selected_object_category"],
+        str(filter_bundle.get("selected_cause") or "all"),
+        str(filter_bundle.get("selected_object_category") or "all"),
         build_daily_history_sql=build_daily_history_sql,
         count_forecasting_records_sql=count_forecasting_records_sql,
     )
@@ -64,22 +60,22 @@ def load_ml_aggregation_inputs(
     if cached_inputs is not None:
         return cached_inputs
 
-    metadata_items = filter_bundle["metadata_items"]
+    metadata_items = filter_bundle.get("metadata_items") or []
     payload = {
         **filter_bundle,
         "daily_history": build_daily_history_sql(
             source_tables,
             history_window=selected_history_window,
-            cause=filter_bundle["selected_cause"],
-            object_category=filter_bundle["selected_object_category"],
+            cause=str(filter_bundle.get("selected_cause") or "all"),
+            object_category=str(filter_bundle.get("selected_object_category") or "all"),
             metadata_items=metadata_items,
         ),
     }
     payload["filtered_records_count"] = count_forecasting_records_sql(
         source_tables,
         history_window=selected_history_window,
-        cause=payload["selected_cause"],
-        object_category=payload["selected_object_category"],
+        cause=str(payload.get("selected_cause") or "all"),
+        object_category=str(payload.get("selected_object_category") or "all"),
         metadata_items=metadata_items,
     )
     return _ML_AGGREGATION_INPUT_CACHE.set(cache_key, payload)
@@ -91,7 +87,7 @@ def _load_ml_filter_bundle(
     selected_history_window: str,
     collect_forecasting_metadata: Callable[[Sequence[str]], tuple[list[ForecastingTableMetadata], list[str]]],
     build_option_catalog_sql: Callable[..., ForecastingOptionCatalog],
-) -> MlFilterBundle:
+) -> dict[str, Any]:
     cache_key = _ml_filter_bundle_cache_key(
         source_tables,
         selected_history_window,
@@ -158,43 +154,6 @@ class MlModelDataLoader(DataLoader):
     def clear_cache(self) -> None:
         clear_ml_model_input_cache()
 
-    def load_filter_bundle(
-        self,
-        *,
-        source_tables: Sequence[str],
-        selected_history_window: str,
-        cause: str,
-        object_category: str,
-        collect_forecasting_metadata: Callable[[Sequence[str]], tuple[list[ForecastingTableMetadata], list[str]]],
-        build_option_catalog_sql: Callable[..., ForecastingOptionCatalog],
-        resolve_option_value: Callable[[Sequence[dict[str, str]], str], str],  # one-off
-    ) -> MlFilterBundle:
-        return load_ml_filter_bundle(
-            source_tables=source_tables,
-            selected_history_window=selected_history_window,
-            cause=cause,
-            object_category=object_category,
-            collect_forecasting_metadata=collect_forecasting_metadata,
-            build_option_catalog_sql=build_option_catalog_sql,
-            resolve_option_value=resolve_option_value,
-        )
-
-    def load_aggregation_inputs(
-        self,
-        *,
-        source_tables: Sequence[str],
-        selected_history_window: str,
-        filter_bundle: MlFilterBundle,
-        build_daily_history_sql: Callable[..., list[ForecastingDailyHistoryRow]],
-        count_forecasting_records_sql: Callable[..., int],
-    ) -> MlAggregationInputs:
-        return load_ml_aggregation_inputs(
-            source_tables=source_tables,
-            selected_history_window=selected_history_window,
-            filter_bundle=filter_bundle,
-            build_daily_history_sql=build_daily_history_sql,
-            count_forecasting_records_sql=count_forecasting_records_sql,
-        )
 
 __all__ = [
     "MlModelDataLoader",

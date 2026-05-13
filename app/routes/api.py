@@ -6,9 +6,7 @@ from __future__ import annotations
 # - GET /api/clustering-data -> app.services.clustering.core.get_clustering_data -> app.routes.api_common, app.state
 # - POST /api/clustering-jobs -> app.services.clustering.jobs.start_clustering_job -> app.routes.api_common, app.state
 # - GET /api/clustering-jobs/{job_id} -> app.services.clustering.jobs.get_clustering_job_status -> app.routes.api_common, app.state
-# - GET /api/ml-model-data -> app.services.ml_model.core.get_ml_model_data -> app.routes.api_common, app.state
-# - POST /api/ml-model-jobs -> app.services.ml_model.jobs.start_ml_model_job -> app.routes.api_common, app.state
-# - GET /api/ml-model-jobs/{job_id} -> app.services.ml_model.jobs.get_ml_job_status -> app.routes.api_common, app.state
+# - POST /api/ml-compare-series -> app.services.ml_model.core.get_ml_compare_series_data -> app.routes.api_common, app.state
 # - GET /api/access-points-data -> app.services.access_points.core.get_access_points_data -> app.routes.api_common, app.state
 # - GET /api/column-search -> app.services.table_workflows.build_column_search_payload -> app.routes.api_common
 # - POST /api/column-search/preview -> app.services.table_workflows.build_column_search_preview_payload -> app.routes.api_common
@@ -60,9 +58,8 @@ from .api_common import (
 )
 from .api_dashboard import dashboard_data_endpoint, router as dashboard_router
 from .api_ml_model import (
-    ml_model_job_status_endpoint,
+    ml_compare_series_endpoint,
     router as ml_model_router,
-    start_ml_model_job_endpoint,
 )
 from .api_ops import (
     import_data_endpoint,
@@ -102,11 +99,10 @@ __all__ = [
     "ensure_session_id",
     "import_data_endpoint",
     "logs",
-    "ml_model_job_status_endpoint",
+    "ml_compare_series_endpoint",
     "router",
     "run_profiling_endpoint",
     "start_clustering_job_endpoint",
-    "start_ml_model_job_endpoint",
     "table_page_endpoint",
     "upload_file",
     "utf8_json",

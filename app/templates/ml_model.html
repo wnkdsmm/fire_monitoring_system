@@ -15,23 +15,15 @@
 
 {% block sidebar_status %}
     <div class="sidebar-status" id="mlSidebarStatus">
-        <span class="status-badge{% if data.bootstrap_mode == 'deferred' or data.has_data %} status-badge-live{% endif %}">
-            {% if data.bootstrap_mode == 'deferred' %}Выполняется подготовка ML-прогноза{% elif data.has_data %}ML-прогноз сформирован{% else %}Требуется уточнение параметров{% endif %}
+        <span class="status-badge{% if data.has_data %} status-badge-live{% endif %}">
+            {% if data.has_data %}Сравнение доступно{% else %}Требуется уточнение параметров{% endif %}
         </span>
         <div class="status-line">
-            <span>Модель по числу пожаров</span>
-            <strong>{{ summary.count_model_label }}</strong>
+            <span>Режим</span>
+            <strong>Compare-series</strong>
         </div>
         <div class="status-line">
-            <span>Событие пожара</span>
-            <strong>{{ summary.event_model_label }}</strong>
-        </div>
-        <div class="status-line">
-            <span>Проверка на истории</span>
-            <strong>{{ summary.backtest_method_label }}</strong>
-        </div>
-        <div class="status-line">
-            <span>Исторический период</span>
+            <span>Исторический срез</span>
             <strong>{{ summary.history_period_label }}</strong>
         </div>
     </div>
@@ -41,7 +33,6 @@
 <div class="dashboard-main ml-model-main">
 {% include 'includes/ml_model/hero_intro.html' %}
 {% include 'includes/ml_model/_controls_overview.html' %}
-{% include 'includes/ml_model/_quality_sections.html' %}
 </div>
 {% endblock %}
 

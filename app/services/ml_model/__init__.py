@@ -1,4 +1,4 @@
-"""ML service package facade with lazy public API exports."""
+﻿"""ML compare-series facade."""
 
 from __future__ import annotations
 
@@ -6,31 +6,13 @@ from importlib import import_module
 from typing import Any
 
 _MODULE_EXPORTS = {
-    "backtesting": ".backtesting",
     "core": ".core",
-    "jobs": ".jobs",
-    "ml_model_types": ".ml_model_config_types",
-    "payloads": ".payloads",
-    "training": ".training",
-    # Legacy module aliases (kept for compatibility with old imports).
-    "constants": ".ml_model_config_types",
-    "data_access": ".training.data_access",
-    "domain_types": ".ml_model_result_types",
-    "presentation": ".training.presentation_training",
-    "runtime": ".ml_model_result_types",
-    "training_backtesting": ".backtesting.training_backtesting_execution",
-    "training_forecast": ".training.training_forecast",
-    "training_models": ".training.training_models",
-    "training_result": ".training.training_result",
 }
 
 _ATTRIBUTE_EXPORTS = {
-    "_run_backtest": (".training.training", "_run_backtest"),
     "clear_ml_model_cache": (".core", "clear_ml_model_cache"),
-    "get_ml_job_status": (".jobs", "get_ml_job_status"),
-    "get_ml_model_data": (".core", "get_ml_model_data"),
+    "get_ml_compare_series_data": (".core", "get_ml_compare_series_data"),
     "get_ml_model_shell_context": (".core", "get_ml_model_shell_context"),
-    "start_ml_model_job": (".jobs", "start_ml_model_job"),
 }
 
 __all__ = sorted([*_MODULE_EXPORTS.keys(), *_ATTRIBUTE_EXPORTS.keys()])
@@ -59,4 +41,3 @@ def __getattr__(name: str) -> Any:
 
 def __dir__() -> list[str]:
     return sorted(set(globals().keys()) | set(__all__))
-
