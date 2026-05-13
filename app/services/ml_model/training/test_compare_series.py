@@ -77,3 +77,15 @@ def test_compare_series_partial_fact_hybrid() -> None:
     assert result["rows"][1]["a_source"] == "ml"
     assert result["a_summary"]["fact_days"] == 1
     assert result["a_summary"]["ml_days"] >= 1
+
+
+def test_compare_series_uses_real_month_length_for_selected_years() -> None:
+    result = build_compare_series(
+        month=2,
+        year_a=2024,
+        year_b=2023,
+        daily_history=[],
+        ml_month_provider=lambda _y, _m: {},
+    )
+    assert len(result["rows"]) == 29
+    assert result["rows"][-1]["day"] == 29

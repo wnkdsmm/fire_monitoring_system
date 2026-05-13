@@ -76,8 +76,8 @@
 
         const useCards = columns.length <= 5;
         const tableClassName = useCards
-            ? 'preview-table table-stack-mobile'
-            : 'preview-table table-sticky-first';
+            ? 'data-table table-stack-mobile'
+            : 'data-table table-sticky-first';
 
         const header = '<tr>' + columns.map(function (column) {
             return '<th>' + escapeHtml(column) + '</th>';
@@ -93,8 +93,8 @@
             }).join('')
             : '<tr><td colspan="' + columns.length + '">Нет строк для предпросмотра.</td></tr>';
 
-        previewNode.innerHTML = '<div class="table-scroll"><table class="' + tableClassName + '"><thead>' + header + '</thead><tbody>' + body + '</tbody></table></div>';
-        enableDragScroll(previewNode.querySelector('.table-scroll'));
+        previewNode.innerHTML = '<div class="data-table-shell"><table class="' + tableClassName + '"><thead>' + header + '</thead><tbody>' + body + '</tbody></table></div>';
+        enableDragScroll(previewNode.querySelector('.data-table-shell'));
     }
 
     function isColumnProvidedBySelectedGroup(columnName) {

@@ -341,3 +341,26 @@ def test_compare_service_may_2020_vs_2018_returns_history_has_data_true_when_poi
     assert isinstance(rows, list)
     assert any((row.get("a_value") is not None or row.get("b_value") is not None) for row in rows)
     assert compare["history_has_data"] is True
+
+
+def test_compare_service_caps_overheated_linear_extrapolation(monkeypatch) -> None:
+    caches = create_default_caches()
+    monkeypatch.setattr(ml_core, "_build_ml_request_state", lambda **kwargs: _fake_request_state(month=5, year_a=2030, year_b=2024))
+    monkeypatch.setattr(ml_core, "_load_ml_filter_bundle", lambda **_k: {"option_catalog": {}, "metadata_items": [], "preload_notes": [], "selected_cause": "all", "selected_object_category": "all"})
+    monkeypatch.setattr(
+        ml_core,
+        "_load_ml_aggregation_inputs",
+        lambda **_k: {
+            "daily_history": [
+                {"date": date(2020, 5, 1), "count": 10.0},
+                {"date": date(2021, 5, 1), "count": 20.0},
+                {"date": date(2022, 5, 1), "count": 30.0},
+            ],
+            "filtered_records_count": 3,
+        },
+    )
+
+    payload = ml_core.get_ml_compare_series_data(month=5, year_a=2030, year_b=2024, caches=caches)
+    compare = payload["compare_series"]
+    first_day = next(row for row in compare["rows"] if int(row.get("day") or 0) == 1)
+    assert float(first_day["a_value"]) <= 32.5

@@ -3,6 +3,7 @@ Option Explicit
 Dim shell, fso, projectRoot, logsDir, logFilePath
 Dim envFilePath, envExamplePath, envVars
 Dim appHost, appPort, appUrl
+Dim probeUrl
 Dim resolvedPort
 Dim existingAppUrl
 Dim venvPython, basePython
@@ -52,6 +53,7 @@ End If
 
 resolvedPort = ResolveAvailablePort(appPort, 20)
 appUrl = "http://" & appHost & ":" & resolvedPort & "/"
+probeUrl = appUrl & "docs"
 
 LogMessage "Resolved APP_HOST=" & appHost & ", APP_PORT=" & appPort & ", EFFECTIVE_PORT=" & resolvedPort
 
@@ -116,7 +118,7 @@ startCommand = _
 LogMessage "Starting server command."
 shell.Run startCommand & " >> " & Quote(logFilePath) & " 2>>&1", 0, False
 
-If WaitForUrl(appUrl, 45) Then
+If WaitForUrl(probeUrl, 45) Then
     LogMessage "Server ready: " & appUrl
     shell.Run appUrl, 1, False
     WScript.Quit 0
@@ -240,7 +242,7 @@ Function FindRunningAppUrl(hostValue, preferredPort, maxAttempts)
     For i = 0 To maxAttempts
         portCandidate = CStr(CLng(preferredPort) + i)
         candidateUrl = "http://" & hostValue & ":" & portCandidate & "/"
-        If IsServerRunning(candidateUrl) Then
+        If IsServerRunning(candidateUrl & "docs") Then
             FindRunningAppUrl = candidateUrl
             Exit Function
         End If

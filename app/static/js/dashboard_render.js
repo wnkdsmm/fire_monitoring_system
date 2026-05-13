@@ -12,7 +12,6 @@
             var renderListItems = shared.renderListItems;
             var renderPlotlyInContainer = shared.renderPlotlyInContainer;
             var setHref = shared.setHref;
-            var setSelectOptions = shared.setSelectOptions;
             var setText = shared.setText;
             var createTableChecklist = shared.createTableChecklist;
             var dashboardTableChecklist = typeof createTableChecklist === 'function'
@@ -219,9 +218,6 @@ function renderManagementCards(items) {
         } else if (safeFilters.table_name) {
             params.set('table_name', safeFilters.table_name);
         }
-        if (safeFilters.group_column) {
-            params.set('group_column', safeFilters.group_column);
-        }
 
         const query = params.toString();
         return '/brief/dashboard.txt' + (query ? '?' + query : '');
@@ -252,9 +248,6 @@ function renderManagementCards(items) {
             });
         } else if (safeFilters.table_name) {
             params.set('table_name', safeFilters.table_name);
-        }
-        if (safeFilters.group_column) {
-            params.set('group_column', safeFilters.group_column);
         }
         if (mode) {
             params.set('mode', mode);
@@ -287,7 +280,6 @@ function renderManagementCards(items) {
                 .filter(function (value) { return value && value !== 'all'; });
         }
         renderTableChecklist(filters.available_tables, selectedTableNames);
-        setSelectOptions('groupColumnFilter', filters.available_group_columns, filters.group_column, 'Нет доступных колонок');
 
         setText('heroTableLabel', scope.table_label || 'Все таблицы');
         setText('heroYearLabel', scope.year_label || 'Все годы');
@@ -306,8 +298,7 @@ function renderManagementCards(items) {
         renderManagementActions(management.actions || []);
         updateDashboardBriefExport({
             table_name: filters.table_name || '',
-            table_names: selectedTableNames,
-            group_column: filters.group_column || ''
+            table_names: selectedTableNames
         });
         updateDashboardScreenLinks({
             table_name: filters.table_name || '',

@@ -6,7 +6,7 @@
     {% for selected_table in (filters.table_names or []) %}
         {% set export_query.value = export_query.value ~ '&table_names=' ~ selected_table %}
     {% endfor %}
-    {% set export_href = '/brief/dashboard.txt?' ~ export_query.value ~ '&group_column=' ~ filters.group_column %}
+    {% set export_href = '/brief/dashboard.txt?' ~ export_query.value %}
     {% set export_link_id = 'dashboardExportBriefLink' %}
     {% set cards_id = 'managementBriefCards' %}
 
@@ -83,15 +83,6 @@
                                 </div>
                             </div>
                             <div id="dashboardTableFilterSelectedList" class="dashboard-table-selected-list"></div>
-                        </label>
-                        <label class="filter-field">
-                            <span>Разрез</span>
-                            <select id="groupColumnFilter" name="group_column">
-                                {% for option in filters.available_group_columns %}
-                                <option value="{{ option.value }}" {% if option.value == filters.group_column %}selected{% endif %}>{{ option.label }}</option>
-                                {% endfor %}
-                            </select>
-                            <small class="filter-hint">Определяет аналитическую группировку для сравнения территорий, причин и иных категорий.</small>
                         </label>
                         <div class="filter-field filter-actions">
                             <span>Действие</span>

@@ -309,6 +309,20 @@
     margin-inline: auto;
 }
 
+.chart-panel-yearly-trend {
+    min-height: var(--chart-height-lg);
+    display: flex;
+    flex-direction: column;
+}
+
+.chart-panel-yearly-trend #recentYearsChart {
+    margin-top: auto;
+}
+
+.chart-panel-yearly-trend .plotly-chart {
+    min-height: clamp(300px, 48vh, 380px);
+}
+
 .plotly-chart .js-plotly-plot,
 .plotly-chart .plot-container {
     width: 100% !important;

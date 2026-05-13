@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import re
+
 from app.db_metadata import (
     get_table_column_set_cached,
     get_table_columns_cached,
@@ -9,8 +11,25 @@ from app.db_metadata import (
 )
 
 
+_NAT_SORT_SPLIT_RE = re.compile(r"(\d+)")
+
+
+def _natural_sort_key(value: str) -> tuple[object, ...]:
+    parts = _NAT_SORT_SPLIT_RE.split(str(value or ""))
+    key: list[object] = []
+    for part in parts:
+        if not part:
+            continue
+        if part.isdigit():
+            key.append(int(part))
+            continue
+        key.append(part.casefold())
+    return tuple(key)
+
+
 def get_all_tables(*, force_refresh: bool = False) -> list[str]:
-    return get_table_names_cached(force_refresh=force_refresh)
+    table_names = get_table_names_cached(force_refresh=force_refresh)
+    return sorted(table_names, key=_natural_sort_key)
 
 
 def get_table_columns(table_name: str, *, force_refresh: bool = False) -> list[str]:

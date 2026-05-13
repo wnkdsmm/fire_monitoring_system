@@ -645,8 +645,46 @@ def _build_compare_series_payload(
         base = positive_values if positive_values else values
         return float(sum(base) / len(base))
 
+    def _median(values: list[float]) -> float:
+        if not values:
+            return 0.0
+        ordered = sorted(values)
+        mid = len(ordered) // 2
+        if len(ordered) % 2 == 1:
+            return float(ordered[mid])
+        return float((ordered[mid - 1] + ordered[mid]) / 2.0)
+
+    def _percentile(values: list[float], q: float) -> float:
+        if not values:
+            return 0.0
+        ordered = sorted(values)
+        if len(ordered) == 1:
+            return float(ordered[0])
+        rank = max(0.0, min(1.0, q)) * (len(ordered) - 1)
+        low = int(rank)
+        high = min(low + 1, len(ordered) - 1)
+        weight = rank - low
+        return float(ordered[low] * (1.0 - weight) + ordered[high] * weight)
+
     def _retro_predict_missing_day(target_year: int, target_month: int, target_day: int) -> float:
-        # a) same day/month trend across all years (not just nearest year)
+        month_positive_values = [value for value in month_values.get(int(target_month), []) if value > 0]
+        if month_positive_values:
+            month_median = _median(month_positive_values)
+            month_p75 = _percentile(month_positive_values, 0.75)
+            month_ceiling = min(
+                max(month_positive_values) * 1.25,
+                month_p75 * 1.35,
+                month_median * 2.20,
+            )
+        else:
+            month_ceiling = None
+
+        def _apply_ceiling(value: float) -> float:
+            if month_ceiling is None:
+                return float(value)
+            return float(min(value, month_ceiling))
+
+        # a) same day/month robust baseline across all years
         same_day_candidates: list[tuple[int, float]] = []
         for (row_year, row_month, row_day), row_value in facts_by_ymd.items():
             if row_month == target_month and row_day == target_day and row_year != target_year:
@@ -655,21 +693,8 @@ def _build_compare_series_payload(
         if positive_same_day_candidates:
             same_day_candidates = positive_same_day_candidates
         if same_day_candidates:
-            if len(same_day_candidates) == 1:
-                return same_day_candidates[0][1]
-            years = [item[0] for item in same_day_candidates]
             values = [item[1] for item in same_day_candidates]
-            x_mean = float(sum(years) / len(years))
-            y_mean = float(sum(values) / len(values))
-            denom = float(sum((year - x_mean) ** 2 for year in years))
-            if denom > 0:
-                slope = float(sum((year - x_mean) * (value - y_mean) for year, value in same_day_candidates) / denom)
-                intercept = y_mean - slope * x_mean
-                predicted = intercept + slope * float(target_year)
-                if predicted < 0:
-                    return 0.0
-                return float(predicted)
-            return y_mean
+            return _apply_ceiling(_median(values))
 
         # b) monthly average for this weekday
         try:
@@ -679,12 +704,12 @@ def _build_compare_series_payload(
         if target_weekday is not None:
             weekday_values = month_weekday_values.get((int(target_month), int(target_weekday)), [])
             if weekday_values:
-                return _avg(weekday_values)
+                return _apply_ceiling(_avg(weekday_values))
 
         # c) monthly average
         by_month = month_values.get(int(target_month), [])
         if by_month:
-            return _avg(by_month)
+            return _apply_ceiling(_avg(by_month))
 
         # d) fallback zero
         return 0.0

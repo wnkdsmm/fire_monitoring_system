@@ -29,8 +29,7 @@
 
                 return {
                     table_name: selectedTableNames.length === 1 ? selectedTableNames[0] : 'all',
-                    table_names: selectedTableNames,
-                    group_column: byId('groupColumnFilter') ? byId('groupColumnFilter').value : ''
+                    table_names: selectedTableNames
                 };
             }
 

@@ -1,26 +1,8 @@
 <section class="dashboard-layout dashboard-layout-focused">
                 <div class="dashboard-primary">
-                    <div class="dashboard-grid dashboard-grid-three">
-                        <article class="panel ranking-panel">
-                            <div class="panel-head">
-                                <h2>Преобладающие категории в текущем срезе</h2>
-                                <span class="panel-meta">Распределение категорий и типов, формирующих основную структуру наблюдаемой пожарной обстановки.</span>
-                            </div>
-                            <div id="topDistributionList" class="ranking-list">
-                                {% if rankings.top_distribution %}
-                                    {% for item in rankings.top_distribution %}
-                                    <div class="ranking-row ranking-row-fire" title="{{ item.label }}: {{ item.value_display }}">
-                                        <div class="ranking-label">{{ item.label }}</div>
-                                        <div class="ranking-meta">{{ item.value_display }}</div>
-                                    </div>
-                                    {% endfor %}
-                                {% else %}
-                                <div class="mini-empty">Данные для распределения отсутствуют.</div>
-                                {% endif %}
-                            </div>
-                        </article>
+                    <div class="dashboard-grid dashboard-grid-two">
 
-                        <article class="panel ranking-panel">
+                        <article class="panel ranking-panel chart-panel-yearly-trend">
                             <div class="panel-head">
                                 <h2>Динамика показателей по годам</h2>
                                 <span class="panel-meta">Многолетнее изменение интенсивности пожарной обстановки в выбранном срезе.</span>
@@ -28,33 +10,14 @@
                             {{ render_plotly_chart('recentYearsChart', 'График: динамика количества пожаров по годам') }}
                         </article>
 
-                        <article class="panel ranking-panel">
-                            <div class="panel-head">
-                                <h2>Вклад источников данных в обзор</h2>
-                                <span class="panel-meta">Сравнительный вклад таблиц-источников в формирование итоговой аналитической картины.</span>
-                            </div>
-                            <div id="topTablesList" class="ranking-list">
-                                {% if rankings.top_tables %}
-                                    {% for item in rankings.top_tables %}
-                                    <div class="ranking-row ranking-row-table" title="{{ item.label }}: {{ item.value_display }}">
-                                        <div class="ranking-label">{{ item.label }}</div>
-                                        <div class="ranking-meta">{{ item.value_display }}</div>
-                                    </div>
-                                    {% endfor %}
-                                {% else %}
-                                <div class="mini-empty">В выбранных параметрах таблицы отсутствуют.</div>
-                                {% endif %}
-                            </div>
-                        </article>
-                    </div>
-
-                    <article class="panel chart-panel chart-panel-large chart-panel-causes">
+                        <article class="panel chart-panel chart-panel-large chart-panel-causes">
                         <div class="panel-head">
                             <h2 id="yearlyFiresTitle">{{ charts.yearly_fires.title }}</h2>
                             <span class="panel-meta">Частотная структура причин пожаров в выбранном аналитическом срезе.</span>
                         </div>
                         {{ render_plotly_chart('yearlyFiresChart', 'График: частотная структура причин пожаров') }}
-                    </article>
+                        </article>
+                    </div>
 
                     <div class="dashboard-grid dashboard-grid-two">
                         <article class="panel chart-panel chart-panel-large">

@@ -85,6 +85,14 @@
         '</li>';
     }
 
+    function sortTableNames(tableNames) {
+        var collator = new Intl.Collator('ru', { numeric: true, sensitivity: 'base' });
+        return (Array.isArray(tableNames) ? tableNames.slice() : [])
+            .map(function (name) { return String(name || '').trim(); })
+            .filter(function (name) { return name.length > 0; })
+            .sort(function (left, right) { return collator.compare(left, right); });
+    }
+
     function renderTableList(tableNames) {
         var list = byId('tableList');
         var emptyState = byId('tableListEmpty');
@@ -92,7 +100,8 @@
             return;
         }
 
-        if (!Array.isArray(tableNames) || !tableNames.length) {
+        var sortedNames = sortTableNames(tableNames);
+        if (!sortedNames.length) {
             list.innerHTML = '';
             list.dataset.hasItems = 'false';
             list.classList.add('is-hidden');
@@ -102,7 +111,7 @@
             return;
         }
 
-        list.innerHTML = tableNames.map(buildTableCard).join('');
+        list.innerHTML = sortedNames.map(buildTableCard).join('');
         list.dataset.hasItems = 'true';
         list.classList.remove('is-hidden');
         list.hidden = false;
@@ -162,7 +171,7 @@
     }
 
     function applyTableState(tableNames) {
-        var items = Array.isArray(tableNames) ? tableNames : [];
+        var items = sortTableNames(tableNames);
         renderTableList(items);
         updateCount('heroTablesCount', items.length);
         updateCount('sidebarTablesCount', items.length);

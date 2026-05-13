@@ -8,7 +8,7 @@ from sqlalchemy import text
 from app.db_metadata import get_table_names_cached
 from app.runtime_invalidation import invalidate_table_related_caches
 from app.shared.sql_utils import quote_identifier
-from app.table_metadata import get_table_columns
+from app.table_metadata import get_all_tables, get_table_columns
 from config.db import engine
 
 _NO_SELECTED_COLUMNS_MESSAGE = "Не выбрано ни одной колонки для новой таблицы"
@@ -129,7 +129,7 @@ def delete_tables(table_names: Sequence[Any], *, db_engine=engine) -> dict[str, 
 
     invalidate_table_related_caches()
 
-    remaining_tables = get_table_names_cached()
+    remaining_tables = get_all_tables()
     return {
         "deleted_tables": normalized_names,
         "remaining_tables": remaining_tables,
