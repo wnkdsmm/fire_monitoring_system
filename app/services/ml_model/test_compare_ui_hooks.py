@@ -78,4 +78,6 @@ def test_compare_chart_marks_ml_in_legend_and_summary() -> None:
     assert "ML-prog (Poisson)" in source
     assert "d_value" in source
     assert "d_summary" in source
+    assert "d_quality" in source
+    assert "Poisson quality" in source
     assert "ML-model (Poisson)" in source

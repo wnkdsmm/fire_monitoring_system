@@ -606,6 +606,100 @@ def _append_poisson_ml_line(
     return merged
 
 
+def _evaluate_poisson_backtest(
+    *,
+    daily_history: list[dict[str, Any]],
+    target_month: int,
+    year_ml: int,
+) -> dict[str, Any]:
+    default = {
+        "quality_available": False,
+        "mae": None,
+        "rmse": None,
+        "smape": None,
+        "sample_size": 0,
+        "folds_used": 0,
+        "reason": "insufficient_history",
+    }
+    try:
+        if _load_poisson_dependencies() is None:
+            return {**default, "reason": "model_unavailable"}
+
+        facts_by_year_day: dict[int, dict[int, float]] = {}
+        for row in daily_history:
+            row_date = _parse_optional_iso_date(str(row.get("date") or ""))
+            if row_date is None or row_date.month != int(target_month) or row_date.year >= int(year_ml):
+                continue
+            raw = row.get("count")
+            if raw is None:
+                continue
+            try:
+                value = float(raw)
+            except (TypeError, ValueError):
+                continue
+            if not math.isfinite(value):
+                continue
+            facts_by_year_day.setdefault(int(row_date.year), {})[int(row_date.day)] = max(0.0, float(value))
+
+        candidate_years = sorted(facts_by_year_day.keys())
+        if len(candidate_years) < 2:
+            return default
+        fold_years = candidate_years[-5:]
+
+        abs_errors: list[float] = []
+        sq_errors: list[float] = []
+        smape_values: list[float] = []
+        folds_used = 0
+
+        for test_year in fold_years:
+            actual_by_day = facts_by_year_day.get(int(test_year)) or {}
+            if not actual_by_day:
+                continue
+            pred_by_day, _summary = _predict_month_poisson_ml(
+                daily_history=daily_history,
+                target_year=int(test_year),
+                target_month=int(target_month),
+            )
+            fold_count = 0
+            for day, actual in actual_by_day.items():
+                pred = pred_by_day.get(int(day))
+                if pred is None:
+                    continue
+                pred_value = float(pred)
+                if not math.isfinite(pred_value):
+                    continue
+                err = pred_value - float(actual)
+                abs_errors.append(abs(err))
+                sq_errors.append(err * err)
+                denom = abs(float(actual)) + abs(pred_value)
+                smape_values.append((200.0 * abs(err) / denom) if denom > 0.0 else 0.0)
+                fold_count += 1
+            if fold_count > 0:
+                folds_used += 1
+
+        sample_size = len(abs_errors)
+        if folds_used == 0 or sample_size == 0:
+            return {**default, "reason": "insufficient_targets", "folds_used": int(folds_used), "sample_size": int(sample_size)}
+
+        mae = sum(abs_errors) / float(sample_size)
+        rmse = math.sqrt(sum(sq_errors) / float(sample_size))
+        smape = sum(smape_values) / float(sample_size)
+        if not (math.isfinite(mae) and math.isfinite(rmse) and math.isfinite(smape)):
+            return {**default, "reason": "insufficient_targets", "folds_used": int(folds_used), "sample_size": int(sample_size)}
+
+        return {
+            "quality_available": True,
+            "mae": float(mae),
+            "rmse": float(rmse),
+            "smape": float(smape),
+            "sample_size": int(sample_size),
+            "folds_used": int(folds_used),
+            "reason": None,
+        }
+    except Exception:
+        return {**default, "reason": "evaluation_error"}
+
+
 def get_ml_compare_series_data(
     table_name: str = "all",
     table_names: Sequence[str] | None = None,
@@ -666,6 +760,15 @@ def get_ml_compare_series_data(
                 "b_summary": {"fact_days": 0, "ml_days": 0},
                 "c_summary": {"fact_days": 0, "ml_days": 0},
                 "d_summary": {"model_days": 0, "clipped_days": 0},
+                "d_quality": {
+                    "quality_available": False,
+                    "mae": None,
+                    "rmse": None,
+                    "smape": None,
+                    "sample_size": 0,
+                    "folds_used": 0,
+                    "reason": "insufficient_history",
+                },
                 "year_model": selected_compare_year_ml,
                 "history_has_data": False,
             },
@@ -711,6 +814,11 @@ def get_ml_compare_series_data(
     compare_series = _append_poisson_ml_line(
         compare_payload=compare_series,
         daily_history=daily_history,
+        year_ml=selected_compare_year_ml,
+    )
+    compare_series["d_quality"] = _evaluate_poisson_backtest(
+        daily_history=daily_history,
+        target_month=selected_compare_month,
         year_ml=selected_compare_year_ml,
     )
     result_payload = {

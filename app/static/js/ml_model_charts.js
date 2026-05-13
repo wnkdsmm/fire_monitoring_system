@@ -4,6 +4,14 @@
     var escapeHtml = shared.escapeHtml;
     var normalizeCssColor = shared.normalizeCssColor;
 
+    function formatMetric(value) {
+        var n = Number(value);
+        if (!isFinite(n)) {
+            return '-';
+        }
+        return n.toFixed(2);
+    }
+
     function applyLegendDecorators(root) {
         var scope = root && typeof root.querySelectorAll === 'function' ? root : document;
         Array.prototype.forEach.call(scope.querySelectorAll('[data-legend-color]'), function (node) {
@@ -271,10 +279,22 @@
             var bSummary = data.b_summary || {};
             var cSummary = data.c_summary || {};
             var dSummary = data.d_summary || {};
+            var dQuality = data.d_quality || {};
+            var qualityText = '';
+            if (dQuality.quality_available === true) {
+                qualityText = ' | Poisson quality: MAE ' + formatMetric(dQuality.mae)
+                    + ' | RMSE ' + formatMetric(dQuality.rmse)
+                    + ' | sMAPE ' + formatMetric(dQuality.smape) + '%'
+                    + ' | n=' + String(dQuality.sample_size || 0)
+                    + ' | folds=' + String(dQuality.folds_used || 0);
+            } else {
+                qualityText = ' | Poisson quality: недоступно (' + String(dQuality.reason || 'insufficient_history') + ')';
+            }
             summaryNode.textContent = 'Год 1 (' + aYear + '): факт ' + String(aSummary.fact_days || 0) + ', ML ' + String(aSummary.ml_days || 0)
                 + ' | Год 2 (' + bYear + '): факт ' + String(bSummary.fact_days || 0) + ', ML ' + String(bSummary.ml_days || 0)
                 + ' | Compare-series (' + cYear + '): факт ' + String(cSummary.fact_days || 0) + ', ML ' + String(cSummary.ml_days || 0)
                 + ' | ML-prog (Poisson): model_days ' + String(dSummary.model_days || 0) + ', clipped_days ' + String(dSummary.clipped_days || 0)
+                + qualityText
                 + (overlapBC ? ' | Compare-series совпадает с Год 2 для выбранных параметров' : '')
                 + (modes.overall === 'ml_ml' ? ' | обе линии построены ML' : '')
                 + (historyHasData ? '' : ' | нет входных данных');
