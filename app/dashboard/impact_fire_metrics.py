@@ -46,6 +46,34 @@ _AREA_BUCKET_ORDER = ["До 1 га", "1-5 га", "5-20 га", "20-100 га", "10
 _IMPACT_TIMELINE_METRIC_KEYS = ("deaths", "injuries", "evacuated", "evacuated_children", "rescued_children")
 
 
+def _normalize_cause_label(raw: str) -> str:
+    cleaned = raw.strip()
+    if not cleaned or cleaned in {"-", "—", "н/д", "н.д.", "нет данных", "не указано", "не указана"}:
+        return "Не указано"
+    if cleaned.replace(".", "").replace(",", "").replace(" ", "").isdigit():
+        return "Не указано"
+    return cleaned
+
+
+def _merge_cause_counts(grouped: dict[str, int]) -> dict[str, int]:
+    """Merge near-duplicate labels: if a shorter label is a prefix of a longer one, fold it in."""
+    by_length = sorted(grouped.keys(), key=len, reverse=True)
+    canonical: dict[str, str] = {}
+    for label in by_length:
+        canonical[label] = label
+    for short in by_length:
+        for long in by_length:
+            if short == long or len(short) >= len(long):
+                continue
+            if len(short) >= 20 and long.startswith(short):
+                canonical[short] = canonical.get(long, long)
+                break
+    merged: dict[str, int] = defaultdict(int)
+    for label, count in grouped.items():
+        merged[canonical.get(label, label)] += count
+    return dict(merged)
+
+
 def _collect_cause_counts(selected_tables: list[DashboardTableRef], selected_year: int | None) -> dict[str, int]:
     grouped: dict[str, int] = defaultdict(int)
     with engine.connect() as conn:
@@ -59,7 +87,7 @@ def _collect_cause_counts(selected_tables: list[DashboardTableRef], selected_yea
             query = text(
                 f"""
                 SELECT
-                    COALESCE(NULLIF(TRIM(CAST({quote_identifier(cause_column)} AS TEXT)), ''), 'Не указано') AS label,
+                    COALESCE(NULLIF(NULLIF(NULLIF(TRIM(CAST({quote_identifier(cause_column)} AS TEXT)), ''), '0'), '-'), 'Не указано') AS label,
                     COUNT(*) AS fire_count
                 FROM {quote_identifier(table['name'])}
                 WHERE {where_clause}
@@ -70,9 +98,10 @@ def _collect_cause_counts(selected_tables: list[DashboardTableRef], selected_yea
             )
             params = {"selected_year": selected_year} if _uses_selected_year_param(table, selected_year) else {}
             for row in conn.execute(query, params).mappings().all():
-                grouped[row["label"]] += int(row["fire_count"] or 0)
+                normalized = _normalize_cause_label(str(row["label"] or ""))
+                grouped[normalized] += int(row["fire_count"] or 0)
 
-    return dict(grouped)
+    return dict(_merge_cause_counts(grouped))
 
 
 def _build_cause_chart(
@@ -125,7 +154,7 @@ def _collect_month_counts(selected_tables: list[DashboardTableRef], selected_yea
 
 
 def _column_label_expression(column_name: str) -> str:
-    return f"COALESCE(NULLIF(TRIM(CAST({quote_identifier(column_name)} AS TEXT)), ''), 'Не указано')"
+    return f"COALESCE(NULLIF(NULLIF(NULLIF(TRIM(CAST({quote_identifier(column_name)} AS TEXT)), ''), '0'), '-'), 'Не указано')"
 
 
 def _resolve_grouped_count_query_context(
@@ -454,7 +483,7 @@ def _collect_dashboard_grouped_counts(
         label = row["label"]
         fire_count = int(row["fire_count"] or 0)
         if metric_kind == "cause":
-            cause_counts[str(label or "Не указано")] += fire_count
+            cause_counts[_normalize_cause_label(str(label or ""))] += fire_count
         elif metric_kind == "distribution":
             distribution_counts[str(label or "Не указано")] += fire_count
         elif metric_kind == "district":
@@ -474,10 +503,11 @@ def _collect_dashboard_grouped_counts(
         elif metric_kind == "impact_timeline":
             impact_timeline_rows.append(dict(row))
 
+    merged_cause_counts = _merge_cause_counts(dict(cause_counts))
     return {
-        "cause_counts": dict(cause_counts),
+        "cause_counts": merged_cause_counts,
         "district_counts": dict(district_counts),
-        "distribution_counts": dict(cause_counts) if selected_group_column in CAUSE_COLUMNS else dict(distribution_counts),
+        "distribution_counts": merged_cause_counts if selected_group_column in CAUSE_COLUMNS else dict(distribution_counts),
         "month_counts": dict(month_counts),
         "area_bucket_counts": dict(area_bucket_counts),
         "positive_column_counts": dict(positive_column_counts),
