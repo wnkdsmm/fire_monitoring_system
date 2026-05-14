@@ -185,11 +185,13 @@
     color: var(--ink);
     line-height: 1.5;
     overflow-wrap: anywhere;
+    cursor: pointer;
     transition: border-color 0.18s ease, background-color 0.18s ease;
 }
 
 .table-link-card:hover {
     border-color: var(--accent-border);
+    background: rgba(0, 0, 0, 0.04);
     text-decoration: none;
 }
 
