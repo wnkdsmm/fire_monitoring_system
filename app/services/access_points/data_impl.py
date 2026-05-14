@@ -102,6 +102,17 @@ def _resolve_option_value(options: Sequence[OptionItem], selected_value: object,
     return str(options[0].get("value") or default) if options else default
 
 
+def _resolve_preferred_exact_column(columns: Sequence[str], preferred_names: Sequence[str]) -> str:
+    if not columns:
+        return ""
+    normalized_to_original = {_clean_text(column).casefold(): str(column) for column in columns if _clean_text(column)}
+    for name in preferred_names:
+        key = _clean_text(name).casefold()
+        if key and key in normalized_to_original:
+            return normalized_to_original[key]
+    return ""
+
+
 def _load_table_metadata(table_name: str) -> AccessPointMetadata:
     try:
         columns = get_table_columns_cached(table_name)
@@ -134,6 +145,31 @@ def _load_table_metadata(table_name: str) -> AccessPointMetadata:
         "registered_damage": _resolve_column_name(columns, REGISTERED_DAMAGE_COLUMN_CANDIDATES),
         "event_date": _resolve_column_name(columns, [DATE_COLUMN]),
     }
+    preferred_settlement_column = _resolve_preferred_exact_column(
+        columns,
+        [
+            "Наименование населенного пункта",
+            "Наименование населённого пункта",
+            "НАИМЕНОВАНИЕ НАСЕЛЕННОГО ПУНКТА",
+            "НАИМЕНОВАНИЕ НАСЕЛЁННОГО ПУНКТА",
+        ],
+    )
+    if preferred_settlement_column:
+        resolved_columns["settlement"] = preferred_settlement_column
+
+    note_column = str(resolved_columns.get("address_comment") or "").strip()
+    address_column = str(resolved_columns.get("address") or "").strip()
+    normalized_note_column = note_column.casefold()
+    normalized_address_column = address_column.casefold()
+    note_is_prim = "prim" in normalized_note_column or "примеч" in normalized_note_column
+    address_is_adres_o = "adres_o" in normalized_address_column or "адрес объекта" in normalized_address_column
+    if note_is_prim and address_is_adres_o:
+        resolved_columns["address"] = note_column
+
+    normalized_table_name = str(table_name or "").strip().lower()
+    if normalized_table_name.startswith("clean_stat"):
+        if note_column:
+            resolved_columns["address"] = note_column
     return {"table_name": table_name, "columns": columns, "resolved_columns": resolved_columns}
 
 
@@ -255,7 +291,17 @@ def _normalize_record(row: RawPointRow) -> PointRecord | None:
     registered_damage = _to_float_or_none(row.get("registered_damage"))
     event_date = _parse_datetime_text(row.get("event_date"))
 
-    if latitude is None or longitude is None:
+    has_identity_hint = any(
+        [
+            bool(address),
+            bool(object_name),
+            bool(settlement),
+            bool(territory_label),
+            bool(district),
+            latitude is not None and longitude is not None,
+        ]
+    )
+    if not has_identity_hint:
         return None
 
     return {
@@ -523,6 +569,11 @@ def _collect_access_point_metadata(source_tables: Sequence[str]) -> tuple[list[A
 
 def _record_to_access_point_input(record: PointRecord, *, source_table: str) -> AccessPointInput:
     event_date = record.get("event_date")
+    event_month = getattr(event_date, "month", None)
+    try:
+        heating_season = bool(event_month is not None and int(event_month) in {9, 10, 11, 12, 1, 2, 3, 4, 5})
+    except (TypeError, ValueError):
+        heating_season = False
     response_minutes = _calculate_response_minutes(
         record.get("report_time") or record.get("detection_time"),
         record.get("arrival_time"),
@@ -550,7 +601,7 @@ def _record_to_access_point_input(record: PointRecord, *, source_table: str) -> 
             or (record.get("registered_damage") or 0) > 0
         ),
         "night_incident": bool(record.get("report_time") is not None and int(record["report_time"].hour) < 6),
-        "heating_season": _is_heating_season(event_date),
+        "heating_season": heating_season,
     }
 
 

@@ -51,7 +51,7 @@ class AccessPointMetadata(TypedDict, total=False):
 
 
 class PointRecord(TypedDict, total=False):
-    """Normalized raw incident record with geospatial fields from data_impl."""
+    """Normalized raw incident record with optional geospatial fields from data_impl."""
 
     district: str
     territory_label: str

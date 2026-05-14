@@ -32,8 +32,17 @@ def _truthy_value(value: Any) -> bool | None:
     return None
 
 
-def _is_heating_season(value: date) -> bool:
-    return value.month in {9, 10, 11, 12, 1, 2, 3, 4, 5}
+def _is_heating_season(value: date | None) -> bool:
+    if value is None:
+        return False
+    month = getattr(value, "month", None)
+    if month is None:
+        return False
+    try:
+        month_int = int(month)
+    except (TypeError, ValueError):
+        return False
+    return month_int in {9, 10, 11, 12, 1, 2, 3, 4, 5}
 
 
 def _is_rural_label(value: str) -> bool:
@@ -187,4 +196,3 @@ def _date_expression(column_name: str) -> str:
         f"WHEN {text_value} ~ '^[0-9]{{4}}/[0-9]{{2}}/[0-9]{{2}}' THEN TO_DATE(SUBSTRING({text_value} FROM 1 FOR 10), 'YYYY/MM/DD') "
         "ELSE NULL END"
     )
-

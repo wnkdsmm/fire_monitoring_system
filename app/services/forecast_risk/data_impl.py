@@ -5,7 +5,12 @@ from typing import Any, Sequence
 from sqlalchemy import text
 
 from app.db_metadata import get_table_columns_cached
-from app.domain.fire_columns import FIRE_DATE_COLUMN_CANDIDATES
+from app.domain.fire_columns import (
+    ADDRESS_COLUMN_CANDIDATES,
+    ADDRESS_COMMENT_COLUMN_CANDIDATES,
+    FIRE_DATE_COLUMN_CANDIDATES,
+    SETTLEMENT_COLUMN_CANDIDATES,
+)
 from app.services.shared.sql_helpers import build_scope_conditions, build_select_parts
 from app.shared.sql_utils import quote_identifier
 from config.db import engine
@@ -158,6 +163,17 @@ def _collect_risk_inputs(
     return metadata_items, records, notes
 
 
+def _resolve_preferred_exact_column(columns: Sequence[str], preferred_names: Sequence[str]) -> str:
+    if not columns:
+        return ""
+    normalized_to_original = {_clean_text(column).casefold(): str(column) for column in columns if _clean_text(column)}
+    for name in preferred_names:
+        key = _clean_text(name).casefold()
+        if key and key in normalized_to_original:
+            return normalized_to_original[key]
+    return ""
+
+
 def _load_table_metadata(table_name: str) -> RiskTableMetadata:
     try:
         columns = get_table_columns_cached(table_name)
@@ -177,6 +193,9 @@ def _load_table_metadata(table_name: str) -> RiskTableMetadata:
         "fire_station_distance": _resolve_column_name(columns, FIRE_STATION_DISTANCE_COLUMN_CANDIDATES),
         "water_supply_count": _resolve_column_name(columns, WATER_SUPPLY_COUNT_COLUMN_CANDIDATES),
         "water_supply_details": _resolve_column_name(columns, WATER_SUPPLY_DETAILS_COLUMN_CANDIDATES),
+        "address": _resolve_column_name(columns, ADDRESS_COLUMN_CANDIDATES),
+        "address_comment": _resolve_column_name(columns, ADDRESS_COMMENT_COLUMN_CANDIDATES),
+        "settlement": _resolve_column_name(columns, SETTLEMENT_COLUMN_CANDIDATES),
         "report_time": _resolve_column_name(columns, REPORT_TIME_COLUMN_CANDIDATES),
         "arrival_time": _resolve_column_name(columns, ARRIVAL_TIME_COLUMN_CANDIDATES),
         "detection_time": _resolve_column_name(columns, DETECTION_TIME_COLUMN_CANDIDATES),
@@ -189,6 +208,30 @@ def _load_table_metadata(table_name: str) -> RiskTableMetadata:
         "injuries": _resolve_column_name(columns, INJURIES_COLUMN_CANDIDATES),
         "deaths": _resolve_column_name(columns, DEATHS_COLUMN_CANDIDATES),
     }
+    preferred_settlement_column = _resolve_preferred_exact_column(
+        columns,
+        [
+            "Наименование населенного пункта",
+            "Наименование населённого пункта",
+            "НАИМЕНОВАНИЕ НАСЕЛЕННОГО ПУНКТА",
+            "НАИМЕНОВАНИЕ НАСЕЛЁННОГО ПУНКТА",
+        ],
+    )
+    if preferred_settlement_column:
+        resolved_columns["settlement"] = preferred_settlement_column
+
+    note_column = str(resolved_columns.get("address_comment") or "").strip()
+    address_column = str(resolved_columns.get("address") or "").strip()
+    normalized_note_column = note_column.casefold()
+    normalized_address_column = address_column.casefold()
+    note_is_prim = "prim" in normalized_note_column or "примеч" in normalized_note_column
+    address_is_adres_o = "adres_o" in normalized_address_column or "адрес объекта" in normalized_address_column
+    if note_is_prim and address_is_adres_o:
+        resolved_columns["address"] = note_column
+
+    normalized_table_name = str(table_name or "").strip().lower()
+    if normalized_table_name.startswith("clean_stat") and note_column:
+        resolved_columns["address"] = note_column
     return {"table_name": table_name, "columns": columns, "resolved_columns": resolved_columns}
 
 
@@ -219,6 +262,9 @@ def _load_risk_records(
         "object_category": "object_category_value",
         "territory_label": "territory_label_value",
         "settlement_type": "settlement_type_value",
+        "settlement": "settlement_value",
+        "address": "address_value",
+        "address_comment": "address_comment_value",
         "risk_category": "risk_category_value",
         "water_supply_details": "water_supply_details_value",
         "report_time": "report_time_value",
@@ -262,7 +308,8 @@ def _load_risk_records(
         if fire_date is None:
             continue
         district = _clean_text(row.get("district_value"))
-        territory_label = _pick_territory_label(row.get("territory_label_value"), district)
+        settlement_value = _clean_text(row.get("settlement_value"))
+        territory_label = _pick_territory_label(row.get("territory_label_value") or settlement_value, district)
         report_time = _parse_datetime_text(row.get("report_time_value"))
         arrival_time = _parse_datetime_text(row.get("arrival_time_value"))
         detection_time = _parse_datetime_text(row.get("detection_time_value"))
@@ -279,7 +326,7 @@ def _load_risk_records(
         incident_time = report_time or detection_time or arrival_time
         cause_value = _clean_text(row.get("cause_value"))
         object_category_value = _clean_text(row.get("object_category_value"))
-        settlement_type_value = _clean_text(row.get("settlement_type_value"))
+        settlement_type_value = _clean_text(row.get("settlement_type_value")) or settlement_value
         risk_category_value = _clean_text(row.get("risk_category_value"))
         records.append(
             {

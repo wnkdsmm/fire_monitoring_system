@@ -432,8 +432,6 @@ function showLoading(message) {
             charts.scatter ? charts.scatter.title : 'Проблемные точки на двумерной проекции риска'
         );
         renderChart(charts.scatter, 'accessPointsScatterChart', 'accessPointsScatterChartFallback');
-        renderChart(charts.factor_heatmap, 'accessPointsHeatmapChart', 'accessPointsHeatmapFallback');
-        renderChart(charts.factor_bar, 'accessPointsFactorBarChart', 'accessPointsFactorBarFallback');
         renderChart(charts.score_histogram, 'accessPointsHistogramChart', 'accessPointsHistogramChartFallback');
     }
     function render(data) {
