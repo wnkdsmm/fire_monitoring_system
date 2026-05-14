@@ -1,0 +1,509 @@
+{
+  "table_count": 36,
+  "report": [
+    {
+      "table": "clean_ekup_2019",
+      "status": "ok",
+      "resolved": {
+        "address": "",
+        "address_comment": "",
+        "settlement": "\u041d\u0430\u0438\u043c\u0435\u043d\u043e\u0432\u0430\u043d\u0438\u0435 \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "settlement_type": "\u041d\u0430\u0438\u043c\u0435\u043d\u043e\u0432\u0430\u043d\u0438\u0435 \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "district": "",
+        "territory_label": "",
+        "latitude": "",
+        "longitude": ""
+      }
+    },
+    {
+      "table": "clean_ekup_2023",
+      "status": "ok",
+      "resolved": {
+        "address": "",
+        "address_comment": "",
+        "settlement": "\u041d\u0430\u0438\u043c\u0435\u043d\u043e\u0432\u0430\u043d\u0438\u0435 \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "settlement_type": "\u041d\u0430\u0438\u043c\u0435\u043d\u043e\u0432\u0430\u043d\u0438\u0435 \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "district": "",
+        "territory_label": "",
+        "latitude": "",
+        "longitude": ""
+      }
+    },
+    {
+      "table": "clean_STAT2011_decoded",
+      "status": "ok",
+      "resolved": {
+        "address": "F149 | ADRES_O | \u0410\u0434\u0440\u0435\u0441 \u043e\u0431\u044a\u0435\u043a\u0442\u0430",
+        "address_comment": "",
+        "settlement": "F6 | P5_1 | \u0412\u0438\u0434: \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "settlement_type": "F6 | P5_1 | \u0412\u0438\u0434: \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "district": "",
+        "territory_label": "F171 | OKATOPP | \u041d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u044b\u0439 \u043f\u0443\u043d\u043a\u0442",
+        "latitude": "",
+        "longitude": ""
+      }
+    },
+    {
+      "table": "clean_STAT2014_decoded",
+      "status": "ok",
+      "resolved": {
+        "address": "F149 | ADRES_O | \u0410\u0434\u0440\u0435\u0441 \u043e\u0431\u044a\u0435\u043a\u0442\u0430",
+        "address_comment": "",
+        "settlement": "F6 | P5_1 | \u0412\u0438\u0434: \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "settlement_type": "F6 | P5_1 | \u0412\u0438\u0434: \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "district": "",
+        "territory_label": "F171 | OKATOPP | \u041d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u044b\u0439 \u043f\u0443\u043d\u043a\u0442",
+        "latitude": "",
+        "longitude": ""
+      }
+    },
+    {
+      "table": "clean_STAT2020_decoded",
+      "status": "ok",
+      "resolved": {
+        "address": "F149 | ADRES_O | \u0410\u0434\u0440\u0435\u0441 \u043e\u0431\u044a\u0435\u043a\u0442\u0430",
+        "address_comment": "",
+        "settlement": "F6 | P5_1 | \u0412\u0438\u0434: \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "settlement_type": "F6 | P5_1 | \u0412\u0438\u0434: \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "district": "",
+        "territory_label": "F171 | OKATOPP | \u041d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u044b\u0439 \u043f\u0443\u043d\u043a\u0442",
+        "latitude": "",
+        "longitude": ""
+      }
+    },
+    {
+      "table": "clean_ekup_2020",
+      "status": "ok",
+      "resolved": {
+        "address": "",
+        "address_comment": "",
+        "settlement": "\u041d\u0430\u0438\u043c\u0435\u043d\u043e\u0432\u0430\u043d\u0438\u0435 \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "settlement_type": "\u041d\u0430\u0438\u043c\u0435\u043d\u043e\u0432\u0430\u043d\u0438\u0435 \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "district": "",
+        "territory_label": "",
+        "latitude": "",
+        "longitude": ""
+      }
+    },
+    {
+      "table": "clean_STAT2010_decoded",
+      "status": "ok",
+      "resolved": {
+        "address": "F149 | ADRES_O | \u0410\u0434\u0440\u0435\u0441 \u043e\u0431\u044a\u0435\u043a\u0442\u0430",
+        "address_comment": "",
+        "settlement": "F6 | P5_1 | \u0412\u0438\u0434: \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "settlement_type": "F6 | P5_1 | \u0412\u0438\u0434: \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "district": "",
+        "territory_label": "F171 | OKATOPP | \u041d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u044b\u0439 \u043f\u0443\u043d\u043a\u0442",
+        "latitude": "",
+        "longitude": ""
+      }
+    },
+    {
+      "table": "clean_STAT2015_decoded",
+      "status": "ok",
+      "resolved": {
+        "address": "F149 | ADRES_O | \u0410\u0434\u0440\u0435\u0441 \u043e\u0431\u044a\u0435\u043a\u0442\u0430",
+        "address_comment": "",
+        "settlement": "F6 | P5_1 | \u0412\u0438\u0434: \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "settlement_type": "F6 | P5_1 | \u0412\u0438\u0434: \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "district": "",
+        "territory_label": "F171 | OKATOPP | \u041d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u044b\u0439 \u043f\u0443\u043d\u043a\u0442",
+        "latitude": "",
+        "longitude": ""
+      }
+    },
+    {
+      "table": "clean_ekup_2021",
+      "status": "ok",
+      "resolved": {
+        "address": "",
+        "address_comment": "",
+        "settlement": "\u041d\u0430\u0438\u043c\u0435\u043d\u043e\u0432\u0430\u043d\u0438\u0435 \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "settlement_type": "\u041d\u0430\u0438\u043c\u0435\u043d\u043e\u0432\u0430\u043d\u0438\u0435 \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "district": "",
+        "territory_label": "",
+        "latitude": "",
+        "longitude": ""
+      }
+    },
+    {
+      "table": "clean_ekup_Yemelyanovo_2025",
+      "status": "ok",
+      "resolved": {
+        "address": "\u0410\u0434\u0440\u0435\u0441",
+        "address_comment": "\u041a\u043e\u043c\u043c\u0435\u043d\u0442\u0430\u0440\u0438\u0439 \u043a \u0430\u0434\u0440\u0435\u0441\u0443",
+        "settlement": "\u0412\u0438\u0434 \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "settlement_type": "\u0412\u0438\u0434 \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "district": "\u041e\u041a\u0422\u041c\u041e. \u0422\u0435\u043a\u0441\u0442",
+        "territory_label": "\u041e\u041a\u0422\u041c\u041e. \u0422\u0435\u043a\u0441\u0442",
+        "latitude": "\u0428\u0438\u0440\u043e\u0442\u0430",
+        "longitude": "\u0414\u043e\u043b\u0433\u043e\u0442\u0430"
+      }
+    },
+    {
+      "table": "clean_ekup_2022",
+      "status": "ok",
+      "resolved": {
+        "address": "",
+        "address_comment": "",
+        "settlement": "\u041d\u0430\u0438\u043c\u0435\u043d\u043e\u0432\u0430\u043d\u0438\u0435 \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "settlement_type": "\u041d\u0430\u0438\u043c\u0435\u043d\u043e\u0432\u0430\u043d\u0438\u0435 \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "district": "",
+        "territory_label": "",
+        "latitude": "",
+        "longitude": ""
+      }
+    },
+    {
+      "table": "clean_STAT2009_decoded",
+      "status": "ok",
+      "resolved": {
+        "address": "F149 | ADRES_O | \u0410\u0434\u0440\u0435\u0441 \u043e\u0431\u044a\u0435\u043a\u0442\u0430",
+        "address_comment": "",
+        "settlement": "F6 | P5_1 | \u0412\u0438\u0434: \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "settlement_type": "F6 | P5_1 | \u0412\u0438\u0434: \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "district": "",
+        "territory_label": "F171 | OKATOPP | \u041d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u044b\u0439 \u043f\u0443\u043d\u043a\u0442",
+        "latitude": "",
+        "longitude": ""
+      }
+    },
+    {
+      "table": "clean_STAT2016_decoded",
+      "status": "ok",
+      "resolved": {
+        "address": "F149 | ADRES_O | \u0410\u0434\u0440\u0435\u0441 \u043e\u0431\u044a\u0435\u043a\u0442\u0430",
+        "address_comment": "",
+        "settlement": "F6 | P5_1 | \u0412\u0438\u0434: \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "settlement_type": "F6 | P5_1 | \u0412\u0438\u0434: \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "district": "",
+        "territory_label": "F171 | OKATOPP | \u041d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u044b\u0439 \u043f\u0443\u043d\u043a\u0442",
+        "latitude": "",
+        "longitude": ""
+      }
+    },
+    {
+      "table": "clean_ekup_2024_decoded",
+      "status": "ok",
+      "resolved": {
+        "address": "",
+        "address_comment": "",
+        "settlement": "\u041d\u0410\u0418\u041c\u0415\u041d\u041e\u0412\u0410\u041d\u0418\u0415 \u041d\u0410\u0421\u0415\u041b\u0415\u041d\u041d\u041e\u0413\u041e \u041f\u0423\u041d\u041a\u0422\u0410",
+        "settlement_type": "\u041d\u0410\u0418\u041c\u0415\u041d\u041e\u0412\u0410\u041d\u0418\u0415 \u041d\u0410\u0421\u0415\u041b\u0415\u041d\u041d\u041e\u0413\u041e \u041f\u0423\u041d\u041a\u0422\u0410",
+        "district": "",
+        "territory_label": "",
+        "latitude": "",
+        "longitude": ""
+      }
+    },
+    {
+      "table": "clean_ekup_Yemelyanovo_2024",
+      "status": "ok",
+      "resolved": {
+        "address": "\u0410\u0434\u0440\u0435\u0441",
+        "address_comment": "\u041a\u043e\u043c\u043c\u0435\u043d\u0442\u0430\u0440\u0438\u0439 \u043a \u0430\u0434\u0440\u0435\u0441\u0443",
+        "settlement": "\u0412\u0438\u0434 \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "settlement_type": "\u0412\u0438\u0434 \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "district": "\u041e\u041a\u0422\u041c\u041e. \u0422\u0435\u043a\u0441\u0442",
+        "territory_label": "\u041e\u041a\u0422\u041c\u041e. \u0422\u0435\u043a\u0441\u0442",
+        "latitude": "\u0428\u0438\u0440\u043e\u0442\u0430",
+        "longitude": "\u0414\u043e\u043b\u0433\u043e\u0442\u0430"
+      }
+    },
+    {
+      "table": "clean_STAT1992_decoded",
+      "status": "ok",
+      "resolved": {
+        "address": "",
+        "address_comment": "",
+        "settlement": "F6 | P5_1 | \u0412\u0438\u0434: \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "settlement_type": "F6 | P5_1 | \u0412\u0438\u0434: \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "district": "",
+        "territory_label": "F171 | OKATOPP | \u041d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u044b\u0439 \u043f\u0443\u043d\u043a\u0442",
+        "latitude": "",
+        "longitude": ""
+      }
+    },
+    {
+      "table": "clean_STAT1993_decoded",
+      "status": "ok",
+      "resolved": {
+        "address": "",
+        "address_comment": "",
+        "settlement": "F6 | P5_1 | \u0412\u0438\u0434: \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "settlement_type": "F6 | P5_1 | \u0412\u0438\u0434: \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "district": "",
+        "territory_label": "F171 | OKATOPP | \u041d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u044b\u0439 \u043f\u0443\u043d\u043a\u0442",
+        "latitude": "",
+        "longitude": ""
+      }
+    },
+    {
+      "table": "clean_STAT1994_decoded",
+      "status": "ok",
+      "resolved": {
+        "address": "F148 | PRIM | \u041f\u0440\u0438\u043c\u0435\u0447\u0430\u043d\u0438\u0435",
+        "address_comment": "",
+        "settlement": "F6 | P5_1 | \u0412\u0438\u0434: \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "settlement_type": "F6 | P5_1 | \u0412\u0438\u0434: \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "district": "",
+        "territory_label": "F171 | OKATOPP | \u041d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u044b\u0439 \u043f\u0443\u043d\u043a\u0442",
+        "latitude": "",
+        "longitude": ""
+      }
+    },
+    {
+      "table": "clean_STAT1995_decoded",
+      "status": "ok",
+      "resolved": {
+        "address": "F149 | ADRES_O | \u0410\u0434\u0440\u0435\u0441 \u043e\u0431\u044a\u0435\u043a\u0442\u0430",
+        "address_comment": "",
+        "settlement": "F6 | P5_1 | \u0412\u0438\u0434: \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "settlement_type": "F6 | P5_1 | \u0412\u0438\u0434: \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "district": "",
+        "territory_label": "F171 | OKATOPP | \u041d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u044b\u0439 \u043f\u0443\u043d\u043a\u0442",
+        "latitude": "",
+        "longitude": ""
+      }
+    },
+    {
+      "table": "clean_STAT1996_decoded",
+      "status": "ok",
+      "resolved": {
+        "address": "F149 | ADRES_O | \u0410\u0434\u0440\u0435\u0441 \u043e\u0431\u044a\u0435\u043a\u0442\u0430",
+        "address_comment": "",
+        "settlement": "F6 | P5_1 | \u0412\u0438\u0434: \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "settlement_type": "F6 | P5_1 | \u0412\u0438\u0434: \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "district": "",
+        "territory_label": "F171 | OKATOPP | \u041d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u044b\u0439 \u043f\u0443\u043d\u043a\u0442",
+        "latitude": "",
+        "longitude": ""
+      }
+    },
+    {
+      "table": "clean_STAT1997_decoded",
+      "status": "ok",
+      "resolved": {
+        "address": "F149 | ADRES_O | \u0410\u0434\u0440\u0435\u0441 \u043e\u0431\u044a\u0435\u043a\u0442\u0430",
+        "address_comment": "",
+        "settlement": "F6 | P5_1 | \u0412\u0438\u0434: \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "settlement_type": "F6 | P5_1 | \u0412\u0438\u0434: \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "district": "",
+        "territory_label": "F171 | OKATOPP | \u041d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u044b\u0439 \u043f\u0443\u043d\u043a\u0442",
+        "latitude": "",
+        "longitude": ""
+      }
+    },
+    {
+      "table": "clean_STAT1998_decoded",
+      "status": "ok",
+      "resolved": {
+        "address": "F149 | ADRES_O | \u0410\u0434\u0440\u0435\u0441 \u043e\u0431\u044a\u0435\u043a\u0442\u0430",
+        "address_comment": "",
+        "settlement": "F6 | P5_1 | \u0412\u0438\u0434: \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "settlement_type": "F6 | P5_1 | \u0412\u0438\u0434: \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "district": "",
+        "territory_label": "F171 | OKATOPP | \u041d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u044b\u0439 \u043f\u0443\u043d\u043a\u0442",
+        "latitude": "",
+        "longitude": ""
+      }
+    },
+    {
+      "table": "clean_STAT1999_decoded",
+      "status": "ok",
+      "resolved": {
+        "address": "F149 | ADRES_O | \u0410\u0434\u0440\u0435\u0441 \u043e\u0431\u044a\u0435\u043a\u0442\u0430",
+        "address_comment": "",
+        "settlement": "F6 | P5_1 | \u0412\u0438\u0434: \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "settlement_type": "F6 | P5_1 | \u0412\u0438\u0434: \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "district": "",
+        "territory_label": "F171 | OKATOPP | \u041d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u044b\u0439 \u043f\u0443\u043d\u043a\u0442",
+        "latitude": "",
+        "longitude": ""
+      }
+    },
+    {
+      "table": "clean_STAT2000_decoded",
+      "status": "ok",
+      "resolved": {
+        "address": "F149 | ADRES_O | \u0410\u0434\u0440\u0435\u0441 \u043e\u0431\u044a\u0435\u043a\u0442\u0430",
+        "address_comment": "",
+        "settlement": "F6 | P5_1 | \u0412\u0438\u0434: \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "settlement_type": "F6 | P5_1 | \u0412\u0438\u0434: \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "district": "",
+        "territory_label": "F171 | OKATOPP | \u041d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u044b\u0439 \u043f\u0443\u043d\u043a\u0442",
+        "latitude": "",
+        "longitude": ""
+      }
+    },
+    {
+      "table": "clean_STAT2001_decoded",
+      "status": "ok",
+      "resolved": {
+        "address": "F149 | ADRES_O | \u0410\u0434\u0440\u0435\u0441 \u043e\u0431\u044a\u0435\u043a\u0442\u0430",
+        "address_comment": "",
+        "settlement": "F6 | P5_1 | \u0412\u0438\u0434: \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "settlement_type": "F6 | P5_1 | \u0412\u0438\u0434: \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "district": "",
+        "territory_label": "F171 | OKATOPP | \u041d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u044b\u0439 \u043f\u0443\u043d\u043a\u0442",
+        "latitude": "",
+        "longitude": ""
+      }
+    },
+    {
+      "table": "clean_STAT2002_decoded",
+      "status": "ok",
+      "resolved": {
+        "address": "F149 | ADRES_O | \u0410\u0434\u0440\u0435\u0441 \u043e\u0431\u044a\u0435\u043a\u0442\u0430",
+        "address_comment": "",
+        "settlement": "F6 | P5_1 | \u0412\u0438\u0434: \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "settlement_type": "F6 | P5_1 | \u0412\u0438\u0434: \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "district": "",
+        "territory_label": "F171 | OKATOPP | \u041d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u044b\u0439 \u043f\u0443\u043d\u043a\u0442",
+        "latitude": "",
+        "longitude": ""
+      }
+    },
+    {
+      "table": "clean_STAT2003_decoded",
+      "status": "ok",
+      "resolved": {
+        "address": "F149 | ADRES_O | \u0410\u0434\u0440\u0435\u0441 \u043e\u0431\u044a\u0435\u043a\u0442\u0430",
+        "address_comment": "",
+        "settlement": "F6 | P5_1 | \u0412\u0438\u0434: \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "settlement_type": "F6 | P5_1 | \u0412\u0438\u0434: \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "district": "",
+        "territory_label": "F171 | OKATOPP | \u041d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u044b\u0439 \u043f\u0443\u043d\u043a\u0442",
+        "latitude": "",
+        "longitude": ""
+      }
+    },
+    {
+      "table": "clean_STAT2004_decoded",
+      "status": "ok",
+      "resolved": {
+        "address": "F149 | ADRES_O | \u0410\u0434\u0440\u0435\u0441 \u043e\u0431\u044a\u0435\u043a\u0442\u0430",
+        "address_comment": "",
+        "settlement": "F6 | P5_1 | \u0412\u0438\u0434: \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "settlement_type": "F6 | P5_1 | \u0412\u0438\u0434: \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "district": "",
+        "territory_label": "F171 | OKATOPP | \u041d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u044b\u0439 \u043f\u0443\u043d\u043a\u0442",
+        "latitude": "",
+        "longitude": ""
+      }
+    },
+    {
+      "table": "clean_STAT2005_decoded",
+      "status": "ok",
+      "resolved": {
+        "address": "F149 | ADRES_O | \u0410\u0434\u0440\u0435\u0441 \u043e\u0431\u044a\u0435\u043a\u0442\u0430",
+        "address_comment": "",
+        "settlement": "F6 | P5_1 | \u0412\u0438\u0434: \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "settlement_type": "F6 | P5_1 | \u0412\u0438\u0434: \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "district": "",
+        "territory_label": "F171 | OKATOPP | \u041d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u044b\u0439 \u043f\u0443\u043d\u043a\u0442",
+        "latitude": "",
+        "longitude": ""
+      }
+    },
+    {
+      "table": "clean_STAT2006_decoded",
+      "status": "ok",
+      "resolved": {
+        "address": "F149 | ADRES_O | \u0410\u0434\u0440\u0435\u0441 \u043e\u0431\u044a\u0435\u043a\u0442\u0430",
+        "address_comment": "",
+        "settlement": "F6 | P5_1 | \u0412\u0438\u0434: \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "settlement_type": "F6 | P5_1 | \u0412\u0438\u0434: \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "district": "",
+        "territory_label": "F171 | OKATOPP | \u041d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u044b\u0439 \u043f\u0443\u043d\u043a\u0442",
+        "latitude": "",
+        "longitude": ""
+      }
+    },
+    {
+      "table": "clean_STAT2007_decoded",
+      "status": "ok",
+      "resolved": {
+        "address": "F149 | ADRES_O | \u0410\u0434\u0440\u0435\u0441 \u043e\u0431\u044a\u0435\u043a\u0442\u0430",
+        "address_comment": "",
+        "settlement": "F6 | P5_1 | \u0412\u0438\u0434: \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "settlement_type": "F6 | P5_1 | \u0412\u0438\u0434: \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "district": "",
+        "territory_label": "F171 | OKATOPP | \u041d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u044b\u0439 \u043f\u0443\u043d\u043a\u0442",
+        "latitude": "",
+        "longitude": ""
+      }
+    },
+    {
+      "table": "clean_STAT2008_decoded",
+      "status": "ok",
+      "resolved": {
+        "address": "F149 | ADRES_O | \u0410\u0434\u0440\u0435\u0441 \u043e\u0431\u044a\u0435\u043a\u0442\u0430",
+        "address_comment": "",
+        "settlement": "F6 | P5_1 | \u0412\u0438\u0434: \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "settlement_type": "F6 | P5_1 | \u0412\u0438\u0434: \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "district": "",
+        "territory_label": "",
+        "latitude": "",
+        "longitude": ""
+      }
+    },
+    {
+      "table": "clean_STAT2012_decoded",
+      "status": "ok",
+      "resolved": {
+        "address": "F149 | ADRES_O | \u0410\u0434\u0440\u0435\u0441 \u043e\u0431\u044a\u0435\u043a\u0442\u0430",
+        "address_comment": "",
+        "settlement": "F6 | P5_1 | \u0412\u0438\u0434: \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "settlement_type": "F6 | P5_1 | \u0412\u0438\u0434: \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "district": "",
+        "territory_label": "F171 | OKATOPP | \u041d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u044b\u0439 \u043f\u0443\u043d\u043a\u0442",
+        "latitude": "",
+        "longitude": ""
+      }
+    },
+    {
+      "table": "clean_stat2017_decoded",
+      "status": "ok",
+      "resolved": {
+        "address": "F149 | ADRES_O | \u0410\u0434\u0440\u0435\u0441 \u043e\u0431\u044a\u0435\u043a\u0442\u0430",
+        "address_comment": "",
+        "settlement": "F6 | P5_1 | \u0412\u0438\u0434: \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "settlement_type": "F6 | P5_1 | \u0412\u0438\u0434: \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "district": "",
+        "territory_label": "F171 | OKATOPP | \u041d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u044b\u0439 \u043f\u0443\u043d\u043a\u0442",
+        "latitude": "",
+        "longitude": ""
+      }
+    },
+    {
+      "table": "clean_STAT2013_decoded",
+      "status": "ok",
+      "resolved": {
+        "address": "F149 | ADRES_O | \u0410\u0434\u0440\u0435\u0441 \u043e\u0431\u044a\u0435\u043a\u0442\u0430",
+        "address_comment": "",
+        "settlement": "F6 | P5_1 | \u0412\u0438\u0434: \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "settlement_type": "F6 | P5_1 | \u0412\u0438\u0434: \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "district": "",
+        "territory_label": "F171 | OKATOPP | \u041d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u044b\u0439 \u043f\u0443\u043d\u043a\u0442",
+        "latitude": "",
+        "longitude": ""
+      }
+    },
+    {
+      "table": "clean_stat2018_decoded",
+      "status": "ok",
+      "resolved": {
+        "address": "F149 | ADRES_O | \u0410\u0434\u0440\u0435\u0441 \u043e\u0431\u044a\u0435\u043a\u0442\u0430",
+        "address_comment": "",
+        "settlement": "F6 | P5_1 | \u0412\u0438\u0434: \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "settlement_type": "F6 | P5_1 | \u0412\u0438\u0434: \u043d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u043e\u0433\u043e \u043f\u0443\u043d\u043a\u0442\u0430",
+        "district": "",
+        "territory_label": "F171 | OKATOPP | \u041d\u0430\u0441\u0435\u043b\u0435\u043d\u043d\u044b\u0439 \u043f\u0443\u043d\u043a\u0442",
+        "latitude": "",
+        "longitude": ""
+      }
+    }
+  ]
+}

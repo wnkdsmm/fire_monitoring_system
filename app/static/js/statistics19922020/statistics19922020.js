@@ -406,9 +406,9 @@
         if (decodeButton) {
             decodeButton.addEventListener("click", function () {
                 runAction({
-                    endpoint: "/statistics19922020/decode",
+                    endpoint: "/statistics19922020/decode-and-import",
                     uploadMode: "required",
-                    errorMessage: ERROR_TEXTS.decodeFailed || "Не удалось расшифровать выбранный файл."
+                    errorMessage: ERROR_TEXTS.decodeImportFailed || "Не удалось выполнить расшифровку и загрузку в PostgreSQL."
                 });
             });
         }
@@ -464,3 +464,4 @@
         initializePage();
     }
 }(window));
+
