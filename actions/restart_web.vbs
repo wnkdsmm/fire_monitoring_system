@@ -19,8 +19,8 @@ If Not fso.FileExists(startScript) Then
     WScript.Quit 1
 End If
 
-cmdStop = "cscript //nologo """ & stopScript & """"
-cmdStart = "cscript //nologo """ & startScript & """"
+cmdStop = "cscript //nologo """ & stopScript & """ --silent-success"
+cmdStart = "cscript //nologo """ & startScript & """ --silent-success"
 
 ' stop_web_app.vbs already performs cache cleanup.
 rc = shell.Run(cmdStop, 0, True)

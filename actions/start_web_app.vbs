@@ -10,11 +10,12 @@ Dim venvPython, basePython
 Dim bootstrapCommand, startCommand, runCode
 Dim reqFilePath, installCode
 Dim databaseUrl, dbCheckCode
-Dim isLiteStart
+Dim isLiteStart, silentSuccess
 
 Set shell = CreateObject("WScript.Shell")
 Set fso = CreateObject("Scripting.FileSystemObject")
-isLiteStart = (LCase(Trim(GetArg(0))) = "--lite")
+isLiteStart = HasArg("--lite")
+silentSuccess = HasArg("--silent-success")
 
 projectRoot = ResolveProjectRoot()
 logsDir = fso.BuildPath(projectRoot, "logs")
@@ -150,7 +151,9 @@ shell.Run startCommand & " >> " & Quote(logFilePath) & " 2>>&1", 0, False
 If WaitForUrl(probeUrl, IIf(isLiteStart, 12, 45)) Then
     LogMessage "Server ready: " & appUrl
     shell.Run appUrl, 1, False
-    MsgBox "Server started successfully." & vbCrLf & appUrl, vbInformation, "Fire Data"
+    If Not silentSuccess Then
+        MsgBox "Server started successfully." & vbCrLf & appUrl, vbInformation, "Fire Data"
+    End If
     WScript.Quit 0
 End If
 
@@ -165,6 +168,18 @@ Function GetArg(index)
     Else
         GetArg = ""
     End If
+End Function
+
+Function HasArg(expectedValue)
+    Dim i, currentArg
+    HasArg = False
+    For i = 0 To WScript.Arguments.Count - 1
+        currentArg = LCase(Trim(WScript.Arguments(i)))
+        If currentArg = LCase(expectedValue) Then
+            HasArg = True
+            Exit Function
+        End If
+    Next
 End Function
 
 Function ResolveProjectRoot()

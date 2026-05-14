@@ -866,6 +866,107 @@ def get_ml_compare_series_data(
     return cache_set.compare_cache.set(compare_cache_key, result_payload)
 
 
+def _load_day_month_heatmap(
+    *,
+    metadata_items: list[Any],
+    year_a: int,
+    year_b: int,
+    object_category: str = "all",
+    top_causes_per_cell: int = 3,
+) -> dict[int, dict[str, Any]]:
+    """Returns per-year calendar heatmap data: z[month-1][day-1] and hover text."""
+    from app.services.forecasting.utils import _date_expression, _text_expression
+    from app.services.forecasting.selection import _normalize_filter_value
+    from app.shared.sql_utils import quote_identifier
+    from config.db import engine
+    from sqlalchemy import text as sqltext
+
+    obj_cat = _normalize_filter_value(str(object_category or "all"))
+    # raw accumulator: {year: {month: {day: {cause: count}}}}
+    raw: dict[int, dict[int, dict[int, dict[str, int]]]] = {int(year_a): {}, int(year_b): {}}
+
+    for meta in (metadata_items or []):
+        table_name = str((meta or {}).get("table_name") or "")
+        resolved = dict((meta or {}).get("resolved_columns") or {})
+        cause_col = resolved.get("cause") or ""
+        date_col = resolved.get("date") or ""
+        if not table_name or not cause_col or not date_col:
+            continue
+
+        date_expr = _date_expression(date_col)
+        cause_expr = _text_expression(cause_col)
+        src = quote_identifier(table_name)
+
+        conds = [
+            f"{date_expr} IS NOT NULL",
+            f"{cause_expr} IS NOT NULL",
+            f"EXTRACT(YEAR FROM {date_expr}) IN (:year_a, :year_b)",
+        ]
+        params: dict[str, Any] = {"year_a": int(year_a), "year_b": int(year_b)}
+
+        if obj_cat != "all":
+            obj_col = resolved.get("object_category") or ""
+            if obj_col:
+                conds.append(f"{_text_expression(obj_col)} = :object_category")
+                params["object_category"] = obj_cat
+
+        sql = sqltext(
+            f"SELECT {cause_expr} AS cause_value,"
+            f" EXTRACT(YEAR FROM {date_expr})::int AS yr,"
+            f" EXTRACT(MONTH FROM {date_expr})::int AS mo,"
+            f" EXTRACT(DAY FROM {date_expr})::int AS dy,"
+            f" COUNT(*) AS cnt"
+            f" FROM {src}"
+            f" WHERE {' AND '.join(conds)}"
+            f" GROUP BY {cause_expr},"
+            f" EXTRACT(YEAR FROM {date_expr})::int,"
+            f" EXTRACT(MONTH FROM {date_expr})::int,"
+            f" EXTRACT(DAY FROM {date_expr})::int"
+        )
+
+        try:
+            with engine.connect() as conn:
+                for row in conn.execute(sql, params).mappings():
+                    cause_val = str(row.get("cause_value") or "").strip()
+                    yr = int(row.get("yr") or 0)
+                    mo = int(row.get("mo") or 0)
+                    dy = int(row.get("dy") or 0)
+                    cnt = int(row.get("cnt") or 0)
+                    if not cause_val or yr not in (int(year_a), int(year_b)):
+                        continue
+                    if not 1 <= mo <= 12 or not 1 <= dy <= 31:
+                        continue
+                    raw[yr].setdefault(mo, {}).setdefault(dy, {}).setdefault(cause_val, 0)
+                    raw[yr][mo][dy][cause_val] += cnt
+        except Exception:
+            continue
+
+    month_names = ["Янв", "Фев", "Мар", "Апр", "Май", "Июн",
+                   "Июл", "Авг", "Сен", "Окт", "Ноя", "Дек"]
+
+    def _build_matrices(year_data: dict[int, dict[int, dict[str, int]]]) -> dict[str, Any]:
+        z = [[None] * 31 for _ in range(12)]
+        text = [[""] * 31 for _ in range(12)]
+        for mo in range(1, 13):
+            for dy in range(1, 32):
+                cell = (year_data.get(mo) or {}).get(dy) or {}
+                total = sum(cell.values())
+                if total == 0:
+                    continue
+                z[mo - 1][dy - 1] = total
+                top = sorted(cell.items(), key=lambda kv: kv[1], reverse=True)[:int(top_causes_per_cell)]
+                lines = [f"{month_names[mo - 1]}, {dy}. Всего: {total}"]
+                for rank, (cause, cnt) in enumerate(top, 1):
+                    lines.append(f"{rank}. {cause}: {cnt}")
+                text[mo - 1][dy - 1] = "<br>".join(lines)
+        return {"z": z, "text": text}
+
+    return {
+        int(year_a): _build_matrices(raw.get(int(year_a), {})),
+        int(year_b): _build_matrices(raw.get(int(year_b), {})),
+    }
+
+
 def _load_cause_counts_by_year(
     *,
     metadata_items: list[Any],
@@ -977,13 +1078,20 @@ def get_ml_causes_chart_data(
         object_category=object_category,
     )
     metadata_items = list(filter_bundle.get("metadata_items") or [])
+    obj_cat = str(filter_bundle.get("selected_object_category") or "all")
     causes, errors = _load_cause_counts_by_year(
         metadata_items=metadata_items,
         target_month=selected_month,
         year_a=selected_year_a,
         year_b=selected_year_b,
-        object_category=str(filter_bundle.get("selected_object_category") or "all"),
+        object_category=obj_cat,
         top_n=int(top_n),
+    )
+    heatmap = _load_day_month_heatmap(
+        metadata_items=metadata_items,
+        year_a=selected_year_a,
+        year_b=selected_year_b,
+        object_category=obj_cat,
     )
     return {
         "causes": causes,
@@ -991,6 +1099,8 @@ def get_ml_causes_chart_data(
         "year_b": selected_year_b,
         "month": selected_month,
         "top_n": int(top_n),
+        "heatmap_a": heatmap.get(int(selected_year_a), {}),
+        "heatmap_b": heatmap.get(int(selected_year_b), {}),
         "debug_errors": errors,
         "debug_tables": [str((m or {}).get("table_name") or "") for m in metadata_items],
     }

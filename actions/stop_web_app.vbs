@@ -1,11 +1,12 @@
 Option Explicit
 
-Dim shell, fso, projectRoot, logsDir, logFilePath
+Dim shell, fso, projectRoot, logsDir, logFilePath, silentSuccess
 Dim envFilePath, envVars, appPort
 Dim stoppedByName, stoppedByPort, cacheRemoved
 
 Set shell = CreateObject("WScript.Shell")
 Set fso = CreateObject("Scripting.FileSystemObject")
+silentSuccess = (LCase(Trim(GetArg(0))) = "--silent-success")
 
 projectRoot = ResolveProjectRoot()
 logsDir = fso.BuildPath(projectRoot, "logs")
@@ -32,10 +33,20 @@ LogMessage "Stopped by port: " & CStr(stoppedByPort)
 LogMessage "Cache entries removed: " & CStr(cacheRemoved)
 LogMessage "==== shutdown complete ===="
 
-MsgBox "Server stop complete." & vbCrLf & _
-       "Stopped by name: " & CStr(stoppedByName) & vbCrLf & _
-       "Stopped by port: " & CStr(stoppedByPort) & vbCrLf & _
-       "Cache removed: " & CStr(cacheRemoved), vbInformation, "Fire Data"
+If Not silentSuccess Then
+    MsgBox "Server stop complete." & vbCrLf & _
+           "Stopped by name: " & CStr(stoppedByName) & vbCrLf & _
+           "Stopped by port: " & CStr(stoppedByPort) & vbCrLf & _
+           "Cache removed: " & CStr(cacheRemoved), vbInformation, "Fire Data"
+End If
+
+Function GetArg(index)
+    If WScript.Arguments.Count > index Then
+        GetArg = WScript.Arguments(index)
+    Else
+        GetArg = ""
+    End If
+End Function
 
 Function ResolveProjectRoot()
     Dim scriptDir

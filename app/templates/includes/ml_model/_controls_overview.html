@@ -1,4 +1,4 @@
-﻿<section class="panel filters-panel">
+<section class="panel filters-panel">
     <div class="panel-head">
         <h2>Параметры сравнения</h2>
         <span class="panel-meta">Три линии по дням месяца: Год 1, Год 2 и Compare-series (Год ML).</span>
@@ -72,8 +72,42 @@
 
 <section class="panel filters-panel" style="margin-top:1.5rem">
     <div class="panel-head">
-        <h2>Топ-10 причин пожаров</h2>
-        <span class="panel-meta">Сравнение Год 1 и Год 2 за выбранный месяц.</span>
+        <h2>Анализ причин пожаров</h2>
+        <span class="panel-meta">Ранжирование и распределение по дням месяца для Год 1 и Год 2.</span>
     </div>
+
+    <section class="ml-reading-guide" style="margin-bottom:1.25rem" aria-label="Методология анализа причин">
+        <div class="ml-reading-guide-head">
+            <h3>Методология</h3>
+            <p class="panel-meta">Два взаимодополняющих представления одного среза данных.</p>
+        </div>
+        <div class="ml-method-grid">
+            <article>
+                <h4>Топ-10 причин — столбчатая диаграмма</h4>
+                <ul>
+                    <li>Для каждого года выбирается выбранный месяц <em>m₀</em>.</li>
+                    <li>Причины упорядочиваются по убыванию суммарного числа пожаров:<br>
+                        <code>rank(k) = argsort↓ Σ<sub>d</sub> f(year, m₀, d, causeₖ)</code>
+                    </li>
+                    <li>Отображаются первые 10 позиций; нумерация 1–10 сохраняется при смене месяца.</li>
+                    <li>Два столбца рядом позволяют сравнить структуру причин между Год 1 и Год 2.</li>
+                </ul>
+            </article>
+            <article>
+                <h4>Тепловая карта по дням — календарная матрица</h4>
+                <ul>
+                    <li>Матрица размерности 12 × 31 (строки — месяцы, столбцы — дни 1–31).</li>
+                    <li>Значение ячейки (m, d):<br>
+                        <code>z[m][d] = Σ<sub>cause</sub> f(year, m, d, cause)</code>
+                    </li>
+                    <li>При наведении отображается топ-3 причины для данной ячейки.</li>
+                    <li>Пустые ячейки (дни, которых нет в месяце) отображаются белым.</li>
+                    <li>Цветовая шкала нормирована в пределах каждого года независимо.</li>
+                </ul>
+            </article>
+        </div>
+    </section>
+
     <div id="mlCausesChart"></div>
+    <div id="mlCausesHeatmaps" style="margin-top:1.5rem"></div>
 </section>

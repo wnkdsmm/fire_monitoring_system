@@ -364,14 +364,14 @@
             barmode: 'group',
             bargap: 0.25,
             bargroupgap: 0.08,
-            margin: { l: 60, r: 20, t: 48, b: 40 },
-            xaxis: { tickmode: 'array', tickvals: indices, ticktext: indices },
-            yaxis: { title: 'Кол-во пожаров', titlefont: { size: 12 } },
-            legend: { orientation: 'h', x: 0, y: 1.0, xanchor: 'left', yanchor: 'bottom' },
-            height: 360,
+            margin: { l: 70, r: 20, t: 56, b: 48 },
+            xaxis: { tickmode: 'array', tickvals: indices, ticktext: indices, tickfont: { size: 13 } },
+            yaxis: { title: 'Кол-во пожаров', titlefont: { size: 13 } },
+            legend: { orientation: 'h', x: 0, y: 1.0, xanchor: 'left', yanchor: 'bottom', font: { size: 13 } },
+            height: 460,
             plot_bgcolor: 'transparent',
             paper_bgcolor: 'transparent',
-            font: { size: 11 }
+            font: { size: 13 }
         };
 
         var plotDiv = document.createElement('div');
@@ -393,8 +393,87 @@
         chartNode.appendChild(legendDiv);
     }
 
+    var MONTH_SHORT = ['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'];
+    var DAY_LABELS = [];
+    for (var _d = 1; _d <= 31; _d++) { DAY_LABELS.push(String(_d)); }
+
+    function renderCausesHeatmaps(causesData, chartId) {
+        var chartNode = byId(chartId);
+        if (!chartNode) { return; }
+        var data = causesData || {};
+        var yearA = data.year_a != null ? String(data.year_a) : '';
+        var yearB = data.year_b != null ? String(data.year_b) : '';
+        var hmA = data.heatmap_a || {};
+        var hmB = data.heatmap_b || {};
+
+        var hasData = (Array.isArray(hmA.z) && hmA.z.length) || (Array.isArray(hmB.z) && hmB.z.length);
+        if (!hasData) { chartNode.innerHTML = ''; return; }
+
+        var colorscaleA = [[0,'rgb(240,253,250)'],[0.1,'rgb(153,221,215)'],[0.35,'rgb(45,175,163)'],[0.65,'rgb(13,130,121)'],[1,'rgb(7,76,68)']];
+        var colorscaleB = [[0,'rgb(255,250,244)'],[0.1,'rgb(253,210,160)'],[0.35,'rgb(240,130,30)'],[0.65,'rgb(195,80,5)'],[1,'rgb(120,50,2)']];
+
+        function buildTrace(hm, colorscale) {
+            return {
+                type: 'heatmap',
+                x: DAY_LABELS,
+                y: MONTH_SHORT,
+                z: Array.isArray(hm.z) ? hm.z : [],
+                text: Array.isArray(hm.text) ? hm.text : [],
+                hoverinfo: 'text',
+                colorscale: colorscale,
+                showscale: false,
+                zsmooth: false
+            };
+        }
+
+        var baseLayout = {
+            margin: { l: 52, r: 16, t: 48, b: 40 },
+            height: 460,
+            plot_bgcolor: 'transparent',
+            paper_bgcolor: 'transparent',
+            font: { size: 13 },
+            xaxis: { title: 'День', tickfont: { size: 11 }, automargin: true },
+            yaxis: { title: '', autorange: 'reversed', tickfont: { size: 12 } },
+            hoverlabel: {
+                bgcolor: '#ffffff',
+                bordercolor: '#e2e8f0',
+                font: { color: '#1e293b', size: 13 },
+                align: 'left'
+            }
+        };
+
+        chartNode.innerHTML = '';
+        var wrapper = document.createElement('div');
+        wrapper.className = 'ml-heatmap-grid';
+
+        function makePanel(year, hm, colorscale) {
+            var plot = document.createElement('div');
+            var Plotly = global.Plotly;
+            if (Plotly && typeof Plotly.newPlot === 'function') {
+                var panelLayout = Object.assign({}, baseLayout, {
+                    title: {
+                        text: String(year),
+                        font: { size: 15, color: '#111827' },
+                        x: 0.5,
+                        xanchor: 'center',
+                        y: 0.97,
+                        yanchor: 'top',
+                        pad: { b: 4 }
+                    }
+                });
+                Plotly.newPlot(plot, [buildTrace(hm, colorscale)], panelLayout, { responsive: true, displayModeBar: false });
+            }
+            return plot;
+        }
+
+        wrapper.appendChild(makePanel(yearA, hmA, colorscaleA));
+        wrapper.appendChild(makePanel(yearB, hmB, colorscaleB));
+        chartNode.appendChild(wrapper);
+    }
+
     global.MlModelCharts = {
         renderCompareChart: renderCompareChart,
-        renderCausesChart: renderCausesChart
+        renderCausesChart: renderCausesChart,
+        renderCausesHeatmaps: renderCausesHeatmaps
     };
 }(window));
