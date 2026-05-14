@@ -270,6 +270,21 @@ def run_rename_headers_script(
         input_path = _resolve_script_input_file(job, resolve_fallback_input_xlsx())
 
         add_log(session_id, resolved_job_id, f"[statistics19922020] Запуск rename_headers для файла: {input_path}")
+        original_sheet_name: str | None = None
+        original_headers: list[str] = []
+        try:
+            preview_module = _load_module_from_path(script_path, "rename_headers_2019_2023_preview")
+            if hasattr(preview_module, "FILE_PATH"):
+                preview_module.FILE_PATH = input_path
+            if hasattr(preview_module, "pick_sheet"):
+                original_sheet_name = str(preview_module.pick_sheet(input_path))
+            if original_sheet_name:
+                original_df = pd.read_excel(input_path, sheet_name=original_sheet_name)
+                original_headers = [str(col) for col in list(original_df.columns)]
+        except Exception:
+            original_sheet_name = None
+            original_headers = []
+
         module = _load_module_from_path(script_path, "rename_headers_2019_2023")
         if hasattr(module, "FILE_PATH"):
             module.FILE_PATH = input_path
@@ -277,6 +292,14 @@ def run_rename_headers_script(
         with redirect_stdout(buffer):
             module.main()
         _split_lines_to_logs(session_id, resolved_job_id, buffer.getvalue())
+
+        if original_sheet_name and original_headers:
+            updated_df = pd.read_excel(input_path, sheet_name=original_sheet_name)
+            if len(updated_df.columns) == len(original_headers):
+                updated_df.columns = original_headers
+                with pd.ExcelWriter(input_path, engine="openpyxl", mode="a", if_sheet_exists="replace") as writer:
+                    updated_df.to_excel(writer, sheet_name=original_sheet_name, index=False)
+                add_log(session_id, resolved_job_id, "[statistics19922020] Исходный регистр заголовков восстановлен.")
 
         job_store.set_uploaded_file(session_id, resolved_job_id, input_path, input_path.name)
         add_log(session_id, resolved_job_id, "[statistics19922020] rename_headers завершен.")

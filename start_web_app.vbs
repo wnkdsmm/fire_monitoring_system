@@ -10,9 +10,11 @@ Dim venvPython, basePython
 Dim bootstrapCommand, startCommand, runCode
 Dim reqFilePath, installCode
 Dim databaseUrl, dbCheckCode
+Dim isLiteStart
 
 Set shell = CreateObject("WScript.Shell")
 Set fso = CreateObject("Scripting.FileSystemObject")
+isLiteStart = (LCase(Trim(GetArg(0))) = "--lite")
 
 projectRoot = fso.GetParentFolderName(WScript.ScriptFullName)
 logsDir = fso.BuildPath(projectRoot, "logs")
@@ -72,7 +74,7 @@ probeUrl = appUrl & "docs"
 LogMessage "Resolved APP_HOST=" & appHost & ", APP_PORT=" & appPort & ", EFFECTIVE_PORT=" & resolvedPort
 
 venvPython = fso.BuildPath(projectRoot, ".venv\Scripts\python.exe")
-If Not fso.FileExists(venvPython) Then
+If Not fso.FileExists(venvPython) And Not isLiteStart Then
     basePython = ResolveBasePython()
     If Len(basePython) = 0 Then
         MsgBox "Python not found." & vbCrLf & _
@@ -97,8 +99,8 @@ If Not fso.FileExists(venvPython) Then
 End If
 
 If Not fso.FileExists(venvPython) Then
-    MsgBox "Python in .venv not found after bootstrap." & vbCrLf & _
-           "Run setup.bat manually.", vbCritical, "Fire Data"
+    MsgBox "Python in .venv not found." & vbCrLf & _
+           "Run first_start_web.vbs first.", vbCritical, "Fire Data"
     WScript.Quit 1
 End If
 
@@ -108,7 +110,7 @@ If Not fso.FileExists(reqFilePath) Then
     WScript.Quit 1
 End If
 
-If Not HasRuntimeDeps(venvPython) Then
+If Not isLiteStart And Not HasRuntimeDeps(venvPython) Then
     LogMessage "Runtime dependencies are missing in .venv. Installing requirements."
     installCode = InstallRequirements(projectRoot, venvPython, reqFilePath, logFilePath)
     LogMessage "Install requirements exit code: " & CStr(installCode)
@@ -144,6 +146,7 @@ shell.Run startCommand & " >> " & Quote(logFilePath) & " 2>>&1", 0, False
 If WaitForUrl(probeUrl, 45) Then
     LogMessage "Server ready: " & appUrl
     shell.Run appUrl, 1, False
+    MsgBox "Server started successfully." & vbCrLf & appUrl, vbInformation, "Fire Data"
     WScript.Quit 0
 End If
 
@@ -151,6 +154,14 @@ LogMessage "ERROR: Server was not ready in time."
 MsgBox "Server did not start in 45 seconds." & vbCrLf & _
        "See logs\startup.log for details.", vbExclamation, "Fire Data"
 WScript.Quit 1
+
+Function GetArg(index)
+    If WScript.Arguments.Count > index Then
+        GetArg = WScript.Arguments(index)
+    Else
+        GetArg = ""
+    End If
+End Function
 
 Function ResolveBasePython()
     Dim foundPath

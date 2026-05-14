@@ -130,15 +130,52 @@
         return Array.prototype.slice.call(document.querySelectorAll('.table-selection-checkbox'));
     }
 
+    function isVisibleRow(row) {
+        return !!(row && row.offsetParent !== null);
+    }
+
+    function getVisibleSelectionInputs() {
+        return getSelectionInputs().filter(function (input) {
+            var row = input.closest('[data-table-row]');
+            return isVisibleRow(row);
+        });
+    }
+
+    function isClearTableName(tableName) {
+        return String(tableName || '').toLowerCase().indexOf('clear') === 0;
+    }
+
+    function applyClearTablesFilter() {
+        var toggle = byId('toggleClearTables');
+        var showClearTables = !toggle || !!toggle.checked;
+        var rows = Array.prototype.slice.call(document.querySelectorAll('#tableList [data-table-row][data-table-name]'));
+
+        rows.forEach(function (row) {
+            var tableName = String(row.getAttribute('data-table-name') || '').trim();
+            var shouldHide = !showClearTables && isClearTableName(tableName);
+            row.hidden = shouldHide;
+        });
+
+        if (toggle) {
+            var label = toggle.closest('label');
+            var textNode = label ? label.querySelector('span') : null;
+            if (textNode) {
+                textNode.textContent = showClearTables
+                    ? 'Очищенные таблицы: показывать'
+                    : 'Очищенные таблицы: не показывать';
+            }
+        }
+    }
+
     function getSelectedTableNames() {
-        return getSelectionInputs()
+        return getVisibleSelectionInputs()
             .filter(function (input) { return input.checked; })
             .map(function (input) { return String(input.value || '').trim(); })
             .filter(function (tableName) { return !!tableName; });
     }
 
     function refreshSelectionState() {
-        var inputs = getSelectionInputs();
+        var inputs = getVisibleSelectionInputs();
         var selectedNames = getSelectedTableNames();
         var hasTables = inputs.length > 0;
         var selectedCount = selectedNames.length;
@@ -180,7 +217,7 @@
     }
 
     function selectAllTables(isChecked) {
-        getSelectionInputs().forEach(function (input) {
+        getVisibleSelectionInputs().forEach(function (input) {
             input.checked = !!isChecked;
         });
         refreshSelectionState();
@@ -267,6 +304,14 @@
 
             refreshSelectionState();
         });
+
+        var toggle = byId('toggleClearTables');
+        if (toggle) {
+            toggle.addEventListener('change', function () {
+                applyClearTablesFilter();
+                refreshSelectionState();
+            });
+        }
     }
 
     document.addEventListener('DOMContentLoaded', function () {
@@ -281,5 +326,7 @@
 
         bindSelectionActions();
         applyTableState(getRenderedTableNames());
+        applyClearTablesFilter();
+        refreshSelectionState();
     });
 })();

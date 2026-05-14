@@ -80,6 +80,10 @@
                 {% if tables %}Выбрано: 0{% else %}Таблицы отсутствуют{% endif %}
             </div>
             <div class="table-selection-actions">
+                <label class="table-selection-check" style="display:inline-flex;align-items:center;gap:8px;">
+                    <input id="toggleClearTables" type="checkbox" checked>
+                    <span>Очищенные таблицы: показывать</span>
+                </label>
                 <button id="selectAllTablesButton" type="button" class="table-selection-button" {% if not tables %}disabled{% endif %}>Выбрать все</button>
                 <button id="clearSelectedTablesButton" type="button" class="table-selection-button" {% if not tables %}disabled{% endif %}>Снять выбор</button>
                 <button id="deleteSelectedTablesButton" type="button" class="danger-action" {% if not tables %}disabled{% endif %}>Удалить выбранные</button>
