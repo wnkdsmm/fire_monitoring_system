@@ -273,15 +273,19 @@
     background: rgba(232, 242, 255, 1);
 }
 
-.stats-grid .stat-card {
-    padding: var(--space-token-33);
+#tableSummaryCards .stat-card {
+    padding: var(--space-token-19);
 }
 
-.stats-grid .stat-value {
+#tableSummaryCards .stat-value {
     display: block;
-    margin: var(--space-token-11);
-    font-size: var(--font-size-token-06);
-    line-height: 1;
+    margin: 8px 0 6px;
+    font-size: var(--font-size-token-05);
+    line-height: 1.05;
+}
+
+#tableSummaryCards .stat-foot {
+    line-height: 1.35;
 }
 
 .data-table-panel .data-table {

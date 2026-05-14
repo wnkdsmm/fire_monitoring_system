@@ -99,23 +99,6 @@
             {% endfor %}
         </div>
     </section>
-
-    <section class="panel">
-        <div class="panel-head">
-            <h2>Ключевые критерии перед просмотром</h2>
-            <span class="panel-meta" id="tableCriteriaLead">{{ table_summary.criteria_lead }}</span>
-        </div>
-        <div class="stats-grid" id="tableCriteriaGroups">
-            {% for group in table_summary.groups %}
-            <article class="stat-card">
-                <span class="stat-label">{{ group.label }}</span>
-                <strong class="stat-value">{{ group.value }}</strong>
-                <span class="stat-foot">{{ group.meta }}</span>
-            </article>
-            {% endfor %}
-        </div>
-    </section>
-
     <section class="panel data-table-panel">
         <div class="panel-head">
             <div>

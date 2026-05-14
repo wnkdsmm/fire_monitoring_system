@@ -62,8 +62,6 @@
     const summaryLead = byId('tableSummaryLead');
     const summaryScopeNote = byId('tableSummaryScopeNote');
     const summaryCards = byId('tableSummaryCards');
-    const criteriaLead = byId('tableCriteriaLead');
-    const criteriaGroups = byId('tableCriteriaGroups');
     const inlineError = byId('tableInlineError');
     const inlineErrorMessage = byId('tableInlineErrorMessage');
     let inlineRetryButton = byId('tableInlineRetryButton');
@@ -314,12 +312,7 @@
         if (summaryScopeNote) {
             summaryScopeNote.textContent = safeSummary.scope_note || '';
         }
-        if (criteriaLead) {
-            criteriaLead.textContent = safeSummary.criteria_lead || '';
-        }
-
         renderStatCards(summaryCards, safeSummary.cards || []);
-        renderStatCards(criteriaGroups, safeSummary.groups || []);
     }
 
     function updatePagination(pagination) {

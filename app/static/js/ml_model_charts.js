@@ -341,22 +341,19 @@
             return;
         }
 
-        var labels = causes.map(function (c) {
-            var label = String(c.cause || '');
-            return label.length > 40 ? label.slice(0, 38) + '…' : label;
-        });
+        var indices = causes.map(function (_, i) { return String(i + 1); });
         var countsA = causes.map(function (c) { return Number(c.year_a_count) || 0; });
         var countsB = causes.map(function (c) { return Number(c.year_b_count) || 0; });
 
         var traceA = {
-            x: labels,
+            x: indices,
             y: countsA,
             name: yearA,
             type: 'bar',
             marker: { color: '#0F766E' }
         };
         var traceB = {
-            x: labels,
+            x: indices,
             y: countsB,
             name: yearB,
             type: 'bar',
@@ -365,20 +362,35 @@
 
         var layout = {
             barmode: 'group',
-            margin: { l: 50, r: 20, t: 10, b: 140 },
-            xaxis: { tickangle: -45, automargin: true },
-            yaxis: { title: 'Кол-во пожаров' },
-            legend: { orientation: 'h', y: 1.08 },
+            bargap: 0.25,
+            bargroupgap: 0.08,
+            margin: { l: 60, r: 20, t: 48, b: 40 },
+            xaxis: { tickmode: 'array', tickvals: indices, ticktext: indices },
+            yaxis: { title: 'Кол-во пожаров', titlefont: { size: 12 } },
+            legend: { orientation: 'h', x: 0, y: 1.0, xanchor: 'left', yanchor: 'bottom' },
             height: 360,
             plot_bgcolor: 'transparent',
             paper_bgcolor: 'transparent',
-            font: { size: 12 }
+            font: { size: 11 }
         };
+
+        var plotDiv = document.createElement('div');
+        chartNode.innerHTML = '';
+        chartNode.appendChild(plotDiv);
 
         var Plotly = global.Plotly;
         if (Plotly && typeof Plotly.newPlot === 'function') {
-            Plotly.newPlot(chartNode, [traceA, traceB], layout, { responsive: true, displayModeBar: false });
+            Plotly.newPlot(plotDiv, [traceA, traceB], layout, { responsive: true, displayModeBar: false });
         }
+
+        var legendHtml = '<ol class="ml-causes-legend">';
+        causes.forEach(function (c, i) {
+            legendHtml += '<li><span class="ml-causes-legend-num">' + (i + 1) + '</span>' + escapeHtml(String(c.cause || '')) + '</li>';
+        });
+        legendHtml += '</ol>';
+        var legendDiv = document.createElement('div');
+        legendDiv.innerHTML = legendHtml;
+        chartNode.appendChild(legendDiv);
     }
 
     global.MlModelCharts = {
