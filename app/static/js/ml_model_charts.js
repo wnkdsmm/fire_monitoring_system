@@ -326,7 +326,63 @@
         }
     }
 
+    function renderCausesChart(causesData, chartId) {
+        var chartNode = byId(chartId);
+        if (!chartNode) {
+            return;
+        }
+        var data = causesData || {};
+        var causes = Array.isArray(data.causes) ? data.causes : [];
+        var yearA = data.year_a != null ? String(data.year_a) : 'Год 1';
+        var yearB = data.year_b != null ? String(data.year_b) : 'Год 2';
+
+        if (!causes.length) {
+            chartNode.innerHTML = '<p class="chart-empty" style="padding:1rem">Нет данных по причинам для выбранного месяца и лет.</p>';
+            return;
+        }
+
+        var labels = causes.map(function (c) {
+            var label = String(c.cause || '');
+            return label.length > 40 ? label.slice(0, 38) + '…' : label;
+        });
+        var countsA = causes.map(function (c) { return Number(c.year_a_count) || 0; });
+        var countsB = causes.map(function (c) { return Number(c.year_b_count) || 0; });
+
+        var traceA = {
+            x: labels,
+            y: countsA,
+            name: yearA,
+            type: 'bar',
+            marker: { color: '#0F766E' }
+        };
+        var traceB = {
+            x: labels,
+            y: countsB,
+            name: yearB,
+            type: 'bar',
+            marker: { color: '#B45309' }
+        };
+
+        var layout = {
+            barmode: 'group',
+            margin: { l: 50, r: 20, t: 10, b: 140 },
+            xaxis: { tickangle: -45, automargin: true },
+            yaxis: { title: 'Кол-во пожаров' },
+            legend: { orientation: 'h', y: 1.08 },
+            height: 360,
+            plot_bgcolor: 'transparent',
+            paper_bgcolor: 'transparent',
+            font: { size: 12 }
+        };
+
+        var Plotly = global.Plotly;
+        if (Plotly && typeof Plotly.newPlot === 'function') {
+            Plotly.newPlot(chartNode, [traceA, traceB], layout, { responsive: true, displayModeBar: false });
+        }
+    }
+
     global.MlModelCharts = {
-        renderCompareChart: renderCompareChart
+        renderCompareChart: renderCompareChart,
+        renderCausesChart: renderCausesChart
     };
 }(window));

@@ -100,10 +100,36 @@
         };
     }
 
+    async function fetchMlCausesChart(options) {
+        var settings = options || {};
+        var requestPayload = buildRequestPayload(settings);
+        var body = requestPayload.body || {};
+        var causesPayload = {
+            table_name: body.table_name || 'all',
+            table_names: Array.isArray(body.table_names) ? body.table_names : [],
+            cause: body.cause || 'all',
+            object_category: body.object_category || 'all',
+            month: body.month || '',
+            year_a: body.year_a || '',
+            year_b: body.year_b || '',
+            current_user_date: body.current_user_date || getCurrentUserDateIso()
+        };
+        var result = await apiCall('/api/ml-causes-chart', {
+            method: 'POST',
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(causesPayload)
+        }, 'Не удалось загрузить данные по причинам.');
+        return { payload: result.payload || {}, requestBody: causesPayload };
+    }
+
     global.MlModelApi = {
         buildPayloadFromQuery: buildPayloadFromQuery,
         buildQueryFromForm: buildQueryFromForm,
         buildRequestPayload: buildRequestPayload,
-        fetchMlCompareSeries: fetchMlCompareSeries
+        fetchMlCompareSeries: fetchMlCompareSeries,
+        fetchMlCausesChart: fetchMlCausesChart
     };
 }(window));

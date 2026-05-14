@@ -1,6 +1,6 @@
 ﻿from __future__ import annotations
 
-from calendar import monthrange
+from calendar import isleap, monthrange
 from datetime import date, datetime, timedelta
 import math
 import re
@@ -268,6 +268,7 @@ def _build_compare_series_payload(
         by_day: dict[int, list[float]] = {}
         all_values: list[float] = []
         by_year: dict[int, list[float]] = {}
+        by_day_year: dict[int, dict[int, list[float]]] = {}
         for item in history_before_month:
             item_date = _parse_optional_iso_date(str(item.get("date") or ""))
             if item_date is None:
@@ -276,35 +277,54 @@ def _build_compare_series_payload(
             by_day.setdefault(int(item_date.day), []).append(numeric_value)
             all_values.append(numeric_value)
             by_year.setdefault(int(item_date.year), []).append(numeric_value)
+            by_day_year.setdefault(int(item_date.day), {}).setdefault(int(item_date.year), []).append(numeric_value)
 
         if not all_values:
             return {}
 
         overall_mean = sum(all_values) / float(len(all_values))
         latest_history_year = max(by_year.keys()) if by_year else int(target_year)
-        # Future-only correction: add a mild linear year trend so 2026/2027/2028/2029
-        # do not collapse into the same synthetic curve when facts are absent.
-        trend_per_year = 0.0
-        if by_year and int(target_year) > int(latest_history_year) and len(by_year) >= 2:
-            years = sorted(by_year.keys())
-            xs = [float(year) for year in years]
-            ys = [sum(by_year[year]) / float(len(by_year[year])) for year in years]
-            x_mean = sum(xs) / float(len(xs))
-            y_mean = sum(ys) / float(len(ys))
-            denom = sum((x - x_mean) ** 2 for x in xs)
-            if denom > 0:
-                raw_slope = sum((x - x_mean) * (y - y_mean) for x, y in zip(xs, ys)) / denom
-                baseline = max(1.0, abs(y_mean))
-                slope_limit = baseline * 0.15
-                trend_per_year = max(-slope_limit, min(slope_limit, raw_slope))
         future_year_shift = max(0, int(target_year) - int(latest_history_year))
+
+        def _ols_slope_capped(xs: list[float], ys: list[float], y_mean: float) -> float:
+            x_mean = sum(xs) / float(len(xs))
+            denom = sum((x - x_mean) ** 2 for x in xs)
+            if denom <= 0:
+                return 0.0
+            raw_slope = sum((x - x_mean) * (y - y_mean) for x, y in zip(xs, ys)) / denom
+            slope_limit = max(1.0, abs(y_mean)) * 0.15
+            return max(-slope_limit, min(slope_limit, raw_slope))
+
+        # Month-level trend: fallback when a day has too few years to fit reliably.
+        trend_month = 0.0
+        _need_trend = by_year and int(target_year) > int(latest_history_year) and len(by_year) >= 2
+        if _need_trend:
+            years_sorted = sorted(by_year.keys())
+            xs_m = [float(y) for y in years_sorted]
+            ys_m = [sum(by_year[y]) / float(len(by_year[y])) for y in years_sorted]
+            trend_month = _ols_slope_capped(xs_m, ys_m, sum(ys_m) / float(len(ys_m)))
+
+        _MIN_YEARS_DAY_TREND = 10
+
+        def _day_slope(day: int) -> float:
+            if not _need_trend:
+                return 0.0
+            day_year_map = by_day_year.get(int(day)) or {}
+            if len(day_year_map) < _MIN_YEARS_DAY_TREND:
+                return trend_month
+            year_keys = sorted(day_year_map.keys())
+            xs_d = [float(y) for y in year_keys]
+            ys_d = [sum(day_year_map[y]) / float(len(day_year_map[y])) for y in year_keys]
+            return _ols_slope_capped(xs_d, ys_d, sum(ys_d) / float(len(ys_d)))
 
         result: dict[int, float | None] = {}
         for day in range(1, month_days + 1):
             day_values = by_day.get(day) or []
             base_value = (sum(day_values) / float(len(day_values))) if day_values else overall_mean
-            if future_year_shift > 0 and trend_per_year != 0.0:
-                base_value = base_value + trend_per_year * float(future_year_shift)
+            if future_year_shift > 0:
+                slope = _day_slope(day)
+                if slope != 0.0:
+                    base_value = base_value + slope * float(future_year_shift)
             result[day] = max(0.0, base_value)
         return result
 
@@ -429,12 +449,15 @@ def _predict_month_poisson_ml(
 
     parsed_history.sort(key=lambda item: item[0])
     series_by_date: dict[date, float] = {dt: value for dt, value in parsed_history}
-    all_values = [value for _, value in parsed_history]
-    global_mean = sum(all_values) / float(len(all_values)) if all_values else 0.0
+
+    same_month_history = [(dt, value) for dt, value in parsed_history if dt.month == int(target_month)]
+    stat_source = same_month_history if same_month_history else parsed_history
+    stat_values = [value for _, value in stat_source]
+    global_mean = sum(stat_values) / float(len(stat_values)) if stat_values else 0.0
     global_mean = max(0.0, global_mean)
 
     by_day_of_month: dict[int, list[float]] = {}
-    for dt, value in parsed_history:
+    for dt, value in stat_source:
         by_day_of_month.setdefault(int(dt.day), []).append(float(value))
 
     def _baseline_for_day(day: int) -> float:
@@ -481,7 +504,8 @@ def _predict_month_poisson_ml(
             return global_mean
 
         day_of_year = int(day.timetuple().tm_yday)
-        phase = 2.0 * math.pi * float(day_of_year) / 366.0
+        year_days = 366.0 if isleap(day.year) else 365.0
+        phase = 2.0 * math.pi * float(day_of_year) / year_days
         return [
             float(day.day),
             float(day.month),
@@ -514,18 +538,21 @@ def _predict_month_poisson_ml(
     result: dict[int, float | None] = {}
     for day in range(1, month_days + 1):
         current_day = date(int(target_year), int(target_month), int(day))
+        used_fallback = False
         try:
             features = _build_features(current_day, series_by_date, predicted_dates)
             raw_pred = float(model.predict(np.asarray([features], dtype=float))[0])
         except Exception:
             raw_pred = _baseline_for_day(day)
+            used_fallback = True
         if not math.isfinite(raw_pred):
             raw_pred = _baseline_for_day(day)
+            used_fallback = True
         pred = max(0.0, raw_pred)
         predicted_dates[current_day] = pred
         result[int(day)] = pred
         summary["model_days"] += 1
-        if pred != raw_pred:
+        if used_fallback:
             summary["clipped_days"] += 1
     return result, summary
 
@@ -837,6 +864,136 @@ def get_ml_compare_series_data(
         },
     }
     return cache_set.compare_cache.set(compare_cache_key, result_payload)
+
+
+def _load_cause_counts_by_year(
+    *,
+    metadata_items: list[Any],
+    target_month: int,
+    year_a: int,
+    year_b: int,
+    object_category: str = "all",
+    top_n: int = 10,
+) -> tuple[list[dict[str, Any]], list[str]]:
+    from app.services.forecasting.utils import _date_expression, _text_expression
+    from app.services.forecasting.selection import _normalize_filter_value
+    from app.shared.sql_utils import quote_identifier
+    from config.db import engine
+    from sqlalchemy import text as sqltext
+
+    obj_cat = _normalize_filter_value(str(object_category or "all"))
+    cause_totals: dict[str, dict[int, int]] = {}
+    errors: list[str] = []
+
+    for meta in (metadata_items or []):
+        table_name = str((meta or {}).get("table_name") or "")
+        resolved = dict((meta or {}).get("resolved_columns") or {})
+        cause_col = resolved.get("cause") or ""
+        date_col = resolved.get("date") or ""
+        if not table_name or not cause_col or not date_col:
+            continue
+
+        date_expr = _date_expression(date_col)
+        cause_expr = _text_expression(cause_col)
+        src = quote_identifier(table_name)
+
+        conds = [
+            f"{date_expr} IS NOT NULL",
+            f"{cause_expr} IS NOT NULL",
+            f"EXTRACT(MONTH FROM {date_expr}) = :month",
+            f"EXTRACT(YEAR FROM {date_expr}) IN (:year_a, :year_b)",
+        ]
+        params: dict[str, Any] = {"month": int(target_month), "year_a": int(year_a), "year_b": int(year_b)}
+
+        if obj_cat != "all":
+            obj_col = resolved.get("object_category") or ""
+            if obj_col:
+                conds.append(f"{_text_expression(obj_col)} = :object_category")
+                params["object_category"] = obj_cat
+
+        sql = sqltext(
+            f"SELECT {cause_expr} AS cause_value,"
+            f" EXTRACT(YEAR FROM {date_expr})::int AS yr,"
+            f" COUNT(*) AS cnt"
+            f" FROM {src}"
+            f" WHERE {' AND '.join(conds)}"
+            f" GROUP BY {cause_expr}, EXTRACT(YEAR FROM {date_expr})::int"
+        )
+
+        try:
+            with engine.connect() as conn:
+                for row in conn.execute(sql, params).mappings():
+                    cause_val = str(row.get("cause_value") or "").strip()
+                    yr = int(row.get("yr") or 0)
+                    cnt = int(row.get("cnt") or 0)
+                    if cause_val and yr in (int(year_a), int(year_b)):
+                        cause_totals.setdefault(cause_val, {}).setdefault(yr, 0)
+                        cause_totals[cause_val][yr] += cnt
+        except Exception as exc:
+            errors.append(f"{table_name}: {exc}")
+            continue
+
+    ranked = sorted(
+        [(cause, counts.get(int(year_a), 0), counts.get(int(year_b), 0)) for cause, counts in cause_totals.items()],
+        key=lambda t: t[1] + t[2],
+        reverse=True,
+    )
+    return [{"cause": t[0], "year_a_count": t[1], "year_b_count": t[2]} for t in ranked[:int(top_n)]], errors
+
+
+def get_ml_causes_chart_data(
+    table_name: str = "all",
+    table_names: Sequence[str] | None = None,
+    cause: str = "all",
+    object_category: str = "all",
+    current_user_date: str = "",
+    month: int | None = None,
+    year_a: int | None = None,
+    year_b: int | None = None,
+    top_n: int = 10,
+) -> dict[str, Any]:
+    request_state = _build_ml_request_state(
+        table_name=table_name,
+        table_names=table_names,
+        cause=cause,
+        object_category=object_category,
+        current_user_date=current_user_date,
+        month=month,
+        year_a=year_a,
+        year_b=year_b,
+    )
+    selected_month = int(request_state.get("selected_compare_month") or 0)
+    selected_year_a = int(request_state.get("selected_compare_year_a") or 0)
+    selected_year_b = int(request_state.get("selected_compare_year_b") or 0)
+    source_tables = list(request_state.get("source_tables") or [])
+
+    empty = {"causes": [], "year_a": selected_year_a, "year_b": selected_year_b, "month": selected_month, "top_n": int(top_n)}
+    if not source_tables:
+        return empty
+
+    filter_bundle = _load_ml_filter_bundle(
+        source_tables=source_tables,
+        cause=cause,
+        object_category=object_category,
+    )
+    metadata_items = list(filter_bundle.get("metadata_items") or [])
+    causes, errors = _load_cause_counts_by_year(
+        metadata_items=metadata_items,
+        target_month=selected_month,
+        year_a=selected_year_a,
+        year_b=selected_year_b,
+        object_category=str(filter_bundle.get("selected_object_category") or "all"),
+        top_n=int(top_n),
+    )
+    return {
+        "causes": causes,
+        "year_a": selected_year_a,
+        "year_b": selected_year_b,
+        "month": selected_month,
+        "top_n": int(top_n),
+        "debug_errors": errors,
+        "debug_tables": [str((m or {}).get("table_name") or "") for m in metadata_items],
+    }
 
 
 def clear_ml_model_cache(caches: MLModelCaches | None = None) -> None:

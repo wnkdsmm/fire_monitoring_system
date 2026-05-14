@@ -7,7 +7,7 @@
 {% block title %}Таблица: {{ table_name }}{% endblock %}
 
 {% block page_styles %}
-<link rel="stylesheet" href="/static/css/tables.css?v={{ tables_css_version }}&cb=topscroll-v2">
+<link rel="stylesheet" href="/static/css/tables.css?v={{ tables_css_version }}&cb=topscroll-v3">
 {% endblock %}
 
 {% block sidebar_status %}
@@ -191,10 +191,19 @@
         </div>
 
         <div class="table-columns-strip">
-            <span class="table-columns-strip-label">Колонки:</span>
+            <div class="table-columns-strip-head">
+                <span class="table-columns-strip-label">Колонки:</span>
+                <span id="tableColumnsMeta" class="table-columns-meta">Показано: {{ columns | length }} / {{ columns | length }}</span>
+                <div class="table-columns-actions">
+                    <button id="tableColumnsSelectAllButton" type="button" class="table-selection-button">Выбрать все</button>
+                    <button id="tableColumnsClearButton" type="button" class="table-selection-button">Снять выбор</button>
+                </div>
+            </div>
             <div id="tableColumnsList" class="table-columns-list">
                 {% for col in columns %}
-                <span class="table-columns-chip">{{ col }}</span>
+                <button type="button" class="table-columns-chip" data-column-index="{{ loop.index0 }}" title="Скрыть колонку">
+                    <span>{{ col }}</span>
+                </button>
                 {% endfor %}
             </div>
         </div>
@@ -239,5 +248,5 @@
 <script src="/static/js/shared/ui_helpers.js?v={{ analytics_shared_js_version }}"></script>
 <script src="/static/js/shared/plotly_helpers.js?v={{ analytics_shared_js_version }}"></script>
 <script src="/static/js/analytics_shared.js?v={{ analytics_shared_js_version }}"></script>
-<script src="/static/js/table_view.js?v={{ table_view_js_version }}&cb=topscroll-v2"></script>
+<script src="/static/js/table_view.js?v={{ table_view_js_version }}&cb=topscroll-v3"></script>
 {% endblock %}
