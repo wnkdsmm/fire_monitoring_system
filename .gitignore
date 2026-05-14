@@ -10,6 +10,8 @@ results/
 data/results/
 data/uploads/
 tmp_*.txt
+_tmp_*
+logs/_tmp_*.log
 
 # local tool caches
 .pytest_cache/
