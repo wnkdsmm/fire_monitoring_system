@@ -11,37 +11,21 @@
                         </article>
 
                         <article class="panel chart-panel chart-panel-large chart-panel-causes">
-                        <div class="panel-head">
-                            <h2 id="yearlyFiresTitle">{{ charts.yearly_fires.title }}</h2>
-                            <span class="panel-meta">Частотная структура причин пожаров в выбранном аналитическом срезе.</span>
-                        </div>
-                        {{ render_plotly_chart('yearlyFiresChart', 'График: частотная структура причин пожаров') }}
+                            <div class="panel-head">
+                                <h2 id="yearlyFiresTitle">{{ charts.yearly_fires.title }}</h2>
+                                <span class="panel-meta">Частотная структура причин пожаров в выбранном аналитическом срезе.</span>
+                            </div>
+                            {{ render_plotly_chart('yearlyFiresChart', 'График: частотная структура причин пожаров') }}
                         </article>
                     </div>
 
                     <div class="dashboard-grid dashboard-grid-two">
                         <article class="panel chart-panel chart-panel-large">
                             <div class="panel-head">
-                                <h2 id="distributionTitle">{{ charts.distribution.title }}</h2>
-                                <span class="panel-meta" id="distributionMeta">{{ charts.distribution.description or 'Распределение пожаров по выбранному группировочному признаку.' }}</span>
+                                <h2 id="distributionTitle">{{ charts.yearly_area.title }}</h2>
+                                <span class="panel-meta" id="distributionMeta">{{ charts.yearly_area.description or 'Тяжесть последствий пожаров и их влияние на население.' }}</span>
                             </div>
-                            {{ render_plotly_chart('distributionChart', 'График: распределение пожаров по группировочному признаку') }}
-                        </article>
-
-                        <article class="panel chart-panel chart-panel-large">
-                            <div class="panel-head">
-                                <h2 id="yearlyAreaTitle">{{ charts.yearly_area.title }}</h2>
-                                <span class="panel-meta" id="yearlyAreaMeta">{{ charts.yearly_area.description or 'Тяжесть последствий пожаров и их влияние на население.' }}</span>
-                            </div>
-                            {{ render_plotly_chart('yearlyAreaChart', 'График: тяжесть последствий и влияние на население по годам') }}
-                        </article>
-
-                        <article class="panel chart-panel chart-panel-large">
-                            <div class="panel-head">
-                                <h2 id="cumulativeAreaTitle">{{ charts.cumulative_area.title }}</h2>
-                                <span class="panel-meta" id="cumulativeAreaMeta">{{ charts.cumulative_area.description or 'Накопленная площадь пожаров по дням года для сопоставления текущего и предыдущего периодов.' }}</span>
-                            </div>
-                            {{ render_plotly_chart('cumulativeAreaChart', 'График: накопленная площадь пожаров по дням года') }}
+                            {{ render_plotly_chart('distributionChart', 'График: последствия, эвакуация и дети') }}
                         </article>
                     </div>
 
@@ -61,14 +45,6 @@
                             </div>
                             {{ render_plotly_chart('monthlyProfileChart', 'График: сезонный профиль пожарной активности') }}
                         </article>
-
-                        <article class="panel chart-panel">
-                            <div class="panel-head">
-                                <h2 id="areaBucketsTitle">{{ charts.area_buckets.title }}</h2>
-                                <span class="panel-meta" id="areaBucketsMeta">{{ charts.area_buckets.description or 'Структура пожаров по масштабам площади: преобладание малых или крупных очагов.' }}</span>
-                            </div>
-                            {{ render_plotly_chart('areaBucketsChart', 'График: структура пожаров по масштабу площади') }}
-                        </article>
                     </div>
                 </div>
-        </section>
+</section>

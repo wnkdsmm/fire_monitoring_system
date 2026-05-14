@@ -57,25 +57,19 @@
     function renderDashboardCharts(charts) {
         var safeCharts = charts || {};
         renderPlotlyInContainer(safeCharts.yearly_fires, 'yearlyFiresChart');
-        renderPlotlyInContainer(safeCharts.distribution, 'distributionChart');
-        renderPlotlyInContainer(safeCharts.yearly_area, 'yearlyAreaChart');
+        renderPlotlyInContainer(safeCharts.yearly_area, 'distributionChart');
         renderPlotlyInContainer(safeCharts.yearly_trend, 'recentYearsChart');
-        renderPlotlyInContainer(safeCharts.cumulative_area, 'cumulativeAreaChart');
         renderPlotlyInContainer(safeCharts.monthly_heatmap, 'monthlyHeatmapChart');
         renderPlotlyInContainer(safeCharts.monthly_profile, 'monthlyProfileChart');
-        renderPlotlyInContainer(safeCharts.area_buckets, 'areaBucketsChart');
     }
 
     function showChartsLoading() {
         var ids = [
             'yearlyFiresChart',
             'distributionChart',
-            'yearlyAreaChart',
             'recentYearsChart',
-            'cumulativeAreaChart',
             'monthlyHeatmapChart',
             'monthlyProfileChart',
-            'areaBucketsChart'
         ];
         ids.forEach(function (id) {
             var container = byId(id);
@@ -333,20 +327,14 @@ function renderManagementCards(items) {
         setText('sidebarPeriodLabel', summary.period_label || 'Нет данных');
 
         setText('yearlyFiresTitle', charts.yearly_fires ? charts.yearly_fires.title : 'Причины возгораний');
-        setText('distributionTitle', charts.distribution ? charts.distribution.title : 'Распределение по выбранному разрезу');
-        setText('yearlyAreaTitle', charts.yearly_area ? charts.yearly_area.title : 'Последствия пожара');
+        setText('distributionTitle', charts.yearly_area ? charts.yearly_area.title : 'Последствия, эвакуация и дети');
 
-        setText('cumulativeAreaTitle', charts.cumulative_area ? charts.cumulative_area.title : 'Накопленная площадь по дням года');
         setText('monthlyHeatmapTitle', charts.monthly_heatmap ? charts.monthly_heatmap.title : 'Сезонность по месяцам и годам');
         setText('monthlyProfileTitle', charts.monthly_profile ? charts.monthly_profile.title : 'Сезонность по месяцам');
-        setText('areaBucketsTitle', charts.area_buckets ? charts.area_buckets.title : 'Структура по площади пожара');
-        setText('distributionMeta', charts.distribution ? charts.distribution.description : 'Что показывает блок: как пожары распределяются по выбранной группе.');
-        setText('yearlyAreaMeta', charts.yearly_area ? charts.yearly_area.description : 'Что показывает блок: тяжесть последствий и влияние пожаров на людей.');
+        setText('distributionMeta', charts.yearly_area ? charts.yearly_area.description : 'Что показывает блок: тяжесть последствий пожаров и влияние на людей.');
 
-        setText('cumulativeAreaMeta', charts.cumulative_area ? charts.cumulative_area.description : 'Накопленная площадь: текущий год против предыдущего.');
         setText('monthlyHeatmapMeta', charts.monthly_heatmap ? charts.monthly_heatmap.description : 'Количество пожаров по месяцам и годам.');
         setText('monthlyProfileMeta', charts.monthly_profile ? charts.monthly_profile.description : 'Что показывает блок: сезонный рисунок пожаров, если нужно планировать профилактику заранее.');
-        setText('areaBucketsMeta', charts.area_buckets ? charts.area_buckets.description : 'Что показывает блок: преобладают ли небольшие или крупные пожары.');
 
         if (charts && Object.keys(charts).length > 0) {
             renderDashboardCharts(charts);
