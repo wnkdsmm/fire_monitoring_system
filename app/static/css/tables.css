@@ -292,7 +292,15 @@
 
 .data-table-panel .data-table th,
 .data-table-panel .data-table td {
-    min-width: max(10rem, 18ch);
+    min-width: 7.5rem;
+    max-width: 18rem;
+    padding: 8px 10px;
+    font-size: var(--font-size-token-04);
+    line-height: 1.2;
+    white-space: normal;
+    overflow-wrap: break-word;
+    word-break: normal;
+    vertical-align: top;
 }
 
 .data-table-panel .data-table th {
@@ -300,6 +308,10 @@
     top: 0;
     background: var(--paper-strong);
     z-index: var(--z-sticky);
+    font-size: var(--font-size-token-04);
+    line-height: 1.15;
+    text-transform: none;
+    letter-spacing: 0;
 }
 
 .table-summary-scope {
@@ -385,6 +397,56 @@
     max-width: 100%;
     overflow-x: auto;
     overflow-y: hidden;
+}
+
+.data-table-top-scroll {
+    padding: 0 24px 6px;
+    overflow-x: scroll;
+    overflow-y: hidden;
+    min-height: 18px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+}
+
+.data-table-top-scroll-inner {
+    height: 1px;
+}
+
+.data-table-top-scroll::-webkit-scrollbar {
+    height: 12px;
+}
+
+.table-columns-strip {
+    display: grid;
+    gap: 8px;
+    padding: 0 24px 10px;
+}
+
+.table-columns-strip-label {
+    color: var(--muted);
+    font-size: var(--font-size-token-07);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.table-columns-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.table-columns-chip {
+    display: inline-flex;
+    align-items: center;
+    min-height: 28px;
+    padding: 4px 10px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
+    background: var(--surface-soft);
+    color: var(--ink);
+    font-size: var(--font-size-token-02);
+    line-height: 1.25;
 }
 
 @media (max-width: 980px) {

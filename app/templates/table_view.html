@@ -7,7 +7,7 @@
 {% block title %}Таблица: {{ table_name }}{% endblock %}
 
 {% block page_styles %}
-<link rel="stylesheet" href="/static/css/tables.css?v={{ tables_css_version }}">
+<link rel="stylesheet" href="/static/css/tables.css?v={{ tables_css_version }}&cb=topscroll-v2">
 {% endblock %}
 
 {% block sidebar_status %}
@@ -190,7 +190,19 @@
             </div>
         </div>
 
-        <div class="data-table-shell">
+        <div class="table-columns-strip">
+            <span class="table-columns-strip-label">Колонки:</span>
+            <div id="tableColumnsList" class="table-columns-list">
+                {% for col in columns %}
+                <span class="table-columns-chip">{{ col }}</span>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div id="tableTopScroll" class="data-table-shell data-table-top-scroll" aria-hidden="true">
+            <div id="tableTopScrollInner" class="data-table-top-scroll-inner"></div>
+        </div>
+        <div id="tableDataShell" class="data-table-shell">
             <table id="tableDataTable" class="data-table{% if columns | length <= 5 %} table-stack-mobile{% else %} table-sticky-first{% endif %}">
                 <thead id="tableDataHead">
                     <tr>
@@ -227,5 +239,5 @@
 <script src="/static/js/shared/ui_helpers.js?v={{ analytics_shared_js_version }}"></script>
 <script src="/static/js/shared/plotly_helpers.js?v={{ analytics_shared_js_version }}"></script>
 <script src="/static/js/analytics_shared.js?v={{ analytics_shared_js_version }}"></script>
-<script src="/static/js/table_view.js?v={{ table_view_js_version }}"></script>
+<script src="/static/js/table_view.js?v={{ table_view_js_version }}&cb=topscroll-v2"></script>
 {% endblock %}

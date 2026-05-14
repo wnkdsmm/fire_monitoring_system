@@ -20,6 +20,10 @@
     const tableHead = byId('tableDataHead');
     const tableBody = byId('tableDataBody');
     const tableElement = byId('tableDataTable');
+    const tableDataShell = byId('tableDataShell');
+    const tableTopScroll = byId('tableTopScroll');
+    const tableTopScrollInner = byId('tableTopScrollInner');
+    const tableColumnsList = byId('tableColumnsList');
     const sidebarTotalRows = byId('sidebarTotalRows');
     const sidebarPageNumber = byId('sidebarPageNumber');
     const sidebarShownRows = byId('sidebarShownRows');
@@ -37,6 +41,9 @@
 
     let isLoading = false;
     const POPSTATE_HANDLER_KEY = '__tableViewPopstateHandler__';
+    const CELL_TRUNCATE_LIMIT = 40;
+    let syncingTopScroll = false;
+    let syncingBottomScroll = false;
 
     function replaceElementForFreshListeners(element) {
         if (!element) {
@@ -89,10 +96,36 @@
         const safeColumns = Array.isArray(columns) ? columns : [];
         tableHead.innerHTML = `<tr>${safeColumns.map((column) => `<th>${escapeHtml(column)}</th>`).join('')}</tr>`;
         root.dataset.columnsCount = String(safeColumns.length);
+        renderColumnsList(safeColumns);
 
         const useStackMobile = safeColumns.length <= 5;
         tableElement?.classList.toggle('table-stack-mobile', useStackMobile);
         tableElement?.classList.toggle('table-sticky-first', !useStackMobile);
+        syncTopScrollbarGeometry();
+    }
+
+    function renderColumnsList(columns) {
+        if (!tableColumnsList) {
+            return;
+        }
+        const safeColumns = Array.isArray(columns) ? columns : [];
+        tableColumnsList.innerHTML = safeColumns
+            .map((column) => `<span class="table-columns-chip">${escapeHtml(column)}</span>`)
+            .join('');
+    }
+
+    function normalizeCellText(value) {
+        const raw = value == null ? '' : String(value);
+        const compact = raw.replace(/\s+/g, ' ').trim();
+        if (compact.length <= CELL_TRUNCATE_LIMIT) {
+            return { displayValue: compact, fullValue: compact, isTruncated: false };
+        }
+
+        return {
+            displayValue: `${compact.slice(0, CELL_TRUNCATE_LIMIT)}...`,
+            fullValue: compact,
+            isTruncated: true,
+        };
     }
 
     function renderTableRows(columns, rows) {
@@ -113,10 +146,41 @@
             const safeCells = Array.isArray(row) ? row : [];
             const cellsHtml = safeCells.map((value, index) => {
                 const label = useStackMobile ? ` data-label="${escapeHtml(safeColumns[index] ?? '')}"` : '';
-                return `<td${label}>${escapeHtml(value ?? '')}</td>`;
+                const normalized = normalizeCellText(value);
+                const title = normalized.isTruncated ? ` title="${escapeHtml(normalized.fullValue)}"` : '';
+                return `<td${label}${title}>${escapeHtml(normalized.displayValue)}</td>`;
             }).join('');
             return `<tr>${cellsHtml}</tr>`;
         }).join('');
+    }
+
+    function normalizeExistingRows() {
+        if (!tableBody) {
+            return;
+        }
+
+        const cells = tableBody.querySelectorAll('td');
+        cells.forEach((cell) => {
+            const normalized = normalizeCellText(cell.textContent ?? '');
+            cell.textContent = normalized.displayValue;
+            if (normalized.isTruncated) {
+                cell.title = normalized.fullValue;
+            } else {
+                cell.removeAttribute('title');
+            }
+        });
+        syncTopScrollbarGeometry();
+    }
+
+    function syncTopScrollbarGeometry() {
+        if (!tableTopScrollInner || !tableDataShell || !tableElement) {
+            return;
+        }
+
+        const fullWidth = tableDataShell.scrollWidth || tableElement.scrollWidth || 0;
+        const visibleWidth = tableDataShell.clientWidth || 0;
+        tableTopScrollInner.style.width = `${Math.max(fullWidth, visibleWidth)}px`;
+        tableTopScroll.scrollLeft = tableDataShell.scrollLeft;
     }
 
     function renderStatCards(container, items) {
@@ -336,4 +400,30 @@
         const targetPageSize = Number(pageSizeSelect?.value || 100);
         loadPage(targetPage, targetPageSize);
     });
+
+    tableTopScroll?.addEventListener('scroll', () => {
+        if (!tableDataShell || syncingBottomScroll) {
+            return;
+        }
+        syncingTopScroll = true;
+        tableDataShell.scrollLeft = tableTopScroll.scrollLeft;
+        syncingTopScroll = false;
+    });
+
+    tableDataShell?.addEventListener('scroll', () => {
+        if (!tableTopScroll || syncingTopScroll) {
+            return;
+        }
+        syncingBottomScroll = true;
+        tableTopScroll.scrollLeft = tableDataShell.scrollLeft;
+        syncingBottomScroll = false;
+    });
+
+    window.addEventListener('resize', () => {
+        syncTopScrollbarGeometry();
+        window.requestAnimationFrame(syncTopScrollbarGeometry);
+    });
+    normalizeExistingRows();
+    syncTopScrollbarGeometry();
+    window.requestAnimationFrame(syncTopScrollbarGeometry);
 })();
