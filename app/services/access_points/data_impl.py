@@ -32,12 +32,12 @@ from .constants import (
     ARRIVAL_TIME_COLUMN_CANDIDATES,
     CASUALTY_FLAG_COLUMN_CANDIDATES,
     CONSEQUENCE_COLUMN_CANDIDATES,
-    DATE_COLUMN,
     DETECTION_TIME_COLUMN_CANDIDATES,
     DEATHS_COLUMN_CANDIDATES,
     DESTROYED_AREA_COLUMN_CANDIDATES,
     DESTROYED_BUILDINGS_COLUMN_CANDIDATES,
     DISTRICT_COLUMN_CANDIDATES,
+    FIRE_DATE_COLUMN_CANDIDATES,
     FIRE_STATION_DISTANCE_COLUMN_CANDIDATES,
     INJURIES_COLUMN_CANDIDATES,
     LATITUDE_COLUMN_CANDIDATES,
@@ -49,6 +49,11 @@ from .constants import (
     REPORT_TIME_COLUMN_CANDIDATES,
     SETTLEMENT_COLUMN_CANDIDATES,
     SETTLEMENT_TYPE_COLUMN_CANDIDATES,
+    SPLIT_ARRIVAL_HOURS_COLUMN_CANDIDATES,
+    SPLIT_ARRIVAL_MINS_COLUMN_CANDIDATES,
+    SPLIT_DETECTION_HOURS_COLUMN_CANDIDATES,
+    SPLIT_REPORT_HOURS_COLUMN_CANDIDATES,
+    SPLIT_REPORT_MINS_COLUMN_CANDIDATES,
     TERRITORY_LABEL_COLUMN_CANDIDATES,
     WATER_SUPPLY_COUNT_COLUMN_CANDIDATES,
     WATER_SUPPLY_DETAILS_COLUMN_CANDIDATES,
@@ -143,7 +148,12 @@ def _load_table_metadata(table_name: str) -> AccessPointMetadata:
         "destroyed_area": _resolve_column_name(columns, DESTROYED_AREA_COLUMN_CANDIDATES),
         "destroyed_buildings": _resolve_column_name(columns, DESTROYED_BUILDINGS_COLUMN_CANDIDATES),
         "registered_damage": _resolve_column_name(columns, REGISTERED_DAMAGE_COLUMN_CANDIDATES),
-        "event_date": _resolve_column_name(columns, [DATE_COLUMN]),
+        "event_date": _resolve_column_name(columns, FIRE_DATE_COLUMN_CANDIDATES),
+        "split_report_hours": _resolve_column_name(columns, SPLIT_REPORT_HOURS_COLUMN_CANDIDATES),
+        "split_report_mins": _resolve_column_name(columns, SPLIT_REPORT_MINS_COLUMN_CANDIDATES),
+        "split_arrival_hours": _resolve_column_name(columns, SPLIT_ARRIVAL_HOURS_COLUMN_CANDIDATES),
+        "split_arrival_mins": _resolve_column_name(columns, SPLIT_ARRIVAL_MINS_COLUMN_CANDIDATES),
+        "split_detection_hours": _resolve_column_name(columns, SPLIT_DETECTION_HOURS_COLUMN_CANDIDATES),
     }
     preferred_settlement_column = _resolve_preferred_exact_column(
         columns,
@@ -219,6 +229,11 @@ def _build_source_sql(
     destroyed_area_expr = _optional_numeric_expression(resolved_columns["destroyed_area"], fallback="NULL")
     destroyed_buildings_expr = _optional_numeric_expression(resolved_columns["destroyed_buildings"], fallback="NULL")
     registered_damage_expr = _optional_numeric_expression(resolved_columns["registered_damage"], fallback="NULL")
+    split_report_hours_expr = _optional_numeric_expression(resolved_columns.get("split_report_hours"), fallback="NULL")
+    split_report_mins_expr = _optional_numeric_expression(resolved_columns.get("split_report_mins"), fallback="NULL")
+    split_arrival_hours_expr = _optional_numeric_expression(resolved_columns.get("split_arrival_hours"), fallback="NULL")
+    split_arrival_mins_expr = _optional_numeric_expression(resolved_columns.get("split_arrival_mins"), fallback="NULL")
+    split_detection_hours_expr = _optional_numeric_expression(resolved_columns.get("split_detection_hours"), fallback="NULL")
     date_expr = select_expression_or_fallback(
         resolved_columns.get("event_date"),
         _date_expression,
@@ -259,7 +274,12 @@ def _build_source_sql(
             {destroyed_area_expr} AS destroyed_area,
             {destroyed_buildings_expr} AS destroyed_buildings,
             {registered_damage_expr} AS registered_damage,
-            {date_expr} AS event_date
+            {date_expr} AS event_date,
+            {split_report_hours_expr} AS split_report_hours,
+            {split_report_mins_expr} AS split_report_mins,
+            {split_arrival_hours_expr} AS split_arrival_hours,
+            {split_arrival_mins_expr} AS split_arrival_mins,
+            {split_detection_hours_expr} AS split_detection_hours
         FROM {quote_identifier(table_name)}
         ) src{where_sql}
     """
@@ -290,6 +310,11 @@ def _normalize_record(row: RawPointRow) -> PointRecord | None:
     destroyed_buildings = _to_float_or_none(row.get("destroyed_buildings"))
     registered_damage = _to_float_or_none(row.get("registered_damage"))
     event_date = _parse_datetime_text(row.get("event_date"))
+    split_report_hours = _to_float_or_none(row.get("split_report_hours"))
+    split_report_mins = _to_float_or_none(row.get("split_report_mins"))
+    split_arrival_hours = _to_float_or_none(row.get("split_arrival_hours"))
+    split_arrival_mins = _to_float_or_none(row.get("split_arrival_mins"))
+    split_detection_hours = _to_float_or_none(row.get("split_detection_hours"))
 
     has_identity_hint = any(
         [
@@ -329,6 +354,11 @@ def _normalize_record(row: RawPointRow) -> PointRecord | None:
         "destroyed_buildings": destroyed_buildings,
         "registered_damage": registered_damage,
         "event_date": event_date,
+        "split_report_hours": split_report_hours,
+        "split_report_mins": split_report_mins,
+        "split_arrival_hours": split_arrival_hours,
+        "split_arrival_mins": split_arrival_mins,
+        "split_detection_hours": split_detection_hours,
     }
 
 
@@ -567,6 +597,22 @@ def _collect_access_point_metadata(source_tables: Sequence[str]) -> tuple[list[A
     return metadata_items, notes
 
 
+def _resolve_night_incident(record: PointRecord) -> bool:
+    report_time = record.get("report_time")
+    if report_time is not None:
+        hour = int(report_time.hour)
+        return hour < 6 or hour >= 22
+    split_dh = _to_float_or_none(record.get("split_detection_hours"))
+    if split_dh is not None:
+        hour = int(split_dh)
+        return hour < 6 or hour >= 22
+    split_rh = _to_float_or_none(record.get("split_report_hours"))
+    if split_rh is not None:
+        hour = int(split_rh)
+        return hour < 6 or hour >= 22
+    return False
+
+
 def _record_to_access_point_input(record: PointRecord, *, source_table: str) -> AccessPointInput:
     event_date = record.get("event_date")
     event_month = getattr(event_date, "month", None)
@@ -578,6 +624,16 @@ def _record_to_access_point_input(record: PointRecord, *, source_table: str) -> 
         record.get("report_time") or record.get("detection_time"),
         record.get("arrival_time"),
     )
+    if response_minutes is None:
+        split_rh = _to_float_or_none(record.get("split_report_hours"))
+        split_rm = _to_float_or_none(record.get("split_report_mins"))
+        split_ah = _to_float_or_none(record.get("split_arrival_hours"))
+        split_am = _to_float_or_none(record.get("split_arrival_mins"))
+        if split_rh is not None and split_ah is not None:
+            diff = (split_ah * 60 + (split_am or 0)) - (split_rh * 60 + (split_rm or 0))
+            if diff < 0:
+                diff += 1440
+            response_minutes = diff if 0 <= diff <= 240 else None
     has_water_supply = _parse_water_supply_flag(
         record.get("water_supply_count"),
         _clean_text(record.get("water_supply_details")),
@@ -600,7 +656,7 @@ def _record_to_access_point_input(record: PointRecord, *, source_table: str) -> 
             or (record.get("destroyed_buildings") or 0) > 0
             or (record.get("registered_damage") or 0) > 0
         ),
-        "night_incident": bool(record.get("report_time") is not None and int(record["report_time"].hour) < 6),
+        "night_incident": bool(_resolve_night_incident(record)),
         "heating_season": heating_season,
     }
 
