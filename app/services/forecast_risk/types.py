@@ -57,6 +57,7 @@ class RiskDataRecord(TypedDict, total=False):
     territory_label: str
     settlement_type: str
     fire_station_distance: float | None
+    fire_area: float | None
     has_water_supply: bool | None
     response_minutes: float | None
     long_arrival: bool

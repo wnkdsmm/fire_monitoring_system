@@ -46,7 +46,7 @@ WATER_SUPPORT_COLUMN = "__water_known_count"
 DISTANCE_SUPPORT_COLUMN = "__distance_count"
 ALL_TABLES_VALUE = "all"
 ALL_TABLES_LABEL = "Все таблицы"
-DEFAULT_TERRITORY_SAMPLE_LIMIT = 1000
+DEFAULT_TERRITORY_SAMPLE_LIMIT = 15_000
 
 
 def _shrink_rate(

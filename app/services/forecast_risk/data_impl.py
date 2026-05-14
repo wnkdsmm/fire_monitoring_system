@@ -40,6 +40,11 @@ from .constants import (
     TERRITORY_LABEL_COLUMN_CANDIDATES,
     WATER_SUPPLY_COUNT_COLUMN_CANDIDATES,
     WATER_SUPPLY_DETAILS_COLUMN_CANDIDATES,
+    SPLIT_REPORT_HOURS_COLUMN_CANDIDATES,
+    SPLIT_REPORT_MINS_COLUMN_CANDIDATES,
+    SPLIT_ARRIVAL_HOURS_COLUMN_CANDIDATES,
+    SPLIT_ARRIVAL_MINS_COLUMN_CANDIDATES,
+    SPLIT_DETECTION_HOURS_COLUMN_CANDIDATES,
 )
 from .utils import (
     _calculate_response_minutes,
@@ -207,6 +212,11 @@ def _load_table_metadata(table_name: str) -> RiskTableMetadata:
         "casualty_flag": _resolve_column_name(columns, CASUALTY_FLAG_COLUMN_CANDIDATES),
         "injuries": _resolve_column_name(columns, INJURIES_COLUMN_CANDIDATES),
         "deaths": _resolve_column_name(columns, DEATHS_COLUMN_CANDIDATES),
+        "split_report_hours": _resolve_column_name(columns, SPLIT_REPORT_HOURS_COLUMN_CANDIDATES),
+        "split_report_mins": _resolve_column_name(columns, SPLIT_REPORT_MINS_COLUMN_CANDIDATES),
+        "split_arrival_hours": _resolve_column_name(columns, SPLIT_ARRIVAL_HOURS_COLUMN_CANDIDATES),
+        "split_arrival_mins": _resolve_column_name(columns, SPLIT_ARRIVAL_MINS_COLUMN_CANDIDATES),
+        "split_detection_hours": _resolve_column_name(columns, SPLIT_DETECTION_HOURS_COLUMN_CANDIDATES),
     }
     preferred_settlement_column = _resolve_preferred_exact_column(
         columns,
@@ -275,12 +285,18 @@ def _load_risk_records(
     }
     numeric_aliases = {
         "fire_station_distance": "fire_station_distance_value",
+        "fire_area": "fire_area_value",
         "water_supply_count": "water_supply_count_value",
         "registered_damage": "registered_damage_value",
         "destroyed_buildings": "destroyed_buildings_value",
         "destroyed_area": "destroyed_area_value",
         "injuries": "injuries_value",
         "deaths": "deaths_value",
+        "split_report_hours": "split_report_hours_value",
+        "split_report_mins": "split_report_mins_value",
+        "split_arrival_hours": "split_arrival_hours_value",
+        "split_arrival_mins": "split_arrival_mins_value",
+        "split_detection_hours": "split_detection_hours_value",
     }
     select_parts.extend(
         build_select_parts(
@@ -314,6 +330,16 @@ def _load_risk_records(
         arrival_time = _parse_datetime_text(row.get("arrival_time_value"))
         detection_time = _parse_datetime_text(row.get("detection_time_value"))
         response_minutes = _calculate_response_minutes(report_time or detection_time, arrival_time)
+        if response_minutes is None:
+            split_rh = _to_float_or_none(row.get("split_report_hours_value"))
+            split_rm = _to_float_or_none(row.get("split_report_mins_value"))
+            split_ah = _to_float_or_none(row.get("split_arrival_hours_value"))
+            split_am = _to_float_or_none(row.get("split_arrival_mins_value"))
+            if split_rh is not None and split_ah is not None:
+                diff = (split_ah * 60 + (split_am or 0)) - (split_rh * 60 + (split_rm or 0))
+                if diff < 0:
+                    diff += 1440
+                response_minutes = diff if 0 <= diff <= 240 else None
         water_supply_count = _to_float_or_none(row.get("water_supply_count_value"))
         water_supply_details = _clean_text(row.get("water_supply_details_value"))
         registered_damage = _to_float_or_none(row.get("registered_damage_value")) or 0.0
@@ -324,6 +350,14 @@ def _load_risk_records(
         consequence_flag = _truthy_value(row.get("consequence_value"))
         casualty_flag = _truthy_value(row.get("casualty_flag_value"))
         incident_time = report_time or detection_time or arrival_time
+        if incident_time is None:
+            split_dh = _to_float_or_none(row.get("split_detection_hours_value"))
+            if split_dh is not None:
+                incident_hour = int(split_dh) % 24
+            else:
+                incident_hour = None
+        else:
+            incident_hour = incident_time.hour
         cause_value = _clean_text(row.get("cause_value"))
         object_category_value = _clean_text(row.get("object_category_value"))
         settlement_type_value = _clean_text(row.get("settlement_type_value")) or settlement_value
@@ -337,11 +371,12 @@ def _load_risk_records(
                 "territory_label": territory_label,
                 "settlement_type": settlement_type_value,
                 "fire_station_distance": _to_float_or_none(row.get("fire_station_distance_value")),
+                "fire_area": _to_float_or_none(row.get("fire_area_value")),
                 "has_water_supply": _parse_water_supply_flag(water_supply_count, water_supply_details),
                 "response_minutes": response_minutes,
                 "long_arrival": response_minutes is not None and response_minutes >= LONG_RESPONSE_THRESHOLD_MINUTES,
                 "heating_season": _is_heating_season(fire_date),
-                "night_incident": incident_time.hour >= 22 or incident_time.hour < 6 if incident_time else False,
+                "night_incident": incident_hour >= 22 or incident_hour < 6 if incident_hour is not None else False,
                 "victims_present": bool(casualty_flag) or injuries > 0 or deaths > 0,
                 "major_damage": registered_damage > 0 or destroyed_buildings > 0 or destroyed_area > 0,
                 "severe_consequence": bool(consequence_flag) or injuries > 0 or deaths > 0 or registered_damage > 0 or destroyed_buildings > 0 or destroyed_area > 0,
