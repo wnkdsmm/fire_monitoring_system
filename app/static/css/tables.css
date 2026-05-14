@@ -125,6 +125,11 @@
     gap: 10px;
 }
 
+#tableSearchInput {
+    min-width: 260px;
+    width: clamp(260px, 30vw, 360px);
+}
+
 .table-selection-button {
     display: inline-flex;
     align-items: center;
@@ -180,11 +185,10 @@
     color: var(--ink);
     line-height: 1.5;
     overflow-wrap: anywhere;
-    transition: var(--transition-interactive);
+    transition: border-color 0.18s ease, background-color 0.18s ease;
 }
 
 .table-link-card:hover {
-    transform: translateY(-1px);
     border-color: var(--accent-border);
     text-decoration: none;
 }
@@ -197,8 +201,17 @@
 
 .table-link-record-head {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
+    justify-content: space-between;
     gap: 12px;
+}
+
+.table-link-record-head .table-link-title {
+    order: 1;
+}
+
+.table-link-record-head .table-selection-check {
+    order: 2;
 }
 
 .table-selection-check {
@@ -213,10 +226,11 @@
 }
 
 .table-selection-checkbox {
-    width: 18px;
-    height: 18px;
+    width: 22px;
+    height: 22px;
     margin: 0;
     accent-color: var(--accent);
+    cursor: pointer;
 }
 
 .table-link-title {
@@ -232,9 +246,7 @@
 }
 
 .table-link-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
+    display: none;
 }
 
 .table-link-inline-action {

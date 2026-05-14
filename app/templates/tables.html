@@ -27,6 +27,14 @@
 {% endblock %}
 
 {% block content %}
+{% set stats = namespace(clean=0, base=0) %}
+{% for table_name in tables %}
+    {% if table_name[:5] | lower == 'clean' %}
+        {% set stats.clean = stats.clean + 1 %}
+    {% else %}
+        {% set stats.base = stats.base + 1 %}
+    {% endif %}
+{% endfor %}
 <div class="dashboard-main simple-page-main">
     <section class="hero-panel simple-page-intro">
         <div class="hero-copy">
@@ -80,6 +88,12 @@
                 {% if tables %}Выбрано: 0{% else %}Таблицы отсутствуют{% endif %}
             </div>
             <div class="table-selection-actions">
+                <input
+                    id="tableSearchInput"
+                    type="search"
+                    class="table-selection-button"
+                    placeholder="Поиск по имени таблицы"
+                    aria-label="Поиск по имени таблицы">
                 <label class="table-selection-check" style="display:inline-flex;align-items:center;gap:8px;">
                     <input id="toggleClearTables" type="checkbox" checked>
                     <span>Очищенные таблицы: показывать</span>
@@ -91,19 +105,19 @@
         </div>
 
         <div id="tableActionStatus" class="table-action-status is-hidden" aria-live="polite"></div>
+        <div id="tablesTypeStats" class="table-selection-summary" style="display:flex;justify-content:flex-end;margin:4px 0 12px;white-space:nowrap;">
+            Очищенных (clean*): <strong id="cleanTablesCount">{{ stats.clean }}</strong>&nbsp;&nbsp;|&nbsp;&nbsp;Обычных: <strong id="baseTablesCount">{{ stats.base }}</strong>
+        </div>
 
         <ul id="tableList" class="table-link-list{% if not tables %} is-hidden{% endif %}" data-empty-message="В базе данных таблицы отсутствуют." data-has-items="{% if tables %}true{% else %}false{% endif %}" {% if not tables %}hidden{% endif %}>
             {% for table in tables %}
             <li class="table-link-item" data-table-row data-table-name="{{ table }}">
-                <article class="table-link-card table-link-record">
+                <article class="table-link-card table-link-record" data-href="/tables/{{ table | urlpath }}">
                     <div class="table-link-record-head">
                         <label class="table-selection-check">
                             <input class="table-selection-checkbox" type="checkbox" value="{{ table }}" aria-label="Выбрать таблицу {{ table }}">
                         </label>
-                        <a class="table-link-title" href="/tables/{{ table | urlpath }}">{{ table }}</a>
-                    </div>
-                    <div class="table-link-actions">
-                        <a class="table-link-inline-action" href="/tables/{{ table | urlpath }}">Открыть</a>
+                        <span class="table-link-title">{{ table }}</span>
                     </div>
                 </article>
             </li>

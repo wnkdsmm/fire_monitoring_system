@@ -22,6 +22,7 @@ End If
 cmdStop = "cscript //nologo """ & stopScript & """"
 cmdStart = "cscript //nologo """ & startScript & """"
 
+' stop_web_app.vbs already performs cache cleanup.
 rc = shell.Run(cmdStop, 0, True)
 If rc <> 0 Then
     MsgBox "Stop failed. Code: " & CStr(rc), vbCritical, "Fire Data"
@@ -36,3 +37,4 @@ End If
 
 MsgBox "Restart complete. Cache cleared.", vbInformation, "Fire Data"
 WScript.Quit 0
+

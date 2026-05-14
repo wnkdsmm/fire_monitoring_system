@@ -16,7 +16,7 @@ Set shell = CreateObject("WScript.Shell")
 Set fso = CreateObject("Scripting.FileSystemObject")
 isLiteStart = (LCase(Trim(GetArg(0))) = "--lite")
 
-projectRoot = fso.GetParentFolderName(WScript.ScriptFullName)
+projectRoot = ResolveProjectRoot()
 logsDir = fso.BuildPath(projectRoot, "logs")
 If Not fso.FolderExists(logsDir) Then
     On Error Resume Next
@@ -127,13 +127,17 @@ Else
     LogMessage "Runtime dependencies in .venv: OK"
 End If
 
-dbCheckCode = CheckDatabaseConnection(projectRoot, venvPython, logFilePath)
-LogMessage "Database check exit code: " & CStr(dbCheckCode)
-If dbCheckCode <> 0 Then
-    MsgBox "Database connection failed." & vbCrLf & _
-           "Check DATABASE_URL and PostgreSQL availability." & vbCrLf & _
-           "See logs\startup.log for details.", vbCritical, "Fire Data"
-    WScript.Quit 1
+If Not isLiteStart Then
+    dbCheckCode = CheckDatabaseConnection(projectRoot, venvPython, logFilePath)
+    LogMessage "Database check exit code: " & CStr(dbCheckCode)
+    If dbCheckCode <> 0 Then
+        MsgBox "Database connection failed." & vbCrLf & _
+               "Check DATABASE_URL and PostgreSQL availability." & vbCrLf & _
+               "See logs\startup.log for details.", vbCritical, "Fire Data"
+        WScript.Quit 1
+    End If
+Else
+    LogMessage "Lite mode: skip preflight database check."
 End If
 
 startCommand = _
@@ -143,7 +147,7 @@ startCommand = _
 LogMessage "Starting server command."
 shell.Run startCommand & " >> " & Quote(logFilePath) & " 2>>&1", 0, False
 
-If WaitForUrl(probeUrl, 45) Then
+If WaitForUrl(probeUrl, IIf(isLiteStart, 12, 45)) Then
     LogMessage "Server ready: " & appUrl
     shell.Run appUrl, 1, False
     MsgBox "Server started successfully." & vbCrLf & appUrl, vbInformation, "Fire Data"
@@ -160,6 +164,16 @@ Function GetArg(index)
         GetArg = WScript.Arguments(index)
     Else
         GetArg = ""
+    End If
+End Function
+
+Function ResolveProjectRoot()
+    Dim scriptDir
+    scriptDir = fso.GetParentFolderName(WScript.ScriptFullName)
+    If LCase(fso.GetFileName(scriptDir)) = "actions" Then
+        ResolveProjectRoot = fso.GetParentFolderName(scriptDir)
+    Else
+        ResolveProjectRoot = scriptDir
     End If
 End Function
 
