@@ -205,6 +205,9 @@ def ml_model_page(
             **ANALYTICS_PAGE_ASSETS,
             "ml_model_css_version": "css/ml_model.css",
             "ml_model_js_version": "js/ml_model.js",
+            "ml_model_charts_js_version": "js/ml_model_charts.js",
+            "ml_model_api_js_version": "js/ml_model_api.js",
+            "ml_model_render_js_version": "js/ml_model_render.js",
         },
     )
 
