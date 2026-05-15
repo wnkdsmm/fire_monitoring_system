@@ -872,7 +872,7 @@ def _load_day_month_heatmap(
     year_a: int,
     year_b: int,
     object_category: str = "all",
-    top_causes_per_cell: int = 3,
+    top_causes_per_cell: int = 10,
 ) -> dict[int, dict[str, Any]]:
     """Returns per-year calendar heatmap data: z[month-1][day-1] and hover text."""
     from app.services.forecasting.utils import _date_expression, _text_expression
@@ -941,8 +941,10 @@ def _load_day_month_heatmap(
         except Exception:
             continue
 
-    month_names = ["Янв", "Фев", "Мар", "Апр", "Май", "Июн",
-                   "Июл", "Авг", "Сен", "Окт", "Ноя", "Дек"]
+    month_names_short = ["Янв", "Фев", "Мар", "Апр", "Май", "Июн",
+                         "Июл", "Авг", "Сен", "Окт", "Ноя", "Дек"]
+    month_names_full = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь",
+                        "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"]
 
     def _build_matrices(year_data: dict[int, dict[int, dict[str, int]]]) -> dict[str, Any]:
         z = [[None] * 31 for _ in range(12)]
@@ -955,15 +957,80 @@ def _load_day_month_heatmap(
                     continue
                 z[mo - 1][dy - 1] = total
                 top = sorted(cell.items(), key=lambda kv: kv[1], reverse=True)[:int(top_causes_per_cell)]
-                lines = [f"{month_names[mo - 1]}, {dy}. Всего: {total}"]
+                lines = [f"{month_names_short[mo - 1]}, {dy}. Всего: {total}"]
                 for rank, (cause, cnt) in enumerate(top, 1):
                     lines.append(f"{rank}. {cause}: {cnt}")
                 text[mo - 1][dy - 1] = "<br>".join(lines)
         return {"z": z, "text": text}
 
+    def _compute_insights() -> dict[str, Any]:
+        seasons: dict[str, list[int]] = {
+            "Зима": [12, 1, 2], "Весна": [3, 4, 5],
+            "Лето": [6, 7, 8], "Осень": [9, 10, 11],
+        }
+
+        def _year_stats(yr: int) -> dict[str, Any]:
+            year_data = raw.get(yr, {})
+            month_totals: dict[int, int] = {}
+            dominant: dict[str, Any] = {}
+            for mo in range(1, 13):
+                cause_counts: dict[str, int] = {}
+                for _dy, causes in (year_data.get(mo) or {}).items():
+                    for cause, cnt in causes.items():
+                        cause_counts[cause] = cause_counts.get(cause, 0) + cnt
+                total = sum(cause_counts.values())
+                month_totals[mo] = total
+                if cause_counts:
+                    top_c = max(cause_counts, key=cause_counts.__getitem__)
+                    dominant[str(mo)] = {
+                        "cause": top_c,
+                        "count": cause_counts[top_c],
+                        "total": total,
+                        "pct": round(cause_counts[top_c] / total * 100, 1) if total else 0.0,
+                    }
+            total_all = sum(month_totals.values())
+            season_totals: dict[str, Any] = {}
+            for sname, months in seasons.items():
+                sc = sum(month_totals.get(m, 0) for m in months)
+                season_totals[sname] = {
+                    "count": sc,
+                    "pct": round(sc / total_all * 100, 1) if total_all else 0.0,
+                }
+            peak_mo = max(month_totals, key=month_totals.__getitem__) if month_totals else None
+            return {
+                "month_totals": {str(mo): cnt for mo, cnt in month_totals.items()},
+                "dominant_by_month": dominant,
+                "season_totals": season_totals,
+                "peak_month": peak_mo,
+                "peak_month_name": month_names_full[peak_mo - 1] if peak_mo else None,
+                "peak_month_count": month_totals.get(peak_mo, 0) if peak_mo else 0,
+                "total_fires": total_all,
+            }
+
+        stats_a = _year_stats(int(year_a))
+        stats_b = _year_stats(int(year_b))
+        totals_a = {int(k): v for k, v in stats_a["month_totals"].items()}
+        totals_b = {int(k): v for k, v in stats_b["month_totals"].items()}
+        monthly_delta = []
+        for mo in range(1, 13):
+            a = totals_a.get(mo, 0)
+            b = totals_b.get(mo, 0)
+            delta_abs = b - a
+            delta_pct = round(delta_abs / a * 100, 1) if a > 0 else None
+            monthly_delta.append({
+                "month": mo,
+                "month_name": month_names_full[mo - 1],
+                "year_a": a,
+                "year_b": b,
+                "delta_abs": delta_abs,
+                "delta_pct": delta_pct,
+            })
+        return {"year_a": stats_a, "year_b": stats_b, "monthly_delta": monthly_delta}
+
     return {
         int(year_a): _build_matrices(raw.get(int(year_a), {})),
         int(year_b): _build_matrices(raw.get(int(year_b), {})),
+        "insights": _compute_insights(),
     }
 
 
@@ -1101,6 +1168,7 @@ def get_ml_causes_chart_data(
         "top_n": int(top_n),
         "heatmap_a": heatmap.get(int(selected_year_a), {}),
         "heatmap_b": heatmap.get(int(selected_year_b), {}),
+        "insights": heatmap.get("insights", {}),
         "debug_errors": errors,
         "debug_tables": [str((m or {}).get("table_name") or "") for m in metadata_items],
     }

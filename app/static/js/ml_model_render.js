@@ -263,15 +263,18 @@
                 var causesResult = (causesResponse && causesResponse.payload && causesResponse.payload.result) || {};
                 charts.renderCausesChart(causesResult, 'mlCausesChart');
                 charts.renderCausesHeatmaps(causesResult, 'mlCausesHeatmaps');
+                charts.renderCausesInsights(causesResult, 'mlCausesInsights');
             } catch (_e) {
                 charts.renderCausesChart({}, 'mlCausesChart');
                 charts.renderCausesHeatmaps({}, 'mlCausesHeatmaps');
+                charts.renderCausesInsights({}, 'mlCausesInsights');
             }
         } catch (error) {
             showError((error && error.message) ? error.message : 'Нет данных для сравнения выбранных лет за выбранный месяц.');
             charts.renderCompareChart({}, 'mlCompareChart', 'mlCompareChartFallback', 'mlCompareChartSummary');
             charts.renderCausesChart({}, 'mlCausesChart');
             charts.renderCausesHeatmaps({}, 'mlCausesHeatmaps');
+            charts.renderCausesInsights({}, 'mlCausesInsights');
         } finally {
             setBusy(false);
         }
