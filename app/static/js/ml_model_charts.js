@@ -546,8 +546,8 @@
                 + '<th class="ml-num">' + escapeHtml(yearA) + '</th>'
                 + '<th class="ml-num">' + escapeHtml(yearB) + '</th>'
                 + '<th class="ml-num">Δ%</th>'
-                + '<th>Топ-2 причины (' + escapeHtml(yearA) + ')</th>'
-                + '<th>Топ-2 причины (' + escapeHtml(yearB) + ')</th>'
+                + '<th>Топ-3 причины (' + escapeHtml(yearA) + ')</th>'
+                + '<th>Топ-3 причины (' + escapeHtml(yearB) + ')</th>'
                 + '</tr></thead><tbody>';
 
             delta.forEach(function (row) {
