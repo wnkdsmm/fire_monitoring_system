@@ -5,7 +5,7 @@ from typing import Any, Sequence
 
 from sqlalchemy import text
 
-from app.statistics_constants import DATE_COLUMN, IMPACT_METRIC_CONFIG
+from app.statistics_constants import IMPACT_METRIC_CONFIG
 from config.db import engine
 
 from .charts import _build_yearly_plotly, _finalize_chart

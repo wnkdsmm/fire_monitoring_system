@@ -37,7 +37,6 @@ from .page_common import (
     render_context_page,
     render_template_page,
     resolve_page_mode_context,
-    templates,
 )
 
 

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Sequence
 
-from app.db_metadata import get_table_columns_cached, get_table_signature_cached
+from app.db_metadata import get_table_columns_cached
 from app.table_catalog import build_table_options, get_clean_table_names
 from app.statistics_constants import (
     BUILDING_CATEGORY_COLUMN,

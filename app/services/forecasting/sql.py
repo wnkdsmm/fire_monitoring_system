@@ -12,10 +12,8 @@ from collections import Counter
 from datetime import date
 from typing import Any, Sequence
 
-from app.perf import current_perf_trace
-from config.db import engine
 
-from .sql_aggregations import AggregationQueryBuilder, QueryBuilder
+from .sql_aggregations import AggregationQueryBuilder
 from .sql_payload import PayloadQueryBuilder, _DailyHistoryLoadTrace
 from .sql_sources import SourceQueryBuilder
 from .types import (

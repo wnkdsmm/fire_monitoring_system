@@ -1,5 +1,4 @@
 from __future__ import annotations
-from config.constants import LONG_RESPONSE_THRESHOLD_MINUTES
 
 DATE_COLUMN = "Дата возникновения пожара"
 AREA_COLUMN = "Площадь пожара"

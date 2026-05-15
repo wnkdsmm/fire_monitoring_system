@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import math
 from itertools import combinations
-from typing import Any, Sequence
+from typing import Sequence
 
 import numpy as np
 import pandas as pd

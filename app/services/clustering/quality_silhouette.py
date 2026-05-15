@@ -9,12 +9,10 @@ from .quality_cohesion import (
 
 
     _build_stability_note,
-    _resolve_method_algorithm_key,
     _summarize_segmentation_strength,
 )
 from .types import (
     ClusterCountGuidance,
-    ClusterLabel,
     ClusterMethod,
     ClusterMetrics,
     ClusteringQualityAssessment,

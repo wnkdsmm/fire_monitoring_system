@@ -63,7 +63,6 @@ from .types import (
     AccessPointInput,
     AccessPointMetadata,
     AccessPointsDataPayload,
-    AccessPointsSummary,
     ConsequenceSummary,
     OptionItem,
     PointRecord,

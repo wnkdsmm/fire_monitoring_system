@@ -4,9 +4,7 @@ import re
 from typing import Any
 
 from app.services.shared.formatting import (
-    format_datetime as _format_datetime,
     format_number_two_decimals as _format_number,
-    format_percentage as _format_percentage,
 )
 from app.shared.sql_utils import quote_identifier
 from app.table_catalog import select_clean_table_names

@@ -1,12 +1,10 @@
 from __future__ import annotations
 
-from typing import Sequence
 
 from config.constants import (
     CLUSTER_BALANCE_RATIO_CRITICAL_THRESHOLD,
     CLUSTER_SHAPE_BALANCE_WARNING_THRESHOLD,
     CLUSTER_STABILITY_ARI_DIVERGENCE_THRESHOLD,
-    LOW_SUPPORT_TERRITORY_THRESHOLD,
 )
 from .quality_assessment import (
     compute_method_algorithm_key,

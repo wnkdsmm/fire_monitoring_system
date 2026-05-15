@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Sequence
+from typing import Sequence
 
 from app.services.shared.data_utils import _clean_text, _unique_non_empty
 from app.services.shared.formatting import _format_integer

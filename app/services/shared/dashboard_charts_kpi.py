@@ -11,13 +11,8 @@ from app.services.charting import (
     build_item_chart_bundle,
     build_item_pie_payload,
     build_item_vertical_bar_payload,
-    build_plotly_bar_payload,
     build_plotly_bar_trace,
-    build_plotly_line,
-    build_plotly_marker,
     build_plotly_payload_from_traces,
-    build_plotly_scatter_payload,
-    build_plotly_scatter_trace,
 )
 from app.services.chart_utils import (
     build_horizontal_legend,

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections import Counter
-from datetime import date, datetime
+from datetime import datetime
 from typing import Any, TypedDict
 
 import pandas as pd

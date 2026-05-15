@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from typing import Any, Sequence
+from typing import Sequence
 
 from sqlalchemy import text
 
@@ -30,13 +30,11 @@ from .data_access import (
     _year_expression,
 )
 from .types import (
-    DashboardGroupedDimensionSql,
     DashboardGroupedQueryContext,
     DashboardGroupedResultSelects,
     DashboardGroupedCounts,
     DashboardTableRef,
     DistributionResult,
-    ImpactMetric,
     ImpactTimelineSqlRow,
 )
 from .utils import _date_expression, _format_number

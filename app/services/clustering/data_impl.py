@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import math
 from collections import Counter
-from typing import Any, Sequence
+from typing import Sequence
 
 import numpy as np
 import pandas as pd
@@ -32,7 +32,6 @@ from .types import (
     TerritoryBucket,
     TerritoryGlobalStats,
     TerritoryRecord,
-    TerritorySupportSummary,
 )
 from .utils import _format_number, _format_percent
 

@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-import re
-import textwrap
-from typing import Any, Sequence, TypedDict
+from typing import Sequence
 
 from .dashboard_charts_kpi import (
     ChartData,
@@ -13,10 +11,7 @@ from .dashboard_charts_kpi import (
     _wrap_plotly_label,
 )
 from app.services.charting import (
-    build_empty_chart_bundle,
-    build_empty_plotly_payload,
     build_item_horizontal_bar_payload,
-    build_item_chart_bundle,
     build_item_pie_payload,
     build_item_vertical_bar_payload,
     build_plotly_bar_payload,
@@ -29,7 +24,6 @@ from app.services.charting import (
 )
 from app.services.chart_utils import (
     build_horizontal_legend,
-    build_plotly_layout,
     build_plotly_palette,
     merge_plotly_layout,
 )

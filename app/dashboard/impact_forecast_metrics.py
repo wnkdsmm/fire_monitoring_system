@@ -1,11 +1,10 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from typing import Any, Sequence
+from typing import Sequence
 
 from sqlalchemy import text
 
-from app.statistics_constants import DATE_COLUMN
 from config.db import engine
 
 from .charts import (
@@ -25,7 +24,6 @@ from .types import (
     DashboardTableRef,
     DashboardWidgets,
     DistributionResult,
-    ImpactMetric,
     ImpactTimelineBucket,
     ImpactTimelineSqlRow,
 )

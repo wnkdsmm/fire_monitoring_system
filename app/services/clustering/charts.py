@@ -27,8 +27,8 @@ from app.services.chart_utils import (
 )
 from app.statistics_constants import PLOTLY_PALETTE
 
-from .types import ClusteringCharts, DiagnosticsRow
-from .utils import _format_integer, _format_number, _format_percent
+from .types import DiagnosticsRow
+from .utils import _format_number, _format_percent
 
 
 def _minmax_normalize_profiles(

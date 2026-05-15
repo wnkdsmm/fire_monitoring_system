@@ -7,7 +7,6 @@ from typing import Any, Sequence
 
 from app.shared.sql_utils import quote_identifier
 
-from .constants import LONG_RESPONSE_THRESHOLD_MINUTES
 
 
 def _parse_water_supply_flag(count_value: float | None, details: str) -> bool | None:

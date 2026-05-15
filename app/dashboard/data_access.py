@@ -7,7 +7,7 @@ from sqlalchemy import text
 
 from app.domain.fire_columns import CAUSE_COLUMN_CANDIDATES, FIRE_DATE_COLUMN_CANDIDATES
 from app.domain.fire_columns import DASHBOARD_DISTRICT_COLUMN_CANDIDATES as DISTRICT_COLUMN_CANDIDATES
-from app.statistics_constants import AREA_COLUMN, DATE_COLUMN, IMPACT_METRIC_CONFIG
+from app.statistics_constants import AREA_COLUMN, IMPACT_METRIC_CONFIG
 
 from .types import DashboardTableRef, ImpactTotals
 from .utils import _date_expression

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from typing import Any, Sequence
+from typing import Sequence
 
 from sqlalchemy import text
 
@@ -19,7 +19,6 @@ from app.statistics_constants import (
     DAMAGE_OVERVIEW_LABELS,
     DAMAGE_PAIR_COLUMNS,
     DAMAGE_STANDALONE_COLUMNS,
-    DATE_COLUMN,
     DISTRIBUTION_GROUPS,
     FEED_DAMAGED_COLUMN,
     FEED_DESTROYED_COLUMN,

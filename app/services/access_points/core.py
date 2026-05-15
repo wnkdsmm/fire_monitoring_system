@@ -18,7 +18,6 @@ from .analysis_output import (
     _build_uncertainty_notes,
 )
 from .analysis_ranking import (
-    _build_access_point_rows,
     _build_access_point_rows_from_entity_frame,
     _select_incomplete_points,
     _select_top_points,
@@ -29,7 +28,6 @@ from .data import (
     _build_access_points_table_options,
     _build_option_catalog,
     _collect_access_point_metadata,
-    _parse_limit,
     _resolve_option_value,
     _resolve_selected_table,
     _selected_source_tables,

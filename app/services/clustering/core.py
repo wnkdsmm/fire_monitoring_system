@@ -13,7 +13,6 @@ from .core_results import (
     _build_clustering_success_payload,
 )
 from .core_runner import (
-    _CLUSTERING_CACHE,
     _append_clustering_feature_notes,
     _build_clustering_cache_key,
     _build_clustering_feature_context,
