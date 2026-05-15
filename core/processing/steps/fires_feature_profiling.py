@@ -15,6 +15,7 @@ from config.constants import (
 )
 from config.db import engine
 from core.processing.pipeline import PipelineStep
+from app.shared.sql_utils import quote_identifier
 
 
 
@@ -67,7 +68,7 @@ class FiresFeatureProfilingStep(PipelineStep):
 
         logger.info("Читаем таблицу из базы данных...")
         try:
-            return pd.read_sql(f'SELECT * FROM "{table_name}"', engine)
+            return pd.read_sql(f"SELECT * FROM {quote_identifier(table_name)}", engine)
         except Exception:
             logger.exception("Не удалось прочитать таблицу: %s", table_name)
             raise

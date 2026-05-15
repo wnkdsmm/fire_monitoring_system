@@ -16,7 +16,7 @@ Set shell = CreateObject("WScript.Shell")
 Set fso = CreateObject("Scripting.FileSystemObject")
 isLiteStart = (LCase(Trim(GetArg(0))) = "--lite")
 
-projectRoot = fso.GetParentFolderName(WScript.ScriptFullName)
+projectRoot = ResolveProjectRoot()
 logsDir = fso.BuildPath(projectRoot, "logs")
 If Not fso.FolderExists(logsDir) Then
     On Error Resume Next
@@ -160,6 +160,16 @@ Function GetArg(index)
         GetArg = WScript.Arguments(index)
     Else
         GetArg = ""
+    End If
+End Function
+
+Function ResolveProjectRoot()
+    Dim scriptDir
+    scriptDir = fso.GetParentFolderName(WScript.ScriptFullName)
+    If LCase(fso.GetFileName(scriptDir)) = "actions" Then
+        ResolveProjectRoot = fso.GetParentFolderName(scriptDir)
+    Else
+        ResolveProjectRoot = scriptDir
     End If
 End Function
 

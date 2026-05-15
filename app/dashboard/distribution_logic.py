@@ -2,24 +2,20 @@ from __future__ import annotations
 
 from typing import Any
 
-from app.statistics_constants import CAUSE_COLUMNS
+from app.domain.fire_columns import CAUSE_COLUMNS
 
 from .data_access import _resolve_cause_column, _resolve_table_column_name
 from .distribution import (
     _build_damage_category_items,
     _build_damage_overview_chart,
     _build_damage_pairs_chart,
-    _build_damage_share_chart,
     _build_damage_standalone_chart,
     _build_distribution_chart,
     _build_damage_theme_items,
     _collect_damage_counts,
 )
 from .impact import (
-    _build_area_buckets_chart,
-    _build_area_buckets_chart_from_counts,
     _build_combined_impact_timeline_chart,
-    _build_cumulative_area_chart,
     _build_monthly_heatmap_chart,
     _build_monthly_profile_chart,
     _build_sql_district_widget_from_counts,
@@ -89,15 +85,6 @@ def _build_damage_dashboard_charts(
             selected_year,
             items=damage_theme_items,
         ),
-        "area_buckets": _build_damage_share_chart(
-            selected_tables,
-            selected_year,
-            items=damage_theme_items,
-        ),
-        "cumulative_area": _build_cumulative_area_chart(
-            selected_tables,
-            selected_year,
-        ),
         "monthly_heatmap": _build_monthly_heatmap_chart(
             selected_tables,
             selected_year,
@@ -121,13 +108,6 @@ def _build_standard_dashboard_charts(
     )
     build_monthly_profile_chart = getattr(_service_module, "_build_monthly_profile_chart", _build_monthly_profile_chart)
     build_monthly_heatmap_chart = getattr(_service_module, "_build_monthly_heatmap_chart", _build_monthly_heatmap_chart)
-    build_area_buckets_chart = getattr(_service_module, "_build_area_buckets_chart", _build_area_buckets_chart)
-    build_cumulative_area_chart = getattr(_service_module, "_build_cumulative_area_chart", _build_cumulative_area_chart)
-    build_area_buckets_chart_from_counts = getattr(
-        _service_module,
-        "_build_area_buckets_chart_from_counts",
-        _build_area_buckets_chart_from_counts,
-    )
 
     distribution_counts = grouped_counts_bundle["distribution_counts"]
     reusable_distribution_counts = (
@@ -138,7 +118,6 @@ def _build_standard_dashboard_charts(
         )
         else None
     )
-    area_bucket_counts = grouped_counts_bundle["area_bucket_counts"]
     return {
         "distribution": build_distribution_chart(
             selected_tables,
@@ -157,15 +136,6 @@ def _build_standard_dashboard_charts(
             month_counts=grouped_counts_bundle["month_counts"],
         ),
         "monthly_heatmap": build_monthly_heatmap_chart(
-            selected_tables,
-            selected_year,
-        ),
-        "area_buckets": (
-            build_area_buckets_chart_from_counts(area_bucket_counts)
-            if area_bucket_counts is not None
-            else build_area_buckets_chart(selected_tables, selected_year)
-        ),
-        "cumulative_area": build_cumulative_area_chart(
             selected_tables,
             selected_year,
         ),

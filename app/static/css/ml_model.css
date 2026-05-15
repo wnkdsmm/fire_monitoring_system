@@ -19,6 +19,7 @@
     grid-template-columns: 1fr 1fr;
     gap: var(--gap-lg);
     min-width: 0;
+    overflow: hidden;
 }
 
 .ml-heatmap-grid > * {
@@ -38,6 +39,9 @@
     gap: 6px;
     align-items: baseline;
     line-height: 1.4;
+    min-width: 0;
+    overflow-wrap: break-word;
+    word-break: break-word;
 }
 
 .ml-heatmap-title {

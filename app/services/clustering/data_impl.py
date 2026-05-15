@@ -12,7 +12,7 @@ from app.labels import (
     CLUSTERING_DEFAULT_CLUSTER_FEATURES,
     CLUSTERING_FEATURE_METADATA,
 )
-from app.statistics_constants import EXCLUDED_TABLE_PREFIXES as TABLE_EXCLUDED_PREFIXES
+from app.domain.analytics_metadata import EXCLUDED_TABLE_PREFIXES as TABLE_EXCLUDED_PREFIXES
 from config.constants import (
     CLUSTER_COUNT_OPTIONS,
     CLUSTERING_RANDOM_STATE,
@@ -33,7 +33,10 @@ from .types import (
     TerritoryGlobalStats,
     TerritoryRecord,
 )
-from .utils import _format_number, _format_percent
+from app.services.shared.formatting import (
+    format_number as _format_number,
+    format_percent as _format_percent,
+)
 
 AUTO_DEFAULT_EXCLUDED_FEATURES = set(CLUSTERING_AUTO_DEFAULT_EXCLUDED_FEATURES)
 DEFAULT_CLUSTER_FEATURES = list(CLUSTERING_DEFAULT_CLUSTER_FEATURES)
@@ -298,7 +301,7 @@ def _update_territory_bucket(bucket: TerritoryBucket, record: TerritoryRecord, l
         bucket["area_count"] += 1
 
     response_minutes = record.get("response_minutes")
-    if response_minutes is not None:
+    if response_minutes is not None and float(response_minutes) >= 0:
         bucket["response_sum"] += float(response_minutes)
         bucket["response_count"] += 1
         if record.get("long_arrival"):

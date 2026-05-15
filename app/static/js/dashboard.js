@@ -125,7 +125,7 @@ async function fetchDashboardData() {
                 }
             }).catch(function () {
                 renderApi.showChartsLoading && (function() {
-                    var ids = ['yearlyFiresChart', 'distributionChart', 'monthlyHeatmapChart', 'monthlyProfileChart'];
+                    var ids = ['yearlyFiresChart', 'distributionChart', 'recentYearsChart', 'monthlyHeatmapChart', 'monthlyProfileChart'];
                     ids.forEach(function(id) {
                         var el = document.getElementById(id);
                         if (el) el.innerHTML = '<div class="chart-loading chart-loading--error">Не удалось загрузить графики. Обновите страницу.</div>';

@@ -5,7 +5,7 @@ from typing import Any, Sequence
 
 from sqlalchemy import text
 
-from app.statistics_constants import IMPACT_METRIC_CONFIG
+from app.domain.analytics_metadata import IMPACT_METRIC_CONFIG
 from config.db import engine
 
 from .charts import _build_yearly_plotly, _finalize_chart
@@ -30,9 +30,9 @@ from .types import (
     SummaryResult,
     SummaryRow,
 )
+from app.services.shared.formatting import format_percentage as _format_percentage
 from .utils import (
     _format_number,
-    _format_percentage,
     _format_period_label,
     _format_signed_number,
 )

@@ -213,7 +213,8 @@ def _build_feature_stat(
             "positive_count": 0,
         }
 
-    column_indexes = [columns.index(column_name) for column_name in matched_columns if column_name in columns]
+    col_index_map = {name: idx for idx, name in enumerate(columns)}
+    column_indexes = [col_index_map[column_name] for column_name in matched_columns if column_name in col_index_map]
     non_empty_rows = 0
     observed_values: list[Any] = []
     counter: Counter[str] = Counter()
@@ -253,7 +254,7 @@ def _build_feature_stat(
     unique_count = len(counter)
     if counter:
         top_value, top_count = counter.most_common(1)[0]
-        top_share = _format_percent(top_count / max(sum(counter.values()), 1))
+        top_share = _format_percent(top_count / max(row_count, 1))
 
     date_range = _summarize_date_range(observed_values) if feature["id"] == "fire_date" else ""
     average_number = (numeric_sum / numeric_count) if numeric_count else 0.0
@@ -270,7 +271,7 @@ def _build_feature_stat(
         card_meta = f"Дата пожара распознана. Заполненность: {coverage_display}."
     elif feature["id"] in {"district", "locality", "settlement_type", "cause", "object_category"} and top_value:
         highlight = top_value
-        summary = f"Чаще всего встречается В«{top_value}В» ({top_share}). Заполнено {coverage_display} строк."
+        summary = f"Чаще всего встречается «{top_value}» ({top_share}). Заполнено {coverage_display} строк."
         card_value = top_value
         unique_meta = f"{_format_int(unique_count)} уник." if unique_count else "без разбивки"
         card_meta = f"{unique_meta}; заполнено {coverage_display} строк."
@@ -281,7 +282,7 @@ def _build_feature_stat(
         card_meta = f"Координаты распознаны. Заполненность: {coverage_display}."
     elif feature["id"] == "water_supply" and top_value:
         highlight = coverage_display
-        summary = f"Признак водоснабжения найден. Частое значение: В«{top_value}В». Заполнено {coverage_display} строк."
+        summary = f"Признак водоснабжения найден. Частое значение: «{top_value}». Заполнено {coverage_display} строк."
         card_value = coverage_display
         card_meta = f"Водоснабжение распознано. Заполненность: {coverage_display}."
     elif feature["id"] in {"report_time", "arrival_time"}:

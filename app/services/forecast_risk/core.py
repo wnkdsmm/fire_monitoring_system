@@ -5,7 +5,7 @@ from typing import Any, Callable, Sequence
 from app.perf import ensure_sqlalchemy_timing, perf_trace
 from config.db import engine
 
-from .constants import MAX_TERRITORIES
+from config.constants import MAX_TERRITORIES
 from .data import _collect_risk_inputs
 from .geo import _build_geo_prediction
 from .notes import _build_risk_notes

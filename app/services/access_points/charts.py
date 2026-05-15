@@ -13,7 +13,7 @@ from app.services.chart_utils import (
     build_component_projection,
     build_service_scatter_layout,
 )
-from app.statistics_constants import PLOTLY_PALETTE
+from app.domain.analytics_metadata import PLOTLY_PALETTE
 
 TYPOLOGY_LABELS: dict[str, str] = {
     "access": "Дальний выезд",

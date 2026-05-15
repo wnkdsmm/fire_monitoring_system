@@ -4,14 +4,16 @@ from typing import Any, Sequence
 
 from app.db_metadata import get_table_columns_cached
 from app.table_catalog import build_table_options, get_clean_table_names
-from app.statistics_constants import (
-    BUILDING_CATEGORY_COLUMN,
-    BUILDING_CAUSE_COLUMN,
+from app.domain.analytics_metadata import (
     COLUMN_LABELS,
     DAMAGE_GROUP_LABEL,
     DAMAGE_GROUP_OPTION_LABEL,
     DAMAGE_GROUP_OPTION_VALUE,
     DISTRIBUTION_GROUPS,
+)
+from app.domain.fire_columns import (
+    BUILDING_CATEGORY_COLUMN,
+    BUILDING_CAUSE_COLUMN,
     GENERAL_CAUSE_COLUMN,
     OPEN_AREA_CAUSE_COLUMN,
     RISK_CATEGORY_COLUMN,

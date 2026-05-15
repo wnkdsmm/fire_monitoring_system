@@ -246,7 +246,7 @@ def _build_compare_series_payload(
 
     def _predict_month_with_trained_ml(target_year: int, target_month: int) -> dict[int, float | None]:
         month_days = int(monthrange(int(target_year), int(target_month))[1])
-        history_before_month: list[dict[str, Any]] = []
+        history_before_month: list[tuple[date, float]] = []
         for row in daily_history:
             row_date = _parse_optional_iso_date(str(row.get("date") or ""))
             if row_date is None:
@@ -260,7 +260,7 @@ def _build_compare_series_payload(
                 count_value = float(raw_count)
             except (TypeError, ValueError):
                 continue
-            history_before_month.append({"date": row_date.isoformat(), "count": count_value})
+            history_before_month.append((row_date, count_value))
 
         if not history_before_month:
             return {}
@@ -269,11 +269,7 @@ def _build_compare_series_payload(
         all_values: list[float] = []
         by_year: dict[int, list[float]] = {}
         by_day_year: dict[int, dict[int, list[float]]] = {}
-        for item in history_before_month:
-            item_date = _parse_optional_iso_date(str(item.get("date") or ""))
-            if item_date is None:
-                continue
-            numeric_value = float(item.get("count") or 0.0)
+        for item_date, numeric_value in history_before_month:
             by_day.setdefault(int(item_date.day), []).append(numeric_value)
             all_values.append(numeric_value)
             by_year.setdefault(int(item_date.year), []).append(numeric_value)
@@ -582,7 +578,7 @@ def _append_compare_series_line(
         c_row = c_by_day.get(int(day)) if day is not None else None
         if c_row is None:
             normalized["c_value"] = None
-            normalized["c_source"] = "ml"
+            normalized["c_source"] = "empty"
         else:
             normalized["c_value"] = c_row.get("c_value")
             normalized["c_source"] = str(c_row.get("c_source") or "ml")
@@ -959,7 +955,8 @@ def _load_day_month_heatmap(
                 top = sorted(cell.items(), key=lambda kv: kv[1], reverse=True)[:int(top_causes_per_cell)]
                 lines = [f"{month_names_short[mo - 1]}, {dy}. Всего: {total}"]
                 for rank, (cause, cnt) in enumerate(top, 1):
-                    lines.append(f"{rank}. {cause}: {cnt}")
+                    short = cause if len(cause) <= 45 else cause[:43] + "…"
+                    lines.append(f"{rank}. {short}: {cnt}")
                 text[mo - 1][dy - 1] = "<br>".join(lines)
         return {"z": z, "text": text}
 

@@ -35,7 +35,6 @@ from config.constants import (
     HOPKINS_MAX_SAMPLE_SIZE,
     HOPKINS_MIN_ROW_COUNT,
     HOPKINS_SAMPLE_DIVISOR,
-    LOG_TRANSFORM_SKEW_THRESHOLD,
     STABILITY_MIN_OVERLAP,
     STABILITY_RANDOM_SEEDS,
     STABILITY_RESAMPLE_MIN_ROWS,
@@ -585,20 +584,9 @@ def _prepare_model_frame(cluster_frame: pd.DataFrame) -> tuple[pd.DataFrame, set
     for column in transformed.columns:
         if column not in LOG_SCALE_FEATURES:
             continue
-        series = transformed[column].clip(lower=0.0)
-        if float(series.skew(skipna=True) or 0.0) < LOG_TRANSFORM_SKEW_THRESHOLD:
-            continue
-        transformed[column] = np.log1p(series)
+        transformed[column] = np.log1p(transformed[column].clip(lower=0.0))
         transformed_columns.add(column)
     return transformed, transformed_columns
-
-
-def _restore_raw_centers(transformed_centers: np.ndarray, columns: Sequence[str], transformed_columns: set[str]) -> np.ndarray:
-    raw_centers = np.array(transformed_centers, copy=True)
-    for column_index, column in enumerate(columns):
-        if column in transformed_columns:
-            raw_centers[:, column_index] = np.expm1(raw_centers[:, column_index])
-    return raw_centers
 
 
 def _estimate_elbow_k(rows: Sequence[dict[str, Any]]) -> int | None:

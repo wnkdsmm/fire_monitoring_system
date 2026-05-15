@@ -12,10 +12,7 @@ from .distribution_logic import (
     _build_standard_dashboard_charts,
 )
 from .impact_fire_metrics import (
-    _build_area_buckets_chart,
-    _build_area_buckets_chart_from_counts,
     _build_cause_chart,
-    _build_cumulative_area_chart,
     _build_monthly_heatmap_chart,
     _collect_cause_counts,
     _collect_month_counts,
@@ -66,9 +63,6 @@ __all__ = [
     '_build_trend',
     '_build_rankings',
     '_build_highlights',
-    '_build_area_buckets_chart',
-    '_build_area_buckets_chart_from_counts',
-    '_build_cumulative_area_chart',
     '_build_monthly_heatmap_chart',
     '_build_combined_impact_timeline_chart',
     '_build_distribution_chart',

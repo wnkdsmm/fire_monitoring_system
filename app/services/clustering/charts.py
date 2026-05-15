@@ -25,10 +25,13 @@ from app.services.chart_utils import (
     merge_plotly_layout,
     plotly_layout,
 )
-from app.statistics_constants import PLOTLY_PALETTE
+from app.domain.analytics_metadata import PLOTLY_PALETTE
 
 from .types import DiagnosticsRow
-from .utils import _format_number, _format_percent
+from app.services.shared.formatting import (
+    format_number as _format_number,
+    format_percent as _format_percent,
+)
 
 
 def _minmax_normalize_profiles(

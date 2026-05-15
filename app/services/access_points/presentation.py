@@ -6,7 +6,8 @@ from app.services.shared.data_utils import _clean_text, _unique_non_empty
 from app.services.shared.formatting import _format_integer
 from app.services.shared.summary_cards import build_summary_cards
 
-from .constants import ACCESS_POINTS_DESCRIPTION, ACCESS_POINTS_TITLE, MAX_NOTES
+from app.domain.access_points_metadata import ACCESS_POINTS_DESCRIPTION, ACCESS_POINTS_TITLE
+from config.constants import MAX_NOTES
 from .types import AccessPointCard, AccessPointFilters, AccessPointPresentation, OptionItem, PointData, PresentationSummary
 
 

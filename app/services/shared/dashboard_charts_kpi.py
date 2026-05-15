@@ -20,7 +20,7 @@ from app.services.chart_utils import (
     build_plotly_palette,
     merge_plotly_layout,
 )
-from app.statistics_constants import PLOTLY_PALETTE
+from app.domain.analytics_metadata import PLOTLY_PALETTE
 
 
 class ChartData(TypedDict):

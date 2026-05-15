@@ -26,7 +26,11 @@ from .types import (
     QualityScore,
     SupportSummary,
 )
-from .utils import _format_integer, _format_number, _format_percent
+from app.services.shared.formatting import (
+    format_integer as _format_integer,
+    format_number as _format_number,
+    format_percent as _format_percent,
+)
 
 def _build_kmeans_description(weighting_strategy: str) -> str:
     from config.constants import WEIGHTING_STRATEGY_INCIDENT_LOG

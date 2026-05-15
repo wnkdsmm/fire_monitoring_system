@@ -27,7 +27,7 @@ from app.services.chart_utils import (
     build_plotly_palette,
     merge_plotly_layout,
 )
-from app.statistics_constants import PLOTLY_PALETTE
+from app.domain.analytics_metadata import PLOTLY_PALETTE
 
 
 def _build_yearly_plotly(title: str, items: list[ChartData], metric: str, empty_message: str) -> PlotlyPayload:

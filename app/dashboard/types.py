@@ -270,8 +270,6 @@ class DashboardAggregation(TypedDict, total=False):
     yearly_area_chart: DistributionResult
     monthly_profile: DistributionResult
     monthly_heatmap: DistributionResult
-    area_buckets: DistributionResult
-    cumulative_area: DistributionResult
     trend: DashboardSection
     rankings: dict[str, list[DistributionItem]]
     highlights: list[SummaryCard]

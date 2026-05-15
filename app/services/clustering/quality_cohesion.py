@@ -11,7 +11,11 @@ from .quality_assessment import (
     compute_segmentation_strength,
 )
 from .types import ClusterLabel, ClusterMethod, ClusterMetrics
-from .utils import _format_integer, _format_number, _format_percent
+from app.services.shared.formatting import (
+    format_integer as _format_integer,
+    format_number as _format_number,
+    format_percent as _format_percent,
+)
 
 
 def _summarize_segmentation_strength(

@@ -142,7 +142,7 @@
     }
 
     function isClearTableName(tableName) {
-        return String(tableName || '').toLowerCase().indexOf('clean') === 0;
+        return String(tableName || '').toLowerCase().indexOf('clean_') === 0;
     }
 
     function refreshTypeStats() {

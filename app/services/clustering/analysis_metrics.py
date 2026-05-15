@@ -41,7 +41,11 @@ from .types import (
     ClusteringRunResult,
     FeatureSelectionReport,
 )
-from .utils import _format_integer, _format_number, _format_percent
+from app.services.shared.formatting import (
+    format_integer as _format_integer,
+    format_number as _format_number,
+    format_percent as _format_percent,
+)
 
 FEATURE_METADATA = CLUSTERING_FEATURE_METADATA
 MAX_K_DIAGNOSTICS = max(CLUSTER_COUNT_OPTIONS)
@@ -153,6 +157,7 @@ def _evaluate_cluster_counts(
     cluster_frame: pd.DataFrame,
     entity_frame: pd.DataFrame,
     weighting_strategy: str = WEIGHTING_STRATEGY_INCIDENT_LOG,
+    prepared_model_inputs: tuple[Any, Any, Any, Any, Any] | None = None,
 ) -> ClusteringDiagnosticsResult:
     if len(cluster_frame) < 3:
         return {
@@ -168,7 +173,7 @@ def _evaluate_cluster_counts(
         for cluster_count in CLUSTER_COUNT_OPTIONS
         if 2 <= cluster_count <= min(MAX_K_DIAGNOSTICS, len(cluster_frame) - 1)
     ]
-    prepared_inputs = _prepare_model_inputs(
+    prepared_inputs = prepared_model_inputs or _prepare_model_inputs(
         cluster_frame,
         entity_frame,
         weighting_strategy=weighting_strategy,
@@ -294,7 +299,7 @@ def _evaluate_single_kmeans(
             first_seed_row = dict(run_row)
         run_rows.append(run_row)
 
-    if success_count < 2 or not run_rows:
+    if success_count < 1 or not run_rows:
         return []
     if labels_first_seed is None:
         labels_first_seed = labels_fallback

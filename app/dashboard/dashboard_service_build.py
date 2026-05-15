@@ -80,7 +80,7 @@ def _build_dashboard_aggregation(
             selected_tables,
             selected_year,
             selected_group_column,
-            include_area_buckets=True,
+            include_area_buckets=False,
             include_impact_timeline=True,
         )
     cause_counts = grouped_counts_bundle["cause_counts"]
@@ -107,8 +107,6 @@ def _build_dashboard_aggregation(
     yearly_area_chart = dashboard_charts["yearly_area_chart"]
     monthly_profile = dashboard_charts["monthly_profile"]
     monthly_heatmap = dashboard_charts["monthly_heatmap"]
-    area_buckets = dashboard_charts["area_buckets"]
-    cumulative_area = dashboard_charts["cumulative_area"]
     summary_metrics = _build_dashboard_summary_metrics(
         summary=summary,
         yearly_fires_series=yearly_fires_series,
@@ -151,8 +149,6 @@ def _build_dashboard_aggregation(
         "yearly_area_chart": yearly_area_chart,
         "monthly_profile": monthly_profile,
         "monthly_heatmap": monthly_heatmap,
-        "area_buckets": area_buckets,
-        "cumulative_area": cumulative_area,
         "trend": trend,
         "rankings": rankings,
         "highlights": highlights,
@@ -185,8 +181,6 @@ def _build_dashboard_payload(
     yearly_trend_chart = aggregation["yearly_fires_series"]
     monthly_profile = aggregation["monthly_profile"]
     monthly_heatmap = aggregation["monthly_heatmap"]
-    area_buckets = aggregation["area_buckets"]
-    cumulative_area = aggregation["cumulative_area"]
     management["export_text"] = ""
     if isinstance(management.get("brief"), dict):
         management["brief"]["export_text"] = ""
@@ -214,11 +208,8 @@ def _build_dashboard_payload(
             "yearly_fires": cause_overview,
             "yearly_area": yearly_area_chart,
             "yearly_trend": yearly_trend_chart,
-            "distribution": distribution,
             "monthly_heatmap": monthly_heatmap,
             "monthly_profile": monthly_profile,
-            "area_buckets": area_buckets,
-            "cumulative_area": cumulative_area,
         },
         "filters": {
             "table_name": selected_table_name,
@@ -319,13 +310,8 @@ def _empty_dashboard_data(
             "yearly_fires": _finalize_chart("Причины возгораний", [], "Нет данных по причинам возгорания."),
             "yearly_area": _finalize_chart("Последствия, эвакуация и дети", [], "Нет данных по погибшим, травмам и эвакуации."),
             "yearly_trend": _finalize_chart("Динамика количества пожаров по годам", [], "Недостаточно данных для динамики по годам."),
-            "distribution": _finalize_chart("Распределение по колонке", [], "Нет данных для графика."),
-
             "monthly_heatmap": _finalize_chart("Сезонность по месяцам и годам", [], "Недостаточно данных для тепловой карты сезонности."),
             "monthly_profile": _finalize_chart("Сезонность по месяцам", [], "Нет данных для сезонного профиля."),
-            "area_buckets": _finalize_chart("Структура по площади пожара", [], "Нет данных по площади пожара."),
-
-            "cumulative_area": _finalize_chart("Накопленная площадь по дням года", [], "Недостаточно данных для накопленного графика площади."),
         },
         "filters": {
             "table_name": "all",

@@ -7,7 +7,7 @@ from .types import (
     ClusterCountRecommendationMessages,
     QualityDiagnostics,
 )
-from .utils import _format_integer
+from app.services.shared.formatting import format_integer as _format_integer
 
 __all__ = [
     "_build_cluster_count_guidance",

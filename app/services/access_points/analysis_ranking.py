@@ -11,7 +11,7 @@ from .analysis_factors import (
     _record_from_column_values,
 )
 from .analysis_output import ACCESS_POINT_PAYLOAD_OVERWRITE_COLUMNS, _build_access_point_payload_row
-from .constants import MAX_INCOMPLETE_POINTS, TOP_POINT_CARD_COUNT
+from config.constants import MAX_INCOMPLETE_POINTS, TOP_POINT_CARD_COUNT
 from .point_data import _build_point_entity_frames
 
 

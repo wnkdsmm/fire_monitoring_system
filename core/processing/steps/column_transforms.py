@@ -98,21 +98,17 @@ def apply_match_results(
     )
     match_mask = match_df["has_match"]
 
-    profile_df.loc[
-        match_mask,
-        [
-            "mandatory_feature_detected",
-            "protected_feature_id",
-            "protected_feature_label",
-            "protection_scope",
-            "protection_rule",
-            "protection_match",
-            "protection_reason",
-        ],
-    ] = match_df.loc[
-        match_mask,
-        ["mandatory", "feature_id", "feature_label", "scope", "rule_id", "matched_value", "reason"],
-    ].to_numpy()
+    _COL_MAP = [
+        ("mandatory_feature_detected", "mandatory"),
+        ("protected_feature_id", "feature_id"),
+        ("protected_feature_label", "feature_label"),
+        ("protection_scope", "scope"),
+        ("protection_rule", "rule_id"),
+        ("protection_match", "matched_value"),
+        ("protection_reason", "reason"),
+    ]
+    for target_col, source_col in _COL_MAP:
+        profile_df.loc[match_mask, target_col] = match_df.loc[match_mask, source_col]
 
     protected_mask = match_mask & profile_df["profiling_candidate_to_drop"]
     profile_df.loc[protected_mask, "candidate_to_drop"] = False

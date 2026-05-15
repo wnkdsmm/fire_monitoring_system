@@ -6,7 +6,11 @@ from typing import Any, Sequence
 
 from app.shared.sql_utils import quote_identifier
 from app.services.shared.formatting import (
+    _format_period,
     _format_signed_percent,
+    format_integer as _format_integer,
+    format_number as _format_number,
+    format_probability as _format_probability,
 )
 
 from .constants import FORECAST_DAY_OPTIONS, HISTORY_WINDOW_OPTIONS, PLOTLY_PALETTE

@@ -23,7 +23,7 @@ from .analysis_ranking import (
     _select_top_points,
 )
 from .charts import _build_points_scatter_chart, _build_score_histogram
-from .constants import ACCESS_POINT_LIMIT_OPTIONS
+from config.constants import ACCESS_POINT_LIMIT_OPTIONS
 from .data import (
     _build_access_points_table_options,
     _build_option_catalog,

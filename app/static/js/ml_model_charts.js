@@ -427,27 +427,30 @@
         }
 
         var baseLayout = {
-            margin: { l: 52, r: 16, t: 48, b: 40 },
-            height: 460,
+            margin: { l: 60, r: 16, t: 44, b: 36 },
+            height: 400,
             plot_bgcolor: 'transparent',
             paper_bgcolor: 'transparent',
             font: { size: 13 },
-            xaxis: { title: 'День', tickfont: { size: 11 }, automargin: true },
+            xaxis: { title: 'День', tickfont: { size: 11 }, automargin: false },
             yaxis: { title: '', autorange: 'reversed', tickfont: { size: 12 } },
             hoverlabel: {
                 bgcolor: '#ffffff',
                 bordercolor: '#e2e8f0',
                 font: { color: '#1e293b', size: 13 },
-                align: 'left'
+                align: 'left',
+                namelength: 0
             }
         };
 
         chartNode.innerHTML = '';
         var wrapper = document.createElement('div');
         wrapper.className = 'ml-heatmap-grid';
+        chartNode.appendChild(wrapper);
 
         function makePanel(year, hm, colorscale) {
             var plot = document.createElement('div');
+            wrapper.appendChild(plot);
             var Plotly = global.Plotly;
             if (Plotly && typeof Plotly.newPlot === 'function') {
                 var panelLayout = Object.assign({}, baseLayout, {
@@ -456,19 +459,17 @@
                         font: { size: 15, color: '#111827' },
                         x: 0.5,
                         xanchor: 'center',
-                        y: 0.97,
+                        y: 0.975,
                         yanchor: 'top',
-                        pad: { b: 4 }
+                        pad: { b: 0 }
                     }
                 });
                 Plotly.newPlot(plot, [buildTrace(hm, colorscale)], panelLayout, { responsive: true, displayModeBar: false });
             }
-            return plot;
         }
 
-        wrapper.appendChild(makePanel(yearA, hmA, colorscaleA));
-        wrapper.appendChild(makePanel(yearB, hmB, colorscaleB));
-        chartNode.appendChild(wrapper);
+        makePanel(yearA, hmA, colorscaleA);
+        makePanel(yearB, hmB, colorscaleB);
     }
 
     var SEASON_COLORS = { 'Зима': '#93c5fd', 'Весна': '#86efac', 'Лето': '#fcd34d', 'Осень': '#fdba74' };

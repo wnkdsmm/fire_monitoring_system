@@ -5,7 +5,8 @@ from typing import Sequence
 
 from sqlalchemy import text
 
-from app.statistics_constants import CAUSE_COLUMNS, DATE_COLUMN, MONTH_LABELS
+from app.domain.fire_columns import CAUSE_COLUMNS, DATE_COLUMN
+from app.statistics_constants import MONTH_LABELS
 from config.db import engine
 
 from .charts import (
@@ -106,7 +107,7 @@ def _build_cause_chart(
     selected_tables: list[DashboardTableRef],
     selected_year: int | None,
     *,
-    cause_counts: dict[str, int | None] = None,
+    cause_counts: dict[str, int | None] | None = None,
 ) -> DistributionResult:
     grouped = cause_counts or {}
     items = [
@@ -517,7 +518,7 @@ def _build_monthly_profile_chart(
     selected_tables: list[DashboardTableRef],
     selected_year: int | None,
     *,
-    month_counts: dict[int, int | None] = None,
+    month_counts: dict[int, int | None] | None = None,
 ) -> DistributionResult:
     grouped = month_counts if month_counts is not None else _collect_month_counts(selected_tables, selected_year)
     items = []
@@ -758,9 +759,6 @@ __all__ = [
     "_collect_dashboard_grouped_counts",
     "_collect_cause_counts",
     "_collect_month_counts",
-    "_build_area_buckets_chart",
-    "_build_area_buckets_chart_from_counts",
-    "_build_cumulative_area_chart",
     "_build_monthly_heatmap_chart",
     "_build_cause_chart",
     "_build_monthly_profile_chart",
