@@ -23,7 +23,7 @@
             hints.push('Качество Poisson сейчас недоступно: ' + String(quality.reason || 'insufficient_history'));
         }
         if (overlapBC) {
-            hints.push('Compare-series совпадает с Год 2 для текущих параметров.');
+            hints.push('OLS-эталон совпадает с Год 2: год прогноза равен году 2. Измените год прогноза, чтобы получить независимую линию.');
         }
         if (!hints.length) {
             hintNode.textContent = '';
@@ -237,7 +237,7 @@
                 }
                 var dayText = row && row.day != null ? String(row.day) : '';
                 var source = row && row[sourceKey] ? String(row[sourceKey]) : '';
-                var sourceLabel = source === 'ml' ? 'ML' : (source === 'ml_model' ? 'ML-model (Poisson)' : 'факт');
+                var sourceLabel = source === 'ml' ? 'OLS-достройка' : (source === 'ml_model' ? 'Poisson ML' : 'факт');
                 var valueText = String(Math.round(val * 100) / 100).replace('.', ',');
                 var tip = 'Год: ' + yearLabel + ' | День: ' + dayText + ' | Значение: ' + valueText + ' | Источник: ' + sourceLabel;
                 points += '<circle cx="' + x(i).toFixed(2) + '" cy="' + y(val).toFixed(2) + '" r="4.2" class="ml-point ' + pointClass + '" tabindex="0" data-tip="' + escapeHtml(tip) + '"></circle>';
@@ -282,17 +282,17 @@
         svg += axisLabels + '</svg>';
 
         var modes = data.modes || {};
-        var legendA = aYear + (modes.year_a === 'ml' ? ' (ML)' : (modes.year_a === 'mixed' ? ' (факт+ML)' : ' (факт)'));
-        var legendB = bYear + (modes.year_b === 'ml' ? ' (ML)' : (modes.year_b === 'mixed' ? ' (факт+ML)' : ' (факт)'));
-        var legendC = 'Compare-series ' + cYear + (modes.year_ml === 'ml' ? ' (ML)' : (modes.year_ml === 'mixed' ? ' (факт+ML)' : ' (факт)'));
-        var legendD = 'ML-prog (Poisson) ' + dYear;
+        var legendA = aYear + (modes.year_a === 'ml' ? ' (OLS-достройка)' : (modes.year_a === 'mixed' ? ' (факт + OLS)' : ' (факт)'));
+        var legendB = bYear + (modes.year_b === 'ml' ? ' (OLS-достройка)' : (modes.year_b === 'mixed' ? ' (факт + OLS)' : ' (факт)'));
+        var legendC = 'OLS-эталон ' + cYear + (modes.year_ml === 'ml' ? ' (OLS)' : (modes.year_ml === 'mixed' ? ' (факт + OLS)' : ' (факт)'));
+        var legendD = 'Poisson ML ' + dYear;
 
         chartNode.innerHTML = ''
             + '<div class="ml-chart-legend">'
-            + '<span class="ml-chart-legend-item"><i data-legend-color="#0F766E"></i>' + escapeHtml(legendA) + '</span>'
-            + '<span class="ml-chart-legend-item"><i data-legend-color="#B45309"></i>' + escapeHtml(legendB) + '</span>'
-            + '<span class="ml-chart-legend-item"><i data-legend-color="#1D4ED8"></i>' + escapeHtml(legendC) + '</span>'
-            + '<span class="ml-chart-legend-item"><i data-legend-color="#7C3AED"></i>' + escapeHtml(legendD) + '</span>'
+            + '<span class="ml-chart-legend-item" title="Факт за выбранный месяц; пропущенные дни достроены OLS (среднее по тому же дню прошлых лет + линейный тренд)"><i data-legend-color="#0F766E"></i>' + escapeHtml(legendA) + '</span>'
+            + '<span class="ml-chart-legend-item" title="Факт за выбранный месяц; пропущенные дни достроены OLS (среднее по тому же дню прошлых лет + линейный тренд)"><i data-legend-color="#B45309"></i>' + escapeHtml(legendB) + '</span>'
+            + '<span class="ml-chart-legend-item" title="OLS-эталон для года прогноза: тот же алгоритм что Год 1/2, применённый к году прогноза. Совпадает с Год 2 если год прогноза = год 2."><i data-legend-color="#1D4ED8"></i>' + escapeHtml(legendC) + '</span>'
+            + '<span class="ml-chart-legend-item" title="Poisson-регрессия с 10 фичами (lag-7, lag-14, rolling, sin/cos сезонности) — независимый ML-прогноз для года прогноза."><i data-legend-color="#7C3AED"></i>' + escapeHtml(legendD) + '</span>'
             + '</div>'
             + '<div class="ml-chart-shell">' + svg + '</div>';
         applyLegendDecorators(chartNode);
@@ -315,13 +315,13 @@
             } else {
                 qualityText = ' | Poisson quality: недоступно (' + String(dQuality.reason || 'insufficient_history') + ')';
             }
-            summaryNode.textContent = 'Год 1 (' + aYear + '): факт ' + String(aSummary.fact_days || 0) + ', ML ' + String(aSummary.ml_days || 0)
-                + ' | Год 2 (' + bYear + '): факт ' + String(bSummary.fact_days || 0) + ', ML ' + String(bSummary.ml_days || 0)
-                + ' | Compare-series (' + cYear + '): факт ' + String(cSummary.fact_days || 0) + ', ML ' + String(cSummary.ml_days || 0)
-                + ' | ML-prog (Poisson): model_days ' + String(dSummary.model_days || 0) + ', clipped_days ' + String(dSummary.clipped_days || 0)
+            summaryNode.textContent = 'Год 1 (' + aYear + '): факт ' + String(aSummary.fact_days || 0) + ' дн., OLS ' + String(aSummary.ml_days || 0) + ' дн.'
+                + ' | Год 2 (' + bYear + '): факт ' + String(bSummary.fact_days || 0) + ' дн., OLS ' + String(bSummary.ml_days || 0) + ' дн.'
+                + ' | OLS-эталон (' + cYear + '): факт ' + String(cSummary.fact_days || 0) + ' дн., OLS ' + String(cSummary.ml_days || 0) + ' дн.'
+                + ' | Poisson ML: дней ' + String(dSummary.model_days || 0) + ', запасных ' + String(dSummary.clipped_days || 0)
                 + qualityText
-                + (overlapBC ? ' | Compare-series совпадает с Год 2 для выбранных параметров' : '')
-                + (modes.overall === 'ml_ml' ? ' | обе линии построены ML' : '')
+                + (overlapBC ? ' | ⚠ OLS-эталон совпадает с Год 2 (год прогноза = ' + bYear + '): измените год прогноза для независимой линии' : '')
+                + (modes.overall === 'ml_ml' ? ' | обе линии построены OLS' : '')
                 + (historyHasData ? '' : ' | нет входных данных');
         }
     }
