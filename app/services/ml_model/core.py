@@ -981,13 +981,16 @@ def _load_day_month_heatmap(
                 total = sum(cause_counts.values())
                 month_totals[mo] = total
                 if cause_counts:
-                    top_c = max(cause_counts, key=cause_counts.__getitem__)
-                    dominant[str(mo)] = {
-                        "cause": top_c,
-                        "count": cause_counts[top_c],
-                        "total": total,
-                        "pct": round(cause_counts[top_c] / total * 100, 1) if total else 0.0,
-                    }
+                    top2 = sorted(cause_counts.items(), key=lambda kv: kv[1], reverse=True)[:2]
+                    dominant[str(mo)] = [
+                        {
+                            "cause": c,
+                            "count": cnt,
+                            "total": total,
+                            "pct": round(cnt / total * 100, 1) if total else 0.0,
+                        }
+                        for c, cnt in top2
+                    ]
             total_all = sum(month_totals.values())
             season_totals: dict[str, Any] = {}
             for sname, months in seasons.items():

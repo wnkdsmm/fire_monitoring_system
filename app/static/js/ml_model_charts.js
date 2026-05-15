@@ -523,6 +523,22 @@
         if (delta.length) {
             var domA = statsA.dominant_by_month || {};
             var domB = statsB.dominant_by_month || {};
+
+            function formatTopCauses(entry) {
+                var items = Array.isArray(entry) ? entry : (entry && entry.cause ? [entry] : []);
+                if (!items.length) { return '<span style="color:var(--color-token-07)">—</span>'; }
+                return items.map(function (d, i) {
+                    return '<span class="ml-cause-rank">' + (i + 1) + '.</span> '
+                        + escapeHtml(d.cause || '—')
+                        + (d.pct != null ? '<span class="ml-cause-pct"> ' + d.pct + '%</span>' : '');
+                }).join('<br>');
+            }
+
+            function getTopCause(entry) {
+                var items = Array.isArray(entry) ? entry : (entry && entry.cause ? [entry] : []);
+                return items.length ? (items[0].cause || '') : '';
+            }
+
             html += '<div class="ml-insights-table-wrap">'
                 + '<table class="ml-insights-table">'
                 + '<thead><tr>'
@@ -530,31 +546,27 @@
                 + '<th class="ml-num">' + escapeHtml(yearA) + '</th>'
                 + '<th class="ml-num">' + escapeHtml(yearB) + '</th>'
                 + '<th class="ml-num">Δ%</th>'
-                + '<th>Доминирующая причина (' + escapeHtml(yearA) + ')</th>'
-                + '<th>Доминирующая причина (' + escapeHtml(yearB) + ')</th>'
+                + '<th>Топ-2 причины (' + escapeHtml(yearA) + ')</th>'
+                + '<th>Топ-2 причины (' + escapeHtml(yearB) + ')</th>'
                 + '</tr></thead><tbody>';
 
             delta.forEach(function (row) {
                 var moStr = String(row.month);
-                var dA = domA[moStr] || {};
-                var dB = domB[moStr] || {};
+                var entrA = domA[moStr];
+                var entrB = domB[moStr];
                 var pct = row.delta_pct != null ? row.delta_pct : null;
                 var pctStr = pct != null ? (pct >= 0 ? '+' + pct : String(pct)) + '%' : '—';
                 var pctCls = pct == null ? '' : (pct > 5 ? ' ml-delta-up' : pct < -5 ? ' ml-delta-down' : '');
-                var causesDiff = dA.cause && dB.cause && dA.cause !== dB.cause;
+                var topA = getTopCause(entrA);
+                var topB = getTopCause(entrB);
+                var causesDiff = topA && topB && topA !== topB;
                 html += '<tr>'
                     + '<td>' + escapeHtml(row.month_name) + '</td>'
                     + '<td class="ml-num">' + (row.year_a || 0) + '</td>'
                     + '<td class="ml-num">' + (row.year_b || 0) + '</td>'
                     + '<td class="ml-num' + pctCls + '">' + pctStr + '</td>'
-                    + '<td class="ml-cause-cell' + (causesDiff ? ' ml-cause-differs-a' : '') + '">'
-                    + escapeHtml(dA.cause || '—')
-                    + (dA.pct ? '<span class="ml-cause-pct"> ' + dA.pct + '%</span>' : '')
-                    + '</td>'
-                    + '<td class="ml-cause-cell' + (causesDiff ? ' ml-cause-differs-b' : '') + '">'
-                    + escapeHtml(dB.cause || '—')
-                    + (dB.pct ? '<span class="ml-cause-pct"> ' + dB.pct + '%</span>' : '')
-                    + '</td>'
+                    + '<td class="ml-cause-cell' + (causesDiff ? ' ml-cause-differs-a' : '') + '">' + formatTopCauses(entrA) + '</td>'
+                    + '<td class="ml-cause-cell' + (causesDiff ? ' ml-cause-differs-b' : '') + '">' + formatTopCauses(entrB) + '</td>'
                     + '</tr>';
             });
             html += '</tbody></table></div>';
