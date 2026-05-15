@@ -17,7 +17,7 @@
 .table-management-layout {
     display: grid;
     grid-template-columns: minmax(0, 1.2fr) minmax(18rem, 1fr);
-    gap: 18px;
+    gap: var(--gap-md);
     align-items: start;
 }
 
@@ -27,7 +27,7 @@
 
 .table-action-card {
     display: grid;
-    gap: 14px;
+    gap: var(--gap-md);
     padding: var(--space-token-32);
     border: 1px solid var(--line);
     border-radius: var(--radius-card);
@@ -36,7 +36,7 @@
 
 .table-import-copy {
     display: grid;
-    gap: 14px;
+    gap: var(--gap-md);
 }
 
 .table-import-lead {
@@ -197,7 +197,7 @@
 
 .table-link-record {
     display: grid;
-    gap: 14px;
+    gap: var(--gap-md);
     min-height: 100%;
 }
 
@@ -326,7 +326,7 @@
 .table-pagination-toolbar {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
-    gap: 16px;
+    gap: var(--gap-md);
     padding: 0 24px 20px;
     align-items: end;
 }

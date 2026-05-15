@@ -10,7 +10,7 @@
 
 .statistics19922020-action-groups {
     display: grid;
-    gap: 14px;
+    gap: var(--gap-md);
 }
 
 .statistics19922020-action-group {

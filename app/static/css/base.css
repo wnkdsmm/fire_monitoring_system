@@ -26,9 +26,9 @@
     --sky: #2d6c8f;
     --sand: #d1a15f;
     --sidebar-width: 292px;
-    --content-gap: 18px;
+    --content-gap: var(--gap-md);
     --page-padding: clamp(16px, 2vw, 28px);
-    --section-gap: clamp(16px, 1.4vw, 20px);
+    --section-gap: var(--gap-md);
     --chart-height-lg: clamp(320px, 52vh, 420px);
     --chart-height-md: clamp(260px, 44vh, 360px);
     --chart-height-ml-sm: 320px;
@@ -236,13 +236,21 @@
     --space-token-26: 6px 10px;
     --space-token-27: 6px 12px;
     --space-token-28: 8px;
-    /* Font sizes */
-    --font-size-token-01: 11px;
-    --font-size-token-02: 13px;
-    --font-size-token-03: 15px;
-    --font-size-token-04: 17px;
-    --font-size-token-05: 30px;
-    --font-size-token-06: 34px;
+    /* Spacing scale — 2 levels */
+    --gap-md: 16px;
+    --gap-lg: 28px;
+    /* Font scale — 4 levels */
+    --fs-xs: 12px;
+    --fs-sm: 14px;
+    --fs-md: 17px;
+    --fs-lg: clamp(24px, 3vw, 34px);
+    /* Font token aliases → new scale */
+    --font-size-token-01: var(--fs-xs);
+    --font-size-token-02: var(--fs-sm);
+    --font-size-token-03: var(--fs-sm);
+    --font-size-token-04: var(--fs-md);
+    --font-size-token-05: var(--fs-lg);
+    --font-size-token-06: var(--fs-lg);
     /* Spacing aliases */
     --space-token-29: 12px;
     --space-token-30: 14px;
@@ -251,14 +259,14 @@
     --space-token-33: 20px;
     --space-token-34: 24px;
     --space-token-35: clamp(16px, 2vw, 28px);
-    /* Font aliases */
-    --font-size-token-07: 12px;
-    --font-size-token-08: 14px;
-    --font-size-token-09: 16px;
-    --font-size-token-10: 18px;
-    --font-size-token-11: 22px;
-    --font-size-token-12: 24px;
-    --font-size-token-13: 28px;
+    /* Font aliases cont. */
+    --font-size-token-07: var(--fs-xs);
+    --font-size-token-08: var(--fs-sm);
+    --font-size-token-09: var(--fs-sm);
+    --font-size-token-10: var(--fs-md);
+    --font-size-token-11: var(--fs-md);
+    --font-size-token-12: var(--fs-lg);
+    --font-size-token-13: var(--fs-lg);
 }
 
 * {

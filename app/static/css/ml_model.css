@@ -10,14 +10,14 @@
     grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
     gap: 4px 24px;
     border-top: 1px solid var(--color-border, #e5e7eb);
-    font-size: 13px;
+    font-size: var(--fs-sm);
     color: var(--color-text-secondary, #6b7280);
 }
 
 .ml-heatmap-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 24px;
+    gap: var(--gap-lg);
     min-width: 0;
 }
 
@@ -41,7 +41,7 @@
 }
 
 .ml-heatmap-title {
-    font-size: 15px;
+    font-size: var(--fs-sm);
     font-weight: 600;
     color: var(--color-text, #111827);
     margin: 0 0 4px 0;
@@ -56,7 +56,7 @@
 }
 
 .ml-hero-panel {
-    margin-bottom: 16px;
+    margin-bottom: var(--gap-md);
 }
 
 .ml-model-main > .filters-panel {
@@ -66,7 +66,7 @@
 .ml-hero-grid {
     display: grid;
     grid-template-columns: minmax(0, 1.6fr) minmax(280px, 0.9fr);
-    gap: 16px;
+    gap: var(--gap-md);
 }
 
 .ml-hero-badge {
@@ -82,7 +82,7 @@
 
 .ml-hero-title {
     margin: 10px 0;
-    font-size: clamp(2rem, 4vw, 3.5rem);
+    font-size: var(--fs-lg);
     line-height: 1.05;
 }
 
@@ -127,7 +127,7 @@
 .hero-stat-value {
     display: block;
     margin: 6px 0;
-    font-size: 2.2rem;
+    font-size: var(--fs-lg);
     line-height: 1;
 }
 
@@ -359,7 +359,7 @@
 
 .ml-reading-guide-head h3 {
     margin: 0 0 4px;
-    font-size: 1rem;
+    font-size: var(--fs-sm);
 }
 
 .ml-reading-lines {
@@ -457,8 +457,8 @@
 .ml-insights-peaks {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 14px;
-    margin-bottom: 18px;
+    gap: var(--gap-md);
+    margin-bottom: var(--gap-md);
 }
 
 .ml-insights-peak-card {
@@ -469,7 +469,7 @@
 
 .ml-peak-value {
     display: block;
-    font-size: 1.35rem;
+    font-size: var(--fs-md);
     margin: 4px 0 2px;
     color: var(--ink-strong, #111827);
 }
@@ -534,7 +534,7 @@
 
 .ml-season-cnt {
     color: var(--color-token-07, #9ca3af);
-    font-size: 0.85em;
+    font-size: var(--fs-xs);
 }
 
 .ml-insights-table-wrap {
@@ -584,12 +584,12 @@
 
 .ml-cause-pct {
     color: var(--color-token-07, #9ca3af);
-    font-size: 0.85em;
+    font-size: var(--fs-xs);
 }
 
 .ml-cause-rank {
     color: var(--color-token-07, #9ca3af);
-    font-size: 0.85em;
+    font-size: var(--fs-xs);
     font-variant-numeric: tabular-nums;
     margin-right: 1px;
 }
