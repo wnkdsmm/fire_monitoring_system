@@ -1,7 +1,7 @@
 <section class="panel filters-panel">
     <div class="panel-head">
         <h2>Параметры сравнения</h2>
-        <span class="panel-meta">Три линии по дням месяца: Год 1, Год 2 и Compare-series (Год ML).</span>
+        <span class="panel-meta">Год 1 и Год 2 — факт с ML-достройкой пропусков; OLS-эталонная линия и прогноз Poisson для года прогноза.</span>
     </div>
     <form class="filters-grid ml-controls-grid" id="mlModelForm" method="get" action="/ml-model">
         <label class="filter-field">
@@ -17,52 +17,66 @@
             <select id="mlYearBFilter" name="year_b"></select>
         </label>
         <label class="filter-field">
-            <span>Год ML (текущий .. +3)</span>
+            <span>Год прогноза (текущий&nbsp;.. +3)</span>
             <select id="mlFutureYearFilter" name="year_ml"></select>
         </label>
     </form>
     <div id="mlCompareChart" class="plotly-chart ml-plot{% if not data.compare_series or not data.compare_series.history_has_data %} is-empty{% endif %}"></div>
     <div id="mlCompareChartFallback" class="chart-empty{% if data.compare_series and data.compare_series.history_has_data %} is-hidden{% endif %}">Нет данных для сравнения выбранных лет за выбранный месяц.</div>
     <p id="mlCompareChartSummary" class="panel-meta"></p>
-    <section class="ml-reading-guide" aria-label="Как читать график compare-series">
+    <section class="ml-reading-guide" aria-label="Как читать график">
         <div class="ml-reading-guide-head">
             <h3>Как читать график</h3>
-            <p class="panel-meta">4 линии показывают факт и два типа модельных оценок для выбранного месяца.</p>
+            <p class="panel-meta">4 ряда по дням выбранного месяца: факт двух лет с ML-достройкой, OLS-эталон и Poisson-прогноз.</p>
         </div>
         <ul class="ml-reading-lines">
-            <li><span class="ml-line-chip ml-line-chip-year-a"></span><strong>Год 1:</strong> факт + ML-достройка пропусков.</li>
-            <li><span class="ml-line-chip ml-line-chip-year-b"></span><strong>Год 2:</strong> факт + ML-достройка пропусков.</li>
-            <li><span class="ml-line-chip ml-line-chip-compare"></span><strong>Compare-series:</strong> сравнительная расчётная линия для Год ML (эвристика системы).</li>
-            <li><span class="ml-line-chip ml-line-chip-poisson"></span><strong>ML-prog (Poisson):</strong> отдельный прогноз модели PoissonRegressor.</li>
+            <li><span class="ml-line-chip ml-line-chip-year-a"></span><strong>Год 1:</strong> реальные данные; пропуски закрываются ML-достройкой (OLS-тренд по дню).</li>
+            <li><span class="ml-line-chip ml-line-chip-year-b"></span><strong>Год 2:</strong> то же — реальные данные и ML-достройка пропусков.</li>
+            <li><span class="ml-line-chip ml-line-chip-compare"></span><strong>OLS-эталон:</strong> детерминированная экстраполяция исторического среднего на год прогноза. Не ML-модель.</li>
+            <li><span class="ml-line-chip ml-line-chip-poisson"></span><strong>Poisson-прогноз:</strong> GLM Пуассона с лаговыми и сезонными признаками (PoissonRegressor).</li>
         </ul>
         <p id="mlCompareGuideHint" class="ml-reading-hint is-hidden"></p>
-        <details class="ml-reading-details" aria-label="Подробнее о логике сравнения и качестве Poisson">
-            <summary>Подробнее</summary>
+        <details class="ml-reading-details" aria-label="Методология: алгоритмы и формулы">
+            <summary>Методология: алгоритмы и формулы</summary>
             <div class="ml-reading-grid">
                 <article>
-                    <h4>Источник точек</h4>
+                    <h4>Год 1 и Год 2 — факт и ML-достройка пропусков</h4>
+                    <p style="margin:0 0 6px;color:var(--color-token-06);font-size:var(--font-size-token-02)">Для каждого дня <em>d</em> ∈ {1,…,D<sub>m</sub>} выбранного месяца m₀:</p>
                     <ul>
-                        <li><strong>факт:</strong> реальное наблюдение.</li>
-                        <li><strong>ML:</strong> эвристическая достройка пропусков.</li>
-                        <li><strong>ML-model (Poisson):</strong> прогноз PoissonRegressor.</li>
+                        <li>если факт существует: <code>ŷ<sub>d</sub> = f(year, m₀, d)</code></li>
+                        <li>иначе ML-достройка: <code>φ̂<sub>d</sub> = max(0, μ<sub>d</sub> + β<sub>d</sub> · Δ)</code></li>
+                    </ul>
+                    <p style="margin:6px 0;color:var(--color-token-06);font-size:var(--font-size-token-02)"><strong>μ<sub>d</sub></strong> — историческая средняя пожаров в день <em>d</em> месяца m₀; <strong>Δ</strong> — сдвиг целевого года относительно последнего года истории.</p>
+                    <p style="margin:6px 0;color:var(--color-token-06);font-size:var(--font-size-token-02)">Наклон OLS-тренда по дню <em>d</em>:</p>
+                    <ul>
+                        <li><code>β<sub>d</sub> = Σ(x−x̄)(y−ȳ) / Σ(x−x̄)²</code> — по парам (year, fires<sub>d,year</sub>)</li>
+                        <li>ограничен порогом <code>±0.15 · max(1, μ<sub>d</sub>)</code></li>
+                        <li>если число лет наблюдения дня <em>d</em> &lt; 10 — используется β месячного уровня</li>
                     </ul>
                 </article>
                 <article>
-                    <h4>Как читать качество Poisson</h4>
+                    <h4>OLS-эталонная линия</h4>
+                    <p style="margin:0 0 6px;color:var(--color-token-06);font-size:var(--font-size-token-02)">Детерминированная проекция исторического паттерна на год прогноза <em>year_ml</em>:</p>
                     <ul>
-                        <li><strong>MAE:</strong> средняя абсолютная ошибка, меньше лучше.</li>
-                        <li><strong>RMSE:</strong> сильнее штрафует большие промахи, меньше лучше.</li>
-                        <li><strong>sMAPE:</strong> относительная ошибка в %, ближе к 0 лучше.</li>
-                        <li><strong>n=</strong> число фактических точек в оценке.</li>
-                        <li><strong>folds</strong> число backtest-сплитов.</li>
+                        <li><code>ĉ<sub>d</sub>(year_ml) = max(0, μ<sub>d</sub> + β<sub>d</sub> · (year_ml − x̄))</code></li>
                     </ul>
+                    <p style="margin:6px 0;color:var(--color-token-06);font-size:var(--font-size-token-02)">Алгоритм идентичен ML-достройке, но <em>Δ = year_ml − x̄</em> — сдвиг в будущее. Линия является наивным бенчмарком (baseline): отклонение Poisson-прогноза от эталона указывает на нелинейный сигнал, усвоенный GLM-моделью. <strong>Не является прогнозом ML-модели</strong> — это OLS-тренд, продлённый за горизонт истории.</p>
                 </article>
                 <article>
-                    <h4>Ограничения</h4>
+                    <h4>Poisson-прогноз (GLM)</h4>
+                    <p style="margin:0 0 6px;color:var(--color-token-06);font-size:var(--font-size-token-02)">Регрессия Пуассона с логарифмической функцией связи:</p>
                     <ul>
-                        <li>При нехватке истории метрики могут быть недоступны.</li>
-                        <li>Прогноз не заменяет факт, а дополняет анализ.</li>
+                        <li><code>log(λ<sub>d</sub>) = X<sub>d</sub>β</code>, &nbsp; <code>ŷ<sub>d</sub> = exp(X<sub>d</sub>β̂)</code></li>
                     </ul>
+                    <p style="margin:6px 0;color:var(--color-token-06);font-size:var(--font-size-token-02)">Вектор признаков X<sub>d</sub> (10 переменных):</p>
+                    <ul>
+                        <li>день месяца, месяц, день недели, признак выходного (0/1)</li>
+                        <li>lag‑7, lag‑14 — наблюдения за 7 и 14 дней до <em>d</em></li>
+                        <li>roll‑7, roll‑14 — скользящие средние за 7 и 14 дней</li>
+                        <li>sin(2π·DOY/Y), cos(2π·DOY/Y) — Фурье-кодировка сезонности (DOY — порядковый день года, Y — длина года: 365 или 366)</li>
+                    </ul>
+                    <p style="margin:6px 0;color:var(--color-token-06);font-size:var(--font-size-token-02)">Модель: <code>PoissonRegressor(α=0.05, max_iter=500)</code> — L2-регуляризованный GLM. Обучение на всей доступной истории. Прогноз строится авторегрессивно: lag-признаки дней, ещё не вошедших в историю, берутся из предшествующих предсказаний.</p>
+                    <p style="margin:6px 0;color:var(--color-token-06);font-size:var(--font-size-token-02)">Оценка качества — walk-forward cross-validation по MAE, RMSE, sMAPE на hold-out периодах.</p>
                 </article>
             </div>
         </details>
@@ -87,7 +101,7 @@
                 <ul>
                     <li>Для каждого года выбирается выбранный месяц <em>m₀</em>.</li>
                     <li>Причины упорядочиваются по убыванию суммарного числа пожаров:<br>
-                        <code>rank(k) = argsort↓ Σ<sub>d</sub> f(year, m₀, d, causeₖ)</code>
+                        <code>rank(k) = argsort↓ Σ<sub>d</sub> f(year, m₀, d, cause<sub>k</sub>)</code>
                     </li>
                     <li>Отображаются первые 10 позиций; нумерация 1–10 сохраняется при смене месяца.</li>
                     <li>Два столбца рядом позволяют сравнить структуру причин между Год 1 и Год 2.</li>
@@ -100,7 +114,7 @@
                     <li>Значение ячейки (m, d):<br>
                         <code>z[m][d] = Σ<sub>cause</sub> f(year, m, d, cause)</code>
                     </li>
-                    <li>При наведении отображается топ-3 причины для данной ячейки.</li>
+                    <li>При наведении — топ причин для данной ячейки (до 10 если есть).</li>
                     <li>Пустые ячейки (дни, которых нет в месяце) отображаются белым.</li>
                     <li>Цветовая шкала нормирована в пределах каждого года независимо.</li>
                 </ul>
