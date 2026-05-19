@@ -26,7 +26,6 @@ from config.constants import (
     VALIDATION_WINDOW_STEP_MIN_DAYS,
 )
 
-from .profile_resolution import resolve_weight_profile_for_records
 from .profiles import DEFAULT_RISK_WEIGHT_MODE, get_risk_weight_profile, resolve_component_weights
 from .scoring import _build_territory_rows
 from .types import (

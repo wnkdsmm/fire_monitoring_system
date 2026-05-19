@@ -71,16 +71,16 @@
         var href = '/tables/' + encodeURIComponent(safeTable);
 
         return '<li class="table-link-item" data-table-row data-table-name="' + escapeHtml(safeTable) + '">' +
-            '<article class="table-link-card table-link-record">' +
+            '<article class="table-link-card table-link-record" data-href="' + href + '">' +
                 '<div class="table-link-record-head">' +
                     '<label class="table-selection-check">' +
                         '<input class="table-selection-checkbox" type="checkbox" value="' + escapeHtml(safeTable) + '" aria-label="Выбрать таблицу ' + escapeHtml(safeTable) + '">' +
                     '</label>' +
-                    '<a class="table-link-title" href="' + href + '">' + escapeHtml(safeTable) + '</a>' +
+                    '<span class="table-link-title">' + escapeHtml(safeTable) + '</span>' +
                 '</div>' +
-                '<div class="table-link-actions">' +
-                    '<a class="table-link-inline-action" href="' + href + '">Открыть</a>' +
-                '</div>' +
+                
+                    
+                
             '</article>' +
         '</li>';
     }
@@ -130,15 +130,91 @@
         return Array.prototype.slice.call(document.querySelectorAll('.table-selection-checkbox'));
     }
 
+    function isVisibleRow(row) {
+        return !!(row && row.offsetParent !== null);
+    }
+
+    function getVisibleSelectionInputs() {
+        return getSelectionInputs().filter(function (input) {
+            var row = input.closest('[data-table-row]');
+            return isVisibleRow(row);
+        });
+    }
+
+    function isClearTableName(tableName) {
+        return String(tableName || '').toLowerCase().indexOf('clean_') === 0;
+    }
+
+    function refreshTypeStats() {
+        var rows = Array.prototype.slice.call(document.querySelectorAll('#tableList [data-table-row][data-table-name]'));
+        var cleanCount = 0;
+        var baseCount = 0;
+
+        rows.forEach(function (row) {
+            var tableName = String(row.getAttribute('data-table-name') || '').trim();
+            if (!tableName) {
+                return;
+            }
+            if (isClearTableName(tableName)) {
+                cleanCount += 1;
+            } else {
+                baseCount += 1;
+            }
+        });
+
+        updateCount('cleanTablesCount', cleanCount);
+        updateCount('baseTablesCount', baseCount);
+    }
+
+    function applyClearTablesFilter() {
+        var searchInput = byId('tableSearchInput');
+        var toggle = byId('toggleClearTables');
+        var showClearTables = !toggle || !!toggle.checked;
+        var query = String(searchInput && searchInput.value ? searchInput.value : '').trim().toLowerCase();
+        var rows = Array.prototype.slice.call(document.querySelectorAll('#tableList [data-table-row][data-table-name]'));
+
+        if (query && toggle && !showClearTables) {
+            var hasMatchInBase = rows.some(function (row) {
+                var tableName = String(row.getAttribute('data-table-name') || '').trim();
+                return !isClearTableName(tableName) && tableName.toLowerCase().indexOf(query) !== -1;
+            });
+            var hasMatchInClean = rows.some(function (row) {
+                var tableName = String(row.getAttribute('data-table-name') || '').trim();
+                return isClearTableName(tableName) && tableName.toLowerCase().indexOf(query) !== -1;
+            });
+            if (!hasMatchInBase && hasMatchInClean) {
+                toggle.checked = true;
+                showClearTables = true;
+            }
+        }
+
+        rows.forEach(function (row) {
+            var tableName = String(row.getAttribute('data-table-name') || '').trim();
+            var matchesQuery = !query || tableName.toLowerCase().indexOf(query) !== -1;
+            var shouldHide = !matchesQuery || (!showClearTables && isClearTableName(tableName));
+            row.hidden = shouldHide;
+        });
+
+        if (toggle) {
+            var label = toggle.closest('label');
+            var textNode = label ? label.querySelector('span') : null;
+            if (textNode) {
+                textNode.textContent = showClearTables
+                    ? 'Очищенные таблицы: показывать'
+                    : 'Очищенные таблицы: не показывать';
+            }
+        }
+    }
+
     function getSelectedTableNames() {
-        return getSelectionInputs()
+        return getVisibleSelectionInputs()
             .filter(function (input) { return input.checked; })
             .map(function (input) { return String(input.value || '').trim(); })
             .filter(function (tableName) { return !!tableName; });
     }
 
     function refreshSelectionState() {
-        var inputs = getSelectionInputs();
+        var inputs = getVisibleSelectionInputs();
         var selectedNames = getSelectedTableNames();
         var hasTables = inputs.length > 0;
         var selectedCount = selectedNames.length;
@@ -176,11 +252,12 @@
         updateCount('heroTablesCount', items.length);
         updateCount('sidebarTablesCount', items.length);
         updateAvailability(items.length);
+        refreshTypeStats();
         refreshSelectionState();
     }
 
     function selectAllTables(isChecked) {
-        getSelectionInputs().forEach(function (input) {
+        getVisibleSelectionInputs().forEach(function (input) {
             input.checked = !!isChecked;
         });
         refreshSelectionState();
@@ -267,6 +344,47 @@
 
             refreshSelectionState();
         });
+
+        var tableList = byId('tableList');
+        if (tableList) {
+            tableList.addEventListener('click', function (event) {
+                var target = event.target;
+                if (!(target instanceof Element)) {
+                    return;
+                }
+                if (target.closest('.table-selection-check') || target.classList.contains('table-selection-checkbox')) {
+                    return;
+                }
+                var card = target.closest('.table-link-card[data-href]');
+                if (!card) {
+                    return;
+                }
+                var href = card.getAttribute('data-href');
+                if (href) {
+                    window.location.href = href;
+                }
+            });
+        }
+
+        var toggle = byId('toggleClearTables');
+        if (toggle) {
+            toggle.addEventListener('change', function () {
+                var scrollTop = window.scrollY || window.pageYOffset || 0;
+                applyClearTablesFilter();
+                refreshSelectionState();
+                window.scrollTo(0, scrollTop);
+            });
+        }
+
+        var searchInput = byId('tableSearchInput');
+        if (searchInput) {
+            searchInput.addEventListener('input', function () {
+                var scrollTop = window.scrollY || window.pageYOffset || 0;
+                applyClearTablesFilter();
+                refreshSelectionState();
+                window.scrollTo(0, scrollTop);
+            });
+        }
     }
 
     document.addEventListener('DOMContentLoaded', function () {
@@ -281,5 +399,8 @@
 
         bindSelectionActions();
         applyTableState(getRenderedTableNames());
+        applyClearTablesFilter();
+        refreshTypeStats();
+        refreshSelectionState();
     });
 })();

@@ -3,31 +3,22 @@ from __future__ import annotations
 from contextlib import nullcontext
 from typing import Any, Callable, Sequence
 
-from app.perf import current_perf_trace, profiled
+from app.perf import current_perf_trace
 from config.constants import HOPKINS_MIN_CLUSTERABLE, MIN_ROWS_PER_CLUSTER, WEIGHTING_STRATEGY_INCIDENT_LOG
-from config.db import engine
 
 from .analysis_stats import _compute_hopkins_statistic, _prepare_model_inputs
 from .core_algorithms import _run_clustering_model_stage
 from .core_context import (
     _CLUSTERING_CACHE,
-    _build_clustering_cache_key,
     _build_clustering_request_state,
     _empty_clustering_data,
-    _normalize_clustering_cache_value,
-    _normalize_feature_columns,
-    clear_clustering_cache,
-    get_clustering_page_context,
-    get_clustering_shell_context,
 )
 from .core_dataset import (
-    _append_clustering_feature_notes,
     _build_clustering_feature_context,
     _build_clustering_model_description,
     _build_clustering_model_inputs,
     _emit_clustering_progress,
     _load_clustering_dataset_for_request,
-    _prepare_clustering_feature_selection,
 )
 from .core_results import _build_clustering_quality_stage, _build_clustering_success_payload
 from .types import (

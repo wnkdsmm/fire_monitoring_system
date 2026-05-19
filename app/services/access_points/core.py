@@ -18,18 +18,16 @@ from .analysis_output import (
     _build_uncertainty_notes,
 )
 from .analysis_ranking import (
-    _build_access_point_rows,
     _build_access_point_rows_from_entity_frame,
     _select_incomplete_points,
     _select_top_points,
 )
-from .charts import _build_factor_bar_chart, _build_factor_heatmap, _build_points_scatter_chart, _build_score_histogram
-from .constants import ACCESS_POINT_LIMIT_OPTIONS
+from .charts import _build_points_scatter_chart, _build_score_histogram
+from config.constants import ACCESS_POINT_LIMIT_OPTIONS
 from .data import (
     _build_access_points_table_options,
     _build_option_catalog,
     _collect_access_point_metadata,
-    _parse_limit,
     _resolve_option_value,
     _resolve_selected_table,
     _selected_source_tables,
@@ -148,16 +146,6 @@ def _empty_access_points_charts(message: str) -> dict[str, Any]:
             message,
         ),
         "score_histogram": {
-            "figure": {"data": [], "layout": {}, "config": {"responsive": True}},
-            "plotly": {"data": [], "layout": {}, "config": {"responsive": True}},
-            "empty_message": message,
-        },
-        "factor_bar": {
-            "figure": {"data": [], "layout": {}, "config": {"responsive": True}},
-            "plotly": {"data": [], "layout": {}, "config": {"responsive": True}},
-            "empty_message": message,
-        },
-        "factor_heatmap": {
             "figure": {"data": [], "layout": {}, "config": {"responsive": True}},
             "plotly": {"data": [], "layout": {}, "config": {"responsive": True}},
             "empty_message": message,
@@ -461,8 +449,6 @@ def get_access_points_data(
         "charts": {
             "scatter": _build_points_scatter_chart(rows),
             "score_histogram": _build_score_histogram(rows),
-            "factor_bar": _build_factor_bar_chart(rows),
-            "factor_heatmap": _build_factor_heatmap(rows),
         },
         "top_point_label": str(top_points[0]["label"] if top_points else "-"),
         "top_point_explanation": _build_top_point_lead(top_points[0] if top_points else None),

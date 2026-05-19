@@ -1,13 +1,14 @@
 Option Explicit
 
-Dim shell, fso, projectRoot, logsDir, logFilePath
+Dim shell, fso, projectRoot, logsDir, logFilePath, silentSuccess
 Dim envFilePath, envVars, appPort
 Dim stoppedByName, stoppedByPort, cacheRemoved
 
 Set shell = CreateObject("WScript.Shell")
 Set fso = CreateObject("Scripting.FileSystemObject")
+silentSuccess = (LCase(Trim(GetArg(0))) = "--silent-success")
 
-projectRoot = fso.GetParentFolderName(WScript.ScriptFullName)
+projectRoot = ResolveProjectRoot()
 logsDir = fso.BuildPath(projectRoot, "logs")
 If Not fso.FolderExists(logsDir) Then
     On Error Resume Next
@@ -32,10 +33,30 @@ LogMessage "Stopped by port: " & CStr(stoppedByPort)
 LogMessage "Cache entries removed: " & CStr(cacheRemoved)
 LogMessage "==== shutdown complete ===="
 
-MsgBox "Server stop complete." & vbCrLf & _
-       "Stopped by name: " & CStr(stoppedByName) & vbCrLf & _
-       "Stopped by port: " & CStr(stoppedByPort) & vbCrLf & _
-       "Cache removed: " & CStr(cacheRemoved), vbInformation, "Fire Data"
+If Not silentSuccess Then
+    MsgBox "Server stop complete." & vbCrLf & _
+           "Stopped by name: " & CStr(stoppedByName) & vbCrLf & _
+           "Stopped by port: " & CStr(stoppedByPort) & vbCrLf & _
+           "Cache removed: " & CStr(cacheRemoved), vbInformation, "Fire Data"
+End If
+
+Function GetArg(index)
+    If WScript.Arguments.Count > index Then
+        GetArg = WScript.Arguments(index)
+    Else
+        GetArg = ""
+    End If
+End Function
+
+Function ResolveProjectRoot()
+    Dim scriptDir
+    scriptDir = fso.GetParentFolderName(WScript.ScriptFullName)
+    If LCase(fso.GetFileName(scriptDir)) = "actions" Then
+        ResolveProjectRoot = fso.GetParentFolderName(scriptDir)
+    Else
+        ResolveProjectRoot = scriptDir
+    End If
+End Function
 
 Function Quote(value)
     Quote = Chr(34) & value & Chr(34)

@@ -1,19 +1,21 @@
 from __future__ import annotations
 
-from typing import Sequence
 
 from config.constants import (
     CLUSTER_BALANCE_RATIO_CRITICAL_THRESHOLD,
     CLUSTER_SHAPE_BALANCE_WARNING_THRESHOLD,
     CLUSTER_STABILITY_ARI_DIVERGENCE_THRESHOLD,
-    LOW_SUPPORT_TERRITORY_THRESHOLD,
 )
 from .quality_assessment import (
     compute_method_algorithm_key,
     compute_segmentation_strength,
 )
 from .types import ClusterLabel, ClusterMethod, ClusterMetrics
-from .utils import _format_integer, _format_number, _format_percent
+from app.services.shared.formatting import (
+    format_integer as _format_integer,
+    format_number as _format_number,
+    format_percent as _format_percent,
+)
 
 
 def _summarize_segmentation_strength(

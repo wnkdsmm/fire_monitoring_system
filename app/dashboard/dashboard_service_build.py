@@ -1,19 +1,10 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any
 
-from app.perf import ensure_sqlalchemy_timing, perf_trace
-from app.plotly_bundle import PLOTLY_AVAILABLE, get_plotly_bundle
+from app.plotly_bundle import PLOTLY_AVAILABLE
 from config.constants import PRIORITY_HORIZON_DAYS
-from config.db import engine
 
-from .cache import (
-    _collect_dashboard_metadata_cached,
-    _get_dashboard_cache,
-    _metadata_table_names,
-    _set_dashboard_cache,
-)
 from .charts import _finalize_chart
 from .distribution import _damage_count_columns
 from .distribution_logic import (
@@ -25,7 +16,7 @@ from .impact import (
     _build_cause_chart,
     _collect_dashboard_grouped_counts,
 )
-from .metadata import _collect_group_column_options, _is_damage_group_selection, _resolve_dashboard_filters
+from .metadata import _is_damage_group_selection
 from .management import _build_management_snapshot, _empty_management_snapshot
 from .summary_logic import (
     _build_dashboard_scope,
@@ -38,10 +29,9 @@ from .types import (
     DashboardMetadata,
     DashboardOption,
     DashboardPayload,
-    DashboardRequestState,
     DashboardTableRef,
 )
-from .utils import _find_option_label, _format_datetime, build_horizon_day_options
+from .utils import _format_datetime, build_horizon_day_options
 
 
 def _build_dashboard_error_context(error_message: str, *, plotly_js: str = "") -> DashboardContext:
@@ -90,7 +80,7 @@ def _build_dashboard_aggregation(
             selected_tables,
             selected_year,
             selected_group_column,
-            include_area_buckets=True,
+            include_area_buckets=False,
             include_impact_timeline=True,
         )
     cause_counts = grouped_counts_bundle["cause_counts"]
@@ -117,8 +107,6 @@ def _build_dashboard_aggregation(
     yearly_area_chart = dashboard_charts["yearly_area_chart"]
     monthly_profile = dashboard_charts["monthly_profile"]
     monthly_heatmap = dashboard_charts["monthly_heatmap"]
-    area_buckets = dashboard_charts["area_buckets"]
-    cumulative_area = dashboard_charts["cumulative_area"]
     summary_metrics = _build_dashboard_summary_metrics(
         summary=summary,
         yearly_fires_series=yearly_fires_series,
@@ -161,8 +149,6 @@ def _build_dashboard_aggregation(
         "yearly_area_chart": yearly_area_chart,
         "monthly_profile": monthly_profile,
         "monthly_heatmap": monthly_heatmap,
-        "area_buckets": area_buckets,
-        "cumulative_area": cumulative_area,
         "trend": trend,
         "rankings": rankings,
         "highlights": highlights,
@@ -195,8 +181,6 @@ def _build_dashboard_payload(
     yearly_trend_chart = aggregation["yearly_fires_series"]
     monthly_profile = aggregation["monthly_profile"]
     monthly_heatmap = aggregation["monthly_heatmap"]
-    area_buckets = aggregation["area_buckets"]
-    cumulative_area = aggregation["cumulative_area"]
     management["export_text"] = ""
     if isinstance(management.get("brief"), dict):
         management["brief"]["export_text"] = ""
@@ -224,11 +208,8 @@ def _build_dashboard_payload(
             "yearly_fires": cause_overview,
             "yearly_area": yearly_area_chart,
             "yearly_trend": yearly_trend_chart,
-            "distribution": distribution,
             "monthly_heatmap": monthly_heatmap,
             "monthly_profile": monthly_profile,
-            "area_buckets": area_buckets,
-            "cumulative_area": cumulative_area,
         },
         "filters": {
             "table_name": selected_table_name,
@@ -329,13 +310,8 @@ def _empty_dashboard_data(
             "yearly_fires": _finalize_chart("Причины возгораний", [], "Нет данных по причинам возгорания."),
             "yearly_area": _finalize_chart("Последствия, эвакуация и дети", [], "Нет данных по погибшим, травмам и эвакуации."),
             "yearly_trend": _finalize_chart("Динамика количества пожаров по годам", [], "Недостаточно данных для динамики по годам."),
-            "distribution": _finalize_chart("Распределение по колонке", [], "Нет данных для графика."),
-
             "monthly_heatmap": _finalize_chart("Сезонность по месяцам и годам", [], "Недостаточно данных для тепловой карты сезонности."),
             "monthly_profile": _finalize_chart("Сезонность по месяцам", [], "Нет данных для сезонного профиля."),
-            "area_buckets": _finalize_chart("Структура по площади пожара", [], "Нет данных по площади пожара."),
-
-            "cumulative_area": _finalize_chart("Накопленная площадь по дням года", [], "Недостаточно данных для накопленного графика площади."),
         },
         "filters": {
             "table_name": "all",

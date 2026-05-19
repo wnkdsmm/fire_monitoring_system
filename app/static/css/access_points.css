@@ -1,6 +1,6 @@
 .access-points-main {
     display: grid;
-    gap: 18px;
+    gap: var(--gap-md);
 }
 
 .access-points-form-grid {
@@ -190,7 +190,7 @@
 
 .access-point-feature-picker {
     display: grid;
-    gap: 16px;
+    gap: var(--gap-md);
     margin-top: var(--space-token-28);
     padding: var(--space-token-21);
     border-radius: var(--radius-panel);
@@ -201,7 +201,7 @@
 .access-point-feature-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
-    gap: 14px;
+    gap: var(--gap-md);
 }
 
 .access-point-feature-option {
@@ -256,25 +256,30 @@
 .access-points-layout {
     display: grid;
     grid-template-columns: minmax(0, 1.55fr) minmax(300px, 0.95fr);
-    gap: 18px;
+    gap: var(--gap-md);
     align-items: start;
 }
 
 .access-points-followup {
     display: grid;
-    gap: 18px;
+    gap: var(--gap-md);
+}
+
+.access-points-followup > * {
+    margin-bottom: 0;
 }
 
 .access-points-inline-panels {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 18px;
+    gap: var(--gap-md);
     align-items: start;
 }
 
 .access-points-inline-panels > .panel {
     height: auto;
     align-self: start;
+    margin-bottom: 0;
 }
 
 .access-points-drivers-panel .panel-head,
@@ -292,14 +297,22 @@
 
 .access-points-primary,
 .access-points-secondary {
+    display: grid;
+    gap: var(--gap-md);
+    align-content: start;
     min-width: 0;
+}
+
+.access-points-primary > *,
+.access-points-secondary > * {
+    margin-bottom: 0;
 }
 
 .point-card-grid,
 .typology-grid,
 .incomplete-list {
     display: grid;
-    gap: 14px;
+    gap: var(--gap-md);
 }
 
 .point-card-grid {

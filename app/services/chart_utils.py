@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Sequence, TypedDict
 
-from app.statistics_constants import PLOTLY_PALETTE
+from app.domain.analytics_metadata import PLOTLY_PALETTE
 
 
 class PlotlyLayout(TypedDict, total=False):

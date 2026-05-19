@@ -11,6 +11,18 @@ from core.processing.pipeline import PipelineStep
 logger = logging.getLogger(__name__)
 
 _CSV_FALLBACK_ENCODINGS = ("utf-8-sig", "windows-1251", "latin-1")
+_CSV_CANDIDATE_SEPARATORS = (",", ";", "\t", "|")
+
+
+def _detect_csv_separator(input_file: str, encoding: str) -> str:
+    import csv
+    try:
+        with open(input_file, encoding=encoding, errors="replace") as f:
+            sample = f.read(8192)
+        dialect = csv.Sniffer().sniff(sample, delimiters=",;\t|")
+        return dialect.delimiter
+    except Exception:
+        return ","
 
 
 def _is_valid_tabular_frame(df: pd.DataFrame) -> bool:
@@ -57,7 +69,8 @@ def _read_csv(input_file: str) -> pd.DataFrame:
     last_exc: Exception | None = None
     for enc in candidates:
         try:
-            return pd.read_csv(input_file, encoding=enc)
+            sep = _detect_csv_separator(input_file, enc)
+            return pd.read_csv(input_file, encoding=enc, sep=sep)
         except (UnicodeDecodeError, LookupError) as exc:
             last_exc = exc
             logger.debug("CSV read failed with encoding %s: %s", enc, exc)

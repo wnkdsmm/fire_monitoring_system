@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections import Counter
-from datetime import date, datetime
+from datetime import datetime
 from typing import Any, TypedDict
 
 import pandas as pd
@@ -40,6 +40,12 @@ class ResolvedColumns(TypedDict, total=False):
     destroyed_area: str | None
     destroyed_buildings: str | None
     registered_damage: str | None
+    event_date: str | None
+    split_report_hours: str | None
+    split_report_mins: str | None
+    split_arrival_hours: str | None
+    split_arrival_mins: str | None
+    split_detection_hours: str | None
 
 
 class AccessPointMetadata(TypedDict, total=False):
@@ -51,7 +57,7 @@ class AccessPointMetadata(TypedDict, total=False):
 
 
 class PointRecord(TypedDict, total=False):
-    """Normalized raw incident record with geospatial fields from data_impl."""
+    """Normalized raw incident record with optional geospatial fields from data_impl."""
 
     district: str
     territory_label: str
@@ -77,6 +83,11 @@ class PointRecord(TypedDict, total=False):
     destroyed_buildings: float | None
     registered_damage: float | None
     event_date: datetime | None
+    split_report_hours: float | None
+    split_report_mins: float | None
+    split_arrival_hours: float | None
+    split_arrival_mins: float | None
+    split_detection_hours: float | None
 
 
 class RawPointRow(TypedDict, total=False):
@@ -106,6 +117,11 @@ class RawPointRow(TypedDict, total=False):
     destroyed_buildings: Any
     registered_damage: Any
     event_date: Any
+    split_report_hours: Any
+    split_report_mins: Any
+    split_arrival_hours: Any
+    split_arrival_mins: Any
+    split_detection_hours: Any
 
 
 class AccessPointInput(PointRecord, total=False):

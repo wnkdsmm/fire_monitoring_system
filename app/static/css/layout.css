@@ -1,7 +1,7 @@
 /* Layout */
 :root {
-    --font-size-base: clamp(13px, 0.8vw, 16px);
-    --space-layout-gap: clamp(16px, 1.5vw, 28px);
+    --font-size-base: var(--fs-sm);
+    --space-layout-gap: var(--gap-lg);
 }
 
 .sidebar {
@@ -10,7 +10,7 @@
     width: var(--sidebar-width);
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: var(--gap-lg);
     padding: 28px 22px;
     color: var(--color-bg-page);
     background: var(--sidebar-end);

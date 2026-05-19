@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Callable, Iterable, Sequence
+from typing import Any, Callable, Iterable
 
 
 def select_expression_or_fallback(

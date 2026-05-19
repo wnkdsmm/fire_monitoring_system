@@ -14,7 +14,10 @@ from .data import (
     _resolve_selected_table,
 )
 from .quality_silhouette import _empty_clustering_quality_assessment
-from .utils import _format_datetime, _format_integer
+from app.services.shared.formatting import (
+    format_datetime as _format_datetime,
+    format_integer as _format_integer,
+)
 
 _CLUSTERING_CACHE = CopyingTtlCache(ttl_seconds=None)
 _CLUSTERING_CACHE_SCHEMA_VERSION = "v4_no_sample_limit"

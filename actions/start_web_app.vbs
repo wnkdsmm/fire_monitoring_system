@@ -10,11 +10,14 @@ Dim venvPython, basePython
 Dim bootstrapCommand, startCommand, runCode
 Dim reqFilePath, installCode
 Dim databaseUrl, dbCheckCode
+Dim isLiteStart, silentSuccess
 
 Set shell = CreateObject("WScript.Shell")
 Set fso = CreateObject("Scripting.FileSystemObject")
+isLiteStart = HasArg("--lite")
+silentSuccess = HasArg("--silent-success")
 
-projectRoot = fso.GetParentFolderName(WScript.ScriptFullName)
+projectRoot = ResolveProjectRoot()
 logsDir = fso.BuildPath(projectRoot, "logs")
 If Not fso.FolderExists(logsDir) Then
     On Error Resume Next
@@ -72,7 +75,7 @@ probeUrl = appUrl & "docs"
 LogMessage "Resolved APP_HOST=" & appHost & ", APP_PORT=" & appPort & ", EFFECTIVE_PORT=" & resolvedPort
 
 venvPython = fso.BuildPath(projectRoot, ".venv\Scripts\python.exe")
-If Not fso.FileExists(venvPython) Then
+If Not fso.FileExists(venvPython) And Not isLiteStart Then
     basePython = ResolveBasePython()
     If Len(basePython) = 0 Then
         MsgBox "Python not found." & vbCrLf & _
@@ -97,8 +100,8 @@ If Not fso.FileExists(venvPython) Then
 End If
 
 If Not fso.FileExists(venvPython) Then
-    MsgBox "Python in .venv not found after bootstrap." & vbCrLf & _
-           "Run setup.bat manually.", vbCritical, "Fire Data"
+    MsgBox "Python in .venv not found." & vbCrLf & _
+           "Run first_start_web.vbs first.", vbCritical, "Fire Data"
     WScript.Quit 1
 End If
 
@@ -108,7 +111,7 @@ If Not fso.FileExists(reqFilePath) Then
     WScript.Quit 1
 End If
 
-If Not HasRuntimeDeps(venvPython) Then
+If Not isLiteStart And Not HasRuntimeDeps(venvPython) Then
     LogMessage "Runtime dependencies are missing in .venv. Installing requirements."
     installCode = InstallRequirements(projectRoot, venvPython, reqFilePath, logFilePath)
     LogMessage "Install requirements exit code: " & CStr(installCode)
@@ -125,13 +128,17 @@ Else
     LogMessage "Runtime dependencies in .venv: OK"
 End If
 
-dbCheckCode = CheckDatabaseConnection(projectRoot, venvPython, logFilePath)
-LogMessage "Database check exit code: " & CStr(dbCheckCode)
-If dbCheckCode <> 0 Then
-    MsgBox "Database connection failed." & vbCrLf & _
-           "Check DATABASE_URL and PostgreSQL availability." & vbCrLf & _
-           "See logs\startup.log for details.", vbCritical, "Fire Data"
-    WScript.Quit 1
+If Not isLiteStart Then
+    dbCheckCode = CheckDatabaseConnection(projectRoot, venvPython, logFilePath)
+    LogMessage "Database check exit code: " & CStr(dbCheckCode)
+    If dbCheckCode <> 0 Then
+        MsgBox "Database connection failed." & vbCrLf & _
+               "Check DATABASE_URL and PostgreSQL availability." & vbCrLf & _
+               "See logs\startup.log for details.", vbCritical, "Fire Data"
+        WScript.Quit 1
+    End If
+Else
+    LogMessage "Lite mode: skip preflight database check."
 End If
 
 startCommand = _
@@ -141,9 +148,12 @@ startCommand = _
 LogMessage "Starting server command."
 shell.Run startCommand & " >> " & Quote(logFilePath) & " 2>>&1", 0, False
 
-If WaitForUrl(probeUrl, 45) Then
+If WaitForUrl(probeUrl, IIf(isLiteStart, 12, 45)) Then
     LogMessage "Server ready: " & appUrl
     shell.Run appUrl, 1, False
+    If Not silentSuccess Then
+        MsgBox "Server started successfully." & vbCrLf & appUrl, vbInformation, "Fire Data"
+    End If
     WScript.Quit 0
 End If
 
@@ -151,6 +161,36 @@ LogMessage "ERROR: Server was not ready in time."
 MsgBox "Server did not start in 45 seconds." & vbCrLf & _
        "See logs\startup.log for details.", vbExclamation, "Fire Data"
 WScript.Quit 1
+
+Function GetArg(index)
+    If WScript.Arguments.Count > index Then
+        GetArg = WScript.Arguments(index)
+    Else
+        GetArg = ""
+    End If
+End Function
+
+Function HasArg(expectedValue)
+    Dim i, currentArg
+    HasArg = False
+    For i = 0 To WScript.Arguments.Count - 1
+        currentArg = LCase(Trim(WScript.Arguments(i)))
+        If currentArg = LCase(expectedValue) Then
+            HasArg = True
+            Exit Function
+        End If
+    Next
+End Function
+
+Function ResolveProjectRoot()
+    Dim scriptDir
+    scriptDir = fso.GetParentFolderName(WScript.ScriptFullName)
+    If LCase(fso.GetFolder(scriptDir).Name) = "actions" Then
+        ResolveProjectRoot = fso.GetParentFolderName(scriptDir)
+    Else
+        ResolveProjectRoot = scriptDir
+    End If
+End Function
 
 Function ResolveBasePython()
     Dim foundPath

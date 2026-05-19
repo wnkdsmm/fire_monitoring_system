@@ -5,9 +5,10 @@ from typing import Any
 
 from sqlalchemy import text
 
-from app.domain.fire_columns import FIRE_DATE_COLUMN_CANDIDATES
+from app.domain.fire_columns import CAUSE_COLUMN_CANDIDATES, FIRE_DATE_COLUMN_CANDIDATES
 from app.domain.fire_columns import DASHBOARD_DISTRICT_COLUMN_CANDIDATES as DISTRICT_COLUMN_CANDIDATES
-from app.statistics_constants import AREA_COLUMN, CAUSE_COLUMNS, DATE_COLUMN, IMPACT_METRIC_CONFIG
+from app.domain.analytics_metadata import IMPACT_METRIC_CONFIG
+from app.domain.fire_columns import AREA_COLUMN
 
 from .types import DashboardTableRef, ImpactTotals
 from .utils import _date_expression
@@ -147,10 +148,33 @@ def _build_impact_timeline_query(
 
 
 def _resolve_cause_column(table: DashboardTableRef) -> str:
-    for column_name in CAUSE_COLUMNS:
+    for column_name in CAUSE_COLUMN_CANDIDATES:
         resolved_column_name = _resolve_table_column_name(table, column_name)
         if resolved_column_name:
             return resolved_column_name
+    normalized_columns = {
+        column_name: _normalize_match_text(column_name)
+        for column_name in table.get("column_set", set())
+    }
+    best_match = ""
+    best_score = -1
+    for column_name, normalized_column in normalized_columns.items():
+        if "гибел" in normalized_column:
+            continue
+        score = -1
+        if "причин" in normalized_column and "пожар" in normalized_column:
+            score = 100
+            if "код" in normalized_column:
+                score = 120
+        elif "причин" in normalized_column and ("возгоран" in normalized_column or "загоран" in normalized_column):
+            score = 90
+            if "код" in normalized_column:
+                score = 110
+        if score > best_score:
+            best_score = score
+            best_match = column_name
+    if best_score > 0:
+        return best_match
     return ""
 
 

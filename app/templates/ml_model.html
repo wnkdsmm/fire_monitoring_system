@@ -2,11 +2,11 @@
 {% set data = ml_model.initial_data %}
 {% set filters = data.filters %}
 {% set summary = data.summary %}
-{% set sidebar_title = "ML-прогноз" %}
+{% set sidebar_title = "Прогнозирование пожарной активности" %}
 {% set sidebar_active = "ml_model" %}
 {% set sidebar_description %}Сравнение по дням выбранного месяца для двух лет: факт, а при отсутствии факта — ML-достройка только для нужного года.{% endset %}
 
-{% block title %}ML-прогноз ожидаемого количества пожаров по дням{% endblock %}
+{% block title %}Временной анализ пожаров{% endblock %}
 
 {% block page_styles %}
 <link rel="stylesheet" href="/static/css/dashboard.css?v={{ dashboard_css_version }}">
@@ -20,7 +20,7 @@
         </span>
         <div class="status-line">
             <span>Режим</span>
-            <strong>Compare-series</strong>
+            <strong>Ретроспективный анализ + Poisson</strong>
         </div>
         <div class="status-line">
             <span>Исторический срез</span>
@@ -49,9 +49,9 @@ window.__FIRE_ML_INITIAL__ = {{ data | tojson }};
 <script src="/static/js/shared/ui_helpers.js?v={{ analytics_shared_js_version }}"></script>
 <script src="/static/js/shared/plotly_helpers.js?v={{ analytics_shared_js_version }}"></script>
 <script src="/static/js/analytics_shared.js?v={{ analytics_shared_js_version }}"></script>
-<script src="/static/js/ml_model_charts.js?v={{ ml_model_js_version }}"></script>
-<script src="/static/js/ml_model_api.js?v={{ ml_model_js_version }}"></script>
-<script src="/static/js/ml_model_render.js?v={{ ml_model_js_version }}"></script>
+<script src="/static/js/ml_model_charts.js?v={{ ml_model_charts_js_version }}"></script>
+<script src="/static/js/ml_model_api.js?v={{ ml_model_api_js_version }}"></script>
+<script src="/static/js/ml_model_render.js?v={{ ml_model_render_js_version }}"></script>
 <script src="/static/js/ml_model.js?v={{ ml_model_js_version }}"></script>
 {{ super() }}
 {% endblock %}

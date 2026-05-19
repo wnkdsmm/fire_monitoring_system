@@ -233,15 +233,21 @@
         setBusy(true);
         try {
             var request = collectFormFilters();
-            var response = await api.fetchMlCompareSeries({
+            var seriesPromise = api.fetchMlCompareSeries({
                 useLocationSearch: false,
                 buildPayload: function () { return request; }
             });
-            var payload = response && response.payload ? response.payload : {};
+            var causesPromise = api.fetchMlCausesChart({
+                useLocationSearch: false,
+                buildPayload: function () { return request; }
+            });
+            var seriesResponse = await seriesPromise;
+            var payload = seriesResponse && seriesResponse.payload ? seriesResponse.payload : {};
             var result = payload.result || {};
             if (!result.compare_series || !Array.isArray(result.compare_series.rows)) {
                 showError('Нет данных для сравнения выбранных лет за выбранный месяц.');
                 charts.renderCompareChart({}, 'mlCompareChart', 'mlCompareChartFallback', 'mlCompareChartSummary');
+                charts.renderCausesChart({}, 'mlCausesChart');
                 return;
             }
             applyData(Object.assign(
@@ -252,9 +258,23 @@
                     compare_series: result.compare_series
                 }
             ));
+            try {
+                var causesResponse = await causesPromise;
+                var causesResult = (causesResponse && causesResponse.payload && causesResponse.payload.result) || {};
+                charts.renderCausesChart(causesResult, 'mlCausesChart');
+                charts.renderCausesHeatmaps(causesResult, 'mlCausesHeatmaps');
+                charts.renderCausesInsights(causesResult, 'mlCausesInsights');
+            } catch (_e) {
+                charts.renderCausesChart({}, 'mlCausesChart');
+                charts.renderCausesHeatmaps({}, 'mlCausesHeatmaps');
+                charts.renderCausesInsights({}, 'mlCausesInsights');
+            }
         } catch (error) {
             showError((error && error.message) ? error.message : 'Нет данных для сравнения выбранных лет за выбранный месяц.');
             charts.renderCompareChart({}, 'mlCompareChart', 'mlCompareChartFallback', 'mlCompareChartSummary');
+            charts.renderCausesChart({}, 'mlCausesChart');
+            charts.renderCausesHeatmaps({}, 'mlCausesHeatmaps');
+            charts.renderCausesInsights({}, 'mlCausesInsights');
         } finally {
             setBusy(false);
         }

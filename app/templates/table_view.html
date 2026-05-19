@@ -7,7 +7,7 @@
 {% block title %}Таблица: {{ table_name }}{% endblock %}
 
 {% block page_styles %}
-<link rel="stylesheet" href="/static/css/tables.css?v={{ tables_css_version }}">
+<link rel="stylesheet" href="/static/css/tables.css?v={{ tables_css_version }}&cb=topscroll-v3">
 {% endblock %}
 
 {% block sidebar_status %}
@@ -99,23 +99,6 @@
             {% endfor %}
         </div>
     </section>
-
-    <section class="panel">
-        <div class="panel-head">
-            <h2>Ключевые критерии перед просмотром</h2>
-            <span class="panel-meta" id="tableCriteriaLead">{{ table_summary.criteria_lead }}</span>
-        </div>
-        <div class="stats-grid" id="tableCriteriaGroups">
-            {% for group in table_summary.groups %}
-            <article class="stat-card">
-                <span class="stat-label">{{ group.label }}</span>
-                <strong class="stat-value">{{ group.value }}</strong>
-                <span class="stat-foot">{{ group.meta }}</span>
-            </article>
-            {% endfor %}
-        </div>
-    </section>
-
     <section class="panel data-table-panel">
         <div class="panel-head">
             <div>
@@ -190,7 +173,28 @@
             </div>
         </div>
 
-        <div class="data-table-shell">
+        <div class="table-columns-strip">
+            <div class="table-columns-strip-head">
+                <span class="table-columns-strip-label">Колонки:</span>
+                <span id="tableColumnsMeta" class="table-columns-meta">Показано: {{ columns | length }} / {{ columns | length }}</span>
+                <div class="table-columns-actions">
+                    <button id="tableColumnsSelectAllButton" type="button" class="table-selection-button">Выбрать все</button>
+                    <button id="tableColumnsClearButton" type="button" class="table-selection-button">Снять выбор</button>
+                </div>
+            </div>
+            <div id="tableColumnsList" class="table-columns-list">
+                {% for col in columns %}
+                <button type="button" class="table-columns-chip" data-column-index="{{ loop.index0 }}" title="Скрыть колонку">
+                    <span>{{ col }}</span>
+                </button>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div id="tableTopScroll" class="data-table-shell data-table-top-scroll" aria-hidden="true">
+            <div id="tableTopScrollInner" class="data-table-top-scroll-inner"></div>
+        </div>
+        <div id="tableDataShell" class="data-table-shell">
             <table id="tableDataTable" class="data-table{% if columns | length <= 5 %} table-stack-mobile{% else %} table-sticky-first{% endif %}">
                 <thead id="tableDataHead">
                     <tr>
@@ -227,5 +231,5 @@
 <script src="/static/js/shared/ui_helpers.js?v={{ analytics_shared_js_version }}"></script>
 <script src="/static/js/shared/plotly_helpers.js?v={{ analytics_shared_js_version }}"></script>
 <script src="/static/js/analytics_shared.js?v={{ analytics_shared_js_version }}"></script>
-<script src="/static/js/table_view.js?v={{ table_view_js_version }}"></script>
+<script src="/static/js/table_view.js?v={{ table_view_js_version }}&cb=topscroll-v3"></script>
 {% endblock %}

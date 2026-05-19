@@ -5,8 +5,7 @@ from typing import Sequence
 from typing import Any
 
 from app.perf import ensure_sqlalchemy_timing, perf_trace
-from app.plotly_bundle import PLOTLY_AVAILABLE, get_plotly_bundle
-from app.services.executive_brief import compose_executive_brief_text
+from app.plotly_bundle import get_plotly_bundle
 from config.constants import PRIORITY_HORIZON_DAYS
 from config.db import engine
 
@@ -22,32 +21,13 @@ from .cache import (
     _metadata_table_names,
     _set_dashboard_cache,
 )
-from .charts import _finalize_chart
-from .distribution import _damage_count_columns
-from .distribution_logic import (
-    _build_dashboard_widgets,
-    _build_damage_dashboard_charts,
-    _build_standard_dashboard_charts,
-)
-from .impact import (
-    _build_cause_chart,
-    _collect_dashboard_grouped_counts,
-)
-from .metadata import _collect_group_column_options, _is_damage_group_selection, _resolve_dashboard_filters
-from .management import _build_management_snapshot, _empty_management_snapshot
-from .summary_logic import (
-    _build_dashboard_scope,
-    _build_dashboard_summary_metrics,
-    _build_dashboard_summary_series,
-)
+from .metadata import _collect_group_column_options, _resolve_dashboard_filters
 from .types import (
-    DashboardAggregation,
     DashboardContext,
     DashboardMetadata,
     DashboardOption,
     DashboardPayload,
     DashboardRequestState,
-    DashboardTableRef,
 )
 from .utils import (
     DASHBOARD_HORIZON_OPTIONS,

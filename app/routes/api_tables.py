@@ -36,9 +36,7 @@ def delete_tables(table_names: list[str]):
 
 @router.get("/api/tables/{table_name}/page")
 def table_page_endpoint(table_name: str, page: int = 1, page_size: int = 100):
-    MAX_PAGE_SIZE = 500
-    if page_size > MAX_PAGE_SIZE:
-        page_size = MAX_PAGE_SIZE
+    page_size = max(1, min(page_size, 500))
     return json_action_response(
         lambda: build_table_page_api_payload(table_name=table_name, page=page, page_size=page_size),
         on_value_error=lambda exc: (

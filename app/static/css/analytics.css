@@ -380,7 +380,7 @@
 
 .ranking-panel {
     display: grid;
-    gap: 16px;
+    gap: var(--gap-md);
 }
 
 .ranking-list {
@@ -446,7 +446,7 @@
 .table-pagination-toolbar {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
-    gap: 16px;
+    gap: var(--gap-md);
     padding: 0 24px 20px;
     align-items: end;
 }

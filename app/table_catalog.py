@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Sequence
 
 from app.db_metadata import get_table_names_cached
-from app.statistics_constants import EXCLUDED_TABLE_PREFIXES
+from app.domain.analytics_metadata import EXCLUDED_TABLE_PREFIXES
 
 _ALL_TABLES_LABEL = "Все таблицы"
 

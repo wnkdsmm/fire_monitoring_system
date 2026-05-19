@@ -127,6 +127,7 @@ def _run_clustering_diagnostics_bundle(
         cluster_frame,
         entity_frame,
         weighting_strategy=weighting_strategy,
+        prepared_model_inputs=prepared_model_inputs,
     )
     render_configuration = _select_render_configuration(
         requested_cluster_count=requested_working_cluster_count,

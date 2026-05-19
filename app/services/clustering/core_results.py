@@ -25,7 +25,11 @@ from .types import (
     ClusteringSummary,
     FeatureSelectionReport,
 )
-from .utils import _format_integer, _format_number, _format_percent
+from app.services.shared.formatting import (
+    format_integer as _format_integer,
+    format_number as _format_number,
+    format_percent as _format_percent,
+)
 
 
 def _apply_cluster_count_guidance_to_summary(

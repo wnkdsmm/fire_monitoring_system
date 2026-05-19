@@ -1,18 +1,13 @@
 from __future__ import annotations
 
-import math
 from datetime import date, datetime, timedelta
 from statistics import mean
 from typing import Any, Sequence
 
 from app.shared.sql_utils import quote_identifier
 from app.services.shared.formatting import (
-    _format_float_for_input,
     _format_period,
-    _format_percent,
     _format_signed_percent,
-    format_count_range as _format_count_range,
-    format_datetime as _format_datetime,
     format_integer as _format_integer,
     format_number as _format_number,
     format_probability as _format_probability,

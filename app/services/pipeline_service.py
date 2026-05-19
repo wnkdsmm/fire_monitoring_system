@@ -6,7 +6,7 @@ import re
 import shutil
 from contextlib import redirect_stdout
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 import pandas as pd
 from fastapi import UploadFile

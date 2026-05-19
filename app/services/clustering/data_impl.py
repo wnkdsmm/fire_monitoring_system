@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import math
 from collections import Counter
-from typing import Any, Sequence
+from typing import Sequence
 
 import numpy as np
 import pandas as pd
@@ -12,7 +12,7 @@ from app.labels import (
     CLUSTERING_DEFAULT_CLUSTER_FEATURES,
     CLUSTERING_FEATURE_METADATA,
 )
-from app.statistics_constants import EXCLUDED_TABLE_PREFIXES as TABLE_EXCLUDED_PREFIXES
+from app.domain.analytics_metadata import EXCLUDED_TABLE_PREFIXES as TABLE_EXCLUDED_PREFIXES
 from config.constants import (
     CLUSTER_COUNT_OPTIONS,
     CLUSTERING_RANDOM_STATE,
@@ -32,9 +32,11 @@ from .types import (
     TerritoryBucket,
     TerritoryGlobalStats,
     TerritoryRecord,
-    TerritorySupportSummary,
 )
-from .utils import _format_number, _format_percent
+from app.services.shared.formatting import (
+    format_number as _format_number,
+    format_percent as _format_percent,
+)
 
 AUTO_DEFAULT_EXCLUDED_FEATURES = set(CLUSTERING_AUTO_DEFAULT_EXCLUDED_FEATURES)
 DEFAULT_CLUSTER_FEATURES = list(CLUSTERING_DEFAULT_CLUSTER_FEATURES)
@@ -46,7 +48,7 @@ WATER_SUPPORT_COLUMN = "__water_known_count"
 DISTANCE_SUPPORT_COLUMN = "__distance_count"
 ALL_TABLES_VALUE = "all"
 ALL_TABLES_LABEL = "Все таблицы"
-DEFAULT_TERRITORY_SAMPLE_LIMIT = 1000
+DEFAULT_TERRITORY_SAMPLE_LIMIT = 15_000
 
 
 def _shrink_rate(
@@ -299,7 +301,7 @@ def _update_territory_bucket(bucket: TerritoryBucket, record: TerritoryRecord, l
         bucket["area_count"] += 1
 
     response_minutes = record.get("response_minutes")
-    if response_minutes is not None:
+    if response_minutes is not None and float(response_minutes) >= 0:
         bucket["response_sum"] += float(response_minutes)
         bucket["response_count"] += 1
         if record.get("long_arrival"):

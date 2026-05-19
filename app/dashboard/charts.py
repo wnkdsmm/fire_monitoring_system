@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from calendar import isleap
 import plotly.graph_objects as go
 from app.plotly_bundle import serialize_plotly_figure
 from app.statistics_constants import MONTH_LABELS
@@ -67,9 +68,10 @@ def _build_cumulative_area_plotly(
             hovertemplate=f"Год: {previous_year}<br>День: %{{x}}<br>Площадь: %{{y:.2f}} га<extra></extra>",
         )
     )
+    max_day = 366 if isleap(current_year) or isleap(previous_year) else 365
     figure.update_layout(
         _plotly_layout("Накопленная площадь, га", showlegend=True),
-        xaxis={"title": "День года", "range": [1, 365]},
+        xaxis={"title": "День года", "range": [1, max_day]},
     )
     return serialize_plotly_figure(figure)
 

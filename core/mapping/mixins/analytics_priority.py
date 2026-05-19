@@ -7,7 +7,7 @@ import numpy as np
 
 from app.services.explainable_logistics import build_explainable_logistics_profile
 
-from ...types import DbscanResult, HotspotPayload, PriorityTerritory, ProcessedRecord, RiskZone, SpatialPoint
+from ...types import HotspotPayload, PriorityTerritory, ProcessedRecord, RiskZone, SpatialPoint
 from .analytics_geometry import group_records_by_field, mean_record_value
 
 
@@ -147,17 +147,12 @@ def build_fallback_risk_zones(
 
 
 def build_spatial_risk_zones(
-    dbscan: DbscanResult,
     hotspots: list[HotspotPayload],
     *,
     km_distance: Callable[[SpatialPoint, SpatialPoint], float],
     build_circle_polygon: Callable[[float, float, float], list[list[float]]],
 ) -> list[RiskZone]:
     risk_zone_candidates: list[RiskZone] = []
-    for cluster in dbscan.get('clusters', []):
-        risk_zone_candidates.append({
-            'label': cluster['label'], 'latitude': cluster['latitude'], 'longitude': cluster['longitude'], 'radius_km': max(cluster['radius_km'], 1.0), 'risk_score': cluster['risk_score'], 'risk_score_display': cluster['risk_score_display'], 'risk_label': cluster['risk_label'], 'risk_tone': cluster['risk_tone'], 'support_count': cluster['incident_count'], 'source': 'DBSCAN', 'explanation': cluster['explanation'],
-        })
     for hotspot in hotspots:
         if any(km_distance(hotspot, existing) < max(hotspot['radius_km'], existing['radius_km']) * 0.75 for existing in risk_zone_candidates):
             continue

@@ -51,7 +51,7 @@
 
 .map-error-page h1 {
     margin: var(--space-token-01);
-    font-size: clamp(24px, 4vw, 28px);
+    font-size: var(--fs-lg);
 }
 
 .map-error-page p {

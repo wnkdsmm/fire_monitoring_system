@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Sequence
 
-from .constants import LONG_RESPONSE_THRESHOLD_MINUTES
+from config.constants import LONG_RESPONSE_THRESHOLD_MINUTES
 from .utils import _unique_non_empty
 
 

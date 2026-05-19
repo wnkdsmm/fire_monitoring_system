@@ -37,7 +37,6 @@ from .page_common import (
     render_context_page,
     render_template_page,
     resolve_page_mode_context,
-    templates,
 )
 
 
@@ -205,6 +204,9 @@ def ml_model_page(
             **ANALYTICS_PAGE_ASSETS,
             "ml_model_css_version": "css/ml_model.css",
             "ml_model_js_version": "js/ml_model.js",
+            "ml_model_charts_js_version": "js/ml_model_charts.js",
+            "ml_model_api_js_version": "js/ml_model_api.js",
+            "ml_model_render_js_version": "js/ml_model_render.js",
         },
     )
 

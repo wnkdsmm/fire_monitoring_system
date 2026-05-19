@@ -23,7 +23,7 @@
             hints.push('Качество Poisson сейчас недоступно: ' + String(quality.reason || 'insufficient_history'));
         }
         if (overlapBC) {
-            hints.push('Compare-series совпадает с Год 2 для текущих параметров.');
+            hints.push('OLS-эталон совпадает с Год 2: год прогноза равен году 2. Измените год прогноза, чтобы получить независимую линию.');
         }
         if (!hints.length) {
             hintNode.textContent = '';
@@ -237,7 +237,7 @@
                 }
                 var dayText = row && row.day != null ? String(row.day) : '';
                 var source = row && row[sourceKey] ? String(row[sourceKey]) : '';
-                var sourceLabel = source === 'ml' ? 'ML' : (source === 'ml_model' ? 'ML-model (Poisson)' : 'факт');
+                var sourceLabel = source === 'ml' ? 'OLS-достройка' : (source === 'ml_model' ? 'Poisson ML' : 'факт');
                 var valueText = String(Math.round(val * 100) / 100).replace('.', ',');
                 var tip = 'Год: ' + yearLabel + ' | День: ' + dayText + ' | Значение: ' + valueText + ' | Источник: ' + sourceLabel;
                 points += '<circle cx="' + x(i).toFixed(2) + '" cy="' + y(val).toFixed(2) + '" r="4.2" class="ml-point ' + pointClass + '" tabindex="0" data-tip="' + escapeHtml(tip) + '"></circle>';
@@ -282,17 +282,17 @@
         svg += axisLabels + '</svg>';
 
         var modes = data.modes || {};
-        var legendA = aYear + (modes.year_a === 'ml' ? ' (ML)' : (modes.year_a === 'mixed' ? ' (факт+ML)' : ' (факт)'));
-        var legendB = bYear + (modes.year_b === 'ml' ? ' (ML)' : (modes.year_b === 'mixed' ? ' (факт+ML)' : ' (факт)'));
-        var legendC = 'Compare-series ' + cYear + (modes.year_ml === 'ml' ? ' (ML)' : (modes.year_ml === 'mixed' ? ' (факт+ML)' : ' (факт)'));
-        var legendD = 'ML-prog (Poisson) ' + dYear;
+        var legendA = aYear + (modes.year_a === 'ml' ? ' (OLS-достройка)' : (modes.year_a === 'mixed' ? ' (факт + OLS)' : ' (факт)'));
+        var legendB = bYear + (modes.year_b === 'ml' ? ' (OLS-достройка)' : (modes.year_b === 'mixed' ? ' (факт + OLS)' : ' (факт)'));
+        var legendC = 'OLS-эталон ' + cYear + (modes.year_ml === 'ml' ? ' (OLS)' : (modes.year_ml === 'mixed' ? ' (факт + OLS)' : ' (факт)'));
+        var legendD = 'Poisson ML ' + dYear;
 
         chartNode.innerHTML = ''
             + '<div class="ml-chart-legend">'
-            + '<span class="ml-chart-legend-item"><i data-legend-color="#0F766E"></i>' + escapeHtml(legendA) + '</span>'
-            + '<span class="ml-chart-legend-item"><i data-legend-color="#B45309"></i>' + escapeHtml(legendB) + '</span>'
-            + '<span class="ml-chart-legend-item"><i data-legend-color="#1D4ED8"></i>' + escapeHtml(legendC) + '</span>'
-            + '<span class="ml-chart-legend-item"><i data-legend-color="#7C3AED"></i>' + escapeHtml(legendD) + '</span>'
+            + '<span class="ml-chart-legend-item" title="Факт за выбранный месяц; пропущенные дни достроены OLS (среднее по тому же дню прошлых лет + линейный тренд)"><i data-legend-color="#0F766E"></i>' + escapeHtml(legendA) + '</span>'
+            + '<span class="ml-chart-legend-item" title="Факт за выбранный месяц; пропущенные дни достроены OLS (среднее по тому же дню прошлых лет + линейный тренд)"><i data-legend-color="#B45309"></i>' + escapeHtml(legendB) + '</span>'
+            + '<span class="ml-chart-legend-item" title="OLS-эталон для года прогноза: тот же алгоритм что Год 1/2, применённый к году прогноза. Совпадает с Год 2 если год прогноза = год 2."><i data-legend-color="#1D4ED8"></i>' + escapeHtml(legendC) + '</span>'
+            + '<span class="ml-chart-legend-item" title="Poisson-регрессия с 10 фичами (lag-7, lag-14, rolling, sin/cos сезонности) — независимый ML-прогноз для года прогноза."><i data-legend-color="#7C3AED"></i>' + escapeHtml(legendD) + '</span>'
             + '</div>'
             + '<div class="ml-chart-shell">' + svg + '</div>';
         applyLegendDecorators(chartNode);
@@ -315,18 +315,272 @@
             } else {
                 qualityText = ' | Poisson quality: недоступно (' + String(dQuality.reason || 'insufficient_history') + ')';
             }
-            summaryNode.textContent = 'Год 1 (' + aYear + '): факт ' + String(aSummary.fact_days || 0) + ', ML ' + String(aSummary.ml_days || 0)
-                + ' | Год 2 (' + bYear + '): факт ' + String(bSummary.fact_days || 0) + ', ML ' + String(bSummary.ml_days || 0)
-                + ' | Compare-series (' + cYear + '): факт ' + String(cSummary.fact_days || 0) + ', ML ' + String(cSummary.ml_days || 0)
-                + ' | ML-prog (Poisson): model_days ' + String(dSummary.model_days || 0) + ', clipped_days ' + String(dSummary.clipped_days || 0)
+            summaryNode.textContent = 'Год 1 (' + aYear + '): факт ' + String(aSummary.fact_days || 0) + ' дн., OLS ' + String(aSummary.ml_days || 0) + ' дн.'
+                + ' | Год 2 (' + bYear + '): факт ' + String(bSummary.fact_days || 0) + ' дн., OLS ' + String(bSummary.ml_days || 0) + ' дн.'
+                + ' | OLS-эталон (' + cYear + '): факт ' + String(cSummary.fact_days || 0) + ' дн., OLS ' + String(cSummary.ml_days || 0) + ' дн.'
+                + ' | Poisson ML: дней ' + String(dSummary.model_days || 0) + ', запасных ' + String(dSummary.clipped_days || 0)
                 + qualityText
-                + (overlapBC ? ' | Compare-series совпадает с Год 2 для выбранных параметров' : '')
-                + (modes.overall === 'ml_ml' ? ' | обе линии построены ML' : '')
+                + (overlapBC ? ' | ⚠ OLS-эталон совпадает с Год 2 (год прогноза = ' + bYear + '): измените год прогноза для независимой линии' : '')
+                + (modes.overall === 'ml_ml' ? ' | обе линии построены OLS' : '')
                 + (historyHasData ? '' : ' | нет входных данных');
         }
     }
 
+    function renderCausesChart(causesData, chartId) {
+        var chartNode = byId(chartId);
+        if (!chartNode) {
+            return;
+        }
+        var data = causesData || {};
+        var causes = Array.isArray(data.causes) ? data.causes : [];
+        var yearA = data.year_a != null ? String(data.year_a) : 'Год 1';
+        var yearB = data.year_b != null ? String(data.year_b) : 'Год 2';
+
+        if (!causes.length) {
+            chartNode.innerHTML = '<p class="chart-empty" style="padding:1rem">Нет данных по причинам для выбранного месяца и лет.</p>';
+            return;
+        }
+
+        var indices = causes.map(function (_, i) { return String(i + 1); });
+        var countsA = causes.map(function (c) { return Number(c.year_a_count) || 0; });
+        var countsB = causes.map(function (c) { return Number(c.year_b_count) || 0; });
+
+        var traceA = {
+            x: indices,
+            y: countsA,
+            name: yearA,
+            type: 'bar',
+            marker: { color: '#0F766E' }
+        };
+        var traceB = {
+            x: indices,
+            y: countsB,
+            name: yearB,
+            type: 'bar',
+            marker: { color: '#B45309' }
+        };
+
+        var layout = {
+            barmode: 'group',
+            bargap: 0.25,
+            bargroupgap: 0.08,
+            margin: { l: 70, r: 20, t: 56, b: 48 },
+            xaxis: { tickmode: 'array', tickvals: indices, ticktext: indices, tickfont: { size: 13 } },
+            yaxis: { title: 'Кол-во пожаров', titlefont: { size: 13 } },
+            legend: { orientation: 'h', x: 0, y: 1.0, xanchor: 'left', yanchor: 'bottom', font: { size: 13 } },
+            height: 460,
+            plot_bgcolor: 'transparent',
+            paper_bgcolor: 'transparent',
+            font: { size: 13 }
+        };
+
+        var plotDiv = document.createElement('div');
+        chartNode.innerHTML = '';
+        chartNode.appendChild(plotDiv);
+
+        var Plotly = global.Plotly;
+        if (Plotly && typeof Plotly.newPlot === 'function') {
+            Plotly.newPlot(plotDiv, [traceA, traceB], layout, { responsive: true, displayModeBar: false });
+        }
+
+        var legendHtml = '<ol class="ml-causes-legend">';
+        causes.forEach(function (c, i) {
+            legendHtml += '<li><span class="ml-causes-legend-num">' + (i + 1) + '</span>' + escapeHtml(String(c.cause || '')) + '</li>';
+        });
+        legendHtml += '</ol>';
+        var legendDiv = document.createElement('div');
+        legendDiv.innerHTML = legendHtml;
+        chartNode.appendChild(legendDiv);
+    }
+
+    var MONTH_SHORT = ['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'];
+    var DAY_LABELS = [];
+    for (var _d = 1; _d <= 31; _d++) { DAY_LABELS.push(String(_d)); }
+
+    function renderCausesHeatmaps(causesData, chartId) {
+        var chartNode = byId(chartId);
+        if (!chartNode) { return; }
+        var data = causesData || {};
+        var yearA = data.year_a != null ? String(data.year_a) : '';
+        var yearB = data.year_b != null ? String(data.year_b) : '';
+        var hmA = data.heatmap_a || {};
+        var hmB = data.heatmap_b || {};
+
+        var hasData = (Array.isArray(hmA.z) && hmA.z.length) || (Array.isArray(hmB.z) && hmB.z.length);
+        if (!hasData) { chartNode.innerHTML = ''; return; }
+
+        var colorscaleA = [[0,'rgb(240,253,250)'],[0.1,'rgb(153,221,215)'],[0.35,'rgb(45,175,163)'],[0.65,'rgb(13,130,121)'],[1,'rgb(7,76,68)']];
+        var colorscaleB = [[0,'rgb(255,250,244)'],[0.1,'rgb(253,210,160)'],[0.35,'rgb(240,130,30)'],[0.65,'rgb(195,80,5)'],[1,'rgb(120,50,2)']];
+
+        function buildTrace(hm, colorscale) {
+            return {
+                type: 'heatmap',
+                x: DAY_LABELS,
+                y: MONTH_SHORT,
+                z: Array.isArray(hm.z) ? hm.z : [],
+                text: Array.isArray(hm.text) ? hm.text : [],
+                hoverinfo: 'text',
+                colorscale: colorscale,
+                showscale: false,
+                zsmooth: false
+            };
+        }
+
+        var baseLayout = {
+            margin: { l: 60, r: 16, t: 44, b: 36 },
+            height: 400,
+            plot_bgcolor: 'transparent',
+            paper_bgcolor: 'transparent',
+            font: { size: 13 },
+            xaxis: { title: 'День', tickfont: { size: 11 }, automargin: false },
+            yaxis: { title: '', autorange: 'reversed', tickfont: { size: 12 } },
+            hoverlabel: {
+                bgcolor: '#ffffff',
+                bordercolor: '#e2e8f0',
+                font: { color: '#1e293b', size: 13 },
+                align: 'left',
+                namelength: 0
+            }
+        };
+
+        chartNode.innerHTML = '';
+        var wrapper = document.createElement('div');
+        wrapper.className = 'ml-heatmap-grid';
+        chartNode.appendChild(wrapper);
+
+        function makePanel(year, hm, colorscale) {
+            var plot = document.createElement('div');
+            wrapper.appendChild(plot);
+            var Plotly = global.Plotly;
+            if (Plotly && typeof Plotly.newPlot === 'function') {
+                var panelLayout = Object.assign({}, baseLayout, {
+                    title: {
+                        text: String(year),
+                        font: { size: 15, color: '#111827' },
+                        x: 0.5,
+                        xanchor: 'center',
+                        y: 0.975,
+                        yanchor: 'top',
+                        pad: { b: 0 }
+                    }
+                });
+                Plotly.newPlot(plot, [buildTrace(hm, colorscale)], panelLayout, { responsive: true, displayModeBar: false });
+            }
+        }
+
+        makePanel(yearA, hmA, colorscaleA);
+        makePanel(yearB, hmB, colorscaleB);
+    }
+
+    var SEASON_COLORS = { 'Зима': '#93c5fd', 'Весна': '#86efac', 'Лето': '#fcd34d', 'Осень': '#fdba74' };
+    var SEASON_ORDER = ['Зима', 'Весна', 'Лето', 'Осень'];
+
+    function renderCausesInsights(causesData, containerId) {
+        var node = byId(containerId);
+        if (!node) { return; }
+        var data = causesData || {};
+        var ins = data.insights || {};
+        var yearA = data.year_a != null ? String(data.year_a) : 'Год 1';
+        var yearB = data.year_b != null ? String(data.year_b) : 'Год 2';
+        var statsA = ins.year_a || {};
+        var statsB = ins.year_b || {};
+        var delta = Array.isArray(ins.monthly_delta) ? ins.monthly_delta : [];
+
+        if (!delta.length && !statsA.total_fires) { node.innerHTML = ''; return; }
+
+        function seasonBars(season_totals) {
+            return SEASON_ORDER.map(function (s) {
+                var info = (season_totals || {})[s] || {};
+                var pct = Number(info.pct) || 0;
+                var cnt = Number(info.count) || 0;
+                return '<li class="ml-season-item">'
+                    + '<span class="ml-season-dot" style="background:' + SEASON_COLORS[s] + '"></span>'
+                    + '<span class="ml-season-name">' + s + '</span>'
+                    + '<span class="ml-season-bar-wrap"><span class="ml-season-bar" style="width:' + Math.min(pct, 100) + '%"></span></span>'
+                    + '<span class="ml-season-pct">' + pct + '% <span class="ml-season-cnt">(' + cnt + ')</span></span>'
+                    + '</li>';
+            }).join('');
+        }
+
+        function peakCard(year, stats) {
+            return '<div class="ml-insights-peak-card">'
+                + '<span class="hero-stat-label">Пиковый месяц (' + escapeHtml(year) + ')</span>'
+                + '<strong class="ml-peak-value">' + escapeHtml(stats.peak_month_name || '—') + '</strong>'
+                + '<span class="ml-peak-meta">' + (stats.peak_month_count || 0) + ' пожаров · всего за год: ' + (stats.total_fires || 0) + '</span>'
+                + '<ul class="ml-season-list">' + seasonBars(stats.season_totals) + '</ul>'
+                + '</div>';
+        }
+
+        var html = '<div class="ml-insights-panel">'
+            + '<div class="ml-insights-header">'
+            + '<h3 style="margin:0 0 4px">Аналитические выводы</h3>'
+            + '<p class="panel-meta" style="margin:0">Сезонный профиль, динамика по месяцам и доминирующие причины.</p>'
+            + '</div>'
+            + '<div class="ml-insights-peaks">'
+            + peakCard(yearA, statsA)
+            + peakCard(yearB, statsB)
+            + '</div>';
+
+        if (delta.length) {
+            var domA = statsA.dominant_by_month || {};
+            var domB = statsB.dominant_by_month || {};
+
+            function formatTopCauses(entry) {
+                var items = Array.isArray(entry) ? entry : (entry && entry.cause ? [entry] : []);
+                if (!items.length) { return '<span style="color:var(--color-token-07)">—</span>'; }
+                return items.map(function (d, i) {
+                    return '<span class="ml-cause-rank">' + (i + 1) + '.</span> '
+                        + escapeHtml(d.cause || '—')
+                        + (d.pct != null ? '<span class="ml-cause-pct"> ' + d.pct + '%</span>' : '');
+                }).join('<br>');
+            }
+
+            function getTopCause(entry) {
+                var items = Array.isArray(entry) ? entry : (entry && entry.cause ? [entry] : []);
+                return items.length ? (items[0].cause || '') : '';
+            }
+
+            html += '<div class="ml-insights-table-wrap">'
+                + '<table class="ml-insights-table">'
+                + '<thead><tr>'
+                + '<th>Месяц</th>'
+                + '<th class="ml-num">' + escapeHtml(yearA) + '</th>'
+                + '<th class="ml-num">' + escapeHtml(yearB) + '</th>'
+                + '<th class="ml-num">Δ%</th>'
+                + '<th>Топ-3 причины (' + escapeHtml(yearA) + ')</th>'
+                + '<th>Топ-3 причины (' + escapeHtml(yearB) + ')</th>'
+                + '</tr></thead><tbody>';
+
+            delta.forEach(function (row) {
+                var moStr = String(row.month);
+                var entrA = domA[moStr];
+                var entrB = domB[moStr];
+                var pct = row.delta_pct != null ? row.delta_pct : null;
+                var pctStr = pct != null ? (pct >= 0 ? '+' + pct : String(pct)) + '%' : '—';
+                var pctCls = pct == null ? '' : (pct > 5 ? ' ml-delta-up' : pct < -5 ? ' ml-delta-down' : '');
+                var topA = getTopCause(entrA);
+                var topB = getTopCause(entrB);
+                var causesDiff = topA && topB && topA !== topB;
+                html += '<tr>'
+                    + '<td>' + escapeHtml(row.month_name) + '</td>'
+                    + '<td class="ml-num">' + (row.year_a || 0) + '</td>'
+                    + '<td class="ml-num">' + (row.year_b || 0) + '</td>'
+                    + '<td class="ml-num' + pctCls + '">' + pctStr + '</td>'
+                    + '<td class="ml-cause-cell' + (causesDiff ? ' ml-cause-differs-a' : '') + '">' + formatTopCauses(entrA) + '</td>'
+                    + '<td class="ml-cause-cell' + (causesDiff ? ' ml-cause-differs-b' : '') + '">' + formatTopCauses(entrB) + '</td>'
+                    + '</tr>';
+            });
+            html += '</tbody></table></div>';
+        }
+
+        html += '</div>';
+        node.innerHTML = html;
+    }
+
     global.MlModelCharts = {
-        renderCompareChart: renderCompareChart
+        renderCompareChart: renderCompareChart,
+        renderCausesChart: renderCausesChart,
+        renderCausesHeatmaps: renderCausesHeatmaps,
+        renderCausesInsights: renderCausesInsights
     };
 }(window));

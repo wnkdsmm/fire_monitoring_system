@@ -1,5 +1,4 @@
 from __future__ import annotations
-from config.constants import LONG_RESPONSE_THRESHOLD_MINUTES
 
 DATE_COLUMN = "Дата возникновения пожара"
 AREA_COLUMN = "Площадь пожара"
@@ -117,6 +116,8 @@ TERRITORY_LABEL_COLUMN_CANDIDATES = [
 SETTLEMENT_TYPE_COLUMN_CANDIDATES = [
     "Вид населенного пункта",
     "Вид населённого пункта",
+    "Вид: населенного пункта",
+    "Вид: населённого пункта",
 ]
 
 BUILDING_CATEGORY_COLUMN_CANDIDATES = [BUILDING_CATEGORY_COLUMN]
@@ -125,6 +126,9 @@ RISK_CATEGORY_COLUMN_CANDIDATES = [RISK_CATEGORY_COLUMN]
 FIRE_STATION_DISTANCE_COLUMN_CANDIDATES = [
     FIRE_STATION_DISTANCE_COLUMN,
     "Удаленность до ближайшей ПЧ",
+    "Расстояние до пожарной части",
+    "Расстояние до ближайшей пожарной части",
+    "Расстояние до ближайшей ПЧ",
 ]
 
 WATER_SUPPLY_COUNT_COLUMN_CANDIDATES = [
@@ -141,11 +145,45 @@ WATER_SUPPLY_COLUMN_CANDIDATES = [
     *WATER_SUPPLY_COUNT_COLUMN_CANDIDATES,
     "Наличие водоснабжения",
     "Водоснабжение",
+    "Водоисточники",
+    "Водоисточник",
 ]
 
-REPORT_TIME_COLUMN_CANDIDATES = ["Время сообщения"]
-ARRIVAL_TIME_COLUMN_CANDIDATES = ["Время прибытия 1-го ПП"]
+REPORT_TIME_COLUMN_CANDIDATES = ["Время сообщения", "Дата и время сообщения"]
+ARRIVAL_TIME_COLUMN_CANDIDATES = ["Время прибытия 1-го ПП", "Дата и время прибытия"]
 DETECTION_TIME_COLUMN_CANDIDATES = ["Время обнаружения"]
+
+SPLIT_REPORT_HOURS_COLUMN_CANDIDATES = [
+    "Время сообщения, час.",
+    "Время сообщения, час",
+    "F63",
+    "P42_1",
+]
+SPLIT_REPORT_MINS_COLUMN_CANDIDATES = [
+    "Время сообщения, мин.",
+    "Время сообщения, мин",
+    "F64",
+    "P42_2",
+]
+SPLIT_ARRIVAL_HOURS_COLUMN_CANDIDATES = [
+    "Время прибытия 1 пож. подра",
+    "Время прибытия, час.",
+    "Время прибытия, час",
+    "F65",
+    "P43_1",
+]
+SPLIT_ARRIVAL_MINS_COLUMN_CANDIDATES = [
+    "Время прибытия, мин.",
+    "Время прибытия, мин",
+    "F66",
+    "P43_2",
+]
+SPLIT_DETECTION_HOURS_COLUMN_CANDIDATES = [
+    "Время обнаружения, час.",
+    "Время обнаружения, час",
+    "F61",
+    "P41_1",
+]
 HEATING_TYPE_COLUMN_CANDIDATES = ["Вид отопления"]
 CONSEQUENCE_COLUMN_CANDIDATES = ["Наличие последствий пожара"]
 REGISTERED_DAMAGE_COLUMN_CANDIDATES = [REGISTERED_DAMAGE_COLUMN]
@@ -165,10 +203,13 @@ ADDRESS_COLUMN_CANDIDATES = [
     "Адрес пожара",
     "Место пожара",
     "Адрес объекта",
+    "Примечание",
 ]
 
 ADDRESS_COMMENT_COLUMN_CANDIDATES = [
     "Комментарий к адресу",
+    "Примечание",
+    "PRIM",
 ]
 
 OBJECT_NAME_COLUMN_CANDIDATES = [
@@ -180,12 +221,22 @@ OBJECT_NAME_COLUMN_CANDIDATES = [
 SETTLEMENT_COLUMN_CANDIDATES = [
     "Населенный пункт",
     "Населённый пункт",
+    "НАСЕЛЕННЫЙ ПУНКТ",
+    "НАСЕЛЁННЫЙ ПУНКТ",
+    "Название населенного пункта",
+    "Название населённого пункта",
+    "НАЗВАНИЕ НАСЕЛЕННОГО ПУНКТА",
+    "НАЗВАНИЕ НАСЕЛЁННОГО ПУНКТА",
     "Наименование населенного пункта",
     "Наименование населённого пункта",
+    "НАИМЕНОВАНИЕ НАСЕЛЕННОГО ПУНКТА",
+    "НАИМЕНОВАНИЕ НАСЕЛЁННОГО ПУНКТА",
     "Нас. пункт",
     "Поселение",
     "Местность",
     "locality",
+    "PRIM",
+    "Примечание",
 ]
 
 OBJECT_CATEGORY_LOOKUP = list(OBJECT_CATEGORY_COLUMN_CANDIDATES)

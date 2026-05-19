@@ -116,9 +116,7 @@ class MapCreatorAnalyticsMixin:
         dated_records = quality_context['dated_records']
 
         hotspots = build_hotspots_from_dated_records(dated_records, notes, self._risk_level)
-        dbscan = {'clusters': [], 'eps_km': 0.0, 'min_samples': 0, 'noise_count': 0, 'availability_note': ''}
         risk_zones = build_spatial_risk_zones(
-            dbscan,
             hotspots,
             km_distance=self._km_distance,
             build_circle_polygon=self._build_circle_polygon,
@@ -126,8 +124,8 @@ class MapCreatorAnalyticsMixin:
 
         logistics = build_logistics_summary_payload(records, [])
         heatmap_points = build_heatmap_points(records)
-        methods = build_spatial_methods(records, hotspots, dbscan, risk_zones, logistics)
-        insights = build_spatial_insights(hotspots, logistics, dbscan, notes)
+        methods = build_spatial_methods(records, hotspots, risk_zones, logistics)
+        insights = build_spatial_insights(hotspots, logistics, notes)
         thesis_paragraphs = build_spatial_thesis_paragraphs(
             table_name,
             records,
@@ -143,7 +141,6 @@ class MapCreatorAnalyticsMixin:
             record_count=len(records),
             heatmap_points=heatmap_points,
             hotspots=hotspots,
-            dbscan=dbscan,
             risk_zones=risk_zones,
             logistics=logistics,
             summary=build_spatial_summary_payload(mode, methods, insights, thesis_paragraphs),

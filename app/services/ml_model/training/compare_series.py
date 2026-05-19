@@ -88,8 +88,8 @@ def build_compare_series(
 
         a_value = a_fact if a_fact is not None else a_ml
         b_value = b_fact if b_fact is not None else b_ml
-        a_source = "fact" if a_fact is not None else "ml"
-        b_source = "fact" if b_fact is not None else "ml"
+        a_source = "fact" if a_fact is not None else ("ml" if a_ml is not None else "empty")
+        b_source = "fact" if b_fact is not None else ("ml" if b_ml is not None else "empty")
 
         if a_value is not None:
             if a_source == "fact":

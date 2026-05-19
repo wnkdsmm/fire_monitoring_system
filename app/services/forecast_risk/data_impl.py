@@ -5,12 +5,17 @@ from typing import Any, Sequence
 from sqlalchemy import text
 
 from app.db_metadata import get_table_columns_cached
-from app.domain.fire_columns import FIRE_DATE_COLUMN_CANDIDATES
+from app.domain.fire_columns import (
+    ADDRESS_COLUMN_CANDIDATES,
+    ADDRESS_COMMENT_COLUMN_CANDIDATES,
+    FIRE_DATE_COLUMN_CANDIDATES,
+    SETTLEMENT_COLUMN_CANDIDATES,
+)
 from app.services.shared.sql_helpers import build_scope_conditions, build_select_parts
 from app.shared.sql_utils import quote_identifier
 from config.db import engine
 
-from .constants import (
+from app.domain.fire_columns import (
     ARRIVAL_TIME_COLUMN_CANDIDATES,
     BUILDING_CATEGORY_COLUMN_CANDIDATES,
     CASUALTY_FLAG_COLUMN_CANDIDATES,
@@ -25,17 +30,22 @@ from .constants import (
     FIRE_STATION_DISTANCE_COLUMN_CANDIDATES,
     HEATING_TYPE_COLUMN_CANDIDATES,
     INJURIES_COLUMN_CANDIDATES,
-    LONG_RESPONSE_THRESHOLD_MINUTES,
     OBJECT_CATEGORY_COLUMN,
     REGISTERED_DAMAGE_COLUMN_CANDIDATES,
     REPORT_TIME_COLUMN_CANDIDATES,
     RISK_CATEGORY_COLUMN_CANDIDATES,
     SETTLEMENT_TYPE_COLUMN_CANDIDATES,
+    SPLIT_ARRIVAL_HOURS_COLUMN_CANDIDATES,
+    SPLIT_ARRIVAL_MINS_COLUMN_CANDIDATES,
+    SPLIT_DETECTION_HOURS_COLUMN_CANDIDATES,
+    SPLIT_REPORT_HOURS_COLUMN_CANDIDATES,
+    SPLIT_REPORT_MINS_COLUMN_CANDIDATES,
     TEMPERATURE_COLUMN_CANDIDATES,
     TERRITORY_LABEL_COLUMN_CANDIDATES,
     WATER_SUPPLY_COUNT_COLUMN_CANDIDATES,
     WATER_SUPPLY_DETAILS_COLUMN_CANDIDATES,
 )
+from config.constants import LONG_RESPONSE_THRESHOLD_MINUTES
 from .utils import (
     _calculate_response_minutes,
     _clean_text,
@@ -158,6 +168,17 @@ def _collect_risk_inputs(
     return metadata_items, records, notes
 
 
+def _resolve_preferred_exact_column(columns: Sequence[str], preferred_names: Sequence[str]) -> str:
+    if not columns:
+        return ""
+    normalized_to_original = {_clean_text(column).casefold(): str(column) for column in columns if _clean_text(column)}
+    for name in preferred_names:
+        key = _clean_text(name).casefold()
+        if key and key in normalized_to_original:
+            return normalized_to_original[key]
+    return ""
+
+
 def _load_table_metadata(table_name: str) -> RiskTableMetadata:
     try:
         columns = get_table_columns_cached(table_name)
@@ -177,6 +198,9 @@ def _load_table_metadata(table_name: str) -> RiskTableMetadata:
         "fire_station_distance": _resolve_column_name(columns, FIRE_STATION_DISTANCE_COLUMN_CANDIDATES),
         "water_supply_count": _resolve_column_name(columns, WATER_SUPPLY_COUNT_COLUMN_CANDIDATES),
         "water_supply_details": _resolve_column_name(columns, WATER_SUPPLY_DETAILS_COLUMN_CANDIDATES),
+        "address": _resolve_column_name(columns, ADDRESS_COLUMN_CANDIDATES),
+        "address_comment": _resolve_column_name(columns, ADDRESS_COMMENT_COLUMN_CANDIDATES),
+        "settlement": _resolve_column_name(columns, SETTLEMENT_COLUMN_CANDIDATES),
         "report_time": _resolve_column_name(columns, REPORT_TIME_COLUMN_CANDIDATES),
         "arrival_time": _resolve_column_name(columns, ARRIVAL_TIME_COLUMN_CANDIDATES),
         "detection_time": _resolve_column_name(columns, DETECTION_TIME_COLUMN_CANDIDATES),
@@ -188,7 +212,36 @@ def _load_table_metadata(table_name: str) -> RiskTableMetadata:
         "casualty_flag": _resolve_column_name(columns, CASUALTY_FLAG_COLUMN_CANDIDATES),
         "injuries": _resolve_column_name(columns, INJURIES_COLUMN_CANDIDATES),
         "deaths": _resolve_column_name(columns, DEATHS_COLUMN_CANDIDATES),
+        "split_report_hours": _resolve_column_name(columns, SPLIT_REPORT_HOURS_COLUMN_CANDIDATES),
+        "split_report_mins": _resolve_column_name(columns, SPLIT_REPORT_MINS_COLUMN_CANDIDATES),
+        "split_arrival_hours": _resolve_column_name(columns, SPLIT_ARRIVAL_HOURS_COLUMN_CANDIDATES),
+        "split_arrival_mins": _resolve_column_name(columns, SPLIT_ARRIVAL_MINS_COLUMN_CANDIDATES),
+        "split_detection_hours": _resolve_column_name(columns, SPLIT_DETECTION_HOURS_COLUMN_CANDIDATES),
     }
+    preferred_settlement_column = _resolve_preferred_exact_column(
+        columns,
+        [
+            "Наименование населенного пункта",
+            "Наименование населённого пункта",
+            "НАИМЕНОВАНИЕ НАСЕЛЕННОГО ПУНКТА",
+            "НАИМЕНОВАНИЕ НАСЕЛЁННОГО ПУНКТА",
+        ],
+    )
+    if preferred_settlement_column:
+        resolved_columns["settlement"] = preferred_settlement_column
+
+    note_column = str(resolved_columns.get("address_comment") or "").strip()
+    address_column = str(resolved_columns.get("address") or "").strip()
+    normalized_note_column = note_column.casefold()
+    normalized_address_column = address_column.casefold()
+    note_is_prim = "prim" in normalized_note_column or "примеч" in normalized_note_column
+    address_is_adres_o = "adres_o" in normalized_address_column or "адрес объекта" in normalized_address_column
+    if note_is_prim and address_is_adres_o:
+        resolved_columns["address"] = note_column
+
+    normalized_table_name = str(table_name or "").strip().lower()
+    if normalized_table_name.startswith("clean_stat") and note_column:
+        resolved_columns["address"] = note_column
     return {"table_name": table_name, "columns": columns, "resolved_columns": resolved_columns}
 
 
@@ -219,6 +272,9 @@ def _load_risk_records(
         "object_category": "object_category_value",
         "territory_label": "territory_label_value",
         "settlement_type": "settlement_type_value",
+        "settlement": "settlement_value",
+        "address": "address_value",
+        "address_comment": "address_comment_value",
         "risk_category": "risk_category_value",
         "water_supply_details": "water_supply_details_value",
         "report_time": "report_time_value",
@@ -229,12 +285,18 @@ def _load_risk_records(
     }
     numeric_aliases = {
         "fire_station_distance": "fire_station_distance_value",
+        "fire_area": "fire_area_value",
         "water_supply_count": "water_supply_count_value",
         "registered_damage": "registered_damage_value",
         "destroyed_buildings": "destroyed_buildings_value",
         "destroyed_area": "destroyed_area_value",
         "injuries": "injuries_value",
         "deaths": "deaths_value",
+        "split_report_hours": "split_report_hours_value",
+        "split_report_mins": "split_report_mins_value",
+        "split_arrival_hours": "split_arrival_hours_value",
+        "split_arrival_mins": "split_arrival_mins_value",
+        "split_detection_hours": "split_detection_hours_value",
     }
     select_parts.extend(
         build_select_parts(
@@ -262,11 +324,22 @@ def _load_risk_records(
         if fire_date is None:
             continue
         district = _clean_text(row.get("district_value"))
-        territory_label = _pick_territory_label(row.get("territory_label_value"), district)
+        settlement_value = _clean_text(row.get("settlement_value"))
+        territory_label = _pick_territory_label(row.get("territory_label_value") or settlement_value, district)
         report_time = _parse_datetime_text(row.get("report_time_value"))
         arrival_time = _parse_datetime_text(row.get("arrival_time_value"))
         detection_time = _parse_datetime_text(row.get("detection_time_value"))
         response_minutes = _calculate_response_minutes(report_time or detection_time, arrival_time)
+        if response_minutes is None:
+            split_rh = _to_float_or_none(row.get("split_report_hours_value"))
+            split_rm = _to_float_or_none(row.get("split_report_mins_value"))
+            split_ah = _to_float_or_none(row.get("split_arrival_hours_value"))
+            split_am = _to_float_or_none(row.get("split_arrival_mins_value"))
+            if split_rh is not None and split_ah is not None:
+                diff = (split_ah * 60 + (split_am or 0)) - (split_rh * 60 + (split_rm or 0))
+                if diff < 0:
+                    diff += 1440
+                response_minutes = diff if 0 <= diff <= 240 else None
         water_supply_count = _to_float_or_none(row.get("water_supply_count_value"))
         water_supply_details = _clean_text(row.get("water_supply_details_value"))
         registered_damage = _to_float_or_none(row.get("registered_damage_value")) or 0.0
@@ -277,9 +350,17 @@ def _load_risk_records(
         consequence_flag = _truthy_value(row.get("consequence_value"))
         casualty_flag = _truthy_value(row.get("casualty_flag_value"))
         incident_time = report_time or detection_time or arrival_time
+        if incident_time is None:
+            split_dh = _to_float_or_none(row.get("split_detection_hours_value"))
+            if split_dh is not None:
+                incident_hour = int(split_dh) % 24
+            else:
+                incident_hour = None
+        else:
+            incident_hour = incident_time.hour
         cause_value = _clean_text(row.get("cause_value"))
         object_category_value = _clean_text(row.get("object_category_value"))
-        settlement_type_value = _clean_text(row.get("settlement_type_value"))
+        settlement_type_value = _clean_text(row.get("settlement_type_value")) or settlement_value
         risk_category_value = _clean_text(row.get("risk_category_value"))
         records.append(
             {
@@ -290,11 +371,12 @@ def _load_risk_records(
                 "territory_label": territory_label,
                 "settlement_type": settlement_type_value,
                 "fire_station_distance": _to_float_or_none(row.get("fire_station_distance_value")),
+                "fire_area": _to_float_or_none(row.get("fire_area_value")),
                 "has_water_supply": _parse_water_supply_flag(water_supply_count, water_supply_details),
                 "response_minutes": response_minutes,
                 "long_arrival": response_minutes is not None and response_minutes >= LONG_RESPONSE_THRESHOLD_MINUTES,
                 "heating_season": _is_heating_season(fire_date),
-                "night_incident": incident_time.hour >= 22 or incident_time.hour < 6 if incident_time else False,
+                "night_incident": incident_hour >= 22 or incident_hour < 6 if incident_hour is not None else False,
                 "victims_present": bool(casualty_flag) or injuries > 0 or deaths > 0,
                 "major_damage": registered_damage > 0 or destroyed_buildings > 0 or destroyed_area > 0,
                 "severe_consequence": bool(consequence_flag) or injuries > 0 or deaths > 0 or registered_damage > 0 or destroyed_buildings > 0 or destroyed_area > 0,

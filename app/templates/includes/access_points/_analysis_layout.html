@@ -9,15 +9,6 @@
             <div id="accessPointsScatterChartFallback" class="chart-empty{% if charts.scatter.empty_message %}{% else %} is-hidden{% endif %}">{{ charts.scatter.empty_message }}</div>
         </article>
 
-        <article class="panel chart-panel">
-            <div class="panel-head">
-                <h2>Вклад факторов в балл риска</h2>
-                <span class="panel-meta">Горизонтальные полосы показывают вклад каждого компонента в итоговый балл топ-10 проблемных точек.</span>
-            </div>
-            <div id="accessPointsFactorBarChart" class="plotly-chart"></div>
-            <div id="accessPointsFactorBarFallback" class="chart-empty is-hidden"></div>
-        </article>
-
         <article class="panel">
             <div class="panel-head">
                 <h2>Верхние позиции рейтинга проблемных точек</h2>
@@ -55,15 +46,6 @@
     </div>
 
     <aside class="access-points-secondary">
-        <article class="panel chart-panel">
-            <div class="panel-head">
-                <h2>Тепловая карта факторов</h2>
-                <span class="panel-meta">Интенсивность цвета отражает уровень компонента риска: красный — высокий, зелёный — низкий.</span>
-            </div>
-            <div id="accessPointsHeatmapChart" class="plotly-chart"></div>
-            <div id="accessPointsHeatmapFallback" class="chart-empty is-hidden"></div>
-        </article>
-
         <article class="panel">
             <div class="panel-head">
                 <h2>Мини-типология</h2>

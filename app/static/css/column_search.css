@@ -15,7 +15,7 @@
 .column-search-form-row {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
-    gap: 16px;
+    gap: var(--gap-md);
     align-items: end;
 }
 
@@ -71,8 +71,8 @@
 .column-search-builder-grid {
     display: grid;
     grid-template-columns: minmax(320px, 0.95fr) minmax(420px, 1.25fr);
-    gap: 18px;
-    margin-bottom: var(--space-token-32);
+    gap: var(--gap-md);
+    margin-bottom: var(--gap-md);
 }
 
 .column-builder-panel {

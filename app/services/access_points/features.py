@@ -6,11 +6,11 @@ import pandas as pd
 
 from app.services.shared.formatting import _format_percent
 
-from .constants import (
+from app.domain.access_points_metadata import (
     ACCESS_POINT_FEATURE_METADATA,
     DEFAULT_ACCESS_POINT_FEATURES,
-    MAX_ACCESS_POINT_FEATURE_OPTIONS,
 )
+from config.constants import MAX_ACCESS_POINT_FEATURE_OPTIONS
 from .analysis_factors import (
     SEVERITY_DAMAGE_WEIGHT,
     SEVERITY_SEVERE_WEIGHT,

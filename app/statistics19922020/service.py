@@ -9,6 +9,8 @@ from pathlib import Path
 from types import ModuleType
 from typing import Any
 
+import pandas as pd
+
 from app.services.pipeline_service import add_log, import_uploaded_data
 from app.state import JobState, job_store
 from app.statistics19922020.config import (
@@ -18,11 +20,11 @@ from app.statistics19922020.config import (
     resolve_script_path,
 )
 from app.statistics19922020.decode_engine import (
-    build_dictionaries,
-    decode_dataframe,
     default_output_path,
     default_report_path,
-    load_field_info,
+    normalize_code,
+    normalize_text,
+    pick_code_and_text_columns,
     read_excel_robust,
 )
 
@@ -79,10 +81,72 @@ def decode_uploaded_stat_file(
         add_log(session_id, resolved_job_id, f"{log_prefix} Папка справочников: {reference_dir}")
 
         source_df = read_excel_robust(input_path, header=0)
-        fields, field_file = load_field_info(reference_dir, source_columns=source_df.columns)
-        dictionaries = build_dictionaries(reference_dir, field_file)
-        add_log(session_id, resolved_job_id, f"{log_prefix} Файл описания полей: {field_file}")
-        decoded_df, report_df = decode_dataframe(source_df, fields, dictionaries)
+
+        def _load_mapping(dict_path: Path) -> dict[str, str]:
+            dictionary_df = read_excel_robust(dict_path, header=0)
+            picked = pick_code_and_text_columns(dictionary_df.columns)
+            if not picked:
+                return {}
+            code_col, text_col = picked
+            mapping: dict[str, str] = {}
+            for raw_code, raw_text in zip(dictionary_df[code_col], dictionary_df[text_col]):
+                code = normalize_code(raw_code)
+                text_value = normalize_text(raw_text)
+                if not code or not text_value:
+                    continue
+                mapping.setdefault(code, text_value)
+            return mapping
+
+        district_mapping = _load_mapping(reference_dir / "rayon.xlsx")
+        reason_mapping = _load_mapping(reference_dir / "prich.xlsx")
+        add_log(
+            session_id,
+            resolved_job_id,
+            f"{log_prefix} Loaded dictionaries: rayon={len(district_mapping)}, prich={len(reason_mapping)}.",
+        )
+
+        decoded_df = source_df.copy()
+        report_rows: list[dict[str, Any]] = []
+        normalized_to_actual: dict[str, str] = {}
+        for col in decoded_df.columns:
+            normalized_to_actual[normalize_text(col).casefold()] = col
+
+        for expected_name, mapping in (
+            ("Код района", district_mapping),
+            ("Причина пожара (код)", reason_mapping),
+        ):
+            actual_column = normalized_to_actual.get(normalize_text(expected_name).casefold())
+            if actual_column is None:
+                report_rows.append(
+                    {
+                        "column_name": expected_name,
+                        "status": "missing_column",
+                        "mapped_rows": 0,
+                        "unmapped_rows": 0,
+                        "total_rows": int(decoded_df.shape[0]),
+                    }
+                )
+                continue
+
+            original_values = decoded_df[actual_column]
+            normalized_codes = original_values.map(normalize_code)
+            mapped_values = normalized_codes.map(mapping)
+            mapped_mask = mapped_values.notna()
+            decoded_df[actual_column] = original_values.where(~mapped_mask, mapped_values)
+
+            mapped_rows = int(mapped_mask.sum())
+            total_rows = int(decoded_df.shape[0])
+            report_rows.append(
+                {
+                    "column_name": str(actual_column),
+                    "status": "ok",
+                    "mapped_rows": mapped_rows,
+                    "unmapped_rows": total_rows - mapped_rows,
+                    "total_rows": total_rows,
+                }
+            )
+
+        report_df = pd.DataFrame(report_rows)
 
         decoded_df.to_excel(output_path, index=False)
         report_df.to_csv(report_path, index=False, encoding="utf-8-sig")
@@ -92,7 +156,7 @@ def decode_uploaded_stat_file(
             if (not report_df.empty and "mapped_rows" in report_df.columns)
             else 0
         )
-        total_columns = int(report_df.shape[0]) if not report_df.empty else int(decoded_df.shape[1])
+        total_columns = 2
 
         # После расшифровки импортируемый файл переключается на декодированную версию.
         job_store.set_uploaded_file(session_id, resolved_job_id, output_path, output_path.name)
@@ -111,7 +175,7 @@ def decode_uploaded_stat_file(
             "input_file": str(input_path),
             "decoded_file": str(output_path),
             "report_file": str(report_path),
-            "dictionaries_loaded": len(dictionaries),
+            "dictionaries_loaded": 2,
             "total_columns": total_columns,
             "decoded_columns": mapped_columns,
         }
@@ -206,6 +270,21 @@ def run_rename_headers_script(
         input_path = _resolve_script_input_file(job, resolve_fallback_input_xlsx())
 
         add_log(session_id, resolved_job_id, f"[statistics19922020] Запуск rename_headers для файла: {input_path}")
+        original_sheet_name: str | None = None
+        original_headers: list[str] = []
+        try:
+            preview_module = _load_module_from_path(script_path, "rename_headers_2019_2023_preview")
+            if hasattr(preview_module, "FILE_PATH"):
+                preview_module.FILE_PATH = input_path
+            if hasattr(preview_module, "pick_sheet"):
+                original_sheet_name = str(preview_module.pick_sheet(input_path))
+            if original_sheet_name:
+                original_df = pd.read_excel(input_path, sheet_name=original_sheet_name)
+                original_headers = [str(col) for col in list(original_df.columns)]
+        except Exception:
+            original_sheet_name = None
+            original_headers = []
+
         module = _load_module_from_path(script_path, "rename_headers_2019_2023")
         if hasattr(module, "FILE_PATH"):
             module.FILE_PATH = input_path
@@ -213,6 +292,14 @@ def run_rename_headers_script(
         with redirect_stdout(buffer):
             module.main()
         _split_lines_to_logs(session_id, resolved_job_id, buffer.getvalue())
+
+        if original_sheet_name and original_headers:
+            updated_df = pd.read_excel(input_path, sheet_name=original_sheet_name)
+            if len(updated_df.columns) == len(original_headers):
+                updated_df.columns = original_headers
+                with pd.ExcelWriter(input_path, engine="openpyxl", mode="a", if_sheet_exists="replace") as writer:
+                    updated_df.to_excel(writer, sheet_name=original_sheet_name, index=False)
+                add_log(session_id, resolved_job_id, "[statistics19922020] Исходный регистр заголовков восстановлен.")
 
         job_store.set_uploaded_file(session_id, resolved_job_id, input_path, input_path.name)
         add_log(session_id, resolved_job_id, "[statistics19922020] rename_headers завершен.")
@@ -295,3 +382,4 @@ def run_split_xlsx_by_year_script(
         return _decode_error_payload(message, resolved_job_id)
     finally:
         job_store.mark_job_status(session_id, resolved_job_id, final_status)
+

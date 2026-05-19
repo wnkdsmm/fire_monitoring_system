@@ -29,7 +29,8 @@ from config.constants import (
     SERVICE_DISTANCE_TARGET_KM,
 )
 
-from .constants import DEFAULT_ACCESS_POINT_FEATURES, LONG_RESPONSE_THRESHOLD_MINUTES
+from app.domain.access_points_metadata import DEFAULT_ACCESS_POINT_FEATURES
+from config.constants import LONG_RESPONSE_THRESHOLD_MINUTES
 from .numeric import (
     _clip_share_series,
     _finite_numeric_columns,

@@ -12,10 +12,19 @@ from .core_results import (
     _build_clustering_quality_stage,
     _build_clustering_success_payload,
 )
-from .core_runner import (
-    _CLUSTERING_CACHE,
-    _append_clustering_feature_notes,
+from .core_context import (
     _build_clustering_cache_key,
+    _normalize_clustering_cache_value,
+    _normalize_feature_columns,
+    clear_clustering_cache,
+    get_clustering_page_context,
+    get_clustering_shell_context,
+)
+from .core_dataset import (
+    _append_clustering_feature_notes,
+    _prepare_clustering_feature_selection,
+)
+from .core_runner import (
     _build_clustering_feature_context,
     _build_clustering_model_description,
     _build_clustering_model_inputs,
@@ -25,14 +34,8 @@ from .core_runner import (
     _empty_clustering_data,
     _load_clustering_dataset_for_request,
     _load_clustering_stage,
-    _normalize_clustering_cache_value,
-    _normalize_feature_columns,
-    _prepare_clustering_feature_selection,
     _render_clustering_payload_stage,
-    clear_clustering_cache,
     get_clustering_data,
-    get_clustering_page_context,
-    get_clustering_shell_context,
 )
 from .count_guidance import _build_cluster_count_guidance
 from .quality_silhouette import (
