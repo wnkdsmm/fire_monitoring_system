@@ -3,14 +3,12 @@ from __future__ import annotations
 from typing import Any
 
 from ...types import (
-    DbscanResult,
     HeatmapPoint,
     HotspotPayload,
     LogisticsSummaryPayload,
     ProcessedRecord,
     RiskZone,
     SpatialAnalyticsPayload,
-    SpatialDbscanPayload,
     SpatialHeatmapPayload,
     SpatialLayerDefaults,
     SpatialQualityContext,
@@ -31,26 +29,11 @@ def build_spatial_heatmap_payload(
     }
 
 
-def build_spatial_dbscan_payload(dbscan: DbscanResult) -> SpatialDbscanPayload:
-    clusters = dbscan.get('clusters', [])
-    return {
-        'enabled': bool(clusters),
-        'clusters': clusters,
-        'eps_km': dbscan.get('eps_km', 0.0),
-        'eps_display': f"{dbscan.get('eps_km', 0.0):.2f} \u043a\u043c" if dbscan.get('eps_km') else '-',
-        'min_samples': dbscan.get('min_samples', 0),
-        'cluster_count': len(clusters),
-        'noise_count': dbscan.get('noise_count', 0),
-        'availability_note': dbscan.get('availability_note', ''),
-    }
-
-
 def build_spatial_layer_defaults(
     *,
     record_count: int,
     mode: str,
     hotspots: list[HotspotPayload],
-    dbscan: DbscanResult,
     risk_zones: list[RiskZone],
 ) -> SpatialLayerDefaults:
     return {
@@ -68,7 +51,6 @@ def build_spatial_analytics_payload(
     record_count: int,
     heatmap_points: list[HeatmapPoint],
     hotspots: list[HotspotPayload],
-    dbscan: DbscanResult,
     risk_zones: list[RiskZone],
     logistics: LogisticsSummaryPayload,
     summary: SpatialSummaryPayload,
@@ -78,7 +60,6 @@ def build_spatial_analytics_payload(
         'quality': quality,
         'heatmap': build_spatial_heatmap_payload(record_count, heatmap_points),
         'hotspots': hotspots,
-        'dbscan': build_spatial_dbscan_payload(dbscan),
         'risk_zones': risk_zones,
         'logistics': logistics,
         'summary': summary,
@@ -86,7 +67,6 @@ def build_spatial_analytics_payload(
             record_count=record_count,
             mode=mode,
             hotspots=hotspots,
-            dbscan=dbscan,
             risk_zones=risk_zones,
         ),
     }
@@ -107,7 +87,6 @@ def build_empty_spatial_analytics(source_record_count: int) -> SpatialAnalyticsP
         },
         'heatmap': {'enabled': False, 'points': [], 'radius': 20, 'blur': 26},
         'hotspots': [],
-        'dbscan': {'enabled': False, 'clusters': [], 'eps_km': 0.0, 'eps_display': '-', 'min_samples': 0, 'cluster_count': 0, 'noise_count': 0, 'availability_note': 'Недостаточно данных.'},
         'risk_zones': [],
         'logistics': {'basis_ready': False, 'summary': '', 'coverage_note': 'Логистический слой не рассчитан.'},
         'summary': {'title': 'Пространственная аналитика пожаров', 'subtitle': 'Нет данных для аналитического слоя.', 'methods': ['Точечный слой пожаров'], 'insights': ['Координаты отсутствуют или некорректны.'], 'thesis_paragraphs': ['Координаты отсутствуют или некорректны, поэтому карта используется только как точечная карта.'], 'fallback_message': 'Координаты отсутствуют или некорректны.'},
@@ -152,7 +131,6 @@ def build_heatmap_points(records: list[ProcessedRecord]) -> list[HeatmapPoint]:
 def build_spatial_methods(
     records: list[ProcessedRecord],
     hotspots: list[HotspotPayload],
-    dbscan: DbscanResult,
     risk_zones: list[RiskZone],
     logistics: LogisticsSummaryPayload,
 ) -> list[str]:
@@ -171,7 +149,6 @@ def build_spatial_methods(
 def build_spatial_insights(
     hotspots: list[HotspotPayload],
     logistics: LogisticsSummaryPayload,
-    dbscan: DbscanResult,
     notes: list[str],
 ) -> list[str]:
     insights = []
@@ -241,7 +218,6 @@ __all__ = [
     "build_empty_spatial_analytics",
     "build_heatmap_points",
     "build_spatial_analytics_payload",
-    "build_spatial_dbscan_payload",
     "build_spatial_heatmap_payload",
     "build_spatial_insights",
     "build_spatial_layer_defaults",

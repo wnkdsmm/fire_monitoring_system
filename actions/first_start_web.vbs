@@ -166,7 +166,7 @@ End Function
 Function ResolveProjectRoot()
     Dim scriptDir
     scriptDir = fso.GetParentFolderName(WScript.ScriptFullName)
-    If LCase(fso.GetFileName(scriptDir)) = "actions" Then
+    If LCase(fso.GetFolder(scriptDir).Name) = "actions" Then
         ResolveProjectRoot = fso.GetParentFolderName(scriptDir)
     Else
         ResolveProjectRoot = scriptDir

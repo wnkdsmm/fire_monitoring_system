@@ -125,30 +125,6 @@ class HotspotPayload(SpatialPoint, total=False):
     explanation: str
 
 
-class DbscanCluster(SpatialPoint, total=False):
-    label: str
-    district: str
-    incident_count: int
-    radius_km: float
-    risk_score: float
-    risk_score_display: str
-    risk_label: str
-    risk_tone: str
-    avg_response_minutes: float | None
-    avg_station_distance: float | None
-    explanation: str
-    rank: int
-    cluster_display: str
-
-
-class DbscanResult(TypedDict, total=False):
-    clusters: list[DbscanCluster]
-    eps_km: float
-    min_samples: int
-    noise_count: int
-    availability_note: str
-
-
 class RiskZone(SpatialPoint, total=False):
     label: str
     radius_km: float
@@ -257,12 +233,6 @@ class SpatialHeatmapPayload(TypedDict, total=False):
     blur: int
 
 
-class SpatialDbscanPayload(DbscanResult, total=False):
-    enabled: bool
-    cluster_count: int
-    eps_display: str
-
-
 class SpatialLayerDefaults(TypedDict, total=False):
     incidents: bool
     heatmap: bool
@@ -275,7 +245,6 @@ class SpatialAnalyticsPayload(TypedDict, total=False):
     quality: SpatialQualityPayload
     heatmap: SpatialHeatmapPayload
     hotspots: list[HotspotPayload]
-    dbscan: SpatialDbscanPayload
     risk_zones: list[RiskZone]
     logistics: LogisticsSummaryPayload
     summary: SpatialSummaryPayload
