@@ -291,19 +291,19 @@ def _build_smoothed_bucket_shares(
         "severe": _smooth_share(
             int(bucket["severe_count"]),
             incident_count,
-            priors["severe"],
+            0.0,
             resolved_support,
         ),
         "victims": _smooth_share(
             int(bucket["victims_count"]),
             incident_count,
-            priors["victims"],
+            0.0,
             resolved_support,
         ),
         "major_damage": _smooth_share(
             int(bucket["major_damage_count"]),
             incident_count,
-            priors["major_damage"],
+            0.0,
             resolved_support,
         ),
         "night": _smooth_share(

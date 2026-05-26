@@ -30,13 +30,13 @@ ok = PostJson(clearUrl, "{}", statusCode, responseText)
 If ok And statusCode >= 200 And statusCode < 300 Then
     LogMessage "SUCCESS status=" & CStr(statusCode)
     LogMessage "Response: " & responseText
-    MsgBox "Cache cleared." & vbCrLf & "HTTP " & CStr(statusCode), vbInformation, "Fire Data"
+    Notify "Cache cleared." & vbCrLf & "HTTP " & CStr(statusCode), vbInformation, "Fire Data"
     WScript.Quit 0
 End If
 
 LogMessage "ERROR status=" & CStr(statusCode)
 LogMessage "Response/Error: " & responseText
-MsgBox "Failed to clear cache." & vbCrLf & _
+Notify "Failed to clear cache." & vbCrLf & _
        "Ensure the app is running." & vbCrLf & _
        "URL: " & clearUrl & vbCrLf & _
        "HTTP: " & CStr(statusCode), vbExclamation, "Fire Data"
@@ -154,4 +154,8 @@ Sub LogMessage(messageText)
         Err.Clear
     End If
     On Error GoTo 0
+End Sub
+
+Sub Notify(text, flags, title)
+    CreateObject("WScript.Shell").Popup text, 5, title, flags
 End Sub

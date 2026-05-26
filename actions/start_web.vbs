@@ -9,7 +9,7 @@ projectRoot = fso.GetParentFolderName(WScript.ScriptFullName)
 startScript = fso.BuildPath(projectRoot, "start_web_app.vbs")
 
 If Not fso.FileExists(startScript) Then
-    MsgBox "Not found: " & startScript, vbCritical, "Fire Data"
+    Notify "Not found: " & startScript, vbCritical, "Fire Data"
     WScript.Quit 1
 End If
 
@@ -20,10 +20,10 @@ End If
 rc = shell.Run(cmd, 0, True)
 If rc = 0 Then
     If Not silentSuccess Then
-        MsgBox "Start completed successfully.", vbInformation, "Fire Data"
+        Notify "Start completed successfully.", vbInformation, "Fire Data"
     End If
 Else
-    MsgBox "Start failed. Code: " & CStr(rc), vbCritical, "Fire Data"
+    Notify "Start failed. Code: " & CStr(rc), vbCritical, "Fire Data"
 End If
 WScript.Quit rc
 
@@ -34,3 +34,7 @@ Function GetArg(index)
         GetArg = ""
     End If
 End Function
+
+Sub Notify(text, flags, title)
+    CreateObject("WScript.Shell").Popup text, 5, title, flags
+End Sub

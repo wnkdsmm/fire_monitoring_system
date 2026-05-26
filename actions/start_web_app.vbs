@@ -51,13 +51,13 @@ appPort = GetEnvOrDefault(envVars, "APP_PORT", "8000")
 databaseUrl = Trim(GetEnvOrDefault(envVars, "DATABASE_URL", ""))
 If Len(databaseUrl) = 0 Then
     LogMessage "ERROR: DATABASE_URL is empty."
-    MsgBox "DATABASE_URL is not configured in .env." & vbCrLf & _
+    Notify "DATABASE_URL is not configured in .env." & vbCrLf & _
            "Open .env and set DATABASE_URL before starting.", vbCritical, "Fire Data"
     WScript.Quit 1
 End If
 If InStr(1, databaseUrl, "YOUR_PASSWORD", vbTextCompare) > 0 Then
     LogMessage "ERROR: DATABASE_URL still contains placeholder password."
-    MsgBox "DATABASE_URL in .env still contains YOUR_PASSWORD." & vbCrLf & _
+    Notify "DATABASE_URL in .env still contains YOUR_PASSWORD." & vbCrLf & _
            "Set the real PostgreSQL password and restart.", vbCritical, "Fire Data"
     WScript.Quit 1
 End If
@@ -78,7 +78,7 @@ venvPython = fso.BuildPath(projectRoot, ".venv\Scripts\python.exe")
 If Not fso.FileExists(venvPython) And Not isLiteStart Then
     basePython = ResolveBasePython()
     If Len(basePython) = 0 Then
-        MsgBox "Python not found." & vbCrLf & _
+        Notify "Python not found." & vbCrLf & _
                "Install Python 3.10+ and run setup.bat.", vbCritical, "Fire Data"
         WScript.Quit 1
     End If
@@ -93,20 +93,20 @@ If Not fso.FileExists(venvPython) And Not isLiteStart Then
     runCode = shell.Run(bootstrapCommand & " >> " & Quote(logFilePath) & " 2>>&1", 0, True)
     LogMessage "Bootstrap exit code: " & CStr(runCode)
     If runCode <> 0 Then
-        MsgBox "Failed to prepare environment." & vbCrLf & _
+        Notify "Failed to prepare environment." & vbCrLf & _
                "See logs\startup.log for details.", vbCritical, "Fire Data"
         WScript.Quit 1
     End If
 End If
 
 If Not fso.FileExists(venvPython) Then
-    MsgBox "Python in .venv not found." & vbCrLf & _
+    Notify "Python in .venv not found." & vbCrLf & _
            "Run first_start_web.vbs first.", vbCritical, "Fire Data"
     WScript.Quit 1
 End If
 
 If Not fso.FileExists(reqFilePath) Then
-    MsgBox "requirements.txt not found." & vbCrLf & _
+    Notify "requirements.txt not found." & vbCrLf & _
            "Path: " & reqFilePath, vbCritical, "Fire Data"
     WScript.Quit 1
 End If
@@ -119,7 +119,7 @@ If Not isLiteStart And Not HasRuntimeDeps(venvPython) Then
         If HasRuntimeDeps(venvPython) Then
             LogMessage "Install returned non-zero, but runtime dependencies are present. Continue startup."
         Else
-            MsgBox "Failed to install Python dependencies." & vbCrLf & _
+            Notify "Failed to install Python dependencies." & vbCrLf & _
                    "See logs\startup.log for details.", vbCritical, "Fire Data"
             WScript.Quit 1
         End If
@@ -132,7 +132,7 @@ If Not isLiteStart Then
     dbCheckCode = CheckDatabaseConnection(projectRoot, venvPython, logFilePath)
     LogMessage "Database check exit code: " & CStr(dbCheckCode)
     If dbCheckCode <> 0 Then
-        MsgBox "Database connection failed." & vbCrLf & _
+        Notify "Database connection failed." & vbCrLf & _
                "Check DATABASE_URL and PostgreSQL availability." & vbCrLf & _
                "See logs\startup.log for details.", vbCritical, "Fire Data"
         WScript.Quit 1
@@ -152,13 +152,13 @@ If WaitForUrl(probeUrl, IIf(isLiteStart, 12, 45)) Then
     LogMessage "Server ready: " & appUrl
     shell.Run appUrl, 1, False
     If Not silentSuccess Then
-        MsgBox "Server started successfully." & vbCrLf & appUrl, vbInformation, "Fire Data"
+        Notify "Server started successfully." & vbCrLf & appUrl, vbInformation, "Fire Data"
     End If
     WScript.Quit 0
 End If
 
 LogMessage "ERROR: Server was not ready in time."
-MsgBox "Server did not start in 45 seconds." & vbCrLf & _
+Notify "Server did not start in 45 seconds." & vbCrLf & _
        "See logs\startup.log for details.", vbExclamation, "Fire Data"
 WScript.Quit 1
 
@@ -482,4 +482,8 @@ Sub LogMessage(messageText)
         Err.Clear
     End If
     On Error GoTo 0
+End Sub
+
+Sub Notify(text, flags, title)
+    CreateObject("WScript.Shell").Popup text, 5, title, flags
 End Sub

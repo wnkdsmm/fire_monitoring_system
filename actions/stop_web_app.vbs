@@ -34,7 +34,7 @@ LogMessage "Cache entries removed: " & CStr(cacheRemoved)
 LogMessage "==== shutdown complete ===="
 
 If Not silentSuccess Then
-    MsgBox "Server stop complete." & vbCrLf & _
+    Notify "Server stop complete." & vbCrLf & _
            "Stopped by name: " & CStr(stoppedByName) & vbCrLf & _
            "Stopped by port: " & CStr(stoppedByPort) & vbCrLf & _
            "Cache removed: " & CStr(cacheRemoved), vbInformation, "Fire Data"
@@ -366,4 +366,8 @@ Sub LogMessage(messageText)
         Err.Clear
     End If
     On Error GoTo 0
+End Sub
+
+Sub Notify(text, flags, title)
+    CreateObject("WScript.Shell").Popup text, 5, title, flags
 End Sub

@@ -302,6 +302,7 @@
     gap: var(--gap-md);
     align-content: start;
     min-width: 0;
+    padding-bottom: var(--gap-md);
 }
 
 .dashboard-primary > *,

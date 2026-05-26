@@ -18,16 +18,18 @@ class Statistics19922020Config:
 
     @classmethod
     def from_env(cls) -> "Statistics19922020Config":
-        bundled_reference_dir = (Path(__file__).resolve().parent / "dictionaries").resolve()
+        bundled_dir = Path(__file__).resolve().parent
+        bundled_reference_dir = (bundled_dir / "dictionaries").resolve()
+        bundled_scripts_dir = bundled_dir / "scripts"
         return cls(
             stat_reference_dir=bundled_reference_dir,
             rename_headers_script_path=_env_path(
                 "STATISTICS19922020_RENAME_HEADERS_SCRIPT",
-                r"F:\filesFires\edittables\rename_headers_2019_2023.py",
+                str(bundled_scripts_dir / "rename_headers_2019_2023.py"),
             ),
             split_xlsx_script_path=_env_path(
                 "STATISTICS19922020_SPLIT_XLSX_SCRIPT",
-                r"F:\filesFires\edittables\split_xlsx_by_year.py",
+                str(bundled_scripts_dir / "split_xlsx_by_year.py"),
             ),
             fallback_input_xlsx=_env_path(
                 "STATISTICS19922020_FALLBACK_INPUT_XLSX",

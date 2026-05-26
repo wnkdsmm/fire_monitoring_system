@@ -647,7 +647,7 @@ def _record_to_access_point_input(record: PointRecord, *, source_table: str) -> 
         "fire_station_distance": record.get("distance_to_fire_station"),
         "long_arrival": bool(response_minutes is not None and response_minutes >= LONG_RESPONSE_THRESHOLD_MINUTES),
         "has_water_supply": has_water_supply,
-        "severe_consequence": bool(_clean_text(record.get("consequence")) or deaths or injuries),
+        "severe_consequence": bool(deaths or injuries),
         "victims_present": bool(deaths or injuries or record.get("casualty_flag")),
         "major_damage": bool(
             (record.get("destroyed_area") or 0) > 0

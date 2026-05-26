@@ -5,10 +5,6 @@ from typing import Any, Callable
 from ...types import AnalyticsLayersPayload, CategoryStyleLike, MapTablePayload, SpatialLayerDefaults
 
 
-_POINT_ANALYTICS_LAYER_SPECS = (
-    ("hotspots", 10),
-)
-
 
 def build_filter_script_lines(idx: int, container_id: str) -> list[str]:
     return [
@@ -29,17 +25,6 @@ def build_filter_script_lines(idx: int, container_id: str) -> list[str]:
         "    const updateAnalyticsLayers = () => {",
         "        layerCheckboxes.forEach(box => {",
         '            if (box.dataset.layer === "incidents") {',
-        "                return;",
-        "            }",
-        '            if (box.dataset.layer === "hotspot_risk") {',
-        "                const hotspotsLayer = analyticsLayers.hotspots;",
-        "                const riskZonesLayer = analyticsLayers.risk_zones;",
-        "                if (hotspotsLayer) {",
-        "                    hotspotsLayer.setVisible(box.checked);",
-        "                }",
-        "                if (riskZonesLayer) {",
-        "                    riskZonesLayer.setVisible(box.checked);",
-        "                }",
         "                return;",
         "            }",
         "            const layer = analyticsLayers[box.dataset.layer];",
@@ -230,54 +215,9 @@ def _heatmap_layer_script_lines() -> list[str]:
     ]
 
 
-def _point_analytics_layer_script_lines(layer_id: str, base_radius: int) -> list[str]:
-    return [
-        "    if ((analyticsLayersPayload.%s?.features || []).length) {" % layer_id,
-        "        analyticsLayers.%s = new ol.layer.Vector({" % layer_id,
-        "            source: new ol.source.Vector({features: readGeoJson(analyticsLayersPayload.%s)})," % layer_id,
-        "            visible: !!analyticsLayerDefaults.%s," % layer_id,
-        "            style: feature => buildPointStyle(feature, %s)" % base_radius,
-        "        });",
-        "        map.addLayer(analyticsLayers.%s);" % layer_id,
-        "    }",
-        "",
-    ]
-
-
-def _point_analytics_layers_script_lines(layer_specs: tuple[tuple[str, int], ...]) -> list[str]:
-    lines: list[str] = []
-    for layer_id, base_radius in layer_specs:
-        lines.extend(_point_analytics_layer_script_lines(layer_id, base_radius))
-    return lines
-
-
-def _risk_zone_layer_script_lines() -> list[str]:
-    return [
-        "    if ((analyticsLayersPayload.risk_zones?.features || []).length) {",
-        "        analyticsLayers.risk_zones = new ol.layer.Vector({",
-        "            source: new ol.source.Vector({features: readGeoJson(analyticsLayersPayload.risk_zones)}),",
-        "            visible: !!analyticsLayerDefaults.risk_zones,",
-        "            style: feature => {",
-        '                const tone = tonePalette(feature.get("risk_tone"));',
-        "                return new ol.style.Style({",
-        "                    stroke: new ol.style.Stroke({color: tone.stroke, width: 2}),",
-        "                    fill: new ol.style.Fill({color: tone.fill})",
-        "                });",
-        "            }",
-        "        });",
-        "        map.addLayer(analyticsLayers.risk_zones);",
-        "    }",
-        "",
-    ]
-
 
 def _analytics_layer_script_lines() -> list[str]:
-    return (
-        _heatmap_layer_script_lines()
-        + _point_analytics_layers_script_lines(_POINT_ANALYTICS_LAYER_SPECS[:2])
-        + _risk_zone_layer_script_lines()
-        + _point_analytics_layers_script_lines(_POINT_ANALYTICS_LAYER_SPECS[2:])
-    )
+    return _heatmap_layer_script_lines()
 
 
 def build_map_layer_script_lines() -> list[str]:

@@ -208,7 +208,7 @@ def _build_access_point_score_decomposition(
                 code=code,
                 factor_score=factor_score,
                 weight_points=normalized_factor_weights[code],
-                contribution_points=normalized_factor_weights[code] * factor_score * metrics.support_weight,
+                contribution_points=normalized_factor_weights[code] * factor_value * metrics.support_weight,
                 value_display=value_display,
             )
         )

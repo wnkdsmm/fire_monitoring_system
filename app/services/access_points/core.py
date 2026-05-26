@@ -28,6 +28,7 @@ from .data import (
     _build_access_points_table_options,
     _build_option_catalog,
     _collect_access_point_metadata,
+    _parse_limit,
     _resolve_option_value,
     _resolve_selected_table,
     _selected_source_tables,
@@ -172,7 +173,7 @@ def _build_access_points_request_state(
         source_tables = _selected_source_tables(table_options, selected_table)
         if selected_table and selected_table != "all":
             selected_table_names = [selected_table]
-    parsed_limit = _AUTO_ACCESS_POINT_LIMIT
+    parsed_limit = _parse_limit(limit)
     normalized_feature_columns = _normalize_access_point_feature_columns(feature_columns)
     cache_key = _build_access_points_cache_key(
         selected_table=selected_table,

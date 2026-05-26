@@ -263,6 +263,7 @@
 .access-points-followup {
     display: grid;
     gap: var(--gap-md);
+    padding-bottom: var(--gap-md);
 }
 
 .access-points-followup > * {

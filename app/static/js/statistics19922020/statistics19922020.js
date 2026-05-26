@@ -291,7 +291,7 @@
             return buildCompletedMessage(SUCCESS_TEXTS.decoded || "данные расшифрованы.", joinMessageParts([decoded, report]));
         }
 
-        if (endpoint === "/statistics19922020/decode-and-import" || endpoint === "/statistics19922020/decode_import") {
+        if (endpoint === "/statistics19922020/decode-and-import" || endpoint === "/statistics19922020/decode_import" || endpoint === "/statistics19922020/decode-stat-and-import") {
             var importData = payload && payload.import ? payload.import : {};
             var outputFolder = importData.output_folder ? ((DETAIL_TEXTS.outputFolderPrefix || "Папка результата: ") + importData.output_folder + ".") : "";
             return buildCompletedMessage(SUCCESS_TEXTS.decodedAndImported || "данные расшифрованы и загружены в PostgreSQL.", outputFolder);
@@ -408,7 +408,7 @@
                 runAction({
                     endpoint: "/statistics19922020/decode-and-import",
                     uploadMode: "required",
-                    errorMessage: ERROR_TEXTS.decodeImportFailed || "Не удалось выполнить расшифровку и загрузку в PostgreSQL."
+                    errorMessage: ERROR_TEXTS.decodeFailed || "Не удалось выполнить декодирование выбранного файла."
                 });
             });
         }
@@ -416,7 +416,7 @@
         if (decodeImportButton) {
             decodeImportButton.addEventListener("click", function () {
                 runAction({
-                    endpoint: "/statistics19922020/decode-and-import",
+                    endpoint: "/statistics19922020/decode-stat-and-import",
                     uploadMode: "required",
                     errorMessage: ERROR_TEXTS.decodeImportFailed || "Не удалось выполнить расшифровку и загрузку в PostgreSQL."
                 });

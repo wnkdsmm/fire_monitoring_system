@@ -211,6 +211,7 @@
 
 .panel {
     padding: var(--space-token-21);
+    padding-bottom: 32px;
     margin-bottom: var(--gap-md);
     max-width: 100%;
 }

@@ -14,9 +14,6 @@ _DEFAULT_ANALYTICS_TITLE = "Пространственная аналитика 
 _DEFAULT_LOGISTICS_TITLE = "Сервисная зона не определена"
 _DEFAULT_LOGISTICS_TEXT = "Логистический слой пока не рассчитан."
 _DEFAULT_NO_INSIGHTS_HTML = "<li>Без дополнительных аналитических выводов.</li>"
-_DEFAULT_NO_HOTSPOTS_HTML = (
-    "<div class='analytics-item analytics-item-empty'>Hotspot-данные пока не выделены аналитикой.</div>"
-)
 
 
 def build_analytics_layer_geojsons(
@@ -111,12 +108,9 @@ def analytics_heatmap_config(analytics: SpatialAnalyticsPayload) -> dict[str, ob
 
 
 def analytics_layer_definitions(analytics_layers: AnalyticsLayersPayload) -> list[tuple[str, str, str, bool]]:
-    hotspot_available = bool(analytics_layers.get("hotspots", {}).get("features"))
-    risk_available = bool(analytics_layers.get("risk_zones", {}).get("features"))
     return [
         ("incidents", "🗺", "Точки пожаров", True),
         ("heatmap", "🔥", "KDE / heatmap", bool(analytics_layers.get("heatmap", {}).get("features"))),
-        ("hotspot_risk", "📍 ⚠", "Hotspot detection + Зоны риска", hotspot_available or risk_available),
     ]
 
 
@@ -131,15 +125,6 @@ def build_analytics_panel_html(analytics: SpatialAnalyticsPayload, idx: int, esc
     service_zone_label = logistics.get("service_zone_label") or _DEFAULT_LOGISTICS_TITLE
     logistics_text = escape(logistics.get("summary") or logistics.get("coverage_note") or _DEFAULT_LOGISTICS_TEXT)
 
-    hotspot_items = "".join(
-        (
-            f"<div class='analytics-item'><strong>{escape(item.get('label', ''))}</strong>"
-            f"<span>{escape(item.get('risk_score_display', ''))}</span>"
-            f"<small>{escape(item.get('explanation', ''))}</small></div>"
-        )
-        for item in analytics.get("hotspots", [])[:4]
-    ) or _DEFAULT_NO_HOTSPOTS_HTML
-
     method_items = "".join(f"<span class='analytics-chip'>{escape(item)}</span>" for item in summary.get("methods", []))
     note_items = "".join(f"<li>{escape(item)}</li>" for item in summary.get("insights", [])) or _DEFAULT_NO_INSIGHTS_HTML
     fallback_message = quality.get("fallback_message")
@@ -153,16 +138,10 @@ def build_analytics_panel_html(analytics: SpatialAnalyticsPayload, idx: int, esc
             </div>
             <div class="analytics-grid">
                 <div class="analytics-card"><small>Покрытие координат</small><strong>{escape(quality.get('coordinate_coverage_display', '0'))}</strong></div>
-                <div class="analytics-card"><small>Даты для hotspot</small><strong>{escape(date_coverage_display)}</strong></div>
-                <div class="analytics-card"><small>Hotspot-ов</small><strong>{escape(len(analytics.get('hotspots', [])))}</strong></div>
                 <div class="analytics-card"><small>Travel-time</small><strong>{escape(average_travel_time_display)}</strong></div>
                 <div class="analytics-card"><small>Покрытие ПЧ</small><strong>{escape(fire_station_coverage_display)}</strong></div>
             </div>
             {fallback_html}
-            <div class="analytics-section">
-                <div class="analytics-section-title">Hotspot detection</div>
-                {hotspot_items}
-            </div>
             <div class="analytics-section">
                 <div class="analytics-section-title">Логистика прибытия и прикрытия</div>
                 <div class="analytics-item">

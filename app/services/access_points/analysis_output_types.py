@@ -19,6 +19,8 @@ from .analysis_factors import (
     WATER_CODE,
 )
 
+REASON_DETAIL_MIN_CONTRIBUTION = 2.0
+
 
 def _format_coordinate(value: float | None) -> str:
     if value is None:
@@ -153,7 +155,7 @@ def _build_reason_details(score_decomposition: Sequence[dict[str, Any]]) -> list
             "value_display": str(item.get("value_display") or ""),
         }
         for item, contribution in ranked
-        if contribution > 0
+        if contribution >= REASON_DETAIL_MIN_CONTRIBUTION
     ]
     return details[:4]
 

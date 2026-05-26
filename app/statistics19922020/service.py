@@ -20,8 +20,11 @@ from app.statistics19922020.config import (
     resolve_script_path,
 )
 from app.statistics19922020.decode_engine import (
+    build_dictionaries,
+    decode_dataframe,
     default_output_path,
     default_report_path,
+    load_field_info,
     normalize_code,
     normalize_text,
     pick_code_and_text_columns,
@@ -208,6 +211,106 @@ def decode_and_import_uploaded_stat_file(
     import_status = str(import_result.get("status") or "")
     import_status_lower = import_status.lower()
     has_import_error = any(token in import_status_lower for token in ("ошибка", "error", "не загружен"))
+    overall_status = "error" if has_import_error else "decoded_imported"
+    return {
+        "status": overall_status,
+        "job_id": resolved_job_id,
+        "message": import_status,
+        "decode": decode_result,
+        "import": import_result,
+    }
+
+
+def _decode_stat_file_full(
+    *,
+    session_id: str,
+    job_id: str | None,
+    base_dir: str | None = None,
+) -> dict[str, Any]:
+    job = _resolve_import_job(session_id, job_id)
+    if job is None:
+        return _decode_error_payload("Сначала загрузите XLSX файл для расшифровки.", job_id)
+
+    resolved_job_id = job.job_id
+    input_path = job.current_file_path
+    assert input_path is not None
+
+    job_store.mark_job_status(session_id, resolved_job_id, "running")
+    final_status = "failed"
+    log_prefix = "[statistics19922020]"
+
+    try:
+        reference_dir = _resolve_reference_dir(base_dir)
+        output_path = default_output_path(input_path)
+        report_path = default_report_path(output_path)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        report_path.parent.mkdir(parents=True, exist_ok=True)
+
+        add_log(session_id, resolved_job_id, f"{log_prefix} Полная расшифровка STAT: {input_path.name}")
+        add_log(session_id, resolved_job_id, f"{log_prefix} Папка справочников: {reference_dir}")
+
+        source_df = read_excel_robust(input_path, header=0)
+        fields, field_file = load_field_info(reference_dir, source_columns=source_df.columns)
+        dictionaries = build_dictionaries(reference_dir, field_file)
+
+        add_log(
+            session_id,
+            resolved_job_id,
+            f"{log_prefix} Загружено справочников: {len(dictionaries)}, описание полей: {field_file.name}",
+        )
+
+        decoded_df, report_df = decode_dataframe(source_df, fields, dictionaries)
+
+        decoded_df.to_excel(output_path, index=False)
+        report_df.to_csv(report_path, index=False, encoding="utf-8-sig")
+
+        mapped_cols = int((report_df["mapped_rows"] > 0).sum()) if not report_df.empty else 0
+        total_cols = int(report_df.shape[0])
+
+        job_store.set_uploaded_file(session_id, resolved_job_id, output_path, output_path.name)
+        add_log(session_id, resolved_job_id, f"{log_prefix} Готово: расшифровано колонок {mapped_cols}/{total_cols}.")
+        add_log(session_id, resolved_job_id, f"{log_prefix} Декодированный файл: {output_path}")
+        add_log(session_id, resolved_job_id, f"{log_prefix} Отчет: {report_path}")
+
+        final_status = "completed"
+        return {
+            "status": "decoded",
+            "job_id": resolved_job_id,
+            "input_file": str(input_path),
+            "decoded_file": str(output_path),
+            "report_file": str(report_path),
+            "dictionaries_loaded": len(dictionaries),
+            "total_columns": total_cols,
+            "decoded_columns": mapped_cols,
+        }
+    except Exception as exc:
+        message = f"Ошибка расшифровки STAT: {exc}"
+        add_log(session_id, resolved_job_id, f"{log_prefix} {message}")
+        return _decode_error_payload(message, resolved_job_id)
+    finally:
+        job_store.mark_job_status(session_id, resolved_job_id, final_status)
+
+
+def decode_stat_and_import_uploaded_file(
+    *,
+    session_id: str,
+    job_id: str | None,
+    base_dir: str | None = None,
+    output_folder: str | None = None,
+) -> dict[str, Any]:
+    decode_result = _decode_stat_file_full(session_id=session_id, job_id=job_id, base_dir=base_dir)
+    if decode_result.get("status") != "decoded":
+        return decode_result
+
+    resolved_job_id = str(decode_result.get("job_id") or job_id or "")
+    add_log(session_id, resolved_job_id, "[statistics19922020] Старт импорта расшифрованного STAT файла в PostgreSQL.")
+    import_result = import_uploaded_data(
+        session_id=session_id,
+        output_folder=output_folder,
+        job_id=resolved_job_id,
+    )
+    import_status = str(import_result.get("status") or "")
+    has_import_error = any(t in import_status.lower() for t in ("ошибка", "error", "не загружен"))
     overall_status = "error" if has_import_error else "decoded_imported"
     return {
         "status": overall_status,

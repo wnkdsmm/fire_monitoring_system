@@ -156,9 +156,8 @@ def _resolve_access_point_weight_context(
 ) -> tuple[list[str], set[str], dict[str, float]]:
     normalized_selected_features = _normalize_selected_access_features(selected_features)
     active_reason_codes = set(normalized_selected_features)
-    selected_weight_sum = sum(float(FACTOR_WEIGHTS[code]) for code in normalized_selected_features if code in FACTOR_WEIGHTS)
     normalized_factor_weights = {
-        code: (float(weight) / selected_weight_sum) if code in active_reason_codes and selected_weight_sum > 0 else 0.0
+        code: float(weight) if code in active_reason_codes else 0.0
         for code, weight in FACTOR_WEIGHTS.items()
     }
     return normalized_selected_features, active_reason_codes, normalized_factor_weights

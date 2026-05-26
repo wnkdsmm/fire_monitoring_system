@@ -8,6 +8,7 @@ from app.routes.page_common import asset_versions, render_template_page
 
 from .service import (
     decode_and_import_uploaded_stat_file,
+    decode_stat_and_import_uploaded_file,
     decode_uploaded_stat_file,
     run_rename_headers_script,
     run_split_xlsx_by_year_script,
@@ -120,6 +121,27 @@ def statistics19922020_decode_import_alias_endpoint(
     return run_session_json_action(
         request,
         lambda session_id: _decode_and_import_action(session_id, job_id, base_dir, output_folder),
+    )
+
+
+@api_router.post("/statistics19922020/decode-stat-and-import")
+def statistics19922020_decode_stat_and_import_endpoint(
+    request: Request,
+    job_id: str | None = Form(None),
+    base_dir: str | None = Form(None),
+    output_folder: str | None = Form(None),
+):
+    return run_session_json_action(
+        request,
+        lambda session_id: _normalize_decode_response(
+            decode_stat_and_import_uploaded_file(
+                session_id=session_id,
+                job_id=job_id,
+                base_dir=base_dir,
+                output_folder=output_folder,
+            ),
+            include_import=True,
+        ),
     )
 
 
