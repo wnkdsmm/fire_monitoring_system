@@ -29,6 +29,7 @@ from app.domain.analytics_metadata import PLOTLY_PALETTE
 
 from .types import DiagnosticsRow
 from app.services.shared.formatting import (
+    format_integer as _format_integer,
     format_number as _format_number,
     format_percent as _format_percent,
 )
@@ -166,23 +167,27 @@ def _build_distribution_chart(
         limit=len(cluster_labels),
     )
 
+    bar_text = [
+        f"{_format_percent(share)}<br><sub>{_format_integer(fires)} пож.</sub>"
+        for share, fires in zip(shares, fire_totals)
+    ]
     figure = go.Figure(
         data=[
             build_plotly_bar_trace(
                 x=list(cluster_labels),
                 y=counts,
-                text=[_format_percent(share) for share in shares],
+                text=bar_text,
                 textposition="outside",
                 marker={"color": colors[: len(cluster_labels)]},
                 customdata=fire_totals,
-                hovertemplate="<b>%{x}</b><br>Территорий: %{y}<br>Доля: %{text}<br>Пожаров в истории: %{customdata}<extra></extra>",
+                hovertemplate="<b>%{x}</b><br>Территорий: %{y}<br>Доля территорий: %{text}<br>Пожаров в истории: %{customdata}<extra></extra>",
             )
         ]
     )
     figure.update_layout(
         **merge_plotly_layout(
-            plotly_layout("Территорий", height=340),
-            updates={"showlegend": False},
+            plotly_layout("Территорий", height=360),
+            updates={"showlegend": False, "uniformtext": {"mode": "hide", "minsize": 9}},
         )
     )
     return build_chart_bundle(title, figure)

@@ -57,7 +57,7 @@
         var container = byId(containerId);
         var settings = options || {};
         var emptyClass = settings.emptyClass || 'chart-empty';
-        var defaultMessage = settings.emptyMessage || 'Interactive chart is unavailable.';
+        var defaultMessage = settings.emptyMessage || 'Интерактивный график недоступен.';
 
         if (!container) {
             return false;

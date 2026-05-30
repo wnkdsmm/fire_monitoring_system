@@ -75,7 +75,7 @@ def _normalize_table_names(table_options: Sequence[dict[str, str]], table_names:
 def _build_clustering_request_state(
     table_name: str = "",
     table_names: Sequence[str] | None = None,
-    cluster_count: str = "4",
+    cluster_count: str = "5",
     feature_columns: Sequence[str] | None = None,
     cluster_count_is_explicit: bool = False,
 ) -> dict[str, Any]:
@@ -112,7 +112,7 @@ def _build_clustering_request_state(
 def get_clustering_page_context(
     table_name: str = "",
     table_names: Sequence[str] | None = None,
-    cluster_count: str = "4",
+    cluster_count: str = "5",
     feature_columns: Sequence[str] | None = None,
     cluster_count_is_explicit: bool = False,
 ) -> dict[str, Any]:
@@ -136,7 +136,7 @@ def get_clustering_page_context(
 def get_clustering_shell_context(
     table_name: str = "",
     table_names: Sequence[str] | None = None,
-    cluster_count: str = "4",
+    cluster_count: str = "5",
     feature_columns: Sequence[str] | None = None,
     cluster_count_is_explicit: bool = False,
 ) -> dict[str, Any]:

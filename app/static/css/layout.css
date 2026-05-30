@@ -61,8 +61,8 @@
 .brand-block h2,
 .sidebar h2 {
     margin: 0;
-    font-size: var(--font-size-token-05);
-    line-height: 1.05;
+    font-size: clamp(18px, 2.2vw, 24px);
+    line-height: 1.1;
 }
 
 .brand-block p {
@@ -140,6 +140,8 @@
 .dashboard-main {
     margin-left: calc(var(--sidebar-width) + 10px);
     max-width: none;
+    padding-top: var(--space-token-35);
+    padding-bottom: var(--space-token-35);
     padding-left: max(16px, calc(var(--page-padding) - 4px));
     padding-right: max(16px, calc(var(--page-padding) - 4px));
 }
@@ -270,6 +272,8 @@
 
     .dashboard-main {
         margin-left: 0;
+        padding-top: 80px;
+        padding-bottom: 16px;
         padding-left: 16px;
         padding-right: 16px;
     }

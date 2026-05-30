@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 import math
-from concurrent.futures import ThreadPoolExecutor
-from functools import partial
 from itertools import combinations
 from typing import Any, Sequence
 
@@ -15,7 +13,6 @@ from sklearn.preprocessing import StandardScaler
 
 from app.domain.fire_columns import ENTITY_INCIDENT_COUNT_COLUMN
 from app.labels import CLUSTERING_LOG_SCALE_FEATURES
-from config.constants import GAP_STAT_MAX_WORKERS, GAP_STAT_N_REFERENCES
 from config.constants import (
     CLUSTER_SHAPE_MICROCLUSTER_MIN_SIZE,
     CLUSTER_RISK_HIGH_THRESHOLD,
@@ -417,95 +414,6 @@ def _fit_weighted_kmeans(
     return model
 
 
-def _fit_reference_model(
-    reference_index: int,
-    reference_points: np.ndarray,
-    cluster_count: int,
-    row_count: int,
-    random_state: int,
-) -> float:
-    reference_model = KMeans(
-        n_clusters=cluster_count,
-        random_state=random_state + reference_index + 1,
-        n_init=MODEL_N_INIT,
-    )
-    reference_model.fit(reference_points, sample_weight=np.ones(row_count, dtype=float))
-    reference_inertia = max(float(reference_model.inertia_), 1e-12)
-    return float(np.log(reference_inertia))
-
-
-def _compute_gap_statistic(
-    scaled_points: np.ndarray,
-    sample_weights: np.ndarray,
-    k_range: Sequence[int],
-    n_references: int = GAP_STAT_N_REFERENCES,
-    random_state: int = 42,
-) -> dict[int, tuple[float, float]]:
-    points = np.asarray(scaled_points, dtype=float)
-    weights = np.asarray(sample_weights, dtype=float)
-    if points.ndim != 2 or len(points) == 0:
-        return {}
-    if weights.shape[0] != points.shape[0]:
-        weights = np.ones(points.shape[0], dtype=float)
-
-    row_count, feature_count = points.shape
-    valid_ks = sorted({int(k) for k in k_range if 1 < int(k) <= row_count})
-    if not valid_ks:
-        return {}
-
-    refs_count = max(int(n_references), 1)
-    rng = np.random.default_rng(random_state)
-    data_min = np.min(points, axis=0)
-    data_max = np.max(points, axis=0)
-
-    gap_scores: dict[int, tuple[float, float]] = {}
-    with ThreadPoolExecutor(max_workers=GAP_STAT_MAX_WORKERS) as executor:
-        for cluster_count in valid_ks:
-            model = KMeans(n_clusters=cluster_count, random_state=random_state, n_init=MODEL_N_INIT)
-            model.fit(points, sample_weight=weights)
-            observed_inertia = max(float(model.inertia_), 1e-12)
-
-            reference_points_list = [
-                rng.uniform(data_min, data_max, size=(row_count, feature_count))
-                for _ in range(refs_count)
-            ]
-            _fit = partial(
-                _fit_reference_model,
-                cluster_count=cluster_count,
-                row_count=row_count,
-                random_state=random_state,
-            )
-            indices = range(len(reference_points_list))
-            ref_logs = list(executor.map(_fit, indices, reference_points_list))
-
-            gap_score = float(np.mean(ref_logs) - np.log(observed_inertia))
-            se_k = float(np.std(ref_logs, ddof=1) * math.sqrt(1.0 + 1.0 / len(ref_logs)))
-            if not math.isfinite(se_k):
-                se_k = 0.0
-            gap_scores[cluster_count] = (gap_score, se_k)
-    return gap_scores
-
-
-def _estimate_best_k_gap(gap_scores: dict[int, tuple[float, float]]) -> int | None:
-    if not gap_scores:
-        return None
-    ordered_ks = sorted(int(k) for k in gap_scores)
-    if len(ordered_ks) < 2:
-        return None
-
-    gap_values = np.asarray([float(gap_scores[k][0]) for k in ordered_ks], dtype=float)
-    if gap_values.size < 2:
-        return None
-    if float(np.max(gap_values)) <= 0.0:
-        return None
-
-    for index in range(len(ordered_ks) - 1):
-        current_gap = float(gap_scores[ordered_ks[index]][0])
-        next_gap, se_of_next_k = gap_scores[ordered_ks[index + 1]]
-        se_value = float(se_of_next_k) if math.isfinite(float(se_of_next_k)) else 0.0
-        if current_gap >= (float(next_gap) - se_value):
-            return ordered_ks[index]
-    return ordered_ks[int(np.argmax(gap_values))]
 
 
 def _estimate_kmeans_initialization_stability(

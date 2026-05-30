@@ -88,7 +88,6 @@ def default_analytics_layer_flags() -> dict[str, bool]:
     return {
         "incidents": True,
         "heatmap": False,
-        "hotspot_risk": False,
         "hotspots": False,
         "risk_zones": False,
     }

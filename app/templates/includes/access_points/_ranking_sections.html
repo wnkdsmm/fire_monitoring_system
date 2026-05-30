@@ -1,49 +1,4 @@
 <section class="access-points-followup">
-        <div class="access-points-inline-panels">
-            <article class="panel access-points-drivers-panel">
-                <div class="panel-head">
-                    <h2>Главные драйверы риска</h2>
-                    <span class="panel-meta">Факторы, наиболее часто увеличивающие итоговый балл и повышающие позицию точки в рейтинге.</span>
-                </div>
-                <div id="accessPointsReasonBreakdownShell" class="reason-breakdown-grid">
-                    {% if data.reason_breakdown %}
-                        {% for item in data.reason_breakdown %}
-                        <article class="reason-breakdown-card">
-                            <span class="reason-breakdown-label">{{ item.label }}</span>
-                            <strong class="reason-breakdown-value">{{ item.count_display }}</strong>
-                            <span class="reason-breakdown-meta">{{ item.share_display }} точек попадают под этот фактор</span>
-                            <span class="reason-breakdown-meta">В среднем добавляет {{ item.average_contribution_display }} балла</span>
-                            <span class="reason-breakdown-foot">Характерный пример: {{ item.lead_label }}</span>
-                        </article>
-                        {% endfor %}
-                    {% else %}
-                    <div class="mini-empty">Сводка по драйверам будет представлена после выполнения расчета рейтинга.</div>
-                    {% endif %}
-                </div>
-            </article>
-
-            <article class="panel panel-warning">
-                <div class="panel-head">
-                    <h2>Данные неполные</h2>
-                    <span class="panel-meta">Точки, в которых приоритет проверки повышается преимущественно вследствие пропусков по водоснабжению, времени прибытия или удаленности.</span>
-                </div>
-                <div id="accessPointsIncompleteShell" class="incomplete-list">
-                    {% if data.incomplete_points %}
-                        {% for point in data.incomplete_points %}
-                        <article class="incomplete-card">
-                            <strong>{{ point.label }}</strong>
-                            <span>{{ point.incomplete_note }}</span>
-                            <span>Балл проверки: {{ point.investigation_score_display }} | Полнота: {{ point.completeness_display }}</span>
-                            <span>{{ point.explanation }}</span>
-                        </article>
-                        {% endfor %}
-                    {% else %}
-                    <div class="mini-empty">Отдельные точки с приоритетом, обусловленным пропусками данных, на текущем этапе не выделены.</div>
-                    {% endif %}
-                </div>
-            </article>
-        </div>
-
         <article class="panel data-table-panel access-points-ranking-panel">
             <div class="panel-head">
                 <h2>Рейтинг и интерпретация факторов</h2>

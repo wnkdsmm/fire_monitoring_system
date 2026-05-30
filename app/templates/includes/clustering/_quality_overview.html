@@ -30,20 +30,13 @@
     </div>
 
     <div class="stats-grid" id="clusteringQualityMetrics">
-        {% if quality.metric_cards %}
-            {% for item in quality.metric_cards %}
-            <article class="stat-card">
-                <span class="stat-label">{{ item.label }}</span>
-                <strong class="stat-value">{{ item.value }}</strong>
-                <span class="stat-foot">{{ item.meta }}</span>
-            </article>
-            {% endfor %}
-        {% else %}
-        <div class="mini-empty">После выполнения расчета здесь будут представлены внутренние метрики качества кластеризации.</div>
-        {% endif %}
-    </div>
-
-    <div class="stats-grid" id="clusteringQualityMethodology">
+        {% for item in quality.metric_cards %}
+        <article class="stat-card">
+            <span class="stat-label">{{ item.label }}</span>
+            <strong class="stat-value">{{ item.value }}</strong>
+            <span class="stat-foot">{{ item.meta }}</span>
+        </article>
+        {% endfor %}
         {% if quality.methodology_items %}
             {% for item in quality.methodology_items %}
             <article class="stat-card">
@@ -53,9 +46,10 @@
             </article>
             {% endfor %}
         {% else %}
-        <div class="mini-empty">Методологические параметры появятся после расчета.</div>
+        <div class="mini-empty">После выполнения расчета здесь будут представлены параметры кластеризации.</div>
         {% endif %}
     </div>
+    <div id="clusteringQualityMethodology"></div>
 
     <ul class="notice-list" id="clusteringQualityNotes">
         {% if quality.quality_notes %}

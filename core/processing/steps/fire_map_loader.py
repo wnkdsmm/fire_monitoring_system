@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 import pandas as pd
 from sqlalchemy import text
 
@@ -60,6 +62,18 @@ def _resolve_fire_map_columns(
                 selected_columns.append(matched)
             break
     return selected_columns, matched_columns
+
+
+def table_has_map_columns(table_name: str) -> bool:
+    normalized = str(table_name or "").strip()
+    if not normalized:
+        return False
+    try:
+        available_columns = get_table_columns_cached(normalized)
+    except Exception:
+        return False
+    _, matched = _resolve_fire_map_columns(available_columns, Config(output_dir=Path(".")))
+    return bool(matched.get("lat_names") and matched.get("lon_names"))
 
 
 def load_fire_map_source(table_name: str, config: Config) -> FireMapSource:

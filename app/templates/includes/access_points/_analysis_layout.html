@@ -43,6 +43,28 @@
                 {% endif %}
             </div>
         </article>
+
+        <article class="panel access-points-drivers-panel">
+            <div class="panel-head">
+                <h2>Главные драйверы риска</h2>
+                <span class="panel-meta">Факторы, наиболее часто увеличивающие итоговый балл и повышающие позицию точки в рейтинге.</span>
+            </div>
+            <div id="accessPointsReasonBreakdownShell" class="reason-breakdown-grid">
+                {% if data.reason_breakdown %}
+                    {% for item in data.reason_breakdown %}
+                    <article class="reason-breakdown-card">
+                        <span class="reason-breakdown-label">{{ item.label }}</span>
+                        <strong class="reason-breakdown-value">{{ item.count_display }}</strong>
+                        <span class="reason-breakdown-meta">{{ item.share_display }} точек попадают под этот фактор</span>
+                        <span class="reason-breakdown-meta">В среднем добавляет {{ item.average_contribution_display }} балла</span>
+                        <span class="reason-breakdown-foot">Характерный пример: {{ item.lead_label }}</span>
+                    </article>
+                    {% endfor %}
+                {% else %}
+                <div class="mini-empty">Сводка по драйверам будет представлена после выполнения расчета рейтинга.</div>
+                {% endif %}
+            </div>
+        </article>
     </div>
 
     <aside class="access-points-secondary">
@@ -56,9 +78,7 @@
                     {% for item in data.typology %}
                     <article class="typology-card">
                         <strong>{{ item.label }}</strong>
-                        <span>{{ item.count_display }} точек | {{ item.share_display }}</span>
-                        <span>Максимальный балл: {{ item.max_score_display }}</span>
-                        <span>Лидер: {{ item.lead_label }}</span>
+                        <span class="typology-meta">{{ item.count_display }} · {{ item.share_display }} · макс. {{ item.max_score_display }} · {{ item.lead_label }}</span>
                     </article>
                     {% endfor %}
                 {% else %}
@@ -95,6 +115,26 @@
                     {% endfor %}
                 {% else %}
                 <div class="mini-empty">Распределение балла риска будет доступно после выполнения расчета рейтинга.</div>
+                {% endif %}
+            </div>
+        </article>
+
+        <article class="panel panel-warning">
+            <div class="panel-head">
+                <h2>Данные неполные</h2>
+                <span class="panel-meta">Точки, в которых приоритет проверки повышается преимущественно вследствие пропусков по водоснабжению, времени прибытия или удаленности.</span>
+            </div>
+            <div id="accessPointsIncompleteShell" class="incomplete-list">
+                {% if data.incomplete_points %}
+                    {% for point in data.incomplete_points %}
+                    <article class="incomplete-card">
+                        <strong>{{ point.label }}</strong>
+                        <span class="incomplete-meta">балл {{ point.investigation_score_display }} · полнота {{ point.completeness_display }} · {{ point.incomplete_note }}</span>
+                        {% if point.explanation %}<span class="incomplete-explanation">{{ point.explanation }}</span>{% endif %}
+                    </article>
+                    {% endfor %}
+                {% else %}
+                <div class="mini-empty">Отдельные точки с приоритетом, обусловленным пропусками данных, на текущем этапе не выделены.</div>
                 {% endif %}
             </div>
         </article>

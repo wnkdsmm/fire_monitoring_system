@@ -308,11 +308,11 @@
 
 .cluster-overview-grid {
     display: grid;
-    gap: 12px;
+    gap: 6px;
 }
 
 .cluster-overview-card {
-    padding: var(--space-token-31);
+    padding: 10px 12px;
     border-radius: var(--radius-card);
     border: 1px solid var(--line);
 }
@@ -340,9 +340,9 @@
 .cluster-overview-meta,
 .cluster-overview-foot {
     display: block;
-    margin-top: var(--space-token-28);
+    margin-top: 4px;
     color: var(--muted);
-    line-height: 1.45;
+    line-height: 1.4;
 }
 
 .cluster-overview-value {
@@ -354,9 +354,14 @@
     max-width: none;
 }
 
-.cluster-risk-panel .panel-head {
+.cluster-risk-panel .panel-head,
+.clustering-primary .data-table-panel .panel-head {
     display: grid;
-    gap: 8px;
+    gap: 6px;
+}
+
+.clustering-primary .data-table-panel .panel-head h2 {
+    font-size: var(--font-size-token-10);
 }
 
 .cluster-risk-panel .panel-meta {

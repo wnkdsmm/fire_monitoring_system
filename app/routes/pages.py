@@ -216,7 +216,7 @@ def clustering_page(
     request: Request,
     table_name: str = "",
     table_names: list[str] | None = Query(None),
-    cluster_count: str = "4",
+    cluster_count: str = "5",
     feature_columns: list[str] | None = Query(None),
 ):
     clustering = get_clustering_shell_context(
@@ -311,10 +311,23 @@ def fire_map_page(request: Request, table_name: str = ""):
 
 @router.get("/fire-map/embed", response_class=HTMLResponse)
 def fire_map_embed(request: Request, table_name: str = ""):
-    table_options = get_user_table_options()
-    selected_table = resolve_selected_table_value(table_options, table_name)
+    try:
+        table_options = get_user_table_options(prefer_clean=True)
+        selected_table = resolve_selected_table_value(table_options, table_name)
+    except Exception as exc:
+        logger.exception("Failed to resolve table options for /fire-map/embed, table=%r", table_name)
+        return render_template_page(
+            request,
+            "fire_map_error.html",
+            message=f"Ошибка при получении списка таблиц: {exc}",
+            status_code=500,
+            **asset_versions(**FIRE_MAP_ASSETS),
+        )
 
     if not table_name or table_name != selected_table:
+        logger.warning(
+            "/fire-map/embed: table_name=%r not in options (resolved=%r)", table_name, selected_table
+        )
         return render_template_page(
             request,
             "fire_map_error.html",

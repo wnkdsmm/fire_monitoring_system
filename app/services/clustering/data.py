@@ -35,7 +35,7 @@ class ClusteringDataLoader(DataLoader):
         requested_features: Sequence[str],
         feature_frame: pd.DataFrame | None = None,
         entity_frame: pd.DataFrame | None = None,
-        cluster_count: int = 4,
+        cluster_count: int = 5,
     ) -> tuple[list[str], str]:
         return _impl._resolve_selected_features(
             available_features,
@@ -83,7 +83,7 @@ def _resolve_selected_features(
     requested_features: Sequence[str],
     feature_frame: pd.DataFrame | None = None,
     entity_frame: pd.DataFrame | None = None,
-    cluster_count: int = 4,
+    cluster_count: int = 5,
 ) -> tuple[list[str], str]:
     return _LOADER.resolve_selected_features(
         available_features,

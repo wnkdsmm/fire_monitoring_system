@@ -23,7 +23,6 @@ def _build_cluster_count_guidance_context(
 ) -> ClusterCountGuidanceContext:
     raw_recommended_k = (diagnostics or {}).get("best_quality_k")
     best_silhouette_k = (diagnostics or {}).get("best_silhouette_k")
-    best_gap_k = (diagnostics or {}).get("best_gap_k")
     requested_cluster_count = int(requested_cluster_count)
     adjusted_requested_cluster_count = int(
         adjusted_requested_cluster_count if adjusted_requested_cluster_count is not None else requested_cluster_count
@@ -38,7 +37,6 @@ def _build_cluster_count_guidance_context(
     return {
         "recommended_k": int(raw_recommended_k) if has_recommended_k else raw_recommended_k,
         "best_silhouette_k": best_silhouette_k,
-        "best_gap_k": best_gap_k,
         "requested_cluster_count": requested_cluster_count,
         "adjusted_requested_cluster_count": adjusted_requested_cluster_count,
         "current_cluster_count": current_cluster_count,
@@ -74,30 +72,16 @@ def _recommended_cluster_count_messages(
     cluster_count_is_explicit: bool,
 ) -> ClusterCountRecommendationMessages:
     recommended_k = context["recommended_k"]
-    best_gap_k = context["best_gap_k"]
     current_cluster_count = context["current_cluster_count"]
     adjusted_requested_cluster_count = context["adjusted_requested_cluster_count"]
     recommendation_gap = context["recommendation_gap"]
     auto_switched_to_recommended = context["auto_switched_to_recommended"]
-
-    def _append_gap_note(note: str) -> str:
-        if best_gap_k is None:
-            return note
-        if best_gap_k == recommended_k:
-            gap_note = f"Gap statistic подтверждает рекомендацию: k={recommended_k}."
-        else:
-            gap_note = (
-                f"По критерию Gap statistic оптимально k={best_gap_k}, "
-                f"по совокупному качеству — k={recommended_k}."
-            )
-        return gap_note if not note else f"{note} {gap_note}".strip()
 
     if cluster_count_is_explicit and recommendation_gap:
         quality_note = (
             f"Выбранное вручную число групп ({_format_integer(current_cluster_count)}) не совпадает с рекомендацией; "
             f"по совокупности метрик лучше выглядит k={_format_integer(recommended_k)}."
         )
-        quality_note = _append_gap_note(quality_note)
         return {
             "suggested_note": (
                 f"Диагностика рекомендует {recommended_k} группы, "
@@ -117,7 +101,6 @@ def _recommended_cluster_count_messages(
 
     if cluster_count_is_explicit:
         quality_note = f"Выбранное вручную число групп ({_format_integer(current_cluster_count)}) совпадает с рекомендацией."
-        quality_note = _append_gap_note(quality_note)
         return {
             "suggested_note": f"Диагностика подтверждает выбранное вручную значение: {current_cluster_count} группы.",
             "current_note": f"Сейчас используется выбранное вручную значение: {current_cluster_count} группы, и оно совпадает с рекомендацией.",
@@ -133,7 +116,6 @@ def _recommended_cluster_count_messages(
             f"вместо стартового k={_format_integer(adjusted_requested_cluster_count)} "
             f"используется k={_format_integer(current_cluster_count)}."
         )
-        quality_note = _append_gap_note(quality_note)
         model_note = (
             f"По умолчанию страница показывает рекомендованное число групп: {current_cluster_count} "
             f"вместо стартового {adjusted_requested_cluster_count}."
@@ -150,7 +132,6 @@ def _recommended_cluster_count_messages(
         "Текущее число групп уже совпадает с рекомендацией диагностики: "
         f"k={_format_integer(current_cluster_count)}."
     )
-    quality_note = _append_gap_note(quality_note)
     model_note = f"По умолчанию страница показывает рекомендованное число групп: {current_cluster_count}."
     return {
         "suggested_note": suggested_note,
@@ -230,13 +211,11 @@ def _build_cluster_count_guidance(
     recommendation_context = _apply_cluster_count_adjustment_warning(guidance_context, recommendation_context)
     recommended_k = guidance_context["recommended_k"]
     best_silhouette_k = guidance_context["best_silhouette_k"]
-    best_gap_k = guidance_context["best_gap_k"]
     recommendation_gap = guidance_context["recommendation_gap"]
     request_adjusted = guidance_context["request_adjusted"]
     return {
         "recommended_cluster_count": recommended_k,
         "best_silhouette_k": best_silhouette_k,
-        "best_gap_k": best_gap_k,
         "has_recommendation_gap": recommendation_gap,
         "request_adjusted": request_adjusted,
         "suggested_label": recommendation_context["suggested_label"],

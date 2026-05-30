@@ -27,7 +27,7 @@ def start_clustering_job(
     session_id: str,
     table_name: str = "",
     table_names: list[str] | None = None,
-    cluster_count: str = "4",
+    cluster_count: str = "5",
     feature_columns: list[str] | None = None,
     cluster_count_is_explicit: bool = False,
 ) -> dict[str, Any]:  # one-off
@@ -252,7 +252,7 @@ def _build_params_payload(
     return {
         "table_name": str(table_name or ""),
         "table_names": [str(item).strip() for item in (table_names or []) if str(item).strip()],
-        "cluster_count": str(cluster_count or "4"),
+        "cluster_count": str(cluster_count or "5"),
         "feature_columns": [str(item).strip() for item in (feature_columns or []) if str(item).strip()],
         "cluster_count_is_explicit": bool(cluster_count_is_explicit),
     }

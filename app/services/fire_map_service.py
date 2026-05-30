@@ -7,6 +7,7 @@ from typing import Any
 
 from app.cache import CopyingTtlCache
 from app.table_catalog import get_user_table_options, resolve_selected_table_value
+from core.processing.steps.fire_map_loader import table_has_map_columns
 from app.services.executive_brief import (
     build_executive_brief_from_risk_payload,
     empty_executive_brief,
@@ -58,7 +59,8 @@ def build_fire_map_html(table_name: str) -> str:
 
 def get_fire_map_page_context(table_name: str = "") -> dict[str, Any]:
     generated_at = datetime.now().strftime("%d.%m.%Y %H:%M")
-    table_options = get_user_table_options(prefer_clean=True)
+    all_options = get_user_table_options(prefer_clean=True)
+    table_options = [opt for opt in all_options if table_has_map_columns(opt["value"])]
     selected_table = resolve_selected_table_value(table_options, table_name)
     brief = empty_executive_brief()
     risk_prediction: dict[str, Any] = {

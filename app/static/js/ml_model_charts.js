@@ -304,22 +304,10 @@
             var bSummary = data.b_summary || {};
             var cSummary = data.c_summary || {};
             var dSummary = data.d_summary || {};
-            var dQuality = data.d_quality || {};
-            var qualityText = '';
-            if (dQuality.quality_available === true) {
-                qualityText = ' | Poisson quality: MAE ' + formatMetric(dQuality.mae)
-                    + ' | RMSE ' + formatMetric(dQuality.rmse)
-                    + ' | sMAPE ' + formatMetric(dQuality.smape) + '%'
-                    + ' | n=' + String(dQuality.sample_size || 0)
-                    + ' | folds=' + String(dQuality.folds_used || 0);
-            } else {
-                qualityText = ' | Poisson quality: недоступно (' + String(dQuality.reason || 'insufficient_history') + ')';
-            }
             summaryNode.textContent = 'Год 1 (' + aYear + '): факт ' + String(aSummary.fact_days || 0) + ' дн., OLS ' + String(aSummary.ml_days || 0) + ' дн.'
                 + ' | Год 2 (' + bYear + '): факт ' + String(bSummary.fact_days || 0) + ' дн., OLS ' + String(bSummary.ml_days || 0) + ' дн.'
                 + ' | OLS-эталон (' + cYear + '): факт ' + String(cSummary.fact_days || 0) + ' дн., OLS ' + String(cSummary.ml_days || 0) + ' дн.'
                 + ' | Poisson ML: дней ' + String(dSummary.model_days || 0) + ', запасных ' + String(dSummary.clipped_days || 0)
-                + qualityText
                 + (overlapBC ? ' | ⚠ OLS-эталон совпадает с Год 2 (год прогноза = ' + bYear + '): измените год прогноза для независимой линии' : '')
                 + (modes.overall === 'ml_ml' ? ' | обе линии построены OLS' : '')
                 + (historyHasData ? '' : ' | нет входных данных');
@@ -577,10 +565,73 @@
         node.innerHTML = html;
     }
 
+    function metricCard(label, value, meta) {
+        return '<div class="ml-quality-metric-card">'
+            + '<span class="ml-quality-metric-label">' + escapeHtml(label) + '</span>'
+            + '<strong class="ml-quality-metric-value">' + escapeHtml(value) + '</strong>'
+            + '<span class="ml-quality-metric-meta">' + escapeHtml(meta) + '</span>'
+            + '</div>';
+    }
+
+    function renderPoissonQuality(compareSeries, containerId) {
+        var node = byId(containerId);
+        if (!node) { return; }
+        var quality = (compareSeries && compareSeries.d_quality) || {};
+
+        if (!quality.quality_available) {
+            var reason = String(quality.reason || 'insufficient_history');
+            var reasonMessages = {
+                insufficient_history: 'Недостаточно исторических данных — нужно минимум 2 года фактических наблюдений по выбранному месяцу.',
+                model_unavailable: 'Зависимости модели (numpy / sklearn) не установлены на сервере.',
+                insufficient_targets: 'В hold-out периодах не оказалось фактических точек для сравнения.',
+                evaluation_error: 'Произошла ошибка при расчёте метрик.'
+            };
+            var reasonText = reasonMessages[reason] || 'Оценка качества недоступна.';
+            node.innerHTML = '<div class="ml-quality-panel">'
+                + '<div class="ml-quality-legend">'
+                + '<strong>Оценка качества Poisson-прогноза</strong>'
+                + escapeHtml(reasonText)
+                + '</div>'
+                + '</div>';
+            return;
+        }
+
+        var mae = Number(quality.mae);
+        var rmse = Number(quality.rmse);
+        var smape = Number(quality.smape);
+        var folds = Number(quality.folds_used) || 0;
+        var n = Number(quality.sample_size) || 0;
+        var nSmape = Number(quality.smape_sample_size) || 0;
+        var testYear = quality.test_year ? String(quality.test_year) : '';
+
+        var statusLabel, statusColor;
+        if (smape < 30) { statusLabel = 'Хорошее'; statusColor = '#16a34a'; }
+        else if (smape < 60) { statusLabel = 'Умеренное'; statusColor = '#d97706'; }
+        else { statusLabel = 'Слабое'; statusColor = '#dc2626'; }
+
+        var smapeMetaText = nSmape > 0
+            ? 'по ' + String(nSmape) + ' дням с пожарами из ' + String(n)
+            : 'относительная ошибка в %';
+
+        node.innerHTML = '<div class="ml-quality-panel">'
+            + '<div class="ml-quality-header">'
+            + '<span class="ml-quality-title">Оценка качества: тест на ' + (testYear || 'последнем году') + '</span>'
+            + '<span class="ml-quality-status" style="color:' + statusColor + '">&#x25cf; ' + escapeHtml(statusLabel) + '</span>'
+            + '</div>'
+            + '<div class="ml-quality-metrics-grid">'
+            + metricCard('MAE', formatMetric(mae), 'пожаров/день — все ' + String(n) + ' дней')
+            + metricCard('RMSE', formatMetric(rmse), 'пожаров/день — чувствителен к выбросам')
+            + metricCard('sMAPE', formatMetric(smape) + ' %', smapeMetaText)
+            + '<div class="ml-quality-note">MAE — на сколько пожаров/день ошибается модель в среднем. RMSE — то же, но крупные промахи весят больше. sMAPE — относительная ошибка в %, только по дням с пожарами.</div>'
+            + '</div>'
+
+            + '</div>';
+    }
     global.MlModelCharts = {
         renderCompareChart: renderCompareChart,
         renderCausesChart: renderCausesChart,
         renderCausesHeatmaps: renderCausesHeatmaps,
-        renderCausesInsights: renderCausesInsights
+        renderCausesInsights: renderCausesInsights,
+        renderPoissonQuality: renderPoissonQuality
     };
 }(window));

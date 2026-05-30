@@ -18,7 +18,7 @@
             <div id="clusterDiagnosticsChartFallback" class="chart-empty{% if charts.diagnostics.empty_message %}{% else %} is-hidden{% endif %}">{{ charts.diagnostics.empty_message }}</div>
         </article>
 
-        <div class="cluster-three-up">
+        <div class="cluster-two-up">
             <article class="panel chart-panel">
                 <div class="panel-head">
                     <h2 id="clusterFeatureImportanceTitle">{{ charts.feature_importance_chart.title | default("Вклад признаков в разделение кластеров") }}</h2>
@@ -36,78 +36,6 @@
                 <div id="clusterDistributionChart" class="plotly-chart cluster-bar-chart"></div>
                 <div id="clusterDistributionChartFallback" class="chart-empty{% if charts.distribution.empty_message %}{% else %} is-hidden{% endif %}">{{ charts.distribution.empty_message }}</div>
             </article>
-
-            <article class="panel chart-panel">
-                <div class="panel-head">
-                    <h2 id="clusterRadarTitle">{{ charts.radar_chart.title | default("Профили кластеров по признакам") }}</h2>
-                    <span class="panel-meta">Сравнение нормализованных профилей кластеров по выбранным признакам.</span>
-                </div>
-                <div id="clusterRadarChart" class="plotly-chart cluster-bar-chart"></div>
-                <div id="clusterRadarChartFallback" class="chart-empty{% if charts.radar_chart.empty_message %}{% else %} is-hidden{% endif %}">{{ charts.radar_chart.empty_message | default('') }}</div>
-            </article>
-        </div>
-
-        <div class="cluster-two-up">
-            <article class="panel data-table-panel">
-                <div class="panel-head">
-                    <h2>Центры кластеров</h2>
-                    <span class="panel-meta">Средние значения признаков характеризуют профиль каждого кластера территорий.</span>
-                </div>
-                <div class="data-table-shell" id="clusterCentroidTableShell">
-                    {% if data.centroid_rows %}
-                    <table class="data-table table-sticky-first">
-                        <thead>
-                            <tr>
-                                {% for column in data.centroid_columns %}
-                                <th>{{ column }}</th>
-                                {% endfor %}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for row in data.centroid_rows %}
-                            <tr>
-                                {% for value in row %}
-                                <td>{{ value }}</td>
-                                {% endfor %}
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                    {% else %}
-                    <div class="mini-empty">После выполнения расчета здесь будут представлены средние профили кластеров.</div>
-                    {% endif %}
-                </div>
-            </article>
-
-            <article class="panel data-table-panel cluster-risk-panel">
-                <div class="panel-head">
-                    <h2>Риск-профиль кластеров</h2>
-                    <span class="panel-meta">Сводная оценка кластеров по взвешенному интегральному рисковому баллу.</span>
-                </div>
-                <div class="data-table-shell" id="clusterRiskTableShell">
-                    {% if data.cluster_risk %}
-                    <table class="data-table table-stack-mobile cluster-risk-table">
-                        <thead>
-                            <tr>
-                                <th>Кластер</th>
-                                <th>Уровень риска</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for row in data.cluster_risk %}
-                            {% set risk_class = 'risk-high' if row.risk_level == 'Выше среднего' else ('risk-medium' if row.risk_level == 'Средний по группе' else ('risk-low' if row.risk_level == 'Ниже среднего' else '')) %}
-                            <tr>
-                                <td>{{ row.cluster_label }}</td>
-                                <td class="{{ risk_class }}">{{ row.risk_level }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                    {% else %}
-                    <div class="mini-empty">Таблица риск-профиля появится после расчета кластеров.</div>
-                    {% endif %}
-                </div>
-            </article>
         </div>
     </div>
 
@@ -123,9 +51,9 @@
                     <article class="cluster-overview-card tone-{{ item.tone }}">
                         <div class="cluster-overview-head u-flex-between-gap-12">
                             <strong>{{ item.cluster_label }}</strong>
-                            <span class="cluster-badge">{{ item.share_display }}</span>
+                            <span class="cluster-badge" title="Доля территорий: {{ item.share_display }}">{{ item.incident_share_display }}</span>
                         </div>
-                        <span class="cluster-overview-meta">Территорий: <span class="cluster-overview-value">{{ item.size_display }}</span> | Пожаров в истории: <span class="cluster-overview-value">{{ item.incidents_display }}</span></span>
+                        <span class="cluster-overview-meta">Территорий: <span class="cluster-overview-value">{{ item.size_display }}</span> ({{ item.share_display }}) | Пожаров в истории: <span class="cluster-overview-value">{{ item.incidents_display }}</span></span>
                         <span class="cluster-overview-foot">{{ item.summary }}</span>
                     </article>
                     {% endfor %}
@@ -135,20 +63,65 @@
             </div>
         </article>
 
-        <article class="panel ranking-panel">
+        <article class="panel data-table-panel">
             <div class="panel-head">
-                <h2>Замечания по интерпретации результатов</h2>
-                <span class="panel-meta">Рекомендации по корректной интерпретации кластеров и качеству сегментации.</span>
+                <h2>Центры кластеров</h2>
+                <span class="panel-meta">Средние значения признаков характеризуют профиль каждого кластера территорий.</span>
             </div>
-            <ul class="notice-list" id="clusterNotesList">
-                {% if data.notes %}
-                    {% for note in data.notes %}
-                    <li>{{ note }}</li>
-                    {% endfor %}
+            <div class="data-table-shell" id="clusterCentroidTableShell">
+                {% if data.centroid_rows %}
+                <table class="data-table table-sticky-first">
+                    <thead>
+                        <tr>
+                            {% for column in data.centroid_columns %}
+                            <th>{{ column }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in data.centroid_rows %}
+                        <tr>
+                            {% for value in row %}
+                            <td>{{ value }}</td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
                 {% else %}
-                <li>После выполнения расчета здесь будут представлены комментарии по качеству сегментации и интерпретации полученных типов территорий.</li>
+                <div class="mini-empty">После выполнения расчета здесь будут представлены средние профили кластеров.</div>
                 {% endif %}
-            </ul>
+            </div>
+        </article>
+
+        <article class="panel data-table-panel cluster-risk-panel">
+            <div class="panel-head">
+                <h2>Риск-профиль кластеров</h2>
+                <span class="panel-meta">Сводная оценка кластеров по взвешенному интегральному рисковому баллу.</span>
+            </div>
+            <div class="data-table-shell" id="clusterRiskTableShell">
+                {% if data.cluster_risk %}
+                <table class="data-table table-stack-mobile cluster-risk-table">
+                    <thead>
+                        <tr>
+                            <th>Кластер</th>
+                            <th>Уровень риска</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in data.cluster_risk %}
+                        {% set risk_class = 'risk-high' if row.risk_level == 'Выше среднего' else ('risk-medium' if row.risk_level == 'Средний по группе' else ('risk-low' if row.risk_level == 'Ниже среднего' else '')) %}
+                        <tr>
+                            <td>{{ row.cluster_label }}</td>
+                            <td class="{{ risk_class }}">{{ row.risk_level }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="mini-empty">Таблица риск-профиля появится после расчета кластеров.</div>
+                {% endif %}
+            </div>
         </article>
     </aside>
 </section>

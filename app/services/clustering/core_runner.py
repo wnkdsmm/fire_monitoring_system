@@ -230,7 +230,7 @@ def _render_clustering_payload_stage(
 def get_clustering_data(
     table_name: str = "",
     table_names: Sequence[str] | None = None,
-    cluster_count: str = "4",
+    cluster_count: str = "5",
     feature_columns: Sequence[str] | None = None,
     cluster_count_is_explicit: bool = False,
     progress_callback: Callable[[str, str], None] | None = None,

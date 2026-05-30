@@ -33,7 +33,7 @@ var getClusteringErrorMessage = shared.getErrorMessage;
                 params.append('table_names', tableName);
             });
         }
-        params.set('cluster_count', String(formData.get('cluster_count') || '4'));
+        params.set('cluster_count', String(formData.get('cluster_count') || '5'));
         formData.getAll('feature_columns').forEach(function (featureName) {
             var normalized = String(featureName || '').trim();
             if (normalized) {
@@ -49,7 +49,7 @@ var getClusteringErrorMessage = shared.getErrorMessage;
         return {
             table_name: tableNames.length === 1 ? tableNames[0] : 'all',
             table_names: tableNames,
-            cluster_count: String(formData.get('cluster_count') || '4'),
+            cluster_count: String(formData.get('cluster_count') || '5'),
             feature_columns: formData.getAll('feature_columns').map(function (value) {
                 return String(value || '').trim();
             }).filter(Boolean)

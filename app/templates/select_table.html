@@ -88,7 +88,9 @@
                     <select id="tableSelect" class="table-select">
                         <option value="">Выберите таблицу из списка</option>
                         {% for table in tables %}
+                            {% if not table.lower().startswith('clean_') %}
                             <option value="{{ table }}">{{ table }}</option>
+                            {% endif %}
                         {% endfor %}
                     </select>
                 </div>

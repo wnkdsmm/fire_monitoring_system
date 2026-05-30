@@ -336,8 +336,16 @@ function renderManagementCards(items) {
         setText('monthlyHeatmapMeta', charts.monthly_heatmap ? charts.monthly_heatmap.description : 'Количество пожаров по месяцам и годам.');
         setText('monthlyProfileMeta', charts.monthly_profile ? charts.monthly_profile.description : 'Что показывает блок: сезонный рисунок пожаров, если нужно планировать профилактику заранее.');
 
-        if (charts && Object.keys(charts).length > 0) {
+        var hasFullCharts = charts && (
+            charts.yearly_fires !== undefined ||
+            charts.yearly_area !== undefined ||
+            charts.monthly_heatmap !== undefined ||
+            charts.monthly_profile !== undefined
+        );
+        if (hasFullCharts) {
             renderDashboardCharts(charts);
+        } else if (charts && charts.yearly_trend !== undefined) {
+            renderPlotlyInContainer(charts.yearly_trend, 'recentYearsChart');
         }
 
         renderRankingList('topDistributionList', rankings.top_distribution, 'Нет данных по распределению.', 'ranking-row-fire');

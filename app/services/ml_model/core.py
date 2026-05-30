@@ -339,11 +339,29 @@ def _build_compare_series_payload(
         key = (int(row_date.year), int(row_date.month))
         facts_by_year_day.setdefault(key, set()).add(int(row_date.day))
 
+    # Last day with a real fact record for each year in this month.
+    # Days on or before this boundary are treated as genuine observations
+    # (zero-fire days simply absent from the DB), so no OLS fill is applied
+    # within the known historical range — only days strictly after the last
+    # known day are eligible for prediction.
+    last_known_day: dict[int, int] = {
+        yr: max(days_set)
+        for (yr, _mo), days_set in facts_by_year_day.items()
+        if days_set
+    }
     month_days_a = int(monthrange(int(year_a), int(month))[1])
     month_days_b = int(monthrange(int(year_b), int(month))[1])
     required_days_by_year: dict[int, set[int]] = {
-        int(year_a): {day for day in range(1, month_days_a + 1) if day not in facts_by_year_day.get((int(year_a), int(month)), set())},
-        int(year_b): {day for day in range(1, month_days_b + 1) if day not in facts_by_year_day.get((int(year_b), int(month)), set())},
+        int(year_a): {
+            day for day in range(1, month_days_a + 1)
+            if day not in facts_by_year_day.get((int(year_a), int(month)), set())
+            and day > last_known_day.get(int(year_a), 0)
+        },
+        int(year_b): {
+            day for day in range(1, month_days_b + 1)
+            if day not in facts_by_year_day.get((int(year_b), int(month)), set())
+            and day > last_known_day.get(int(year_b), 0)
+        },
     }
     ml_invoked_by_year: dict[int, bool] = {int(year_a): False, int(year_b): False}
 
@@ -522,9 +540,23 @@ def _predict_month_poisson_ml(
         X_train.append(_build_features(dt, series_by_date, {}))
         y_train.append(float(series_by_date[dt]))
 
+    max_train_year = max(dt.year for dt in training_dates) if training_dates else int(target_year)
+
+    def _recency_weight(year: int) -> float:
+        years_back = max(0, max_train_year - int(year))
+        if years_back >= 5:
+            return 1.0
+        return math.exp(0.2 * (5 - years_back))
+
+    sample_weights = [_recency_weight(dt.year) for dt in training_dates]
+
     try:
         model = PoissonRegressor(alpha=0.05, max_iter=500)
-        model.fit(np.asarray(X_train, dtype=float), np.asarray(y_train, dtype=float))
+        model.fit(
+            np.asarray(X_train, dtype=float),
+            np.asarray(y_train, dtype=float),
+            sample_weight=np.asarray(sample_weights, dtype=float),
+        )
     except Exception:
         baseline = _build_month_baseline()
         summary["clipped_days"] = month_days
@@ -667,7 +699,8 @@ def _evaluate_poisson_backtest(
         candidate_years = sorted(facts_by_year_day.keys())
         if len(candidate_years) < 2:
             return default
-        fold_years = candidate_years[-5:]
+        fold_years = candidate_years[-1:]  # один фолд: последний известный год
+        test_year = int(fold_years[0])
 
         abs_errors: list[float] = []
         sq_errors: list[float] = []
@@ -691,11 +724,16 @@ def _evaluate_poisson_backtest(
                 pred_value = float(pred)
                 if not math.isfinite(pred_value):
                     continue
-                err = pred_value - float(actual)
+                actual_value = float(actual)
+                err = pred_value - actual_value
                 abs_errors.append(abs(err))
                 sq_errors.append(err * err)
-                denom = abs(float(actual)) + abs(pred_value)
-                smape_values.append((200.0 * abs(err) / denom) if denom > 0.0 else 0.0)
+                # sMAPE is undefined when actual=0 because Poisson always predicts >0,
+                # giving smape=200% for every zero-fire day and inflating the average.
+                # Compute sMAPE only on days with actual>0.
+                if actual_value > 0:
+                    denom = actual_value + pred_value
+                    smape_values.append(200.0 * abs(err) / denom)
                 fold_count += 1
             if fold_count > 0:
                 folds_used += 1
@@ -716,7 +754,9 @@ def _evaluate_poisson_backtest(
             "rmse": float(rmse),
             "smape": float(smape),
             "sample_size": int(sample_size),
+            "smape_sample_size": len(smape_values),
             "folds_used": int(folds_used),
+            "test_year": test_year,
             "reason": None,
         }
     except Exception:
@@ -789,6 +829,7 @@ def get_ml_compare_series_data(
                     "rmse": None,
                     "smape": None,
                     "sample_size": 0,
+                    "smape_sample_size": 0,
                     "folds_used": 0,
                     "reason": "insufficient_history",
                 },

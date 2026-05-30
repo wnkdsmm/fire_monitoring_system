@@ -85,7 +85,6 @@ class QualityDiagnostics(TypedDict):
     best_configuration: NotRequired[ClusterMethod]
     best_quality_k: NotRequired[int | None]
     best_silhouette_k: NotRequired[int | None]
-    best_gap_k: NotRequired[int | None]
 
 
 class QualityConfigurationContext(TypedDict):
@@ -121,7 +120,6 @@ class ClusterCountGuidanceContext(TypedDict):
 
     recommended_k: int | None
     best_silhouette_k: int | None
-    best_gap_k: int | None
     requested_cluster_count: int
     adjusted_requested_cluster_count: int
     current_cluster_count: int
@@ -147,7 +145,6 @@ class ClusterCountGuidance(TypedDict):
 
     recommended_cluster_count: int | None
     best_silhouette_k: int | None
-    best_gap_k: int | None
     has_recommendation_gap: bool
     request_adjusted: bool
     suggested_label: str
@@ -468,7 +465,6 @@ class ClusteringDiagnosticsResult(TypedDict):
     method_rows_by_cluster_count: NotRequired[dict[int, list[ClusteringMethodRow]]]
     best_silhouette_k: int | None
     best_quality_k: int | None
-    best_gap_k: int | None
     elbow_k: int | None
 
 

@@ -186,30 +186,6 @@ def _build_quality_metric_cards(clustering: ClusterMetrics, resample_share_label
             "value": _format_number(clustering.get("silhouette"), 3),
             "meta": "Чем выше значение, тем заметнее границы между группами",
         },
-        {
-            "label": "Насколько кластеры смешиваются",
-            "value": _format_number(clustering.get("davies_bouldin"), 3),
-            "meta": "Чем ниже значение, тем меньше соседние группы заходят друг в друга",
-        },
-        {
-            "label": "Насколько группы собраны плотно",
-            "value": _format_number(clustering.get("calinski_harabasz"), 1),
-            "meta": "Чем выше значение, тем собраннее территории внутри своих групп",
-        },
-        {
-            "label": "Насколько группы равномерны",
-            "value": _format_percent(clustering.get("cluster_balance_ratio") or 0.0),
-            "meta": (
-                f"Размер самой маленькой и самой большой группы: "
-                f"{_format_integer(clustering.get('smallest_cluster_size'))} / "
-                f"{_format_integer(clustering.get('largest_cluster_size'))}"
-            ),
-        },
-        {
-            "label": "Насколько результат повторяется",
-            "value": _format_number(clustering.get("stability_ari"), 3),
-            "meta": f"Проверено на повторных {resample_share_label}-подвыборках",
-        },
     ]
 
 
@@ -221,7 +197,6 @@ def _build_quality_methodology_items(
     weighting_label: str,
     weighting_meta: str,
     low_support_display: str,
-    explained_variance: Any,
 ) -> list[QualityScore]:
     return [
         {
@@ -231,11 +206,6 @@ def _build_quality_methodology_items(
                 "Разбивает территории на группы, минимизируя разброс внутри каждой. "
                 + (weighting_meta or "Все территории влияют на центры кластеров одинаково.")
             ),
-        },
-        {
-            "label": "Насколько кластеры различимы",
-            "value": segmentation_label,
-            "meta": "Итоговая оценка по разделению групп, устойчивости и их размерам",
         },
         {
             "label": "Что именно кластеризуем",
@@ -256,11 +226,6 @@ def _build_quality_methodology_items(
             "label": "Территории с короткой историей",
             "value": low_support_display,
             "meta": f"Для территорий с ≤{LOW_SUPPORT_TERRITORY_THRESHOLD} пожарами значения сглажены, чтобы убрать шум",
-        },
-        {
-            "label": "Насколько 2D-карта отражает картину",
-            "value": _format_percent(explained_variance or 0.0),
-            "meta": "Сколько общей картины сохраняется, когда данные сводим к плоской карте",
         },
     ]
 
@@ -355,7 +320,6 @@ def _build_clustering_quality_assessment(
             weighting_label=weighting_label,
             weighting_meta=weighting_meta,
             low_support_display=low_support_display,
-            explained_variance=clustering.get("explained_variance"),
         ),
         "comparison_rows": comparison_rows,
         "quality_notes": quality_notes,

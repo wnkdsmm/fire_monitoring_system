@@ -365,9 +365,8 @@ function showLoading(message) {
             return ''
                 + '<article class="incomplete-card">'
                 + '<strong>' + escapeHtml(point.label || '-') + '</strong>'
-                + '<span>' + escapeHtml(point.incomplete_note || 'Нужна проверка полноты данных.') + '</span>'
-                + '<span>Балл проверки: ' + escapeHtml(point.investigation_score_display || '0') + ' | Полнота: ' + escapeHtml(point.completeness_display || '0%') + '</span>'
-                + '<span>' + escapeHtml(explanation) + '</span>'
+                + '<span class="incomplete-meta">балл ' + escapeHtml(point.investigation_score_display || '0') + ' · полнота ' + escapeHtml(point.completeness_display || '0%') + ' · ' + escapeHtml(point.incomplete_note || 'нужна проверка данных') + '</span>'
+                + (explanation ? '<span class="incomplete-explanation">' + escapeHtml(explanation) + '</span>' : '')
                 + '</article>';
         }).join('');
     }

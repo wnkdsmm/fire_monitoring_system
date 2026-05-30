@@ -226,6 +226,7 @@
 
         renderHero(data);
         charts.renderCompareChart(compare, 'mlCompareChart', 'mlCompareChartFallback', 'mlCompareChartSummary');
+        charts.renderPoissonQuality(compare, 'mlPoissonQuality');
     }
 
     async function refreshCompareSeriesOnly() {

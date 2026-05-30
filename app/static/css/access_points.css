@@ -461,9 +461,31 @@
     min-width: min(34rem, 42ch);
 }
 
+.typology-card,
+.incomplete-card {
+    padding: 10px 12px;
+    gap: 3px;
+}
+
+.typology-grid {
+    gap: 8px;
+}
+
 .typology-card strong,
 .incomplete-card strong {
     font-size: var(--font-size-token-09);
+}
+
+.incomplete-meta,
+.typology-meta {
+    color: var(--ink);
+    font-size: var(--font-size-token-08);
+}
+
+.incomplete-explanation,
+.typology-lead {
+    color: var(--ink-muted);
+    font-size: var(--font-size-token-08);
 }
 
 .score-distribution-grid {

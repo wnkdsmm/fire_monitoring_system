@@ -23,10 +23,8 @@ from .analysis_stats import (
     _cluster_quality_score,
     _cluster_shape_diagnostics,
     _compute_cluster_inertia,
-    _compute_gap_statistic,
     _compute_pca_projection,
     _derive_cluster_centers,
-    _estimate_best_k_gap,
     _estimate_elbow_k,
     _estimate_kmeans_initialization_stability,
     _estimate_resampled_stability,
@@ -165,7 +163,6 @@ def _evaluate_cluster_counts(
             "method_rows_by_cluster_count": {},
             "best_silhouette_k": None,
             "best_quality_k": None,
-            "best_gap_k": None,
             "elbow_k": None,
         }
     available_ks = [
@@ -178,14 +175,6 @@ def _evaluate_cluster_counts(
         entity_frame,
         weighting_strategy=weighting_strategy,
     )
-    _, scaled_points, _, _, sample_weights = prepared_inputs
-    gap_scores = _compute_gap_statistic(
-        scaled_points,
-        sample_weights,
-        k_range=available_ks,
-        random_state=CLUSTERING_RANDOM_STATE,
-    )
-
     rows: list[ClusteringMethodRow] = []
     method_rows_by_cluster_count: dict[int, list[ClusteringMethodRow]] = {}
     for cluster_count in available_ks:
@@ -215,7 +204,6 @@ def _evaluate_cluster_counts(
         "method_rows_by_cluster_count": method_rows_by_cluster_count,
         "best_silhouette_k": best_silhouette_row["cluster_count"] if best_silhouette_row else None,
         "best_quality_k": best_quality_row["cluster_count"] if best_quality_row else None,
-        "best_gap_k": _estimate_best_k_gap(gap_scores),
         "elbow_k": _estimate_elbow_k(rows),
     }
 

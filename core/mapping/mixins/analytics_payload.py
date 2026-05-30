@@ -39,7 +39,6 @@ def build_spatial_layer_defaults(
     return {
         'incidents': True,
         'heatmap': record_count >= 3 and mode != 'minimal',
-        'hotspot_risk': bool(hotspots) or bool(risk_zones),
         'hotspots': bool(hotspots),
         'risk_zones': bool(risk_zones),
     }
@@ -90,7 +89,7 @@ def build_empty_spatial_analytics(source_record_count: int) -> SpatialAnalyticsP
         'risk_zones': [],
         'logistics': {'basis_ready': False, 'summary': '', 'coverage_note': 'Логистический слой не рассчитан.'},
         'summary': {'title': 'Пространственная аналитика пожаров', 'subtitle': 'Нет данных для аналитического слоя.', 'methods': ['Точечный слой пожаров'], 'insights': ['Координаты отсутствуют или некорректны.'], 'thesis_paragraphs': ['Координаты отсутствуют или некорректны, поэтому карта используется только как точечная карта.'], 'fallback_message': 'Координаты отсутствуют или некорректны.'},
-        'layer_defaults': {'incidents': True, 'heatmap': False, 'hotspot_risk': False, 'hotspots': False, 'risk_zones': False},
+        'layer_defaults': {'incidents': True, 'heatmap': False, 'hotspots': False, 'risk_zones': False},
     }
 
 
